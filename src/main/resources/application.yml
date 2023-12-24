@@ -1,7 +1,5 @@
 spring:
   r2dbc:
-    url: r2dbc:postgresql://localhost:5432/postgres?characterEncoding=utf
+    url: r2dbc:postgresql://localhost:5555/postgres
     username: postgres
     password: 1234
-    pool:
-      max-size: 100
