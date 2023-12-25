@@ -18,6 +18,7 @@ public class SummonerController {
 
     @GetMapping("/summoners/{name}")
     public Flux<Summoner> getAllSummoners(@PathVariable String name) {
+        //test
         return summonerService.findAllByName(name);
     }
 
