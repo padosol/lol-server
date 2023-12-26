@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.Disposable;
+import reactor.core.publisher.Mono;
 
 import java.net.URLEncoder;
 import java.util.function.Consumer;
@@ -25,18 +26,34 @@ public class RiotAPITest {
         headers.set("X-Riot-Token", "RGAPI-a01f4988-12c3-4672-b3a7-232ac9327810");
 
         WebClient webClient = WebClient.builder()
-                .baseUrl("https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/훈상한")
+                .baseUrl("https://kr.api.riotgames.com/lol")
                 .defaultHeaders(httpHeaders -> httpHeaders.addAll(headers)).build();
 
 
-        SummonerDto block = webClient.get()
+        Mono<SummonerDto> summonerDtoMono = webClient.get()
                 .retrieve()
-                .bodyToMono(SummonerDto.class)
-                .block();
+                .bodyToMono(SummonerDto.class);
 
-        System.out.println(block);
+
+        summonerDtoMono.subscribe(
+                data -> {
+                    System.out.println(data);
+                },
+                error -> {
+                    // Handle any errors that may occur during the API call
+                    System.err.println("Error: " + error.getMessage());
+                },
+                () -> {
+                    // Handle completion (optional)
+                    System.out.println("API call completed");
+                }
+        );
+
+
+        System.out.println("test");
 
     }
 
 
 }
+

@@ -13,6 +13,10 @@ public class SummonerService {
     private final SummonerRepository summonerRepository;
 
     public Mono<Summoner> findSummonerByName(String name) {
+
+        // 데이터 베이스 확인 후 없으면 api 호출해서 데이터 전송
+        // api 
+
         return summonerRepository.findByName(name);
     }
 
