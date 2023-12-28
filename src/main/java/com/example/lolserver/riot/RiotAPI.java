@@ -2,7 +2,6 @@ package com.example.lolserver.riot;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Component
@@ -20,6 +19,9 @@ public class RiotAPI {
         headers.set("Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8");
         headers.set("Origin", "https://developer.riotgames.com");
         headers.set("X-Riot-Token", apiKey);
+
+        // 아자아자 화이팅!
+
 
         this.webClient = WebClient.builder()
                 .baseUrl("https://kr.api.riotgames.com/lol")
