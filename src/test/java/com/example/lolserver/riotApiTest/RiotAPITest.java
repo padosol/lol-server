@@ -26,7 +26,7 @@ public class RiotAPITest {
         headers.set("X-Riot-Token", "RGAPI-a01f4988-12c3-4672-b3a7-232ac9327810");
 
         WebClient webClient = WebClient.builder()
-                .baseUrl("https://kr.api.riotgames.com/lol")
+                .baseUrl("https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/훈상한")
                 .defaultHeaders(httpHeaders -> httpHeaders.addAll(headers)).build();
 
 
@@ -34,23 +34,30 @@ public class RiotAPITest {
                 .retrieve()
                 .bodyToMono(SummonerDto.class);
 
+        SummonerDto block = summonerDtoMono.block();
 
-        summonerDtoMono.subscribe(
-                data -> {
-                    System.out.println(data);
-                },
-                error -> {
-                    // Handle any errors that may occur during the API call
-                    System.err.println("Error: " + error.getMessage());
-                },
-                () -> {
-                    // Handle completion (optional)
-                    System.out.println("API call completed");
-                }
-        );
+
+//        summonerDtoMono.subscribe(
+//                data -> {
+//                    System.out.println(data);
+//                },
+//                error -> {
+//                    // Handle any errors that may occur during the API call
+//                    System.err.println("Error: " + error.getMessage());
+//                },
+//                () -> {
+//                    // Handle completion (optional)
+//                    System.out.println("API call completed");
+//                }
+//        );
 
 
         System.out.println("test");
+
+    }
+
+    @Test
+    void 마스터티어유저() {
 
     }
 
