@@ -20,12 +20,9 @@ public class RiotAPI {
         headers.set("Origin", "https://developer.riotgames.com");
         headers.set("X-Riot-Token", apiKey);
 
-        // 아자아자 화이팅!
-
-
         this.webClient = WebClient.builder()
-                .baseUrl("https://kr.api.riotgames.com/lol")
-                .defaultHeaders(httpHeaders -> httpHeaders.addAll(headers)).build();
+                .defaultHeaders(httpHeaders -> httpHeaders.addAll(headers))
+                .build();
     }
 
     public WebClient getWebClient(){

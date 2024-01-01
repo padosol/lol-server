@@ -1,13 +1,25 @@
 package com.example.lolserver.riotApiTest;
 
+import com.example.lolserver.exception.RateLimitException;
 import com.example.lolserver.summoner.dto.SummonerDto;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 import java.net.URLEncoder;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class RiotAPITest {
@@ -15,6 +27,8 @@ public class RiotAPITest {
 
     @Test
     void 유저정보얻기() {
+
+        long startTime = System.currentTimeMillis();
 
         String userName = "훈상한";
 
@@ -27,32 +41,60 @@ public class RiotAPITest {
 
         WebClient webClient = WebClient.builder()
                 .baseUrl("https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/훈상한")
-                .defaultHeaders(httpHeaders -> httpHeaders.addAll(headers)).build();
+                .defaultHeaders(httpHeaders -> httpHeaders.addAll(headers))
+                .build();
 
 
-        Mono<SummonerDto> summonerDtoMono = webClient.get()
+        SummonerDto summonerDto = webClient.get()
                 .retrieve()
-                .bodyToMono(SummonerDto.class);
+                .bodyToMono(SummonerDto.class)
+                .block();
 
-        SummonerDto block = summonerDtoMono.block();
+        WebClient webClient1 = WebClient.builder()
+                .baseUrl("https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/"+summonerDto.getPuuid()+"/ids")
+                .defaultHeaders(httpHeaders -> httpHeaders.addAll(headers))
+                .build();
 
+        List<String> matchList = webClient1.get()
+                .uri(uriBuilder -> uriBuilder
+                        .queryParam("start", 0)
+                        .queryParam("count", 20)
+                        .build())
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<String>>() {
+                })
+                .block();
 
-//        summonerDtoMono.subscribe(
-//                data -> {
-//                    System.out.println(data);
-//                },
-//                error -> {
-//                    // Handle any errors that may occur during the API call
-//                    System.err.println("Error: " + error.getMessage());
-//                },
-//                () -> {
-//                    // Handle completion (optional)
-//                    System.out.println("API call completed");
-//                }
-//        );
+        List<Map<String, Object>> dataMap = new ArrayList<>();
 
+        // match
+        WebClient webClient2 = WebClient.builder()
+                .defaultHeaders(httpHeaders -> httpHeaders.addAll(headers))
+                .build();
 
-        System.out.println("test");
+        for(String match : matchList) {
+            webClient2.get()
+                    .uri("https://asia.api.riotgames.com/lol/match/v5/matches/" + match)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                    .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
+                            .filter(throwable -> throwable instanceof WebClientResponseException))
+                    .subscribe(
+                            response -> {
+                                dataMap.add(response);
+                            }
+                    );
+        }
+
+        try{
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        long endTime = System.currentTimeMillis();
+
+        System.out.println(endTime - startTime + " ms");
 
     }
 
