@@ -20,7 +20,7 @@ public class SummonerController {
     private final SummonerService summonerService;
 
     @GetMapping("/summoners/{name}")
-    public Mono<Set<Map<String, Object>>> getSummoner(@PathVariable String name) {
+    public Mono<Map<String, Object>> getSummoner(@PathVariable String name) {
         return summonerService.findSummonerByName(name);
     }
 

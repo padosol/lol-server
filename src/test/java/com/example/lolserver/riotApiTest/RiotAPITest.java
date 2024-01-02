@@ -5,32 +5,24 @@ import com.example.lolserver.summoner.dto.SummonerDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 import reactor.util.retry.Retry;
 
-import java.net.URLEncoder;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
+import java.util.*;
 
 public class RiotAPITest {
 
 
     @Test
-    void 유저정보얻기() {
+    void 유저정보와매치리스트얻기() {
 
         long startTime = System.currentTimeMillis();
 
-        String userName = "훈상한";
+        String userName = "건동김";
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
@@ -40,57 +32,76 @@ public class RiotAPITest {
         headers.set("X-Riot-Token", "RGAPI-a01f4988-12c3-4672-b3a7-232ac9327810");
 
         WebClient webClient = WebClient.builder()
-                .baseUrl("https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/훈상한")
+                .baseUrl("https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/" + userName)
                 .defaultHeaders(httpHeaders -> httpHeaders.addAll(headers))
                 .build();
-
 
         SummonerDto summonerDto = webClient.get()
                 .retrieve()
                 .bodyToMono(SummonerDto.class)
                 .block();
 
+        /// 유저 정보 얻기
+        WebClient summonerInfo = WebClient.builder()
+                .baseUrl("https://kr.api.riotgames.com/lol/league/v4/entries/by-summoner/" + summonerDto.getId())
+                .defaultHeaders(httpHeaders -> httpHeaders.addAll(headers))
+                .build();
+
+        Mono<Set<Map<String, Object>>> setMono = summonerInfo.get()
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Set<Map<String, Object>>>() {
+                });
+
+        /// 유저정보 얻기 끝
+
+        // 매치 리스트 얻기
         WebClient webClient1 = WebClient.builder()
                 .baseUrl("https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/"+summonerDto.getPuuid()+"/ids")
                 .defaultHeaders(httpHeaders -> httpHeaders.addAll(headers))
                 .build();
 
-        List<String> matchList = webClient1.get()
+        Mono<List<String>> listMono = webClient1.get()
                 .uri(uriBuilder -> uriBuilder
                         .queryParam("start", 0)
                         .queryParam("count", 20)
                         .build())
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<String>>() {
+                .bodyToMono(new ParameterizedTypeReference<List<String>>() {});
+
+        // match 리스트 얻기 끝
+
+        Tuple2<Set<Map<String, Object>>, List<String>> block = Mono.zip(setMono, listMono)
+                .doOnSuccess(tuple -> {
+
+                    Set<Map<String, Object>> t1 = tuple.getT1();
+                    List<String> t2 = tuple.getT2();
+
+                    System.out.println(t1);
+                    System.out.println(t2);
                 })
                 .block();
 
-        List<Map<String, Object>> dataMap = new ArrayList<>();
 
-        // match
-        WebClient webClient2 = WebClient.builder()
-                .defaultHeaders(httpHeaders -> httpHeaders.addAll(headers))
-                .build();
-
-        for(String match : matchList) {
-            webClient2.get()
-                    .uri("https://asia.api.riotgames.com/lol/match/v5/matches/" + match)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
-                    .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
-                            .filter(throwable -> throwable instanceof WebClientResponseException))
-                    .subscribe(
-                            response -> {
-                                dataMap.add(response);
-                            }
-                    );
-        }
-
-        try{
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        System.out.println("test");
+//        List<Map<String, Object>> dataMap = new ArrayList<>();
+//
+//        WebClient webClient2 = WebClient.builder()
+//                .defaultHeaders(httpHeaders -> httpHeaders.addAll(headers))
+//                .build();
+//
+//        for(String match : matchList) {
+//            webClient2.get()
+//                    .uri("https://asia.api.riotgames.com/lol/match/v5/matches/" + match)
+//                    .retrieve()
+//                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+//                    .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
+//                            .filter(throwable -> throwable instanceof WebClientResponseException))
+//                    .subscribe(
+//                            response -> {
+//                                dataMap.add(response);
+//                            }
+//                    );
+//        }
 
         long endTime = System.currentTimeMillis();
 
@@ -98,10 +109,7 @@ public class RiotAPITest {
 
     }
 
-    @Test
-    void 마스터티어유저() {
 
-    }
 
 
 }
