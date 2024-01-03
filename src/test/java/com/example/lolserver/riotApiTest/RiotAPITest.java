@@ -7,6 +7,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.retry.Retry;
@@ -83,25 +84,43 @@ public class RiotAPITest {
 
 
         System.out.println("test");
-//        List<Map<String, Object>> dataMap = new ArrayList<>();
-//
-//        WebClient webClient2 = WebClient.builder()
-//                .defaultHeaders(httpHeaders -> httpHeaders.addAll(headers))
-//                .build();
-//
-//        for(String match : matchList) {
-//            webClient2.get()
-//                    .uri("https://asia.api.riotgames.com/lol/match/v5/matches/" + match)
-//                    .retrieve()
-//                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
-//                    .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
-//                            .filter(throwable -> throwable instanceof WebClientResponseException))
-//                    .subscribe(
-//                            response -> {
-//                                dataMap.add(response);
-//                            }
-//                    );
-//        }
+
+        List<String> matchList = block.getT2();
+
+        WebClient matchClient = WebClient.builder()
+                .defaultHeaders(httpHeaders -> httpHeaders.addAll(headers))
+                .build();
+
+        List<Map<String, Object>> dataMap = new ArrayList<>();
+
+        List<Mono<Map<String, Object>>> monoList = new ArrayList<>();
+
+        for(String matchId : matchList) {
+            Mono<Map<String, Object>> mapMono = matchClient.get()
+                    .uri("https://asia.api.riotgames.com/lol/match/v5/matches/" + matchId)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
+                    })
+                    .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
+                            .filter(throwable -> throwable instanceof WebClientResponseException)
+                    );
+
+            monoList.add(mapMono);
+        }
+
+        List<Map<String, Object>> block1 = Flux.merge(monoList)
+                .collectList()
+                .map(
+                        result -> {
+                            return result;
+                        }
+                ).block();
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
         long endTime = System.currentTimeMillis();
 

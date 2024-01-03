@@ -36,8 +36,6 @@ public class SummonerService {
                             System.out.println(response.getId());
                             System.out.println(response.getPuuid());
 
-
-
                             return riotAPI.getWebClient().get()
                                     .uri("https://kr.api.riotgames.com/lol/league/v4/entries/by-summoner/" + response.getId())
                                     .retrieve()
