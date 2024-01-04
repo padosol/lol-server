@@ -1,7 +1,9 @@
 package com.example.lolserver.match.service;
 
+import com.example.lolserver.match.dto.MatchDto;
 import com.example.lolserver.riot.RiotAPI;
 import com.example.lolserver.summoner.dto.SummonerDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
@@ -21,14 +23,13 @@ import java.util.Map;
 public class MatchService {
 
     private final RiotAPI riotAPI;
-
-    public Mono<Map<String, Object>> findMatchBySummonerName(String summonerName) {
+    public Flux<Map<String, Object>> findMatchBySummonerName(String summonerName) {
 
         return riotAPI.getWebClient()
                 .get()
                 .uri("https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/" + summonerName)
                 .retrieve()
-                .bodyToMono(SummonerDto.class)
+                .bodyToFlux(SummonerDto.class)
                 .flatMap(
                         response -> {
 
@@ -44,7 +45,7 @@ public class MatchService {
                                             .queryParam("count", 20)
                                             .build())
                                     .retrieve()
-                                    .bodyToMono(new ParameterizedTypeReference<List<String>>() {})
+                                    .bodyToFlux(String[].class)
                                     .flatMap(
                                             matchList -> {
                                                 System.out.println(matchList);
@@ -53,32 +54,31 @@ public class MatchService {
 
                                                 Map<String, Object> matchMap = new HashMap<>();
 
-                                                Flux<Map<String, Object>> flux = Flux.fromArray(matchList.toArray())
-                                                        .flatMap(matchId -> webClient.get()
-                                                                .uri("https://asia.api.riotgames.com/lol/match/v5/matches/" + matchId)
-                                                                .retrieve()
-                                                                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
-                                                                })
-                                                                .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
-                                                                        .filter(throwable -> throwable instanceof WebClientResponseException)
-                                                                )
-                                                        );
+                                                return Flux.just(matchMap);
 
-
-//                                                return Flux.merge(Flux.fromArray(matchList.toArray())
-//                                                        .map( matchId -> webClient.get()
+//                                                return Flux.fromArray(matchList.getMatchIds().toArray())
+//                                                        .flatMap(matchId -> webClient.get()
 //                                                                .uri("https://asia.api.riotgames.com/lol/match/v5/matches/" + matchId)
 //                                                                .retrieve()
-//                                                                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+//                                                                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
+//                                                                })
 //                                                                .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
-//                                                                        .filter(throwable -> throwable instanceof WebClientResponseException))))
-//                                                        .flatMap(
-//                                                                result -> {
-//                                                                    return Mono.just(result);
-//                                                                }
-//                                                        );
-
-                                                return Mono.just(matchMap);
+//                                                                        .filter(throwable -> throwable instanceof WebClientResponseException)
+//                                                                )
+//                                                        ).flatMap(Flux::just);
+//
+////                                                return Flux.merge(Flux.fromArray(matchList.toArray())
+////                                                        .map( matchId -> webClient.get()
+////                                                                .uri("https://asia.api.riotgames.com/lol/match/v5/matches/" + matchId)
+////                                                                .retrieve()
+////                                                                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+////                                                                .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
+////                                                                        .filter(throwable -> throwable instanceof WebClientResponseException))))
+////                                                        .flatMap(
+////                                                                result -> {
+////                                                                    return Mono.just(result);
+////                                                                }
+////                                                        );
                                             }
                                     );
 

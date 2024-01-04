@@ -1,6 +1,5 @@
 package com.example.lolserver.riotApiTest;
 
-import com.example.lolserver.exception.RateLimitException;
 import com.example.lolserver.summoner.dto.SummonerDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
@@ -14,12 +13,16 @@ import reactor.util.retry.Retry;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 
 public class RiotAPITest {
 
 
     @Test
-    void 유저정보와매치리스트얻기() {
+    void 유저정보와매치리스트얻기() throws InterruptedException {
+
+
+        CountDownLatch latch = new CountDownLatch(1);
 
         long startTime = System.currentTimeMillis();
 
@@ -108,25 +111,36 @@ public class RiotAPITest {
             monoList.add(mapMono);
         }
 
-        List<Map<String, Object>> block1 = Flux.merge(monoList)
-                .collectList()
-                .map(
-                        result -> {
-                            return result;
-                        }
-                ).block();
+        Flux<Map<String, Object>> flux = Flux.fromIterable(monoList)
+                .flatMap(mono -> mono);
 
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+
+
+//        List<Map<String, Object>> block1 = Flux.merge(monoList)
+//                .collectList()
+//                .map(
+//                        result -> {
+//                            return result;
+//                        }
+//                ).block();
 
         long endTime = System.currentTimeMillis();
+
+        latch.await();
 
         System.out.println(endTime - startTime + " ms");
 
     }
+
+    @Test
+    void Flux테스트() {
+
+
+
+    }
+
+
+
 
 
 
