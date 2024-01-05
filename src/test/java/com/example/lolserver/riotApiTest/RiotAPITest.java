@@ -133,10 +133,42 @@ public class RiotAPITest {
     }
 
     @Test
-    void Flux테스트() {
+    void Flux테스트() throws InterruptedException {
 
+        CountDownLatch latch = new CountDownLatch(1);
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+        headers.set("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7");
+        headers.set("Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8");
+        headers.set("Origin", "https://developer.riotgames.com");
+        headers.set("X-Riot-Token", "RGAPI-a01f4988-12c3-4672-b3a7-232ac9327810");
 
+        String puuid = "bKzCKQmqmCFeNfX7hYrKvIdZzc8O9MbMfetBPvnR25eyeiXJbKb5zQaA7RzFHp0vsgXiQ8GkZ8LDVQ";
+
+        WebClient webClient = WebClient.builder()
+                .baseUrl("https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/"+puuid+"/ids")
+                .defaultHeaders(httpHeaders -> httpHeaders.addAll(headers))
+                .build();
+
+        webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .queryParam("start", 0)
+                        .queryParam("count", 20)
+                        .build())
+                .retrieve()
+                .bodyToFlux(String.class)
+                .subscribe(response -> {
+
+                    String test = response;
+
+                    System.out.println(response);
+                    latch.countDown();
+                });
+
+        System.out.println("test");
+
+        latch.await();
     }
 
 

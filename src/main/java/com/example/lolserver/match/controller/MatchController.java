@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -20,7 +19,7 @@ public class MatchController {
     private final MatchService matchService;
 
     @GetMapping("/v1/matches/name/{summonerName}")
-    public Flux<Map<String, Object>> getSummoner(@PathVariable String summonerName) {
+    public Mono<List<Map<String, Object>>> getSummoner(@PathVariable String summonerName) {
         return matchService.findMatchBySummonerName(summonerName);
     }
 
