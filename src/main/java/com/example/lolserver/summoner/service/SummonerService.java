@@ -23,8 +23,6 @@ public class SummonerService {
 
     public Mono<Map<String, Object>> findSummonerByName(String name) {
 
-        String encode = UriEncoder.encode(name);
-
         return riotAPI.getWebClient()
                 .get()
                 .uri("https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/" + name)
@@ -32,9 +30,6 @@ public class SummonerService {
                 .bodyToMono(SummonerDto.class)
                 .flatMap(
                         response -> {
-
-                            System.out.println(response.getId());
-                            System.out.println(response.getPuuid());
 
                             return riotAPI.getWebClient().get()
                                     .uri("https://kr.api.riotgames.com/lol/league/v4/entries/by-summoner/" + response.getId())

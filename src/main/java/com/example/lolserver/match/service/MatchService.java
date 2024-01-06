@@ -53,11 +53,9 @@ public class MatchService {
                                     .retrieve()
                                     .bodyToMono(new ParameterizedTypeReference<List<String>>() {
                                     })
-                                    .log()
                                     .publishOn(Schedulers.boundedElastic())
                                     .flatMap(
                                             matchList -> {
-                                                System.out.println(matchList);
 
                                                 WebClient webClient = riotAPI.getWebClient();
 
