@@ -1,5 +1,6 @@
 package com.example.lolserver.match.controller;
 
+import com.example.lolserver.match.dto.metadata.MatchDto;
 import com.example.lolserver.match.service.MatchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -19,7 +19,7 @@ public class MatchController {
     private final MatchService matchService;
 
     @GetMapping("/v1/matches/name/{summonerName}")
-    public Mono<List<Map<String, Object>>> getSummoner(@PathVariable String summonerName) {
+    public Mono<List<MatchDto>> getSummoner(@PathVariable String summonerName) {
         return matchService.findMatchBySummonerName(summonerName);
     }
 

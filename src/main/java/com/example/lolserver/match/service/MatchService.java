@@ -1,35 +1,29 @@
 package com.example.lolserver.match.service;
 
-import com.example.lolserver.match.dto.MatchDto;
+import com.example.lolserver.match.dto.metadata.MatchDto;
 import com.example.lolserver.riot.RiotAPI;
 import com.example.lolserver.summoner.dto.SummonerDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.annotation.Schedules;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class MatchService {
 
     private final RiotAPI riotAPI;
-    public Mono<List<Map<String, Object>>> findMatchBySummonerName(String summonerName) {
+    public Mono<List<MatchDto>> findMatchBySummonerName(String summonerName) {
 
         return riotAPI.getWebClient()
                 .get()
@@ -61,25 +55,54 @@ public class MatchService {
 
                                                 Map<String, Object> matchMap = new HashMap<>();
 
-                                                List<Mono<Map<String, Object>>> summonerMatchList = new ArrayList<>();
+                                                List<Mono<MatchDto>> summonerMatchList = new ArrayList<>();
 
                                                 for(String matchId : matchList) {
 
-                                                    Mono<Map<String, Object>> mapMono = webClient.get()
+                                                    Mono<MatchDto> matchDto = webClient.get()
                                                             .uri("https://asia.api.riotgames.com/lol/match/v5/matches/" + matchId)
                                                             .retrieve()
-                                                            .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                                                            .bodyToMono(MatchDto.class)
                                                             .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
                                                                 .filter(throwable -> throwable instanceof WebClientResponseException)
                                                             );
 
-                                                    summonerMatchList.add(mapMono);
+                                                    summonerMatchList.add(matchDto);
 
                                                 }
 
-                                                return Flux.fromIterable(summonerMatchList)
-                                                        .flatMap(result -> result)
-                                                        .collectList();
+                                                return Flux.fromIterable(summonerMatchList).log()
+                                                        .delaySubscription(Duration.ofSeconds(1)).log()
+                                                        .flatMap(result -> {
+
+                                                            return result.flatMap(
+                                                                    matchData -> {
+
+                                                                        List<String> participants = matchData.getMetadata().getParticipants();
+
+                                                                        int index = 0;
+
+                                                                        for(int i=0;i< participants.size();i++) {
+                                                                            if(puuid.equals(participants.get(i))) {
+                                                                                index = i;
+                                                                                break;
+                                                                            }
+                                                                        }
+
+                                                                        matchData.setMyIndex(index);
+
+                                                                        return Mono.just(matchData);
+                                                                    }
+                                                            );
+
+                                                        })
+                                                        .collectSortedList((o1, o2) -> {
+
+                                                            Date d1 = new Date(o1.getInfo().getGameCreation());
+                                                            Date d2 = new Date(o2.getInfo().getGameCreation());
+
+                                                            return d2.compareTo(d1);
+                                                        });
 
                                             }
                                     );
