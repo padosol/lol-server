@@ -45,9 +45,7 @@ public class MatchService {
                                             .queryParam("count", 20)
                                             .build())
                                     .retrieve()
-                                    .bodyToMono(new ParameterizedTypeReference<List<String>>() {
-                                    })
-                                    .publishOn(Schedulers.boundedElastic())
+                                    .bodyToMono(List.class).log()
                                     .flatMap(
                                             matchList -> {
 
@@ -57,7 +55,7 @@ public class MatchService {
 
                                                 List<Mono<MatchDto>> summonerMatchList = new ArrayList<>();
 
-                                                for(String matchId : matchList) {
+                                                for(Object matchId : matchList) {
 
                                                     Mono<MatchDto> matchDto = webClient.get()
                                                             .uri("https://asia.api.riotgames.com/lol/match/v5/matches/" + matchId)
