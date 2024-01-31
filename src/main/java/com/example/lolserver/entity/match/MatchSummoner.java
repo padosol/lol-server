@@ -1,17 +1,34 @@
 package com.example.lolserver.entity.match;
 
-import org.example.entity.match.value.ItemValue;
 
-import javax.persistence.*;
+import com.example.lolserver.entity.match.value.ItemValue;
+import com.example.lolserver.entity.match.value.StatValue;
+import com.example.lolserver.entity.match.value.StyleValue;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "match_summoner")
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MatchSummoner {
 
     @Id
     @GeneratedValue
     @Column(name = "match_summoner_id")
     private Long id;
+
+
+    // match 정보 필요
+    // summoner 정보 필요
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "match_id")
+    private Match match;
 
     private int assists;
     private int baronKills;
@@ -66,9 +83,11 @@ public class MatchSummoner {
     private int participantId;
     private int pentaKills;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "perks_id")
-    private Perks perks;
+    @Embedded
+    private StatValue statValue;
+
+    @Embedded
+    private StyleValue styleValue;
 
     private int physicalDamageDealt;
     private int physicalDamageDealtToChampions;

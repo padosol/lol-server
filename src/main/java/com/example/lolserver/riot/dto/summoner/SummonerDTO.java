@@ -1,8 +1,8 @@
 package com.example.lolserver.riot.dto.summoner;
 
+import com.example.lolserver.entity.summoner.Summoner;
 import lombok.Getter;
 import lombok.Setter;
-import org.example.entity.summoner.Summoner;
 
 @Getter
 @Setter

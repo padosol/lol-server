@@ -1,13 +1,13 @@
 package com.example.lolserver.entity.league;
 
 
+import com.example.lolserver.entity.summoner.Summoner;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.example.entity.summoner.Summoner;
 
-import javax.persistence.*;
 
 @Entity
 @Builder
@@ -17,7 +17,8 @@ import javax.persistence.*;
 @Table(name = "league_summoner")
 public class LeagueSummoner {
 
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue
     @Column(name = "league_summoner_id")
     private Long id;
 

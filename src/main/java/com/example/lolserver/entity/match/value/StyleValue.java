@@ -6,18 +6,16 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 
+
 @Embeddable
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ItemValue {
+public class StyleValue {
 
-    private int item0;
-    private int item1;
-    private int item2;
-    private int item3;
-    private int item4;
-    private int item5;
-    private int item6;
+    private int primaryRuneId;
+    private String primaryRuneIds;
 
+    private int secondaryRuneId;
+    private String secondaryRuneIds;
 }

@@ -1,9 +1,9 @@
 package com.example.lolserver.riot.dto.league;
 
+import com.example.lolserver.entity.league.League;
+import com.example.lolserver.entity.league.QueueType;
 import lombok.Getter;
 import lombok.Setter;
-import org.example.entity.league.League;
-import org.example.entity.league.QueueType;
 
 import java.util.List;
 

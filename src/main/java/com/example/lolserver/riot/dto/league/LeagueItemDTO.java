@@ -1,10 +1,10 @@
 package com.example.lolserver.riot.dto.league;
 
+import com.example.lolserver.entity.league.League;
+import com.example.lolserver.entity.league.LeagueSummoner;
+import com.example.lolserver.entity.summoner.Summoner;
 import lombok.Getter;
 import lombok.Setter;
-import org.example.entity.league.League;
-import org.example.entity.league.LeagueSummoner;
-import org.example.entity.summoner.Summoner;
 
 @Getter
 @Setter

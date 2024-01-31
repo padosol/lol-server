@@ -1,9 +1,18 @@
 package com.example.lolserver.entity.match;
 
-import javax.persistence.*;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "match_team_ban")
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MatchTeamBan {
 
     @Id

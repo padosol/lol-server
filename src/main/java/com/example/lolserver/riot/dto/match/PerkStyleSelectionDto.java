@@ -1,10 +1,12 @@
 package com.example.lolserver.riot.dto.match;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PerkStyleSelectionDto {
 
     private	int perk;

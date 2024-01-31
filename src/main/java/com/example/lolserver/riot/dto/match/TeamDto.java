@@ -10,7 +10,7 @@ import java.util.List;
 public class TeamDto {
 
     private List<BanDto> bans;
-    private	ObjectivesDto objectives;
+    private ObjectivesDto objectives;
     private	int teamId;
     private	boolean win;
 
