@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -16,11 +18,9 @@ public class LolController {
     @GetMapping("/v1/summoners/{summonerName}")
     public ResponseEntity<Void> searchSummoner(
             @PathVariable String summonerName
-    ) {
+    ) throws IOException, InterruptedException {
 
-
-
-
+        lolService.findSummoner(summonerName);
 
         return null;
     }

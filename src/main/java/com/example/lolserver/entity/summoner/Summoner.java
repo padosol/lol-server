@@ -22,6 +22,7 @@ public class Summoner {
     private String accountId;
     private String puuid;
     private String name;
+    @Column(name = "profile_icon_id")
     private int profileIconId;
     private long revisionDate;
     private long summonerLevel;

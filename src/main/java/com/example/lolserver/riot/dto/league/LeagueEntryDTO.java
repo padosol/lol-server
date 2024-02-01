@@ -1,5 +1,10 @@
 package com.example.lolserver.riot.dto.league;
 
+import com.example.lolserver.entity.league.League;
+import com.example.lolserver.entity.league.LeagueSummoner;
+import com.example.lolserver.entity.league.QueueType;
+import com.example.lolserver.entity.summoner.Summoner;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -22,5 +27,20 @@ public class LeagueEntryDTO {
     private boolean inactive;
 
 
+    public LeagueSummoner toEntity(Summoner summoner, League league) {
+
+         return LeagueSummoner.builder()
+                 .leaguePoints(leaguePoints)
+                 .rank(rank)
+                 .wins(wins)
+                 .losses(losses)
+                 .veteran(veteran)
+                 .inactive(inactive)
+                 .freshBlood(freshBlood)
+                 .hotStreak(hotStreak)
+                 .summoner(summoner)
+                 .league(league)
+                 .build();
+    }
 
 }

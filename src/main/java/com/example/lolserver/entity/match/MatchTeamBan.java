@@ -26,4 +26,11 @@ public class MatchTeamBan {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "match_team_id")
     private MatchTeam matchTeam;
+
+    public MatchTeamBan(int championId, int pickTurn, MatchTeam matchTeam) {
+        this.championId = championId;
+        this.pickTurn = pickTurn;
+        this.matchTeam = matchTeam;
+    }
+
 }

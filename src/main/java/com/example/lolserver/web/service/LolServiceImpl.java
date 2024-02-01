@@ -1,18 +1,26 @@
 package com.example.lolserver.web.service;
 
+import com.example.lolserver.entity.league.League;
+import com.example.lolserver.entity.league.LeagueSummoner;
 import com.example.lolserver.entity.match.Match;
 import com.example.lolserver.entity.match.MatchSummoner;
+import com.example.lolserver.entity.match.MatchTeam;
+import com.example.lolserver.entity.match.MatchTeamBan;
 import com.example.lolserver.entity.summoner.Summoner;
-import com.example.lolserver.riot.RiotAPI;
+import com.example.lolserver.riot.RiotClient;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
+import com.example.lolserver.riot.dto.league.LeagueListDTO;
+import com.example.lolserver.riot.dto.match.BanDto;
 import com.example.lolserver.riot.dto.match.MatchDto;
 import com.example.lolserver.riot.dto.match.ParticipantDto;
+import com.example.lolserver.riot.dto.match.TeamDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
-import com.example.lolserver.web.repository.SummonerRepository;
+import com.example.lolserver.web.repository.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.net.URI;
@@ -28,11 +36,18 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class LolServiceImpl implements LolService{
 
+    private final LeagueSummonerRepository leagueSummonerRepository;
+    private final MatchSummonerRepository matchSummonerRepository;
+    private final MatchTeamBanRepository matchTeamBanRepository;
+    private final MatchTeamRepository matchTeamRepository;
     private final SummonerRepository summonerRepository;
+    private final LeagueRepository leagueRepository;
+    private final MatchRepository matchRepository;
     private final ObjectMapper objectMapper;
-    private final RiotAPI riotAPI;
+    private final RiotClient riotClient;
 
     @Override
+    @Transactional
     public void findSummoner(String summonerName) throws IOException, InterruptedException {
 
         Optional<Summoner> summonerByName = summonerRepository.findSummonerByName(summonerName);
@@ -45,7 +60,7 @@ public class LolServiceImpl implements LolService{
             HttpRequest request = HttpRequest.newBuilder()
                     .GET()
                     .uri(URI.create("https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/" + summonerName))
-                    .headers(riotAPI.headers())
+                    .headers(riotClient.headers())
                     .build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -56,20 +71,46 @@ public class LolServiceImpl implements LolService{
             request = HttpRequest.newBuilder()
                     .GET()
                     .uri(URI.create("https://kr.api.riotgames.com/lol/league/v4/entries/by-summoner/" + summoner.getId()))
-                    .headers()
+                    .headers(riotClient.headers())
                     .build();
 
-            HttpResponse<String> leagueResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
-            Set<LeagueEntryDTO> leagueEntryDTOS = objectMapper.readValue(leagueResponse.body(), new TypeReference<Set<LeagueEntryDTO>>() {});
+            HttpResponse<String> leagueSummonerResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
+            Set<LeagueEntryDTO> leagueEntryDTOS = objectMapper.readValue(leagueSummonerResponse.body(), new TypeReference<Set<LeagueEntryDTO>>() {});
 
             for (LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
-                
+
+                String leagueId = leagueEntryDTO.getLeagueId();
+
+                Optional<League> leagueEntity = leagueRepository.findById(leagueId);
+
+                if(leagueEntity.isEmpty()) {
+                    request = HttpRequest.newBuilder()
+                            .GET()
+                            .uri(URI.create("https://kr.api.riotgames.com/lol/league/v4/leagues/" + leagueId))
+                            .headers(riotClient.headers())
+                            .build();
+
+                    HttpResponse<String> leagueResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                    LeagueListDTO leagueListDTO = objectMapper.readValue(leagueResponse.body(), LeagueListDTO.class);
+
+                    League saveLeague = leagueRepository.save(leagueListDTO.toEntity());
+
+                    LeagueSummoner save = leagueSummonerRepository.save(leagueEntryDTO.toEntity(summoner, saveLeague));
+
+                } else {
+
+                    League league = leagueEntity.get();
+
+                    LeagueSummoner save = leagueSummonerRepository.save(leagueEntryDTO.toEntity(summoner, league));
+                }
+
             }
 
             request = HttpRequest.newBuilder()
                     .GET()
                     .uri(URI.create("https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/"+summoner.getPuuid()+"/ids?start=0&count=20"))
-                    .headers(riotAPI.headers())
+                    .headers(riotClient.headers())
                     .build();
 
             HttpResponse<String> matchListResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -81,19 +122,42 @@ public class LolServiceImpl implements LolService{
                 request = HttpRequest.newBuilder()
                         .GET()
                         .uri(URI.create("https://asia.api.riotgames.com/lol/match/v5/matches/" + matchId))
-                        .headers(riotAPI.headers())
+                        .headers(riotClient.headers())
                         .build();
 
                 HttpResponse<String> matchResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
                 MatchDto matchDTO = objectMapper.readValue(matchResponse.body(), MatchDto.class);
 
                 Match match = matchDTO.toEntity();
+                List<TeamDto> teams = matchDTO.getInfo().getTeams();
+
+                // match 가 있으면 등록 x 없으면 등록
+                Optional<Match> findMatch = matchRepository.findById(match.getMatchId());
+
+                if(!findMatch.isEmpty()) {
+                    continue;
+                }
+
+                Match saveMatch = matchRepository.save(match);
+
+                for (TeamDto team : teams) {
+
+                    MatchTeam saveMatchTeam = matchTeamRepository.save(team.toEntity(saveMatch));
+
+                    List<BanDto> bans = team.getBans();
+
+                    for (BanDto ban : bans) {
+                        MatchTeamBan saveMatchTeamBan = matchTeamBanRepository.save(new MatchTeamBan(ban.getChampionId(), ban.getPickTurn(), saveMatchTeam));
+                    }
+
+                }
 
                 List<ParticipantDto> participants = matchDTO.getInfo().getParticipants();
 
                 for (ParticipantDto participant : participants) {
-                    MatchSummoner matchSummoner = participant.toEntity(match);
+                    MatchSummoner matchSummoner = participant.toEntity(saveMatch);
 
+                    MatchSummoner save = matchSummonerRepository.save(matchSummoner);
                 }
 
 
@@ -103,6 +167,7 @@ public class LolServiceImpl implements LolService{
 
 
         } else {
+            // db 작업
 
 
             

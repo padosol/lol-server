@@ -15,7 +15,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
-public class RiotAPITest {
+public class RiotClientTest {
 
 
     @Test
