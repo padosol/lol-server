@@ -1,8 +1,10 @@
 package com.example.lolserver.web.controller;
 
+import com.example.lolserver.web.dto.SearchData;
 import com.example.lolserver.web.service.LolService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,14 +18,15 @@ public class LolController {
     private final LolService lolService;
 
     @GetMapping("/v1/summoners/{summonerName}")
-    public ResponseEntity<Void> searchSummoner(
+    public ResponseEntity<SearchData> searchSummoner(
             @PathVariable String summonerName
     ) throws IOException, InterruptedException {
 
-        lolService.findSummoner(summonerName);
+        SearchData searchData = lolService.findSummoner(summonerName);
 
-        return null;
+        return new ResponseEntity<>(searchData, HttpStatus.OK);
     }
+
 
 
 

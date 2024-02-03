@@ -8,6 +8,7 @@ import com.example.lolserver.entity.match.MatchTeam;
 import com.example.lolserver.entity.match.MatchTeamBan;
 import com.example.lolserver.entity.summoner.Summoner;
 import com.example.lolserver.riot.RiotClient;
+import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.example.lolserver.riot.dto.league.LeagueListDTO;
 import com.example.lolserver.riot.dto.match.BanDto;
@@ -15,12 +16,16 @@ import com.example.lolserver.riot.dto.match.MatchDto;
 import com.example.lolserver.riot.dto.match.ParticipantDto;
 import com.example.lolserver.riot.dto.match.TeamDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
+import com.example.lolserver.web.dto.SearchData;
+import com.example.lolserver.web.dto.data.SummonerData;
 import com.example.lolserver.web.repository.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.net.URI;
@@ -48,11 +53,60 @@ public class LolServiceImpl implements LolService{
 
     @Override
     @Transactional
-    public void findSummoner(String summonerName) throws IOException, InterruptedException {
+    public SearchData findSummoner(String summonerName) throws IOException, InterruptedException {
 
-        Optional<Summoner> summonerByName = summonerRepository.findSummonerByName(summonerName);
+        int index = summonerName.lastIndexOf('#');
 
-        if(summonerByName.isEmpty()) {
+        String gameName = "";
+        String tagLine = "";
+
+        if(index > -1) {
+            gameName = summonerName.substring(0, index);
+            tagLine = summonerName.substring(index+1);
+        } else {
+            gameName = summonerName;
+        }
+
+        if(StringUtils.hasText(tagLine)) {
+            // 태그라인이 있을 경우 db 정보 조회
+            Optional<Summoner> summoner = summonerRepository.findSummonerByGameNameAndTagLine(gameName, tagLine);
+
+            if(summoner.isEmpty()) {
+                // 비어 있으면 api 조회
+                AccountDto account = riotClient.getAccount(gameName, tagLine);
+
+                if(account.isError()) {
+                    return new SearchData(true);
+                }
+
+                System.out.println(account);
+            }
+
+        } else {
+            // 태그라인이 없는 경우 db조회 후 없으면 없음
+
+
+
+        }
+
+//        Optional<Summoner> summoner = summonerRepository.findSummonerByName(summonerName);
+//
+//        SummonerData summonerData = null;
+//
+//        if(summoner.isEmpty()) {
+//            // api 호출
+//            SummonerDTO summonerDTO = riotClient.getSummoner(summonerName);
+//
+//        }
+
+        return null;
+    }
+
+    public void searchMatchData(String summonerName) throws IOException, InterruptedException {
+
+        Optional<Summoner> summonerEntity = summonerRepository.findSummonerByName(summonerName);
+
+        if(summonerEntity.isEmpty()) {
             // 데이터베이스에 해당 유저가 없으면 api 요청해서 정보를 가져옴
             // 유저 검색 -> matchList 검색 -> matchList 상세 검색 -> db에 데이터넣기
             HttpClient client = HttpClient.newHttpClient();
@@ -159,20 +213,17 @@ public class LolServiceImpl implements LolService{
 
                     MatchSummoner save = matchSummonerRepository.save(matchSummoner);
                 }
-
-
             }
 
-            
-
-
         } else {
-            // db 작업
+            // db 작업 summoner 가 있음
+
+            Summoner summoner = summonerEntity.get();
 
 
-            
         }
 
-
     }
+
+
 }

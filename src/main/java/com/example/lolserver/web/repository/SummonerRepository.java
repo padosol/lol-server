@@ -10,4 +10,8 @@ import java.util.Optional;
 public interface SummonerRepository extends JpaRepository<Summoner, String> {
 
     Optional<Summoner> findSummonerByName(String name);
+
+    Optional<Summoner> findSummonerByGameNameAndTagLine(String gameName, String tagLine);
+
+
 }

@@ -27,4 +27,7 @@ public class Summoner {
     private long revisionDate;
     private long summonerLevel;
 
+    private String gameName;
+    private String tagLine;
+
 }

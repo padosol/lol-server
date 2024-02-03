@@ -7,8 +7,8 @@ import lombok.Setter;
 @Setter
 public class SearchDTO {
 
-
-
+    private String gameName;
+    private String tagLine;
 
 
 }
