@@ -1,4 +1,4 @@
-package com.example.lolserver.web.service;
+package com.example.lolserver.web.service.summoner;
 
 import com.example.lolserver.entity.league.League;
 import com.example.lolserver.entity.league.LeagueSummoner;
@@ -8,6 +8,7 @@ import com.example.lolserver.entity.match.MatchTeam;
 import com.example.lolserver.entity.match.MatchTeamBan;
 import com.example.lolserver.entity.summoner.Summoner;
 import com.example.lolserver.riot.RiotClient;
+import com.example.lolserver.riot.SummonerPathType;
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.example.lolserver.riot.dto.league.LeagueListDTO;
@@ -17,15 +18,12 @@ import com.example.lolserver.riot.dto.match.ParticipantDto;
 import com.example.lolserver.riot.dto.match.TeamDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.web.dto.SearchData;
-import com.example.lolserver.web.dto.data.SummonerData;
 import com.example.lolserver.web.repository.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.net.URI;
@@ -39,7 +37,7 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
-public class LolServiceImpl implements LolService{
+public class SummonerServiceImpl implements SummonerService {
 
     private final LeagueSummonerRepository leagueSummonerRepository;
     private final MatchSummonerRepository matchSummonerRepository;
@@ -55,6 +53,8 @@ public class LolServiceImpl implements LolService{
     @Transactional
     public SearchData findSummoner(String summonerName) throws IOException, InterruptedException {
 
+        SearchData searchData = new SearchData();
+
         int index = summonerName.lastIndexOf('#');
 
         String gameName = "";
@@ -67,39 +67,25 @@ public class LolServiceImpl implements LolService{
             gameName = summonerName;
         }
 
-        if(StringUtils.hasText(tagLine)) {
-            // 태그라인이 있을 경우 db 정보 조회
-            Optional<Summoner> summoner = summonerRepository.findSummonerByGameNameAndTagLine(gameName, tagLine);
+        Optional<Summoner> summoner = summonerRepository.findSummonerByGameNameAndTagLine(gameName, tagLine);
 
-            if(summoner.isEmpty()) {
-                // 비어 있으면 api 조회
-                AccountDto account = riotClient.getAccount(gameName, tagLine);
+        if(summoner.isEmpty()) {
 
-                if(account.isError()) {
-                    return new SearchData(true);
-                }
+            AccountDto account = riotClient.getAccount(gameName, tagLine);
 
-                System.out.println(account);
+            if(account.isError()) {
+                return new SearchData(true);
             }
 
-        } else {
-            // 태그라인이 없는 경우 db조회 후 없으면 없음
+            SummonerDTO summonerDTO = riotClient.getSummoner(account.getPuuid(), SummonerPathType.PUUID);
 
+            Summoner entity = summonerDTO.toEntity(account);
 
-
+            Summoner saveSummoner = summonerRepository.save(entity);
+            searchData.setSummoner(saveSummoner.toData());
         }
 
-//        Optional<Summoner> summoner = summonerRepository.findSummonerByName(summonerName);
-//
-//        SummonerData summonerData = null;
-//
-//        if(summoner.isEmpty()) {
-//            // api 호출
-//            SummonerDTO summonerDTO = riotClient.getSummoner(summonerName);
-//
-//        }
-
-        return null;
+        return searchData;
     }
 
     public void searchMatchData(String summonerName) throws IOException, InterruptedException {

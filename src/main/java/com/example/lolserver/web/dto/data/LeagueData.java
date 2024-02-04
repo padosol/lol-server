@@ -1,18 +1,20 @@
 package com.example.lolserver.web.dto.data;
 
+import com.example.lolserver.web.dto.data.leagueData.LeagueSummonerData;
+import com.example.lolserver.web.dto.error.ErrorData;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
-public class LeagueData {
+public class LeagueData extends ErrorData {
 
-    private String leagueType;
-    private String leaguePoint;
-    private String wins;
-    private String losses;
-    private String oow;
-    private String leagueImage;
-    private String tier;
+    private List<LeagueSummonerData> leagues;
 
+    public LeagueData(){};
+    public LeagueData(boolean notFound) {
+        super(notFound);
+    }
 }

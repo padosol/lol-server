@@ -13,5 +13,7 @@ public interface SummonerRepository extends JpaRepository<Summoner, String> {
 
     Optional<Summoner> findSummonerByGameNameAndTagLine(String gameName, String tagLine);
 
+    Optional<Summoner> findSummonerById(String id);
+
 
 }

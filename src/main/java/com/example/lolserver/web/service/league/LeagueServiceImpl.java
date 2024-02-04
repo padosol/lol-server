@@ -1,0 +1,74 @@
+package com.example.lolserver.web.service.league;
+
+import com.example.lolserver.entity.league.League;
+import com.example.lolserver.entity.league.LeagueSummoner;
+import com.example.lolserver.entity.summoner.Summoner;
+import com.example.lolserver.riot.RiotClient;
+import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
+import com.example.lolserver.web.dto.data.LeagueData;
+import com.example.lolserver.web.dto.data.leagueData.LeagueSummonerData;
+import com.example.lolserver.web.repository.LeagueRepository;
+import com.example.lolserver.web.repository.LeagueSummonerRepository;
+import com.example.lolserver.web.repository.SummonerRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class LeagueServiceImpl implements LeagueService{
+
+    private final RiotClient client;
+    private final LeagueRepository leagueRepository;
+    private final SummonerRepository summonerRepository;
+    private final LeagueSummonerRepository leagueSummonerRepository;
+    @Override
+    public LeagueData getLeaguesBySummoner(String summonerId) throws IOException, InterruptedException {
+
+        Optional<Summoner> summonerEntity = summonerRepository.findSummonerById(summonerId);
+
+        if(summonerEntity.isEmpty()) {
+            return new LeagueData(true);
+        }
+
+        LeagueData leagueData = new LeagueData();
+        Summoner summoner = summonerEntity.get();
+
+        List<LeagueSummoner> leagues = leagueSummonerRepository.findAllBySummoner(summoner);
+
+        if(leagues.size() == 0){
+            // api 호출
+
+            // league 데이터 뽑음
+            Set<LeagueEntryDTO> leagueEntryDTOS = client.getLeagues(summonerId);
+
+            for(LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
+
+                String leagueId = leagueEntryDTO.getLeagueId();
+
+                Optional<League> findLeague = leagueRepository.findById(leagueId);
+
+                if(findLeague.isEmpty()) {
+                    // api 호출
+
+                }
+
+
+            }
+
+            return null;
+
+        }
+
+        List<LeagueSummonerData> leagueSummonerDataList = leagues.stream().map(LeagueSummoner::toData).toList();
+
+        leagueData.setLeagues(leagueSummonerDataList);
+
+        return leagueData;
+    }
+}

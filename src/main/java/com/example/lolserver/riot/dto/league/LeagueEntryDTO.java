@@ -27,7 +27,6 @@ public class LeagueEntryDTO extends ErrorDTO {
     private boolean freshBlood;
     private boolean inactive;
 
-
     public LeagueSummoner toEntity(Summoner summoner, League league) {
 
          return LeagueSummoner.builder()

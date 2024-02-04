@@ -2,6 +2,7 @@ package com.example.lolserver.entity.league;
 
 
 import com.example.lolserver.entity.summoner.Summoner;
+import com.example.lolserver.web.dto.data.leagueData.LeagueSummonerData;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,5 +39,16 @@ public class LeagueSummoner {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "league_id")
     private League league;
+
+    public LeagueSummonerData toData() {
+        return LeagueSummonerData.builder()
+                .leagueType(league.getQueue().name())
+                .leaguePoints(leaguePoints)
+                .wins(wins)
+                .losses(losses)
+                .oow(String.valueOf( wins / (wins + losses) ))
+                .tier(league.getTier())
+                .build();
+    }
 
 }

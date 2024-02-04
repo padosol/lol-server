@@ -19,6 +19,8 @@ public class SearchData {
 
     private boolean notFound;
 
+    public SearchData() {};
+
     public SearchData(boolean notFound) {
         this.notFound = notFound;
     }

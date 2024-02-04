@@ -1,10 +1,9 @@
-package com.example.lolserver.web.service;
+package com.example.lolserver.web.service.summoner;
 
 import com.example.lolserver.web.dto.SearchData;
-import com.example.lolserver.web.dto.data.SummonerData;
 
 import java.io.IOException;
 
-public interface LolService {
+public interface SummonerService {
     SearchData findSummoner(String summonerName) throws IOException, InterruptedException;
 }

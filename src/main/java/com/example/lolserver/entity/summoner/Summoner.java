@@ -1,6 +1,7 @@
 package com.example.lolserver.entity.summoner;
 
 
+import com.example.lolserver.web.dto.data.SummonerData;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -29,5 +30,20 @@ public class Summoner {
 
     private String gameName;
     private String tagLine;
+
+
+    public SummonerData toData() {
+        return SummonerData.builder()
+                .summonerId(id)
+                .accountId(accountId)
+                .name(name)
+                .profileIconId(profileIconId)
+                .puuid(puuid)
+                .revisionDate(revisionDate)
+                .summonerLevel(summonerLevel)
+                .gameName(gameName)
+                .tagLine(tagLine)
+                .build();
+    }
 
 }
