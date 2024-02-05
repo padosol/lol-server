@@ -46,7 +46,7 @@ public class LeagueSummoner {
                 .leaguePoints(leaguePoints)
                 .wins(wins)
                 .losses(losses)
-                .oow(String.valueOf( wins / (wins + losses) ))
+                .oow( String.format("%.2f", (((double) wins / (wins + losses)))*100 ) + "%" )
                 .tier(league.getTier())
                 .build();
     }

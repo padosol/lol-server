@@ -72,7 +72,7 @@ public class RiotClient {
         return summoner;
     }
 
-    public Set<LeagueEntryDTO> getLeagues(String summonerId) throws IOException, InterruptedException {
+    public Set<LeagueEntryDTO> getEntries(String summonerId) throws IOException, InterruptedException {
 
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
@@ -87,14 +87,18 @@ public class RiotClient {
         return leagueEntryDTOS;
     }
 
-    public LeagueListDTO getLeagues(String parameter, PathType type) {
+    public LeagueListDTO getLeagues(String leagueId) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
-                .uri(URI.create("https://kr.api.riotgames.com/lol/league/v4/entries/by-summoner/" + parameter))
+                .uri(URI.create("https://kr.api.riotgames.com/lol/league/v4/leagues/" + leagueId))
                 .headers(headers())
                 .build();
 
-        return null;
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        LeagueListDTO leagueListDTO = objectMapper.readValue(response.body(), LeagueListDTO.class);
+
+        return leagueListDTO;
     }
 
 

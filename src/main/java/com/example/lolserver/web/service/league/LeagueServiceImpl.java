@@ -5,6 +5,7 @@ import com.example.lolserver.entity.league.LeagueSummoner;
 import com.example.lolserver.entity.summoner.Summoner;
 import com.example.lolserver.riot.RiotClient;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
+import com.example.lolserver.riot.dto.league.LeagueListDTO;
 import com.example.lolserver.web.dto.data.LeagueData;
 import com.example.lolserver.web.dto.data.leagueData.LeagueSummonerData;
 import com.example.lolserver.web.repository.LeagueRepository;
@@ -45,7 +46,7 @@ public class LeagueServiceImpl implements LeagueService{
             // api 호출
 
             // league 데이터 뽑음
-            Set<LeagueEntryDTO> leagueEntryDTOS = client.getLeagues(summonerId);
+            Set<LeagueEntryDTO> leagueEntryDTOS = client.getEntries(summonerId);
 
             for(LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
 
@@ -55,14 +56,31 @@ public class LeagueServiceImpl implements LeagueService{
 
                 if(findLeague.isEmpty()) {
                     // api 호출
+                    LeagueListDTO leagueListDTO = client.getLeagues(leagueId);
 
+                    League league = leagueListDTO.toEntity();
+
+                    League saveLeague = leagueRepository.save(league);
+
+                    LeagueSummoner leagueSummoner = leagueEntryDTO.toEntity(summoner, league);
+
+                    leagueSummonerRepository.save(leagueSummoner);
+                } else {
+
+                    League league = findLeague.get();
+                    LeagueSummoner leagueSummoner = leagueEntryDTO.toEntity(summoner, league);
+
+                    leagueSummonerRepository.save(leagueSummoner);
                 }
-
 
             }
 
-            return null;
+            List<LeagueSummoner> saveLeagues = leagueSummonerRepository.findAllBySummoner(summoner);
+            List<LeagueSummonerData> list = saveLeagues.stream().map(LeagueSummoner::toData).toList();
 
+            leagueData.setLeagues(list);
+
+            return leagueData;
         }
 
         List<LeagueSummonerData> leagueSummonerDataList = leagues.stream().map(LeagueSummoner::toData).toList();
