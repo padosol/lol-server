@@ -5,6 +5,7 @@ import com.example.lolserver.entity.match.MatchSummoner;
 import com.example.lolserver.entity.match.value.ItemValue;
 import com.example.lolserver.entity.match.value.StatValue;
 import com.example.lolserver.entity.match.value.StyleValue;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,6 +13,7 @@ import java.util.List;
 
 @Getter
 @Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ParticipantDto {
 
     private int assists;

@@ -3,16 +3,22 @@ package com.example.lolserver.riot;
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.example.lolserver.riot.dto.league.LeagueListDTO;
+import com.example.lolserver.riot.dto.match.MatchDto;
+import com.example.lolserver.riot.dto.match.MetadataDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
+import com.example.lolserver.riot.utils.URIBuilder;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriBuilder;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 
@@ -31,7 +37,7 @@ public class RiotClient {
 
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
-                .uri(URI.create("https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/"+gameName+"/" + tagLine))
+                .uri(URI.create("https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/" + gameName + "/" + tagLine))
                 .headers(headers())
                 .build();
 
@@ -99,6 +105,44 @@ public class RiotClient {
         LeagueListDTO leagueListDTO = objectMapper.readValue(response.body(), LeagueListDTO.class);
 
         return leagueListDTO;
+    }
+
+    public List<String> getMatchesByPuuid(String puuid) throws IOException, InterruptedException {
+
+        URI uri = new URIBuilder("https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/"+puuid+"/ids")
+                .addParameter("startTime", "")
+                .addParameter("endTime", "")
+                .addParameter("queue", "")
+                .addParameter("type", "")
+                .addParameter("start", 0)
+                .addParameter("count", 20)
+                .build();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(uri)
+                .headers(headers())
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        List<String> list = Arrays.stream(objectMapper.readValue(response.body(), String[].class)).toList();
+
+        return list;
+    }
+
+    public MatchDto getMatchesByMatchId(String matchId) throws IOException, InterruptedException {
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create("https://asia.api.riotgames.com/lol/match/v5/matches/" + matchId))
+                .headers(headers())
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        MatchDto matchDto = objectMapper.readValue(response.body(), MatchDto.class);
+
+        return matchDto;
     }
 
 

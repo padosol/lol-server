@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
+import java.util.List;
+
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -18,12 +21,13 @@ public class MatchController {
     private final MatchService matchService;
 
     @GetMapping("/v1/matches/{puuid}")
-    public ResponseEntity<GameData> fetchGameData(
+    public ResponseEntity<List<GameData>> fetchGameData(
             @PathVariable String puuid
-    ) {
-        GameData matches = matchService.getMatches(puuid);
+    ) throws IOException, InterruptedException {
 
-        return new ResponseEntity<>(matches, HttpStatus.OK);
+        List<GameData> gameData = matchService.getMatches(puuid);
+
+        return new ResponseEntity<>(gameData, HttpStatus.OK);
     }
 
 }

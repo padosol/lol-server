@@ -69,21 +69,24 @@ public class SummonerServiceImpl implements SummonerService {
 
         Optional<Summoner> summoner = summonerRepository.findSummonerByGameNameAndTagLine(gameName, tagLine);
 
-        if(summoner.isEmpty()) {
-
-            AccountDto account = riotClient.getAccount(gameName, tagLine);
-
-            if(account.isError()) {
-                return new SearchData(true);
-            }
-
-            SummonerDTO summonerDTO = riotClient.getSummoner(account.getPuuid(), SummonerPathType.PUUID);
-
-            Summoner entity = summonerDTO.toEntity(account);
-
-            Summoner saveSummoner = summonerRepository.save(entity);
-            searchData.setSummoner(saveSummoner.toData());
+        if(summoner.isPresent()) {
+            searchData.setSummoner(summoner.get().toData());
+            return searchData;
         }
+
+
+        AccountDto account = riotClient.getAccount(gameName, tagLine);
+
+        if(account.isError()) {
+            return new SearchData(true);
+        }
+
+        SummonerDTO summonerDTO = riotClient.getSummoner(account.getPuuid(), SummonerPathType.PUUID);
+
+        Summoner entity = summonerDTO.toEntity(account);
+
+        Summoner saveSummoner = summonerRepository.save(entity);
+        searchData.setSummoner(saveSummoner.toData());
 
         return searchData;
     }

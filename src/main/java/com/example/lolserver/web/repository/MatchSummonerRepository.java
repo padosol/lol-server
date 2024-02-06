@@ -13,4 +13,6 @@ public interface MatchSummonerRepository extends JpaRepository<MatchSummoner, Lo
 
     List<MatchSummoner> findMatchSummonerByPuuid(String puuid);
 
+    List<MatchSummoner>findMatchSummonerByMatch(Match match);
+
 }

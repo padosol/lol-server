@@ -2,11 +2,11 @@ package com.example.lolserver.entity.match.value;
 
 
 import jakarta.persistence.Embeddable;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 
+@Getter
+@Setter
 @Embeddable
 @Builder
 @NoArgsConstructor

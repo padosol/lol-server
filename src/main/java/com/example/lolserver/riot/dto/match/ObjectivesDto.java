@@ -1,10 +1,12 @@
 package com.example.lolserver.riot.dto.match;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ObjectivesDto {
 
     private ObjectiveDto baron;

@@ -4,6 +4,7 @@ package com.example.lolserver.entity.match;
 import com.example.lolserver.entity.match.value.ItemValue;
 import com.example.lolserver.entity.match.value.StatValue;
 import com.example.lolserver.entity.match.value.StyleValue;
+import com.example.lolserver.web.dto.data.gameData.ParticipantData;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -139,5 +140,47 @@ public class MatchSummoner {
     private int wardsPlaced;
     private boolean win;
 
+
+
+    public ParticipantData toData() {
+        return ParticipantData.builder()
+                .assists(assists)
+                .champExperience(champExperience)
+                .champLevel(champLevel)
+                .championId(championId)
+                .championName(championName)
+                .consumablesPurchased(consumablesPurchased)
+                .deaths(deaths)
+                .doubleKills(doubleKills)
+                .goldEarned(goldEarned)
+                .individualPosition(individualPosition)
+                .item(item)
+                .itemsPurchased(itemsPurchased)
+                .kills(kills)
+                .lane(lane)
+                .participantId(participantId)
+                .pentaKills(pentaKills)
+                .statValue(statValue)
+                .styleValue(styleValue)
+                .profileIcon(profileIcon)
+                .puuid(puuid)
+                .quadraKills(quadraKills)
+                .riotIdName(riotIdName)
+                .riotIdTagline(riotIdTagline)
+                .role(role)
+                .summoner1Id(summoner1Id)
+                .summoner2Id(summoner2Id)
+                .summonerId(summonerId)
+                .summonerLevel(summonerLevel)
+                .summonerName(summonerName)
+                .teamId(teamId)
+                .teamPosition(teamPosition)
+                .timeCCingOthers(timeCCingOthers)
+                .timePlayed(timePlayed)
+                .tripleKills(tripleKills)
+                .visionScore(visionScore)
+                .win(win)
+                .build();
+    }
 
 }
