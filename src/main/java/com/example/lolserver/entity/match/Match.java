@@ -1,5 +1,6 @@
 package com.example.lolserver.entity.match;
 
+import com.example.lolserver.web.dto.data.gameData.GameInfoData;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;

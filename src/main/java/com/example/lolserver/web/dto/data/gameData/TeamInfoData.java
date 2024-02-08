@@ -3,16 +3,13 @@ package com.example.lolserver.web.dto.data.gameData;
 
 import com.example.lolserver.entity.match.MatchTeam;
 import com.example.lolserver.entity.match.MatchTeamBan;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 @Setter
-@Builder
 public class TeamInfoData {
 
     private	int teamId;
@@ -25,9 +22,10 @@ public class TeamInfoData {
         this.teamId = matchTeam.getTeamId();
         this.win = matchTeam.isWin();
 
-
-
-
+        for(MatchTeamBan matchTeamBan : matchTeamBanList) {
+            this.championId.add(matchTeamBan.getChampionId());
+            this.pickTurn.add(matchTeamBan.getPickTurn());
+        }
 
     }
 

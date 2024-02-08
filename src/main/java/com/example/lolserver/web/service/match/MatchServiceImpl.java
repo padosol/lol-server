@@ -97,12 +97,13 @@ public class MatchServiceImpl implements MatchService{
 
             GameData gameData = new GameData();
 
-            GameInfoData gameInfoData = new GameInfoData();
-            TeamInfoData teamInfoData = new TeamInfoData();
             List<ParticipantData> participantData = new ArrayList<>();
+            List<TeamInfoData> teamInfoDataList = new ArrayList<>();
 
             // gameInfo
             Match match = matchSummoner.getMatch();
+            GameInfoData gameInfoData = new GameInfoData(match);
+            gameData.setGameInfoData(gameInfoData);
 
             // myData
             gameData.setMyData(matchSummoner.toData());
@@ -120,9 +121,13 @@ public class MatchServiceImpl implements MatchService{
             List<MatchTeam> matchTeamList = matchTeamRepository.findMatchTeamsByMatch(match);
 
             for(MatchTeam matchTeam : matchTeamList) {
-                Optional<MatchTeamBan> matchTeamBan = matchTeamBanRepository.findMatchTeamBanByMatchTeam(matchTeam);
+                List<MatchTeamBan> matchTeamBanList = matchTeamBanRepository.findMatchTeamBansByMatchTeam(matchTeam);
 
+                TeamInfoData teamInfoData = new TeamInfoData(matchTeam, matchTeamBanList);
+                teamInfoDataList.add(teamInfoData);
             }
+
+            gameData.setTeamInfoData(teamInfoDataList);
 
             gameDataList.add(gameData);
         }
