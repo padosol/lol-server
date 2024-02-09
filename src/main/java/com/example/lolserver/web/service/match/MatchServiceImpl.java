@@ -18,9 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -111,8 +109,13 @@ public class MatchServiceImpl implements MatchService{
             // participant
             List<MatchSummoner> participants = matchSummonerRepository.findMatchSummonerByMatch(match);
 
+            Map<Integer, Map<String, Integer>> teamKDA = new HashMap<>();
+
             for(MatchSummoner participant : participants) {
                 participantData.add(participant.toData());
+
+                Map<String, Integer> myTeam = teamKDA.get(participant.getTeamId());
+
             }
 
             gameData.setParticipantData(participantData);

@@ -55,6 +55,8 @@ public class SummonerServiceImpl implements SummonerService {
 
         SearchData searchData = new SearchData();
 
+        summonerName = summonerName.replaceAll(" ","");
+
         int index = summonerName.lastIndexOf('#');
 
         String gameName = "";

@@ -15,6 +15,10 @@ public class TeamInfoData {
     private	int teamId;
     private	boolean win;
 
+    private int kills;
+    private int deaths;
+    private int assists;
+
     private	List<Integer> championId = new ArrayList<>();
     private	List<Integer> pickTurn = new ArrayList<>();
 
