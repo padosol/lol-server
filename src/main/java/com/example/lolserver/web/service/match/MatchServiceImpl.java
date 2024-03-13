@@ -10,132 +10,139 @@ import com.example.lolserver.web.dto.data.GameData;
 import com.example.lolserver.web.dto.data.gameData.GameInfoData;
 import com.example.lolserver.web.dto.data.gameData.ParticipantData;
 import com.example.lolserver.web.dto.data.gameData.TeamInfoData;
+import com.example.lolserver.web.dto.request.MatchRequest;
 import com.example.lolserver.web.repository.MatchRepository;
 import com.example.lolserver.web.repository.MatchSummonerRepository;
 import com.example.lolserver.web.repository.MatchTeamBanRepository;
 import com.example.lolserver.web.repository.MatchTeamRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.*;
 
 @Service
-@RequiredArgsConstructor
-public class MatchServiceImpl implements MatchService{
+public class MatchServiceImpl extends MatchService{
 
-    private final RiotClient client;
-    private final MatchRepository matchRepository;
-    private final MatchTeamRepository matchTeamRepository;
-    private final MatchTeamBanRepository matchTeamBanRepository;
-    private final MatchSummonerRepository matchSummonerRepository;
+    public MatchServiceImpl(RiotClient client, MatchRepository matchRepository, MatchTeamRepository matchTeamRepository, MatchTeamBanRepository matchTeamBanRepository, MatchSummonerRepository matchSummonerRepository) {
+        super(client, matchRepository, matchTeamRepository, matchTeamBanRepository, matchSummonerRepository);
+    }
 
     @Override
-    public List<GameData> getMatches(String puuid) throws IOException, InterruptedException {
+    public List<GameData> getMatches(MatchRequest matchRequest) throws IOException, InterruptedException {
 
-        List<MatchSummoner> matchSummonerList = matchSummonerRepository.findMatchSummonerByPuuid(puuid);
+        Pageable pageable = PageRequest.of(matchRequest.getPageNo(), 20, Sort.by(Sort.Direction.DESC, "match"));
+        Page<MatchSummoner> matchSummonerPage = matchSummonerRepository.findAllByPuuid(matchRequest.getPuuid(), pageable);
 
-        if (matchSummonerList.size() > 0) {
+//        List<MatchSummoner> matchSummonerList = matchSummonerRepository.findMatchSummonerByPuuid(matchRequest.getPuuid());
 
-            List<GameData> gameData = createGameData(matchSummonerList, puuid);
+        if (matchSummonerPage.getTotalPages() > 0) {
+
+            List<GameData> gameData = createGameData(matchSummonerPage.getContent(), matchRequest.getPuuid());
 
             return gameData;
         }
 
-        List<String> matchList = client.getMatchesByPuuid(puuid);
+        return getMatchesUseRiotApi(matchRequest.getPuuid());
 
-        for (String matchId : matchList) {
-
-            MatchDto matchDto = client.getMatchesByMatchId(matchId);
-            InfoDto info = matchDto.getInfo();
-            List<ParticipantDto> participantDtos = info.getParticipants();
-            List<TeamDto> teamDtos = info.getTeams();
-
-            Match match = matchDto.toEntity();
-
-            Optional<Match> findMatchSummoner = matchRepository.findById(matchId);
-
-            if (findMatchSummoner.isEmpty()) {
-                Match saveMatch = matchRepository.save(match);
-
-                for (ParticipantDto participantDto : participantDtos) {
-                    MatchSummoner matchSummoner = participantDto.toEntity(saveMatch);
-
-                    MatchSummoner saveMatchSummoner = matchSummonerRepository.save(matchSummoner);
-                }
-
-                for (TeamDto teamDto : teamDtos) {
-                    MatchTeam matchTeam = teamDto.toEntity(saveMatch);
-
-                    MatchTeam saveMatchTeam = matchTeamRepository.save(matchTeam);
-
-                    List<BanDto> banDtos = teamDto.getBans();
-
-                    for (BanDto banDto : banDtos) {
-                        MatchTeamBan matchTeamBan = banDto.toEntity(saveMatchTeam);
-                        MatchTeamBan saveMatchTeamBan = matchTeamBanRepository.save(matchTeamBan);
-                    }
-
-                }
-            }
-        }
-
-        List<MatchSummoner> findMatchSummonerList = matchSummonerRepository.findMatchSummonerByPuuid(puuid);
-
-        List<GameData> gameData = createGameData(findMatchSummonerList, puuid);
-
-        return gameData;
+//        List<String> matchList = client.getMatchesByPuuid(puuid);
+//
+//        for (String matchId : matchList) {
+//
+//            MatchDto matchDto = client.getMatchesByMatchId(matchId);
+//            InfoDto info = matchDto.getInfo();
+//            List<ParticipantDto> participantDtos = info.getParticipants();
+//            List<TeamDto> teamDtos = info.getTeams();
+//
+//            Match match = matchDto.toEntity();
+//            match.convertEpochToLocalDateTime();
+//
+//            Optional<Match> findMatchSummoner = matchRepository.findById(matchId);
+//
+//            if (findMatchSummoner.isEmpty()) {
+//                Match saveMatch = matchRepository.save(match);
+//
+//                for (ParticipantDto participantDto : participantDtos) {
+//                    MatchSummoner matchSummoner = participantDto.toEntity(saveMatch);
+//
+//                    MatchSummoner saveMatchSummoner = matchSummonerRepository.save(matchSummoner);
+//                }
+//
+//                for (TeamDto teamDto : teamDtos) {
+//                    MatchTeam matchTeam = teamDto.toEntity(saveMatch);
+//
+//                    MatchTeam saveMatchTeam = matchTeamRepository.save(matchTeam);
+//
+//                    List<BanDto> banDtos = teamDto.getBans();
+//
+//                    for (BanDto banDto : banDtos) {
+//                        MatchTeamBan matchTeamBan = banDto.toEntity(saveMatchTeam);
+//                        MatchTeamBan saveMatchTeamBan = matchTeamBanRepository.save(matchTeamBan);
+//                    }
+//
+//                }
+//            }
+//        }
+//
+//        List<MatchSummoner> findMatchSummonerList = matchSummonerRepository.findMatchSummonerByPuuid(puuid);
+//
+//        List<GameData> gameData = createGameData(findMatchSummonerList, puuid);
+//
+//        return gameData;
     }
 
-    private List<GameData> createGameData(List<MatchSummoner> matchSummonerList, String puuid) {
-
-        List<GameData> gameDataList = new ArrayList<>();
-
-        for(MatchSummoner matchSummoner : matchSummonerList) {
-
-            GameData gameData = new GameData();
-
-            List<ParticipantData> participantData = new ArrayList<>();
-            List<TeamInfoData> teamInfoDataList = new ArrayList<>();
-
-            // gameInfo
-            Match match = matchSummoner.getMatch();
-            GameInfoData gameInfoData = new GameInfoData(match);
-            gameData.setGameInfoData(gameInfoData);
-
-            // myData
-            gameData.setMyData(matchSummoner.toData());
-
-            // participant
-            List<MatchSummoner> participants = matchSummonerRepository.findMatchSummonerByMatch(match);
-
-            Map<Integer, Map<String, Integer>> teamKDA = new HashMap<>();
-
-            for(MatchSummoner participant : participants) {
-                participantData.add(participant.toData());
-
-                Map<String, Integer> myTeam = teamKDA.get(participant.getTeamId());
-
-            }
-
-            gameData.setParticipantData(participantData);
-
-            // teaminfo
-            List<MatchTeam> matchTeamList = matchTeamRepository.findMatchTeamsByMatch(match);
-
-            for(MatchTeam matchTeam : matchTeamList) {
-                List<MatchTeamBan> matchTeamBanList = matchTeamBanRepository.findMatchTeamBansByMatchTeam(matchTeam);
-
-                TeamInfoData teamInfoData = new TeamInfoData(matchTeam, matchTeamBanList);
-                teamInfoDataList.add(teamInfoData);
-            }
-
-            gameData.setTeamInfoData(teamInfoDataList);
-
-            gameDataList.add(gameData);
-        }
-
-        return gameDataList;
-    }
+//    private List<GameData> createGameData(List<MatchSummoner> matchSummonerList, String puuid) {
+//
+//        List<GameData> gameDataList = new ArrayList<>();
+//
+//        for(MatchSummoner matchSummoner : matchSummonerList) {
+//
+//            GameData gameData = new GameData();
+//
+//            List<ParticipantData> participantData = new ArrayList<>();
+//            List<TeamInfoData> teamInfoDataList = new ArrayList<>();
+//
+//            // gameInfo
+//            Match match = matchSummoner.getMatch();
+//            GameInfoData gameInfoData = new GameInfoData(match);
+//            gameData.setGameInfoData(gameInfoData);
+//
+//            // myData
+//            gameData.setMyData(matchSummoner.toData());
+//
+//            // participant
+//            List<MatchSummoner> participants = matchSummonerRepository.findMatchSummonerByMatch(match);
+//
+//            Map<Integer, Map<String, Integer>> teamKDA = new HashMap<>();
+//
+//            for(MatchSummoner participant : participants) {
+//                participantData.add(participant.toData());
+//
+//                Map<String, Integer> myTeam = teamKDA.get(participant.getTeamId());
+//
+//            }
+//
+//            gameData.setParticipantData(participantData);
+//
+//            // teaminfo
+//            List<MatchTeam> matchTeamList = matchTeamRepository.findMatchTeamsByMatch(match);
+//
+//            for(MatchTeam matchTeam : matchTeamList) {
+//                List<MatchTeamBan> matchTeamBanList = matchTeamBanRepository.findMatchTeamBansByMatchTeam(matchTeam);
+//
+//                TeamInfoData teamInfoData = new TeamInfoData(matchTeam, matchTeamBanList);
+//                teamInfoDataList.add(teamInfoData);
+//            }
+//
+//            gameData.setTeamInfoData(teamInfoDataList);
+//
+//            gameDataList.add(gameData);
+//        }
+//
+//        return gameDataList;
+//    }
 
 }

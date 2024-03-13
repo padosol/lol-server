@@ -10,6 +10,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Date;
+
 @Entity
 @Getter
 @Builder
@@ -28,6 +33,8 @@ public class Summoner {
     private long revisionDate;
     private long summonerLevel;
 
+    private LocalDateTime revisionDateTime;
+
     private String gameName;
     private String tagLine;
 
@@ -45,5 +52,20 @@ public class Summoner {
                 .tagLine(tagLine)
                 .build();
     }
+
+    public void convertEpochToLocalDateTime() {
+        this.revisionDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(this.revisionDate), ZoneOffset.UTC);
+    }
+
+    public boolean isPossibleRenewal() {
+
+        Date now = new Date();
+        Date beforeRenewalDate = new Date(this.revisionDate);
+
+        long gap = now .getTime() - beforeRenewalDate.getTime();
+
+        return gap >= 5 * 60 * 1000;
+    }
+
 
 }

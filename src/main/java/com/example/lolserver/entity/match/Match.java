@@ -7,6 +7,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.cglib.core.Local;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Getter
@@ -18,6 +23,7 @@ public class Match {
     @Id
     private String matchId;
 
+    private String endOfGameResult;
     private String dateVersion;
     private	long gameCreation;
     private	long gameDuration;
@@ -32,5 +38,17 @@ public class Match {
     private	String platformId;
     private	int queueId;
     private	String tournamentCode;
+
+    private LocalDateTime gameCreationDateTime;
+    private LocalDateTime gameEndDateTime;
+    private LocalDateTime gameStartDateTime;
+
+    public void convertEpochToLocalDateTime() {
+        this.gameCreationDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(gameCreation), ZoneOffset.UTC);
+        this.gameEndDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(gameEndTimestamp), ZoneOffset.UTC);
+        this.gameStartDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(gameStartTimestamp), ZoneOffset.UTC);
+    }
+
+
 
 }

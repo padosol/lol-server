@@ -15,6 +15,7 @@ public class MatchDto extends ErrorDTO {
     public Match toEntity() {
         return Match.builder()
                 .matchId(metadata.getMatchId())
+                .endOfGameResult(info.getEndOfGameResult())
                 .dateVersion(metadata.getDataVersion())
                 .gameCreation(info.getGameCreation())
                 .gameDuration(info.getGameDuration())

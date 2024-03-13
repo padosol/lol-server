@@ -19,5 +19,7 @@ public interface SummonerRepository extends JpaRepository<Summoner, String> {
 
     Optional<Summoner> findSummonerById(String id);
 
+    Optional<Summoner> findSummonerByPuuid(String puuid);
+
 
 }

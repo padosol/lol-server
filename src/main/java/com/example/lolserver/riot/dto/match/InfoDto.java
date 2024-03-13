@@ -9,6 +9,7 @@ import java.util.List;
 @Setter
 public class InfoDto {
 
+    private String endOfGameResult;
     private	long gameCreation;
     private	long gameDuration;
     private	long gameEndTimestamp;

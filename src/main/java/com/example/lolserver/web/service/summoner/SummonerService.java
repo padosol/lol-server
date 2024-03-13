@@ -6,4 +6,6 @@ import java.io.IOException;
 
 public interface SummonerService {
     SearchData findSummoner(String summonerName) throws IOException, InterruptedException;
+
+    boolean renewalSummonerInfo(String puuid) throws IOException, InterruptedException;
 }

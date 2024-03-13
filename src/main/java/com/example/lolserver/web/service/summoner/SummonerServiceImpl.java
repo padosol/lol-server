@@ -19,6 +19,7 @@ import com.example.lolserver.riot.dto.match.TeamDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.web.dto.SearchData;
 import com.example.lolserver.web.repository.*;
+import com.example.lolserver.web.service.match.MatchService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +52,8 @@ public class SummonerServiceImpl implements SummonerService {
     private final MatchRepository matchRepository;
     private final ObjectMapper objectMapper;
     private final RiotClient riotClient;
+
+    private final MatchService matchService;
 
     @Override
     @Transactional
@@ -86,11 +92,36 @@ public class SummonerServiceImpl implements SummonerService {
         SummonerDTO summonerDTO = riotClient.getSummoner(account.getPuuid(), SummonerPathType.PUUID);
 
         Summoner entity = summonerDTO.toEntity(account);
+        entity.convertEpochToLocalDateTime();
 
         Summoner saveSummoner = summonerRepository.save(entity);
         searchData.setSummoner(saveSummoner.toData());
 
         return searchData;
+    }
+
+    @Override
+    public boolean renewalSummonerInfo(String puuid) throws IOException, InterruptedException {
+
+        // revision date
+        // 현재 시간
+        // api 호출 데이터
+
+        // 규칙 1. 리비전 시간과 현재 시간 차이가 5분 이상 나야함
+        Optional<Summoner> findSummoner = summonerRepository.findSummonerByPuuid(puuid);
+
+        if(findSummoner.isEmpty()) {
+            return false;
+        }
+
+        Summoner summoner = findSummoner.get();
+
+        if(summoner.isPossibleRenewal()) {
+            matchService.getMatchesUseRiotApi(puuid);
+            return true;
+        }
+
+        return false;
     }
 
     public void searchMatchData(String summonerName) throws IOException, InterruptedException {
