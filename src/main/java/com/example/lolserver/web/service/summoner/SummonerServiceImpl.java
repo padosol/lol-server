@@ -18,6 +18,7 @@ import com.example.lolserver.riot.dto.match.ParticipantDto;
 import com.example.lolserver.riot.dto.match.TeamDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.web.dto.SearchData;
+import com.example.lolserver.web.dto.response.SummonerResponse;
 import com.example.lolserver.web.repository.*;
 import com.example.lolserver.web.service.match.MatchService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -122,6 +123,11 @@ public class SummonerServiceImpl implements SummonerService {
         }
 
         return false;
+    }
+
+    @Override
+    public List<SummonerResponse> getSummoners(String summonerName) {
+        return null;
     }
 
     public void searchMatchData(String summonerName) throws IOException, InterruptedException {

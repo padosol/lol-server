@@ -78,7 +78,7 @@ public class ParticipantDto {
     private int profileIcon;
     private String puuid;
     private int quadraKills;
-    private String riotIdName;
+    private String riotIdGameName;
     private String riotIdTagline;
     private String role;
     private int sightWardsBoughtInGame;
@@ -225,7 +225,7 @@ public class ParticipantDto {
                 .profileIcon(profileIcon)
                 .puuid(puuid)
                 .quadraKills(quadraKills)
-                .riotIdName(riotIdName)
+                .riotIdGameName(riotIdGameName)
                 .riotIdTagline(riotIdTagline)
                 .role(role)
                 .sightWardsBoughtInGame(sightWardsBoughtInGame)

@@ -1,6 +1,7 @@
 package com.example.lolserver.web.controller;
 
 import com.example.lolserver.web.dto.SearchData;
+import com.example.lolserver.web.dto.response.SummonerResponse;
 import com.example.lolserver.web.service.summoner.SummonerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -8,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -24,6 +26,16 @@ public class SummonerController {
         SearchData searchData = summonerService.findSummoner(summonerName);
 
         return new ResponseEntity<>(searchData, HttpStatus.OK);
+    }
+
+    @GetMapping("/v1/summoner/by-name/{summonerName}")
+    public ResponseEntity<List<SummonerResponse>> getSummoners(
+            @PathVariable String summonerName
+    ) {
+
+        List<SummonerResponse> result = summonerService.getSummoners(summonerName);
+
+        return null;
     }
 
 

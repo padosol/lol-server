@@ -33,7 +33,7 @@ public class ParticipantData {
     private int profileIcon;
     private String puuid;
     private int quadraKills;
-    private String riotIdName;
+    private String riotIdGameName;
     private String riotIdTagline;
     private String role;
     private int summoner1Id;

@@ -96,7 +96,7 @@ public class MatchSummoner {
     private int profileIcon;
     private String puuid;
     private int quadraKills;
-    private String riotIdName;
+    private String riotIdGameName;
     private String riotIdTagline;
     private String role;
     private int sightWardsBoughtInGame;
@@ -165,7 +165,7 @@ public class MatchSummoner {
                 .profileIcon(profileIcon)
                 .puuid(puuid)
                 .quadraKills(quadraKills)
-                .riotIdName(riotIdName)
+                .riotIdGameName(riotIdGameName)
                 .riotIdTagline(riotIdTagline)
                 .role(role)
                 .summoner1Id(summoner1Id)
