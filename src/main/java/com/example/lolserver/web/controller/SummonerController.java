@@ -1,6 +1,7 @@
 package com.example.lolserver.web.controller;
 
 import com.example.lolserver.web.dto.SearchData;
+import com.example.lolserver.web.dto.data.SummonerData;
 import com.example.lolserver.web.dto.response.SummonerResponse;
 import com.example.lolserver.web.service.summoner.SummonerService;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 @RestController
@@ -29,13 +31,13 @@ public class SummonerController {
     }
 
     @GetMapping("/v1/summoner/by-name/{summonerName}")
-    public ResponseEntity<List<SummonerResponse>> getSummoners(
+    public ResponseEntity<List<SummonerData>> getSummoners(
             @PathVariable String summonerName
-    ) {
+    ) throws UnsupportedEncodingException {
 
-        List<SummonerResponse> result = summonerService.getSummoners(summonerName);
+        List<SummonerData> result = summonerService.getSummoners(summonerName);
 
-        return null;
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
 

@@ -18,6 +18,7 @@ import com.example.lolserver.riot.dto.match.ParticipantDto;
 import com.example.lolserver.riot.dto.match.TeamDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.web.dto.SearchData;
+import com.example.lolserver.web.dto.data.SummonerData;
 import com.example.lolserver.web.dto.response.SummonerResponse;
 import com.example.lolserver.web.repository.*;
 import com.example.lolserver.web.service.match.MatchService;
@@ -28,10 +29,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -126,8 +130,17 @@ public class SummonerServiceImpl implements SummonerService {
     }
 
     @Override
-    public List<SummonerResponse> getSummoners(String summonerName) {
-        return null;
+    public List<SummonerData> getSummoners(String encodeSummonerName) throws UnsupportedEncodingException {
+
+
+        String decodeSummonerName = URLDecoder.decode(encodeSummonerName, StandardCharsets.UTF_8);
+
+        String gameName = decodeSummonerName.split("-")[0];
+        String tagLine = decodeSummonerName.split("-")[1];
+
+        List<Summoner> result = summonerRepository.findAllByGameNameAndTagLine(gameName, tagLine);
+
+        return result.stream().map(Summoner::toData).toList();
     }
 
     public void searchMatchData(String summonerName) throws IOException, InterruptedException {
