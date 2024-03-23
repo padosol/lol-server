@@ -104,21 +104,6 @@ public class SummonerServiceImpl implements SummonerService {
 
     @Override
     public SummonerResponse findSummoner(Summoner summoner) {
-
-        summoner.summonerNameSetting();
-
-        // List 로 데이터 출력
-        List<Summoner> findSummoners = Collections.emptyList();
-
-        // 만약 list 가 비어있으면 riot 호출
-
-        if(findSummoners.isEmpty()) {
-
-
-
-        }
-
-
         return null;
     }
 

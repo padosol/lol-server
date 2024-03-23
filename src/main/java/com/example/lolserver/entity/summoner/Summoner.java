@@ -28,17 +28,26 @@ public class Summoner {
     @Id
     @Column(name = "summoner_id")
     private String id;
+    @Column(name = "account_id")
     private String accountId;
+    @Column(name = "puuid")
     private String puuid;
 
+    @Column(name = "name")
     private String name;
+    @Column(name = "profile_icon_id")
     private int profileIconId;
+    @Column(name = "revision_date")
     private long revisionDate;
+    @Column(name = "summoner_level")
     private long summonerLevel;
 
+    @Column(name = "game_name")
     private String gameName;
+    @Column(name = "tag_line")
     private String tagLine;
 
+    @Column(name = "revision_date_time")
     private LocalDateTime revisionDateTime;
 
     public SummonerData toData() {
