@@ -1,5 +1,6 @@
 package com.example.lolserver.riot;
 
+import com.example.lolserver.entity.summoner.Summoner;
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.example.lolserver.riot.dto.league.LeagueListDTO;
@@ -10,7 +11,6 @@ import com.example.lolserver.riot.utils.URIBuilder;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriBuilder;
 
 import java.io.IOException;
 import java.net.URI;
@@ -25,8 +25,8 @@ import java.util.Set;
 @Component
 public class RiotClient {
 
-    private HttpClient client;
-    private ObjectMapper objectMapper;
+    private final HttpClient client;
+    private final ObjectMapper objectMapper;
 
     RiotClient() {
         this.client = HttpClient.newHttpClient();
@@ -43,9 +43,20 @@ public class RiotClient {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        AccountDto accountDto = objectMapper.readValue(response.body(), AccountDto.class);
+        return objectMapper.readValue(response.body(), AccountDto.class);
+    }
 
-        return accountDto;
+    public AccountDto getAccountByPuuid(String puuid) throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create("https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/" + puuid))
+                .headers(headers())
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        return objectMapper.readValue(response.body(), AccountDto.class);
+
     }
 
     public SummonerDTO getSummoner(String summonerName) throws IOException, InterruptedException {
@@ -58,10 +69,22 @@ public class RiotClient {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        SummonerDTO summoner = objectMapper.readValue(response.body(), SummonerDTO.class);
-
-        return summoner;
+        return objectMapper.readValue(response.body(), SummonerDTO.class);
     }
+
+    public SummonerDTO getSummonerByPuuid(String puuid) throws IOException, InterruptedException {
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create("https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/" + puuid))
+                .headers(headers())
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        return objectMapper.readValue(response.body(), SummonerDTO.class);
+    }
+
 
     public SummonerDTO getSummoner(String pathValue, SummonerPathType type) throws IOException, InterruptedException {
 
@@ -73,9 +96,7 @@ public class RiotClient {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        SummonerDTO summoner = objectMapper.readValue(response.body(), SummonerDTO.class);
-
-        return summoner;
+        return objectMapper.readValue(response.body(), SummonerDTO.class);
     }
 
     public Set<LeagueEntryDTO> getEntries(String summonerId) throws IOException, InterruptedException {
@@ -88,9 +109,7 @@ public class RiotClient {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        Set<LeagueEntryDTO> leagueEntryDTOS = objectMapper.readValue(response.body(), new TypeReference<Set<LeagueEntryDTO>>() {});
-
-        return leagueEntryDTOS;
+        return objectMapper.readValue(response.body(), new TypeReference<Set<LeagueEntryDTO>>() {});
     }
 
     public LeagueListDTO getLeagues(String leagueId) throws IOException, InterruptedException {
@@ -102,9 +121,7 @@ public class RiotClient {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        LeagueListDTO leagueListDTO = objectMapper.readValue(response.body(), LeagueListDTO.class);
-
-        return leagueListDTO;
+        return objectMapper.readValue(response.body(), LeagueListDTO.class);
     }
 
     public List<String> getMatchesByPuuid(String puuid) throws IOException, InterruptedException {
@@ -125,9 +142,8 @@ public class RiotClient {
                 .build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        List<String> list = Arrays.stream(objectMapper.readValue(response.body(), String[].class)).toList();
 
-        return list;
+        return Arrays.stream(objectMapper.readValue(response.body(), String[].class)).toList();
     }
 
     public MatchDto getMatchesByMatchId(String matchId) throws IOException, InterruptedException {
@@ -140,9 +156,7 @@ public class RiotClient {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        MatchDto matchDto = objectMapper.readValue(response.body(), MatchDto.class);
-
-        return matchDto;
+        return objectMapper.readValue(response.body(), MatchDto.class);
     }
 
 

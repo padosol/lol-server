@@ -1,5 +1,6 @@
 package com.example.lolserver.web.controller;
 
+import com.example.lolserver.entity.summoner.Summoner;
 import com.example.lolserver.web.dto.SearchData;
 import com.example.lolserver.web.dto.data.SummonerData;
 import com.example.lolserver.web.dto.response.SummonerResponse;

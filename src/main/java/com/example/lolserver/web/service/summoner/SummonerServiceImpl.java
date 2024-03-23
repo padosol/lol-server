@@ -39,10 +39,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -68,7 +65,7 @@ public class SummonerServiceImpl implements SummonerService {
 
         summonerName = summonerName.replaceAll(" ","");
 
-        int index = summonerName.lastIndexOf('#');
+        int index = summonerName.lastIndexOf('-');
 
         String gameName = "";
         String tagLine = "";
@@ -106,6 +103,27 @@ public class SummonerServiceImpl implements SummonerService {
     }
 
     @Override
+    public SummonerResponse findSummoner(Summoner summoner) {
+
+        summoner.summonerNameSetting();
+
+        // List 로 데이터 출력
+        List<Summoner> findSummoners = Collections.emptyList();
+
+        // 만약 list 가 비어있으면 riot 호출
+
+        if(findSummoners.isEmpty()) {
+
+
+
+        }
+
+
+        return null;
+    }
+
+    @Override
+    @Transactional
     public boolean renewalSummonerInfo(String puuid) throws IOException, InterruptedException {
 
         // revision date
@@ -122,7 +140,19 @@ public class SummonerServiceImpl implements SummonerService {
         Summoner summoner = findSummoner.get();
 
         if(summoner.isPossibleRenewal()) {
+
+            SummonerDTO summonerDTO = riotClient.getSummonerByPuuid(puuid);
+
+            if(summoner.getRevisionDate() == summonerDTO.getRevisionDate()) {
+                return false;
+            }
+
+            AccountDto accountDto = riotClient.getAccountByPuuid(puuid);
+
+            summoner.revisionSummoner(summonerDTO, accountDto);
+
             matchService.getMatchesUseRiotApi(puuid);
+
             return true;
         }
 
@@ -135,7 +165,7 @@ public class SummonerServiceImpl implements SummonerService {
 
         String decodeSummonerName = URLDecoder.decode(encodeSummonerName, StandardCharsets.UTF_8);
 
-        String gameName = decodeSummonerName.split("-")[0];
+        String gameName = decodeSummonerName.split("-")[0].replaceAll(" ", "");
         String tagLine = decodeSummonerName.split("-")[1];
 
         List<Summoner> result = summonerRepository.findAllByGameNameAndTagLine(gameName, tagLine);

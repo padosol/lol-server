@@ -1,5 +1,6 @@
 package com.example.lolserver.web.service.summoner;
 
+import com.example.lolserver.entity.summoner.Summoner;
 import com.example.lolserver.web.dto.SearchData;
 import com.example.lolserver.web.dto.data.SummonerData;
 import com.example.lolserver.web.dto.response.SummonerResponse;
@@ -10,6 +11,8 @@ import java.util.List;
 
 public interface SummonerService {
     SearchData findSummoner(String summonerName) throws IOException, InterruptedException;
+
+    SummonerResponse findSummoner(Summoner summoner);
 
     boolean renewalSummonerInfo(String puuid) throws IOException, InterruptedException;
 

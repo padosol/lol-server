@@ -1,6 +1,8 @@
 package com.example.lolserver.entity.summoner;
 
 
+import com.example.lolserver.riot.dto.account.AccountDto;
+import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.web.dto.data.SummonerData;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -27,17 +30,16 @@ public class Summoner {
     private String id;
     private String accountId;
     private String puuid;
+
     private String name;
-    @Column(name = "profile_icon_id")
     private int profileIconId;
     private long revisionDate;
     private long summonerLevel;
 
-    private LocalDateTime revisionDateTime;
-
     private String gameName;
     private String tagLine;
 
+    private LocalDateTime revisionDateTime;
 
     public SummonerData toData() {
         return SummonerData.builder()
@@ -65,6 +67,35 @@ public class Summoner {
         long gap = now .getTime() - beforeRenewalDate.getTime();
 
         return gap >= 5 * 60 * 1000;
+    }
+
+    public void revisionSummoner(SummonerDTO summonerDTO, AccountDto accountDto){
+
+        this.name = summonerDTO.getName();
+        this.profileIconId = summonerDTO.getProfileIconId();
+        this.revisionDate = summonerDTO.getRevisionDate();
+        this.summonerLevel = summonerDTO.getSummonerLevel();
+
+        this.gameName = accountDto.getGameName();
+        this.tagLine = accountDto.getTagLine();
+
+        this.convertEpochToLocalDateTime();
+    }
+
+
+    public void summonerNameSetting() {
+
+        if(StringUtils.hasText(this.name)) {
+
+            String[] splitName = this.name.split("-");
+
+            if(splitName.length > 1) {
+                this.gameName = splitName[0];
+                this.tagLine = splitName[1];
+            }
+
+        }
+
     }
 
 
