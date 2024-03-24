@@ -103,8 +103,50 @@ public class SummonerServiceImpl implements SummonerService {
     }
 
     @Override
-    public SummonerResponse findSummoner(Summoner summoner) {
-        return null;
+    public List<SummonerData> getAllSummoner(Summoner summoner) throws IOException, InterruptedException {
+
+        summoner.summonerNameSetting();
+
+        // 요청받은 정보를 이용해서 summoner 에 매핑함
+        List<Summoner> summonerList = new ArrayList<>();
+
+        if(summoner.hasTagLine()) {
+            summonerList = summonerRepository.findAllByGameNameAndTagLine(summoner.getGameName(), summoner.getTagLine());
+        } else {
+            summonerList = summonerRepository.findAllByGameName(summoner.getName());
+        }
+
+        if(!summonerList.isEmpty()) {
+            return summonerList.stream().map(Summoner::toData).toList();
+        }
+
+        SummonerDTO summonerDTO;
+        if(summoner.hasTagLine()){
+            AccountDto accountDto = riotClient.getAccount(summoner.getGameName(), summoner.getTagLine());
+
+            if(!accountDto.isError()) {
+                summonerDTO = riotClient.getSummoner(accountDto.getPuuid(), SummonerPathType.PUUID);
+
+                summoner = summonerDTO.toEntity(accountDto);
+            }
+
+
+        } else {
+            summonerDTO = riotClient.getSummoner(summoner.getName(), SummonerPathType.SUMMONER_NAME);
+
+            if(!summonerDTO.isError()) {
+                AccountDto accountDto = riotClient.getAccountByPuuid(summonerDTO.getPuuid());
+
+                summoner = summonerDTO.toEntity(accountDto);
+            }
+        }
+
+        if(summoner.isPuuid()) {
+            Summoner saveSummoner = summonerRepository.save(summoner);
+            summonerList.add(saveSummoner);
+        }
+
+        return summonerList.stream().map(Summoner::toData).toList();
     }
 
     @Override
@@ -114,7 +156,6 @@ public class SummonerServiceImpl implements SummonerService {
         // revision date
         // 현재 시간
         // api 호출 데이터
-
         // 규칙 1. 리비전 시간과 현재 시간 차이가 5분 이상 나야함
         Optional<Summoner> findSummoner = summonerRepository.findSummonerByPuuid(puuid);
 

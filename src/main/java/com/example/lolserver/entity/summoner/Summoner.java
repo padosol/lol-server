@@ -7,6 +7,7 @@ import com.example.lolserver.web.dto.data.SummonerData;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -50,6 +51,9 @@ public class Summoner {
     @Column(name = "revision_date_time")
     private LocalDateTime revisionDateTime;
 
+    @Column(name = "last_revision_date_time")
+    private LocalDateTime lastRevisionDateTime;
+
     public SummonerData toData() {
         return SummonerData.builder()
                 .summonerId(id)
@@ -57,10 +61,11 @@ public class Summoner {
                 .name(name)
                 .profileIconId(profileIconId)
                 .puuid(puuid)
-                .revisionDate(revisionDate)
+//                .revisionDate(revisionDate)
                 .summonerLevel(summonerLevel)
                 .gameName(gameName)
                 .tagLine(tagLine)
+                .lastRevisionDateTime(lastRevisionDateTime)
                 .build();
     }
 
@@ -70,15 +75,17 @@ public class Summoner {
 
     public boolean isPossibleRenewal() {
 
+        this.lastRevisionDateTime = LocalDateTime.now();
+
         Date now = new Date();
         Date beforeRenewalDate = new Date(this.revisionDate);
 
-        long gap = now .getTime() - beforeRenewalDate.getTime();
+        long gap = now.getTime() - beforeRenewalDate.getTime();
 
         return gap >= 5 * 60 * 1000;
     }
 
-    public void revisionSummoner(SummonerDTO summonerDTO, AccountDto accountDto){
+    public void revisionSummoner(SummonerDTO summonerDTO, AccountDto accountDto) {
 
         this.name = summonerDTO.getName();
         this.profileIconId = summonerDTO.getProfileIconId();
@@ -94,11 +101,11 @@ public class Summoner {
 
     public void summonerNameSetting() {
 
-        if(StringUtils.hasText(this.name)) {
+        if (StringUtils.hasText(this.name)) {
 
             String[] splitName = this.name.split("-");
 
-            if(splitName.length > 1) {
+            if (splitName.length > 1) {
                 this.gameName = splitName[0];
                 this.tagLine = splitName[1];
             }
@@ -107,5 +114,20 @@ public class Summoner {
 
     }
 
+    public boolean hasTagLine() {
+        return StringUtils.hasText(this.tagLine);
+    }
 
+    public boolean isPuuid() {
+        return StringUtils.hasText(this.puuid);
+    }
+
+
+    @PrePersist
+    public void defaultSetting() {
+        if (this.lastRevisionDateTime == null) {
+            convertEpochToLocalDateTime();
+            this.lastRevisionDateTime = this.revisionDateTime;
+        }
+    }
 }

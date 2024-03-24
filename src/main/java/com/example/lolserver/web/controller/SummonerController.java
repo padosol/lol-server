@@ -26,9 +26,30 @@ public class SummonerController {
             @PathVariable String summonerName
     ) throws IOException, InterruptedException {
 
-        SearchData searchData = summonerService.findSummoner(summonerName);
+        SearchData result = summonerService.findSummoner(summonerName);
 
-        return new ResponseEntity<>(searchData, HttpStatus.OK);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @GetMapping("/v1/summoners")
+    public ResponseEntity<List<SummonerData>> getAllSummoner(
+            @RequestParam("q") String q
+    ) throws IOException, InterruptedException {
+
+        List<SummonerData> result = summonerService.getAllSummoner(Summoner.builder()
+                .name(q)
+                .build());
+
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @GetMapping("/v1/summoners/renewal")
+    public ResponseEntity<Boolean> renewalSummonerInfo(
+        @RequestParam("puuid") String puuid
+    ) throws IOException, InterruptedException {
+        boolean result = summonerService.renewalSummonerInfo(puuid);
+
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @GetMapping("/v1/summoner/by-name/{summonerName}")
@@ -37,16 +58,6 @@ public class SummonerController {
     ) throws UnsupportedEncodingException {
 
         List<SummonerData> result = summonerService.getSummoners(summonerName);
-
-        return new ResponseEntity<>(result, HttpStatus.OK);
-    }
-
-
-    @GetMapping("/v1/summoners/renewal")
-    public ResponseEntity<Boolean> renewalSummonerInfo(
-        @RequestParam("puuid") String puuid
-    ) throws IOException, InterruptedException {
-        boolean result = summonerService.renewalSummonerInfo(puuid);
 
         return new ResponseEntity<>(result, HttpStatus.OK);
     }

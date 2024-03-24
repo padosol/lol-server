@@ -11,12 +11,17 @@ import com.example.lolserver.riot.utils.URIBuilder;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriBuilder;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -37,7 +42,8 @@ public class RiotClient {
 
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
-                .uri(URI.create("https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/" + gameName + "/" + tagLine))
+                .uri(URI.create("https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/" +
+                        URLEncoder.encode(gameName, StandardCharsets.UTF_8) + "/" + URLEncoder.encode(tagLine, StandardCharsets.UTF_8)))
                 .headers(headers())
                 .build();
 
@@ -124,20 +130,19 @@ public class RiotClient {
         return objectMapper.readValue(response.body(), LeagueListDTO.class);
     }
 
-    public List<String> getMatchesByPuuid(String puuid) throws IOException, InterruptedException {
+    public List<String> getMatchesByPuuid(String puuid, MatchParameters matchParameters) throws IOException, InterruptedException {
 
-        URI uri = new URIBuilder("https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/"+puuid+"/ids")
-                .addParameter("startTime", "")
-                .addParameter("endTime", "")
-                .addParameter("queue", "")
-                .addParameter("type", "")
-                .addParameter("start", 0)
-                .addParameter("count", 20)
-                .build();
+        URI https = UriComponentsBuilder.newInstance()
+                .scheme("https")
+                .host("asia.api.riotgames.com")
+                .path("lol/match/v5/matches/by-puuid/" + puuid + "/ids")
+                .queryParams(matchParameters.getParams())
+                .build().toUri();
+
 
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
-                .uri(uri)
+                .uri(https)
                 .headers(headers())
                 .build();
 

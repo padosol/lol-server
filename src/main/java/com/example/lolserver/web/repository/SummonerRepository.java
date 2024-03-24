@@ -23,7 +23,12 @@ public interface SummonerRepository extends JpaRepository<Summoner, String> {
     Optional<Summoner> findSummonerByPuuid(String puuid);
 
 
+    @Query("select s from Summoner s where Function('replace', s.gameName, ' ', '') = Function('replace', :gameName, ' ', '')" +
+            "                          and Function('replace', s.tagLine, ' ', '') = Function('replace', :tagLine, ' ', '')")
     List<Summoner> findAllByGameNameAndTagLine(String gameName, String tagLine);
+
+    @Query("select s from Summoner s where Function('replace', s.gameName, ' ', '') = Function('replace', :gameName, ' ', '')")
+    List<Summoner> findAllByGameName(String gameName);
 
 
 }

@@ -12,7 +12,7 @@ import java.util.List;
 public interface SummonerService {
     SearchData findSummoner(String summonerName) throws IOException, InterruptedException;
 
-    SummonerResponse findSummoner(Summoner summoner);
+    List<SummonerData> getAllSummoner(Summoner summoner) throws IOException, InterruptedException;
 
     boolean renewalSummonerInfo(String puuid) throws IOException, InterruptedException;
 
