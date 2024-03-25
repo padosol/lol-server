@@ -16,6 +16,7 @@ import com.example.lolserver.web.repository.MatchRepository;
 import com.example.lolserver.web.repository.MatchSummonerRepository;
 import com.example.lolserver.web.repository.MatchTeamBanRepository;
 import com.example.lolserver.web.repository.MatchTeamRepository;
+import com.example.lolserver.web.repository.dsl.MatchSummonerRepositoryCustom;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
@@ -31,6 +32,7 @@ public abstract class MatchService {
     protected final MatchTeamRepository matchTeamRepository;
     protected final MatchTeamBanRepository matchTeamBanRepository;
     protected final MatchSummonerRepository matchSummonerRepository;
+    protected final MatchSummonerRepositoryCustom matchSummonerRepositoryCustom;
 
     public abstract List<GameData> getMatches(MatchRequest matchRequest) throws IOException, InterruptedException;
 

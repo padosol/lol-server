@@ -7,5 +7,6 @@ import lombok.Setter;
 @Setter
 public class MatchRequest {
     private String puuid;
-    private int pageNo;
+    private Integer queueId;
+    private Integer pageNo;
 }

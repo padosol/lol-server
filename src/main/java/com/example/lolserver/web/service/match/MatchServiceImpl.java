@@ -15,6 +15,7 @@ import com.example.lolserver.web.repository.MatchRepository;
 import com.example.lolserver.web.repository.MatchSummonerRepository;
 import com.example.lolserver.web.repository.MatchTeamBanRepository;
 import com.example.lolserver.web.repository.MatchTeamRepository;
+import com.example.lolserver.web.repository.dsl.MatchSummonerRepositoryCustom;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,21 +28,22 @@ import java.util.*;
 @Service
 public class MatchServiceImpl extends MatchService{
 
-    public MatchServiceImpl(RiotClient client, MatchRepository matchRepository, MatchTeamRepository matchTeamRepository, MatchTeamBanRepository matchTeamBanRepository, MatchSummonerRepository matchSummonerRepository) {
-        super(client, matchRepository, matchTeamRepository, matchTeamBanRepository, matchSummonerRepository);
+    public MatchServiceImpl(RiotClient client, MatchRepository matchRepository, MatchTeamRepository matchTeamRepository, MatchTeamBanRepository matchTeamBanRepository, MatchSummonerRepository matchSummonerRepository, MatchSummonerRepositoryCustom matchSummonerRepositoryCustom) {
+        super(client, matchRepository, matchTeamRepository, matchTeamBanRepository, matchSummonerRepository, matchSummonerRepositoryCustom);
     }
 
     @Override
     public List<GameData> getMatches(MatchRequest matchRequest) throws IOException, InterruptedException {
 
         Pageable pageable = PageRequest.of(matchRequest.getPageNo(), 20, Sort.by(Sort.Direction.DESC, "match"));
-        Page<MatchSummoner> matchSummonerPage = matchSummonerRepository.findAllByPuuid(matchRequest.getPuuid(), pageable);
+//        Page<MatchSummoner> matchSummonerPage = matchSummonerRepository.findAllByPuuid(matchRequest.getPuuid(), pageable);
+        Page<MatchSummoner> matchSummoners = matchSummonerRepositoryCustom.findAllByPuuidAndQueueId(matchRequest, pageable);
 
 //        List<MatchSummoner> matchSummonerList = matchSummonerRepository.findMatchSummonerByPuuid(matchRequest.getPuuid());
 
-        if (matchSummonerPage.getTotalPages() > 0) {
+        if (matchSummoners.getTotalPages() > 0) {
 
-            List<GameData> gameData = createGameData(matchSummonerPage.getContent(), matchRequest.getPuuid());
+            List<GameData> gameData = createGameData(matchSummoners.getContent(), matchRequest.getPuuid());
 
             return gameData;
         }
