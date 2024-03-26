@@ -19,6 +19,7 @@ import com.example.lolserver.riot.dto.match.TeamDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.web.dto.SearchData;
 import com.example.lolserver.web.dto.data.SummonerData;
+import com.example.lolserver.web.dto.request.MatchRequest;
 import com.example.lolserver.web.dto.response.SummonerResponse;
 import com.example.lolserver.web.repository.*;
 import com.example.lolserver.web.service.match.MatchService;
@@ -177,7 +178,7 @@ public class SummonerServiceImpl implements SummonerService {
 
             summoner.revisionSummoner(summonerDTO, accountDto);
 
-            matchService.getMatchesUseRiotApi(puuid);
+            matchService.getMatchesUseRiotApi(MatchRequest.builder().puuid(puuid).build());
 
             return true;
         }

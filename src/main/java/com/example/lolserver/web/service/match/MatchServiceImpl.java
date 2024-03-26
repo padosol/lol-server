@@ -48,7 +48,7 @@ public class MatchServiceImpl extends MatchService{
             return gameData;
         }
 
-        return getMatchesUseRiotApi(matchRequest.getPuuid());
+        return getMatchesUseRiotApi(matchRequest);
     }
 
 }

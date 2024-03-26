@@ -36,9 +36,11 @@ public abstract class MatchService {
 
     public abstract List<GameData> getMatches(MatchRequest matchRequest) throws IOException, InterruptedException;
 
-    public List<GameData> getMatchesUseRiotApi(String puuid) throws IOException, InterruptedException {
-        List<String> matchList = client.getMatchesByPuuid(puuid, MatchParameters.builder()
-                .startTime(START_TIME).build());
+    public List<GameData> getMatchesUseRiotApi(MatchRequest matchRequest) throws IOException, InterruptedException {
+        List<String> matchList = client.getMatchesByPuuid(matchRequest.getPuuid(), MatchParameters.builder()
+                .startTime(START_TIME)
+                .queue(matchRequest.getQueueId())
+                .build());
 
         for (String matchId : matchList) {
 
@@ -81,9 +83,9 @@ public abstract class MatchService {
 
         }
 
-        List<MatchSummoner> findMatchSummonerList = matchSummonerRepository.findMatchSummonerByPuuid(puuid);
+        List<MatchSummoner> findMatchSummonerList = matchSummonerRepository.findMatchSummonerByPuuid(matchRequest.getPuuid());
 
-        return createGameData(findMatchSummonerList, puuid);
+        return createGameData(findMatchSummonerList, matchRequest.getPuuid());
     }
 
     protected List<GameData> createGameData(List<MatchSummoner> matchSummonerList, String puuid) {
