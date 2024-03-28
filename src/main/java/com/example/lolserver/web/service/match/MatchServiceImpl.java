@@ -43,12 +43,10 @@ public class MatchServiceImpl extends MatchService{
 
         if (matchSummoners.getTotalPages() > 0) {
 
-            List<GameData> gameData = createGameData(matchSummoners.getContent(), matchRequest.getPuuid());
-
-            return gameData;
+            return createGameData(matchSummoners.getContent(), matchRequest.getPuuid());
         }
 
-        return getMatchesUseRiotApi(matchRequest);
+        return getMatchesUseRiotApi(matchRequest, pageable);
     }
 
 }

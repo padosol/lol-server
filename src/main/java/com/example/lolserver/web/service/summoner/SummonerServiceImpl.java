@@ -26,6 +26,10 @@ import com.example.lolserver.web.service.match.MatchService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +46,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SummonerServiceImpl implements SummonerService {
@@ -178,7 +183,9 @@ public class SummonerServiceImpl implements SummonerService {
 
             summoner.revisionSummoner(summonerDTO, accountDto);
 
-            matchService.getMatchesUseRiotApi(MatchRequest.builder().puuid(puuid).build());
+            Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "match"));
+
+            matchService.getMatchesUseRiotApi(MatchRequest.builder().puuid(puuid).build(), pageable);
 
             return true;
         }

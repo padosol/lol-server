@@ -18,6 +18,8 @@ import com.example.lolserver.web.repository.MatchTeamBanRepository;
 import com.example.lolserver.web.repository.MatchTeamRepository;
 import com.example.lolserver.web.repository.dsl.MatchSummonerRepositoryCustom;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.io.IOException;
 import java.util.*;
@@ -25,7 +27,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public abstract class MatchService {
 
-    private final Long START_TIME = 1704844800L;
+    private final Long START_TIME = 1704844800000L;
 
     protected final RiotClient client;
     protected final MatchRepository matchRepository;
@@ -36,7 +38,7 @@ public abstract class MatchService {
 
     public abstract List<GameData> getMatches(MatchRequest matchRequest) throws IOException, InterruptedException;
 
-    public List<GameData> getMatchesUseRiotApi(MatchRequest matchRequest) throws IOException, InterruptedException {
+    public List<GameData> getMatchesUseRiotApi(MatchRequest matchRequest, Pageable pageable) throws IOException, InterruptedException {
         List<String> matchList = client.getMatchesByPuuid(matchRequest.getPuuid(), MatchParameters.builder()
                 .startTime(START_TIME)
                 .queue(matchRequest.getQueueId())
@@ -83,9 +85,9 @@ public abstract class MatchService {
 
         }
 
-        List<MatchSummoner> findMatchSummonerList = matchSummonerRepository.findMatchSummonerByPuuid(matchRequest.getPuuid());
+        Page<MatchSummoner> matchSummoners = matchSummonerRepositoryCustom.findAllByPuuidAndQueueId(matchRequest, pageable);
 
-        return createGameData(findMatchSummonerList, matchRequest.getPuuid());
+        return createGameData(matchSummoners.getContent(), matchRequest.getPuuid());
     }
 
     protected List<GameData> createGameData(List<MatchSummoner> matchSummonerList, String puuid) {

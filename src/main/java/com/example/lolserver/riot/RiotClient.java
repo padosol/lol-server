@@ -10,6 +10,7 @@ import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.riot.utils.URIBuilder;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriBuilder;
 import org.springframework.web.util.UriComponents;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Set;
 
 
+@Slf4j
 @Component
 public class RiotClient {
 
@@ -139,6 +141,7 @@ public class RiotClient {
                 .queryParams(matchParameters.getParams())
                 .build().toUri();
 
+        log.debug("MatchesByPuuid Https: {}", https);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()

@@ -38,7 +38,8 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                         puuidEq(matchRequest.getPuuid()),
                         queueIdEq(matchRequest.getQueueId())
                 )
-                .offset(pageable.getOffset())
+                .orderBy(matchSummoner.match.matchId.desc())
+                .offset((long) pageable.getPageNumber() * pageable.getPageSize())
                 .limit(pageable.getPageSize())
                 .fetch();
 
