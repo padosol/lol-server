@@ -36,10 +36,7 @@ public class MatchServiceImpl extends MatchService{
     public List<GameData> getMatches(MatchRequest matchRequest) throws IOException, InterruptedException {
 
         Pageable pageable = PageRequest.of(matchRequest.getPageNo(), 20, Sort.by(Sort.Direction.DESC, "match"));
-//        Page<MatchSummoner> matchSummonerPage = matchSummonerRepository.findAllByPuuid(matchRequest.getPuuid(), pageable);
         Page<MatchSummoner> matchSummoners = matchSummonerRepositoryCustom.findAllByPuuidAndQueueId(matchRequest, pageable);
-
-//        List<MatchSummoner> matchSummonerList = matchSummonerRepository.findMatchSummonerByPuuid(matchRequest.getPuuid());
 
         if (matchSummoners.getTotalPages() > 0) {
 

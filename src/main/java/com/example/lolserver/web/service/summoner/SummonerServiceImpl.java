@@ -21,6 +21,7 @@ import com.example.lolserver.web.dto.SearchData;
 import com.example.lolserver.web.dto.data.SummonerData;
 import com.example.lolserver.web.dto.request.MatchRequest;
 import com.example.lolserver.web.dto.response.SummonerResponse;
+import com.example.lolserver.web.exception.WebException;
 import com.example.lolserver.web.repository.*;
 import com.example.lolserver.web.service.match.MatchService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -108,6 +109,7 @@ public class SummonerServiceImpl implements SummonerService {
         return searchData;
     }
 
+
     @Override
     public List<SummonerData> getAllSummoner(Summoner summoner) throws IOException, InterruptedException {
 
@@ -175,7 +177,7 @@ public class SummonerServiceImpl implements SummonerService {
 
             SummonerDTO summonerDTO = riotClient.getSummonerByPuuid(puuid);
 
-            if(summoner.getRevisionDate() == summonerDTO.getRevisionDate()) {
+            if(summoner.getLastRevisionDateTime() != null && summoner.getRevisionDate() == summonerDTO.getRevisionDate()) {
                 return false;
             }
 
@@ -205,6 +207,38 @@ public class SummonerServiceImpl implements SummonerService {
         List<Summoner> result = summonerRepository.findAllByGameNameAndTagLine(gameName, tagLine);
 
         return result.stream().map(Summoner::toData).toList();
+    }
+
+    @Override
+    public SummonerResponse findSummonerV2(Summoner summoner) throws IOException, InterruptedException {
+
+        summoner.summonerNameSetting();
+
+        // 무조건 태그라인이 존재함
+        Optional<Summoner> findSummoner = summonerRepository.findSummonerByGameNameAndTagLine(summoner.getGameName(), summoner.getTagLine());
+
+        
+        // DB에 존재하지 않을떄
+        if(findSummoner.isEmpty()) {
+            // DB에 없으면 api 호출해서 정보를 가져옴
+            AccountDto account = riotClient.getAccount(summoner.getGameName(), summoner.getTagLine());
+            if(account.isError()) {
+                throw new WebException(account.toResponse());
+            }
+
+            SummonerDTO summonerDTO = riotClient.getSummoner(account.getPuuid(), SummonerPathType.PUUID);
+            Summoner summonerEntity = summonerDTO.toEntity(account);
+
+            Summoner saveSummoner = summonerRepository.save(summonerEntity);
+
+
+        }
+        
+        // DB에 존재할떄
+
+
+
+        return null;
     }
 
     public void searchMatchData(String summonerName) throws IOException, InterruptedException {

@@ -17,4 +17,9 @@ public interface SummonerService {
     boolean renewalSummonerInfo(String puuid) throws IOException, InterruptedException;
 
     List<SummonerData> getSummoners(String encodeSummonerName) throws UnsupportedEncodingException;
+
+
+    // v2
+    SummonerResponse findSummonerV2(Summoner summoner) throws IOException, InterruptedException;
+
 }

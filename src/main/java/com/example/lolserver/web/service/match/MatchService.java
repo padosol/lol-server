@@ -20,6 +20,7 @@ import com.example.lolserver.web.repository.dsl.MatchSummonerRepositoryCustom;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.*;
@@ -27,7 +28,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public abstract class MatchService {
 
-    private final Long START_TIME = 1704844800000L;
+    private final Long START_TIME = 1704844800L;
 
     protected final RiotClient client;
     protected final MatchRepository matchRepository;
@@ -38,6 +39,7 @@ public abstract class MatchService {
 
     public abstract List<GameData> getMatches(MatchRequest matchRequest) throws IOException, InterruptedException;
 
+    @Transactional
     public List<GameData> getMatchesUseRiotApi(MatchRequest matchRequest, Pageable pageable) throws IOException, InterruptedException {
         List<String> matchList = client.getMatchesByPuuid(matchRequest.getPuuid(), MatchParameters.builder()
                 .startTime(START_TIME)
@@ -90,6 +92,7 @@ public abstract class MatchService {
         return createGameData(matchSummoners.getContent(), matchRequest.getPuuid());
     }
 
+    @Transactional
     protected List<GameData> createGameData(List<MatchSummoner> matchSummonerList, String puuid) {
 
         List<GameData> gameDataList = new ArrayList<>();

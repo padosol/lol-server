@@ -4,6 +4,7 @@ package com.example.lolserver.entity.summoner;
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.web.dto.data.SummonerData;
+import com.example.lolserver.web.dto.response.SummonerResponse;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -67,6 +68,10 @@ public class Summoner {
                 .tagLine(tagLine)
                 .lastRevisionDateTime(lastRevisionDateTime)
                 .build();
+    }
+
+    public SummonerResponse toResponse() {
+
     }
 
     public void convertEpochToLocalDateTime() {

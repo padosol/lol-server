@@ -9,7 +9,7 @@ import lombok.Setter;
 public class ErrorStatus {
 
     @JsonProperty(value = "status_code")
-    private Integer statusCode = null;
+    private String statusCode = null;
     private String message;
 
 }

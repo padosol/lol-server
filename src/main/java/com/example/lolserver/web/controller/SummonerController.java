@@ -22,13 +22,22 @@ public class SummonerController {
     private final SummonerService summonerService;
 
     @GetMapping("/v1/summoners/{summonerName}")
-    public ResponseEntity<SearchData> searchSummoner(
+    public ResponseEntity<SearchData> searchSummonerV1(
             @PathVariable String summonerName
     ) throws IOException, InterruptedException {
 
         SearchData result = summonerService.findSummoner(summonerName);
 
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @GetMapping("/v2/summoners/{summonerName}")
+    public ResponseEntity<SearchData> searchSummonerV2(
+            @PathVariable String summonerName
+    ) {
+
+
+        return null;
     }
 
     @GetMapping("/v1/summoners")
