@@ -1,19 +1,14 @@
 package com.example.lolserver.riot;
 
-import com.example.lolserver.entity.summoner.Summoner;
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.example.lolserver.riot.dto.league.LeagueListDTO;
 import com.example.lolserver.riot.dto.match.MatchDto;
-import com.example.lolserver.riot.dto.match.MetadataDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
-import com.example.lolserver.riot.utils.URIBuilder;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriBuilder;
-import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;

@@ -1,10 +1,9 @@
-package com.example.lolserver.web.controller;
+package com.example.lolserver.web.summoner.controller;
 
-import com.example.lolserver.entity.summoner.Summoner;
+import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.dto.SearchData;
-import com.example.lolserver.web.dto.data.SummonerData;
-import com.example.lolserver.web.dto.response.SummonerResponse;
-import com.example.lolserver.web.service.summoner.SummonerService;
+import com.example.lolserver.web.summoner.dto.SummonerResponse;
+import com.example.lolserver.web.summoner.service.SummonerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,33 +18,24 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SummonerController {
 
-    private final SummonerService summonerService;
+    private final SummonerService summonerServiceV1;
 
     @GetMapping("/v1/summoners/{summonerName}")
     public ResponseEntity<SearchData> searchSummonerV1(
             @PathVariable String summonerName
     ) throws IOException, InterruptedException {
 
-        SearchData result = summonerService.findSummoner(summonerName);
+        SearchData result = summonerServiceV1.findSummoner(summonerName);
 
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @GetMapping("/v2/summoners/{summonerName}")
-    public ResponseEntity<SearchData> searchSummonerV2(
-            @PathVariable String summonerName
-    ) {
-
-
-        return null;
-    }
-
     @GetMapping("/v1/summoners")
-    public ResponseEntity<List<SummonerData>> getAllSummoner(
+    public ResponseEntity<List<SummonerResponse>> getAllSummoner(
             @RequestParam("q") String q
     ) throws IOException, InterruptedException {
 
-        List<SummonerData> result = summonerService.getAllSummoner(Summoner.builder()
+        List<SummonerResponse> result = summonerServiceV1.getAllSummoner(Summoner.builder()
                 .name(q)
                 .build());
 
@@ -56,20 +46,9 @@ public class SummonerController {
     public ResponseEntity<Boolean> renewalSummonerInfo(
         @RequestParam("puuid") String puuid
     ) throws IOException, InterruptedException {
-        boolean result = summonerService.renewalSummonerInfo(puuid);
+        boolean result = summonerServiceV1.renewalSummonerInfo(puuid);
 
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
-
-    @GetMapping("/v1/summoner/by-name/{summonerName}")
-    public ResponseEntity<List<SummonerData>> getSummoners(
-            @PathVariable String summonerName
-    ) throws UnsupportedEncodingException {
-
-        List<SummonerData> result = summonerService.getSummoners(summonerName);
-
-        return new ResponseEntity<>(result, HttpStatus.OK);
-    }
-
 
 }

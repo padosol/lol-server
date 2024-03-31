@@ -1,6 +1,6 @@
 package com.example.lolserver.web.dto;
 
-import com.example.lolserver.web.dto.data.SummonerData;
+import com.example.lolserver.web.summoner.dto.SummonerResponse;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,7 +9,7 @@ import lombok.Setter;
 public class SearchData {
 
     // 소환사 정보
-    private SummonerData summoner;
+    private SummonerResponse summoner;
     
     // 리그정보
 

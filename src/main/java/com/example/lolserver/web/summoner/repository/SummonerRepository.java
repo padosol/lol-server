@@ -1,6 +1,6 @@
-package com.example.lolserver.web.repository;
+package com.example.lolserver.web.summoner.repository;
 
-import com.example.lolserver.entity.summoner.Summoner;
+import com.example.lolserver.web.summoner.entity.Summoner;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;

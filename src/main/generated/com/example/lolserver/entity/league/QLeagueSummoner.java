@@ -38,7 +38,7 @@ public class QLeagueSummoner extends EntityPathBase<LeagueSummoner> {
 
     public final StringPath rank = createString("rank");
 
-    public final com.example.lolserver.entity.summoner.QSummoner summoner;
+    public final com.example.lolserver.web.summoner.entity.QSummoner summoner;
 
     public final BooleanPath veteran = createBoolean("veteran");
 
@@ -63,7 +63,7 @@ public class QLeagueSummoner extends EntityPathBase<LeagueSummoner> {
     public QLeagueSummoner(Class<? extends LeagueSummoner> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.league = inits.isInitialized("league") ? new QLeague(forProperty("league")) : null;
-        this.summoner = inits.isInitialized("summoner") ? new com.example.lolserver.entity.summoner.QSummoner(forProperty("summoner")) : null;
+        this.summoner = inits.isInitialized("summoner") ? new com.example.lolserver.web.summoner.entity.QSummoner(forProperty("summoner")) : null;
     }
 
 }

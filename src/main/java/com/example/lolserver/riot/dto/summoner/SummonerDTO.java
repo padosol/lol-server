@@ -1,6 +1,6 @@
 package com.example.lolserver.riot.dto.summoner;
 
-import com.example.lolserver.entity.summoner.Summoner;
+import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.error.ErrorDTO;
 import lombok.Getter;

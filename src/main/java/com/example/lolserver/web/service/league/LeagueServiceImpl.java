@@ -2,7 +2,7 @@ package com.example.lolserver.web.service.league;
 
 import com.example.lolserver.entity.league.League;
 import com.example.lolserver.entity.league.LeagueSummoner;
-import com.example.lolserver.entity.summoner.Summoner;
+import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.riot.RiotClient;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.example.lolserver.riot.dto.league.LeagueListDTO;
@@ -10,7 +10,7 @@ import com.example.lolserver.web.dto.data.LeagueData;
 import com.example.lolserver.web.dto.data.leagueData.LeagueSummonerData;
 import com.example.lolserver.web.repository.LeagueRepository;
 import com.example.lolserver.web.repository.LeagueSummonerRepository;
-import com.example.lolserver.web.repository.SummonerRepository;
+import com.example.lolserver.web.summoner.repository.SummonerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

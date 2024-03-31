@@ -1,4 +1,4 @@
-package com.example.lolserver.entity.summoner;
+package com.example.lolserver.web.summoner.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -15,7 +15,7 @@ import com.querydsl.core.types.Path;
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
 public class QSummoner extends EntityPathBase<Summoner> {
 
-    private static final long serialVersionUID = -750201290L;
+    private static final long serialVersionUID = 1582107590L;
 
     public static final QSummoner summoner = new QSummoner("summoner");
 
@@ -32,6 +32,8 @@ public class QSummoner extends EntityPathBase<Summoner> {
     public final NumberPath<Integer> profileIconId = createNumber("profileIconId", Integer.class);
 
     public final StringPath puuid = createString("puuid");
+
+    public final StringPath region = createString("region");
 
     public final NumberPath<Long> revisionDate = createNumber("revisionDate", Long.class);
 

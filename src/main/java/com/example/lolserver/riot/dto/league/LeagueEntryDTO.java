@@ -2,10 +2,8 @@ package com.example.lolserver.riot.dto.league;
 
 import com.example.lolserver.entity.league.League;
 import com.example.lolserver.entity.league.LeagueSummoner;
-import com.example.lolserver.entity.league.QueueType;
-import com.example.lolserver.entity.summoner.Summoner;
+import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.riot.dto.error.ErrorDTO;
-import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 

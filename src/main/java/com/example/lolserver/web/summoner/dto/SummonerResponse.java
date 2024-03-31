@@ -1,4 +1,4 @@
-package com.example.lolserver.web.dto.data;
+package com.example.lolserver.web.summoner.dto;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Builder
 @Getter
-public class SummonerData {
+public class SummonerResponse {
 
     private String summonerId;
     private String accountId;

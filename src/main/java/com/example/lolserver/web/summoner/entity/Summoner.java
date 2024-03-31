@@ -1,10 +1,9 @@
-package com.example.lolserver.entity.summoner;
+package com.example.lolserver.web.summoner.entity;
 
 
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
-import com.example.lolserver.web.dto.data.SummonerData;
-import com.example.lolserver.web.dto.response.SummonerResponse;
+import com.example.lolserver.web.summoner.dto.SummonerResponse;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -55,8 +54,10 @@ public class Summoner {
     @Column(name = "last_revision_date_time")
     private LocalDateTime lastRevisionDateTime;
 
-    public SummonerData toData() {
-        return SummonerData.builder()
+    private String region;
+
+    public SummonerResponse toData() {
+        return SummonerResponse.builder()
                 .summonerId(id)
                 .accountId(accountId)
                 .name(name)
@@ -70,9 +71,6 @@ public class Summoner {
                 .build();
     }
 
-    public SummonerResponse toResponse() {
-
-    }
 
     public void convertEpochToLocalDateTime() {
         this.revisionDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(this.revisionDate), ZoneOffset.UTC);

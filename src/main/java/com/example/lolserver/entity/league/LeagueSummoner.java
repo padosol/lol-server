@@ -1,7 +1,7 @@
 package com.example.lolserver.entity.league;
 
 
-import com.example.lolserver.entity.summoner.Summoner;
+import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.dto.data.leagueData.LeagueSummonerData;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
