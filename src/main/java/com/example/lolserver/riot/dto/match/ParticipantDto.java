@@ -1,10 +1,10 @@
 package com.example.lolserver.riot.dto.match;
 
-import com.example.lolserver.entity.match.Match;
-import com.example.lolserver.entity.match.MatchSummoner;
-import com.example.lolserver.entity.match.value.ItemValue;
-import com.example.lolserver.entity.match.value.StatValue;
-import com.example.lolserver.entity.match.value.StyleValue;
+import com.example.lolserver.web.match.entity.Match;
+import com.example.lolserver.web.match.entity.MatchSummoner;
+import com.example.lolserver.web.match.entity.value.ItemValue;
+import com.example.lolserver.web.match.entity.value.StatValue;
+import com.example.lolserver.web.match.entity.value.StyleValue;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.Setter;

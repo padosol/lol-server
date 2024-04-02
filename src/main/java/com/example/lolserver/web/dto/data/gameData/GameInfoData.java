@@ -1,6 +1,6 @@
 package com.example.lolserver.web.dto.data.gameData;
 
-import com.example.lolserver.entity.match.Match;
+import com.example.lolserver.web.match.entity.Match;
 import lombok.Getter;
 import lombok.Setter;
 

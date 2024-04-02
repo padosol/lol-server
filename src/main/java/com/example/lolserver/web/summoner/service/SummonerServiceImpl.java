@@ -8,7 +8,7 @@ import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.web.dto.SearchData;
 import com.example.lolserver.web.summoner.dto.SummonerResponse;
 import com.example.lolserver.web.dto.request.MatchRequest;
-import com.example.lolserver.web.service.match.MatchService;
+import com.example.lolserver.web.match.service.MatchService;
 import com.example.lolserver.web.summoner.repository.SummonerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

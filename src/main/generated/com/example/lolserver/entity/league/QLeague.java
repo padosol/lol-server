@@ -2,6 +2,8 @@ package com.example.lolserver.entity.league;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
+import com.example.lolserver.web.league.entity.League;
+import com.example.lolserver.web.league.entity.QueueType;
 import com.querydsl.core.types.dsl.*;
 
 import com.querydsl.core.types.PathMetadata;

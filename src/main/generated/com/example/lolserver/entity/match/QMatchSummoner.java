@@ -2,6 +2,7 @@ package com.example.lolserver.entity.match;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
+import com.example.lolserver.web.match.entity.MatchSummoner;
 import com.querydsl.core.types.dsl.*;
 
 import com.querydsl.core.types.PathMetadata;
@@ -82,7 +83,7 @@ public class QMatchSummoner extends EntityPathBase<MatchSummoner> {
 
     public final NumberPath<Integer> inhibitorTakedowns = createNumber("inhibitorTakedowns", Integer.class);
 
-    public final com.example.lolserver.entity.match.value.QItemValue item;
+    public final com.example.lolserver.web.match.entity.value.QItemValue item;
 
     public final NumberPath<Integer> itemsPurchased = createNumber("itemsPurchased", Integer.class);
 
@@ -152,9 +153,9 @@ public class QMatchSummoner extends EntityPathBase<MatchSummoner> {
 
     public final NumberPath<Integer> spell4Casts = createNumber("spell4Casts", Integer.class);
 
-    public final com.example.lolserver.entity.match.value.QStatValue statValue;
+    public final com.example.lolserver.web.match.entity.value.QStatValue statValue;
 
-    public final com.example.lolserver.entity.match.value.QStyleValue styleValue;
+    public final com.example.lolserver.web.match.entity.value.QStyleValue styleValue;
 
     public final NumberPath<Integer> summoner1Casts = createNumber("summoner1Casts", Integer.class);
 
@@ -244,10 +245,10 @@ public class QMatchSummoner extends EntityPathBase<MatchSummoner> {
 
     public QMatchSummoner(Class<? extends MatchSummoner> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.item = inits.isInitialized("item") ? new com.example.lolserver.entity.match.value.QItemValue(forProperty("item")) : null;
+        this.item = inits.isInitialized("item") ? new com.example.lolserver.web.match.entity.value.QItemValue(forProperty("item")) : null;
         this.match = inits.isInitialized("match") ? new QMatch(forProperty("match")) : null;
-        this.statValue = inits.isInitialized("statValue") ? new com.example.lolserver.entity.match.value.QStatValue(forProperty("statValue")) : null;
-        this.styleValue = inits.isInitialized("styleValue") ? new com.example.lolserver.entity.match.value.QStyleValue(forProperty("styleValue")) : null;
+        this.statValue = inits.isInitialized("statValue") ? new com.example.lolserver.web.match.entity.value.QStatValue(forProperty("statValue")) : null;
+        this.styleValue = inits.isInitialized("styleValue") ? new com.example.lolserver.web.match.entity.value.QStyleValue(forProperty("styleValue")) : null;
     }
 
 }

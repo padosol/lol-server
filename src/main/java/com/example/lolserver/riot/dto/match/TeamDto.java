@@ -1,7 +1,7 @@
 package com.example.lolserver.riot.dto.match;
 
-import com.example.lolserver.entity.match.Match;
-import com.example.lolserver.entity.match.MatchTeam;
+import com.example.lolserver.web.match.entity.Match;
+import com.example.lolserver.web.match.entity.MatchTeam;
 import lombok.Getter;
 import lombok.Setter;
 
