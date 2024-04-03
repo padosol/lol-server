@@ -1,8 +1,7 @@
-package com.example.lolserver.entity.match;
+package com.example.lolserver.web.match.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
-import com.example.lolserver.web.match.entity.Match;
 import com.querydsl.core.types.dsl.*;
 
 import com.querydsl.core.types.PathMetadata;
@@ -16,7 +15,7 @@ import com.querydsl.core.types.Path;
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
 public class QMatch extends EntityPathBase<Match> {
 
-    private static final long serialVersionUID = -1101156764L;
+    private static final long serialVersionUID = 1495437424L;
 
     public static final QMatch match = new QMatch("match");
 

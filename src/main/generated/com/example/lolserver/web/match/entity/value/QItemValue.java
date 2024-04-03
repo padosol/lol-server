@@ -15,7 +15,7 @@ import com.querydsl.core.types.Path;
 @Generated("com.querydsl.codegen.DefaultEmbeddableSerializer")
 public class QItemValue extends BeanPath<ItemValue> {
 
-    private static final long serialVersionUID = 1632298944L;
+    private static final long serialVersionUID = 932555468L;
 
     public static final QItemValue itemValue = new QItemValue("itemValue");
 

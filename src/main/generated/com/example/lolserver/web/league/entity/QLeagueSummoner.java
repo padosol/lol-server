@@ -1,8 +1,7 @@
-package com.example.lolserver.entity.league;
+package com.example.lolserver.web.league.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
-import com.example.lolserver.web.league.entity.LeagueSummoner;
 import com.querydsl.core.types.dsl.*;
 
 import com.querydsl.core.types.PathMetadata;
@@ -17,7 +16,7 @@ import com.querydsl.core.types.dsl.PathInits;
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
 public class QLeagueSummoner extends EntityPathBase<LeagueSummoner> {
 
-    private static final long serialVersionUID = 1908429444L;
+    private static final long serialVersionUID = 400839286L;
 
     private static final PathInits INITS = PathInits.DIRECT2;
 

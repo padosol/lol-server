@@ -41,4 +41,13 @@ public class SummonerV2Controller {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
+
+    @GetMapping("/v2/summoners/renewal")
+    public ResponseEntity<Boolean> renewalSummonerInfo(
+            @RequestParam("puuid") String puuid
+    ) throws IOException, InterruptedException {
+        boolean result = summonerServiceV2.renewalSummonerInfo(puuid);
+
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
 }

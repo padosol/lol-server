@@ -1,8 +1,7 @@
-package com.example.lolserver.entity.match;
+package com.example.lolserver.web.match.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
-import com.example.lolserver.web.match.entity.MatchTeamBan;
 import com.querydsl.core.types.dsl.*;
 
 import com.querydsl.core.types.PathMetadata;
@@ -17,7 +16,7 @@ import com.querydsl.core.types.dsl.PathInits;
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
 public class QMatchTeamBan extends EntityPathBase<MatchTeamBan> {
 
-    private static final long serialVersionUID = 2095479150L;
+    private static final long serialVersionUID = -1513262622L;
 
     private static final PathInits INITS = PathInits.DIRECT2;
 

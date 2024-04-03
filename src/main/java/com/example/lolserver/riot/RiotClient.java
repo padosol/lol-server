@@ -18,6 +18,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -29,6 +32,7 @@ public class RiotClient {
 
     private final HttpClient client;
     private final ObjectMapper objectMapper;
+    private final Long START_TIME = 1704855600L;
 
     RiotClient() {
         this.client = HttpClient.newHttpClient();
@@ -160,6 +164,63 @@ public class RiotClient {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         return objectMapper.readValue(response.body(), MatchDto.class);
+    }
+
+    public List<String> getAllMatchesByPuuid(String puuid) throws IOException, InterruptedException {
+        List<String> matchList = new ArrayList<>();
+
+        boolean flag = true;
+        int start = 0;
+        int count = 100;
+        long endTime = Instant.now().getEpochSecond();
+        while(flag) {
+            MatchParameters matchParameters = MatchParameters.builder()
+                    .startTime(START_TIME)
+                    .endTime(endTime)
+                    .start(0)
+                    .count(100).build();
+
+            URI https = UriComponentsBuilder.newInstance()
+                    .scheme("https")
+                    .host("asia.api.riotgames.com")
+                    .path("lol/match/v5/matches/by-puuid/" + puuid + "/ids")
+                    .queryParams(matchParameters.getParams())
+                    .build().toUri();
+
+            log.debug("MatchesByPuuid Https: {}", https);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .GET()
+                    .uri(https)
+                    .headers(headers())
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            List<String> matchIds = Arrays.stream(objectMapper.readValue(response.body(), String[].class)).toList();
+            matchList.addAll(matchIds);
+
+            if(matchIds.size() == 100) {
+                MatchDto matchDto = getMatchesByMatchId(matchIds.get(99));
+                endTime = matchDto.getInfo().getGameCreation() / 1000;
+            } else {
+                flag = false;
+            }
+
+        }
+
+        return matchList;
+    }
+
+    public List<MatchDto> getAllMatchDto(List<String> matchIds) throws IOException, InterruptedException {
+
+        List<MatchDto> matchList = new ArrayList<>();
+
+        for (String matchId : matchIds) {
+            MatchDto matchDto = getMatchesByMatchId(matchId);
+            matchList.add(matchDto);
+        }
+
+        return matchList;
     }
 
 

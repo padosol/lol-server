@@ -1,9 +1,9 @@
 package com.example.lolserver.web.match.repository.dsl.impl;
 
 import com.example.lolserver.web.match.entity.MatchSummoner;
-import com.example.lolserver.entity.match.QMatch;
-import com.example.lolserver.entity.match.QMatchSummoner;
 import com.example.lolserver.web.dto.request.MatchRequest;
+import com.example.lolserver.web.match.entity.QMatch;
+import com.example.lolserver.web.match.entity.QMatchSummoner;
 import com.example.lolserver.web.match.repository.dsl.MatchSummonerRepositoryCustom;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -53,6 +53,16 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
 
 
         return PageableExecutionUtils.getPage(content, pageable, count::fetchOne);
+    }
+
+    @Override
+    public List<String> findAllByMatchIdNotExist(List<String> matchIds) {
+
+        QMatch match = QMatch.match;
+        return jpaQueryFactory.select(match.matchId)
+                .from(match)
+                .where(match.matchId.notIn(matchIds))
+                .fetch();
     }
 
     private BooleanExpression puuidEq(String puuid) {

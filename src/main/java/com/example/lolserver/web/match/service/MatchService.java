@@ -94,7 +94,7 @@ public abstract class MatchService {
     }
 
     @Transactional
-    protected List<GameData> createGameData(List<MatchSummoner> matchSummonerList, String puuid) {
+    public List<GameData> createGameData(List<MatchSummoner> matchSummonerList, String puuid) {
 
         List<GameData> gameDataList = new ArrayList<>();
 

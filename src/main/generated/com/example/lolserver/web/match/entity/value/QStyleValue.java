@@ -15,7 +15,7 @@ import com.querydsl.core.types.Path;
 @Generated("com.querydsl.codegen.DefaultEmbeddableSerializer")
 public class QStyleValue extends BeanPath<StyleValue> {
 
-    private static final long serialVersionUID = 1419399390L;
+    private static final long serialVersionUID = 1202188114L;
 
     public static final QStyleValue styleValue = new QStyleValue("styleValue");
 

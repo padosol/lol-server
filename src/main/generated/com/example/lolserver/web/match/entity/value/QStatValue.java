@@ -15,7 +15,7 @@ import com.querydsl.core.types.Path;
 @Generated("com.querydsl.codegen.DefaultEmbeddableSerializer")
 public class QStatValue extends BeanPath<StatValue> {
 
-    private static final long serialVersionUID = 1682980127L;
+    private static final long serialVersionUID = 983236651L;
 
     public static final QStatValue statValue = new QStatValue("statValue");
 

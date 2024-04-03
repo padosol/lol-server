@@ -1,9 +1,7 @@
-package com.example.lolserver.entity.league;
+package com.example.lolserver.web.league.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
-import com.example.lolserver.web.league.entity.League;
-import com.example.lolserver.web.league.entity.QueueType;
 import com.querydsl.core.types.dsl.*;
 
 import com.querydsl.core.types.PathMetadata;
@@ -17,7 +15,7 @@ import com.querydsl.core.types.Path;
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
 public class QLeague extends EntityPathBase<League> {
 
-    private static final long serialVersionUID = -563426538L;
+    private static final long serialVersionUID = 612293896L;
 
     public static final QLeague league = new QLeague("league");
 
