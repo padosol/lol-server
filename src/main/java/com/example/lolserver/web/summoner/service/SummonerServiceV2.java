@@ -67,9 +67,9 @@ public class SummonerServiceV2 implements SummonerService{
         // repository 에서 존재하지 않는 matchId만 가져옴
         List<String> allMatchIds = matchSummonerRepositoryCustom.findAllByMatchIdNotExist(matchIds);
 
-//        List<MatchDto> allMatchDto = riotClient.getAllMatchDto(allMatchIds);
-//
-//        matchServiceImpl.saveMatches(allMatchDto);
+        List<MatchDto> allMatchDto = riotClient.getAllMatchDto(allMatchIds);
+
+        matchServiceImpl.saveMatches(allMatchDto);
 
         return true;
     }

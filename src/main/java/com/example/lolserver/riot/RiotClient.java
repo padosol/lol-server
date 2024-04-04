@@ -195,6 +195,8 @@ public class RiotClient {
                     .headers(headers())
                     .build();
 
+            log.debug("request 요청: {}", request);
+
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             List<String> matchIds = Arrays.stream(objectMapper.readValue(response.body(), String[].class)).toList();
             matchList.addAll(matchIds);
@@ -206,6 +208,7 @@ public class RiotClient {
                 flag = false;
             }
 
+            log.debug("전체 matchList 사이즈: {}", matchList.size());
         }
 
         return matchList;
@@ -229,8 +232,8 @@ public class RiotClient {
                 "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
                 "Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
                 "Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8",
-                "Origin", "https://developer.riotgames.com",
-                "X-Riot-Token", "RGAPI-a01f4988-12c3-4672-b3a7-232ac9327810"
+//                "Origin", "https://developer.riotgames.com",
+                "X-Riot-Token", "RGAPI-e6d2cce3-37b3-4b2a-bb54-3859139142d3"
         };
     }
 

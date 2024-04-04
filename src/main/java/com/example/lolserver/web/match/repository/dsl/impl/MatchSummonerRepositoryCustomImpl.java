@@ -59,10 +59,12 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
     public List<String> findAllByMatchIdNotExist(List<String> matchIds) {
 
         QMatch match = QMatch.match;
-        return jpaQueryFactory.select(match.matchId)
+        List<String> inData = jpaQueryFactory.select(match.matchId)
                 .from(match)
-                .where(match.matchId.notIn(matchIds))
+                .where(match.matchId.in(matchIds))
                 .fetch();
+
+        return matchIds.stream().filter( matchId -> !inData.contains(matchId)).toList();
     }
 
     private BooleanExpression puuidEq(String puuid) {
