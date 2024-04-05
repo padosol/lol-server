@@ -34,6 +34,9 @@ public class RiotClient {
     private final ObjectMapper objectMapper;
     private final Long START_TIME = 1704855600L;
 
+    private static int retryCount = 0;
+    private static int retryTime = 0;
+
     RiotClient() {
         this.client = HttpClient.newHttpClient();
         this.objectMapper = new ObjectMapper();
