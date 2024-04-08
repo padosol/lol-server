@@ -1,5 +1,7 @@
 package com.example.lolserver.web.summoner.service;
 
+import com.example.lolserver.riot.api.RiotApi;
+import com.example.lolserver.riot.api.type.Platform;
 import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.riot.RiotClient;
 import com.example.lolserver.riot.SummonerPathType;
@@ -28,7 +30,6 @@ public class SummonerServiceImpl implements SummonerService {
 
     private final SummonerRepository summonerRepository;
     private final RiotClient riotClient;
-
     private final MatchService matchService;
 
     @Override
@@ -61,11 +62,13 @@ public class SummonerServiceImpl implements SummonerService {
 
         AccountDto account = riotClient.getAccount(gameName, tagLine);
 
+
         if(account.isError()) {
             return new SearchData(true);
         }
 
-        SummonerDTO summonerDTO = riotClient.getSummoner(account.getPuuid(), SummonerPathType.PUUID);
+//        SummonerDTO summonerDTO = riotClient.getSummoner(account.getPuuid(), SummonerPathType.PUUID);
+        SummonerDTO summonerDTO = RiotApi.summoner().byPuuid(Platform.KOREA, account.getPuuid());
 
         Summoner entity = summonerDTO.toEntity(account);
         entity.convertEpochToLocalDateTime();

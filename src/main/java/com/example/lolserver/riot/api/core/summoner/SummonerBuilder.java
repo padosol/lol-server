@@ -3,12 +3,15 @@ package com.example.lolserver.riot.api.core.summoner;
 import com.example.lolserver.riot.api.calling.RiotExecute;
 import com.example.lolserver.riot.api.type.Platform;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.io.IOException;
+import java.net.URI;
 
 public class SummonerBuilder {
 
     private Platform platform;
     private String path;
-    private String query;
 
 
     public SummonerBuilder withPlatform(Platform platform) {
@@ -31,12 +34,18 @@ public class SummonerBuilder {
         return this;
     }
 
-    public SummonerDTO get() {
-        RiotExecute execute = new RiotExecute();
+    public SummonerDTO get() throws IOException, InterruptedException {
+        RiotExecute execute = RiotExecute.getInstance();
 
+        URI uri = UriComponentsBuilder.newInstance()
+                .scheme("https")
+                .host(this.platform.getCountry() + ".api.riotgames.com")
+                .path(this.path)
+                .build().toUri();
 
+        SummonerDTO summonerDTO = execute.execute(SummonerDTO.class, uri);
 
-        return null;
+        return summonerDTO;
     }
 
 }
