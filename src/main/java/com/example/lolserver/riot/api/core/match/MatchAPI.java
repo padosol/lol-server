@@ -6,9 +6,9 @@ import com.example.lolserver.riot.dto.match.MatchDto;
 
 public class MatchAPI {
 
-    private final MatchAPI INSTANCE = new MatchAPI();
+    private static final MatchAPI INSTANCE = new MatchAPI();
 
-    public MatchAPI getInstance() {
+    public static MatchAPI getInstance() {
         return INSTANCE;
     }
     private MatchAPI(){};
@@ -19,8 +19,6 @@ public class MatchAPI {
     public MatchDto byPuuid(Platform platform, String puuid) {
         return null;
     }
-
-
 
 
 
