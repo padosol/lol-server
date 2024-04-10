@@ -17,12 +17,12 @@ public class SummonerAPI {
 
     private final SummonerBuilder builder = new SummonerBuilder();
 
-    public SummonerDTO byName(Platform platform, String name) throws IOException, InterruptedException {
-        return builder.withPlatform(platform).withName(name).get();
+    public SummonerBuilder byName(Platform platform, String name) throws IOException, InterruptedException {
+        return builder.withPlatform(platform).withName(name);
     }
 
-    public SummonerDTO byPuuid(Platform platform, String puuid) throws IOException, InterruptedException {
-        return builder.withPlatform(platform).withPuuid(puuid).get();
+    public SummonerBuilder byPuuid(Platform platform, String puuid) throws IOException, InterruptedException {
+        return builder.withPlatform(platform).withPuuid(puuid);
     }
 
 

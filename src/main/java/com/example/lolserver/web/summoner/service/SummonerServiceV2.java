@@ -1,6 +1,7 @@
 package com.example.lolserver.web.summoner.service;
 
 import com.example.lolserver.riot.RiotClient;
+import com.example.lolserver.riot.api.RiotApi;
 import com.example.lolserver.riot.dto.match.MatchDto;
 import com.example.lolserver.web.dto.SearchData;
 import com.example.lolserver.web.match.repository.MatchRepository;

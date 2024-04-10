@@ -4,9 +4,12 @@ import com.example.lolserver.riot.api.calling.RiotExecute;
 import com.example.lolserver.riot.api.type.Platform;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.yaml.snakeyaml.util.UriEncoder;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 public class SummonerBuilder {
 
@@ -37,13 +40,7 @@ public class SummonerBuilder {
     public SummonerDTO get() throws IOException, InterruptedException {
         RiotExecute execute = RiotExecute.getInstance();
 
-        URI uri = UriComponentsBuilder.newInstance()
-                .scheme("https")
-                .host(this.platform.getCountry() + ".api.riotgames.com")
-                .path(this.path)
-                .build().toUri();
-
-        SummonerDTO summonerDTO = execute.execute(SummonerDTO.class, uri);
+        SummonerDTO summonerDTO = execute.execute(SummonerDTO.class, URI.create("https://"+this.platform.getRegion()+".api.riotgames.com" + this.path));
 
         return summonerDTO;
     }

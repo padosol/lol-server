@@ -68,7 +68,7 @@ public class SummonerServiceImpl implements SummonerService {
         }
 
 //        SummonerDTO summonerDTO = riotClient.getSummoner(account.getPuuid(), SummonerPathType.PUUID);
-        SummonerDTO summonerDTO = RiotApi.summoner().byPuuid(Platform.KOREA, account.getPuuid());
+        SummonerDTO summonerDTO = RiotApi.summoner().byPuuid(Platform.KOREA, account.getPuuid()).get();
 
         Summoner entity = summonerDTO.toEntity(account);
         entity.convertEpochToLocalDateTime();

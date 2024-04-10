@@ -1,5 +1,8 @@
 package com.example.lolserver.riot.api.core.summoner;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 public enum SummonerPath {
 
     BY_NAME("/lol/summoner/v4/summoners/by-name/{name}", "{name}"),
@@ -16,7 +19,7 @@ public enum SummonerPath {
     }
 
     public String pathParam(String param) {
-        return this.path.replace(this.key, param);
+        return this.path.replace(this.key, URLEncoder.encode(param, StandardCharsets.UTF_8));
     }
 
 

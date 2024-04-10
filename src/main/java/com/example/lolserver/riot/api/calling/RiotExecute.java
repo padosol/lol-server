@@ -1,17 +1,16 @@
 package com.example.lolserver.riot.api.calling;
 
-import com.example.lolserver.riot.dto.account.AccountDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.yaml.snakeyaml.util.UriEncoder;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public class RiotExecute {
@@ -29,19 +28,57 @@ public class RiotExecute {
 
     public <T> T execute(Class<T> clazz, URI uri) throws IOException, InterruptedException {
 
-        log.debug("riot api 호출");
-
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
                 .uri(uri)
                 .headers(headers())
                 .build();
 
-        log.debug("request url path: {} \n", uri.getPath());
+        log.info("[Riot API 호출]");
+
+        log.info("[Request URI]");
+
+        log.info("[Schema]: {} ", uri.getScheme());
+        log.info("[Host]: {} ", uri.getHost());
+        log.info("[Path]: {} \n", uri.getPath());
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        log.debug("response header: {} ", response.headers());
+        int statusCode = response.statusCode();
+
+        switch(statusCode) {
+            case 200:
+                log.info("Request Success");
+                break;
+            case 404:
+                log.info("Request Not Found");
+                break;
+            case 429:
+                log.info("Request Many too request");
+
+                List<String> strings = response.headers().map().get("retry-after");
+                String retryAfter = strings.get(0);
+
+                log.info("Retry After: {}", retryAfter);
+                Thread.sleep(Integer.parseInt(retryAfter) * 1000L);
+
+                return execute(clazz, uri);
+            default:
+                break;
+        }
+
+
+        Map<String, List<String>> headerMap = response.headers().map();
+
+        log.info("[ Response Headers ]");
+        for(String key : headerMap.keySet()) {
+            List<String> strings = headerMap.get(key);
+
+            for (String header : strings) {
+                log.info("{}: {}", key, header);
+            }
+
+        }
 
         T result = mapper.readValue(response.body(), clazz);
 

@@ -1,5 +1,9 @@
 package com.example.lolserver.riot.api.core.match;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 public enum MatchPath {
 
     BY_PUUID("/lol/match/v5/matches/by-puuid/{puuid}/ids", "{puuid}"),
@@ -15,7 +19,7 @@ public enum MatchPath {
         this.key = key;
     }
 
-    public String pathParam(String param) {
+    public String pathParam(String param) throws UnsupportedEncodingException {
         return this.path.replace(this.key, param);
     }
 
