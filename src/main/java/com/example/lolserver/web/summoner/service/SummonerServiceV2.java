@@ -2,6 +2,8 @@ package com.example.lolserver.web.summoner.service;
 
 import com.example.lolserver.riot.RiotClient;
 import com.example.lolserver.riot.api.RiotApi;
+import com.example.lolserver.riot.api.core.match.MatchListBuilder;
+import com.example.lolserver.riot.api.type.Platform;
 import com.example.lolserver.riot.dto.match.MatchDto;
 import com.example.lolserver.web.dto.SearchData;
 import com.example.lolserver.web.match.repository.MatchRepository;
@@ -63,14 +65,14 @@ public class SummonerServiceV2 implements SummonerService{
             return false;
         }
 
-        List<String> matchIds = riotClient.getAllMatchesByPuuid(puuid);
+        List<String> matchIds = RiotApi.match().byPuuid(Platform.KOREA, summoner.getPuuid()).getAll();
 
         // repository 에서 존재하지 않는 matchId만 가져옴
         List<String> allMatchIds = matchSummonerRepositoryCustom.findAllByMatchIdNotExist(matchIds);
 
-        List<MatchDto> allMatchDto = riotClient.getAllMatchDto(allMatchIds);
+        List<MatchDto> matchDtoList = RiotApi.match().allMatches(Platform.KOREA, allMatchIds);
 
-        matchServiceImpl.saveMatches(allMatchDto);
+        matchServiceImpl.saveMatches(matchDtoList);
 
         return true;
     }

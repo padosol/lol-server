@@ -40,7 +40,8 @@ public class RiotExecute {
 
         log.info("[Schema]: {} ", uri.getScheme());
         log.info("[Host]: {} ", uri.getHost());
-        log.info("[Path]: {} \n", uri.getPath());
+        log.info("[Path]: {} ", uri.getPath());
+        log.info("[Query]: {} \n", uri.getQuery());
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
