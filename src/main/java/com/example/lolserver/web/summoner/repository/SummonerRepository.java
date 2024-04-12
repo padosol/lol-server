@@ -27,8 +27,8 @@ public interface SummonerRepository extends JpaRepository<Summoner, String> {
             "                          and Function('replace', s.tagLine, ' ', '') = Function('replace', :tagLine, ' ', '')")
     List<Summoner> findAllByGameNameAndTagLine(String gameName, String tagLine);
 
-    @Query("select s from Summoner s where Function('replace', s.gameName, ' ', '') = Function('replace', :gameName, ' ', '')")
-    List<Summoner> findAllByGameName(String gameName);
+    @Query("select s from Summoner s where Function('replace', s.name, ' ', '') = Function('replace', :name, ' ', '') or Function('replace', s.gameName, ' ', '') = Function('replace', :name, ' ', '')")
+    List<Summoner> findAllByGameName(String name);
 
 
 }

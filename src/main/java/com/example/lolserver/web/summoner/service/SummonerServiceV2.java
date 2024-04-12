@@ -65,6 +65,8 @@ public class SummonerServiceV2 implements SummonerService{
             return false;
         }
 
+        // 유저 정보 가져오기 닉네임이나 기타등등 변했을 수 있음
+
         List<String> matchIds = RiotApi.match().byPuuid(Platform.KOREA, summoner.getPuuid()).getAll();
 
         // repository 에서 존재하지 않는 matchId만 가져옴

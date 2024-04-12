@@ -109,6 +109,7 @@ public class SummonerServiceImpl implements SummonerService {
 
             if(!accountDto.isError()) {
                 summonerDTO = riotClient.getSummoner(accountDto.getPuuid(), SummonerPathType.PUUID);
+                summonerDTO.setName(summoner.getName());
 
                 summoner = summonerDTO.toEntity(accountDto);
             }
@@ -116,6 +117,7 @@ public class SummonerServiceImpl implements SummonerService {
 
         } else {
             summonerDTO = riotClient.getSummoner(summoner.getName(), SummonerPathType.SUMMONER_NAME);
+            summonerDTO.setName(summoner.getName());
 
             if(!summonerDTO.isError()) {
                 AccountDto accountDto = riotClient.getAccountByPuuid(summonerDTO.getPuuid());
