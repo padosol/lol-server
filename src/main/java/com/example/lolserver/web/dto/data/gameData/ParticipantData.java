@@ -47,6 +47,8 @@ public class ParticipantData {
     private int timePlayed;
     private int tripleKills;
     private int visionScore;
+    private int totalMinionsKilled;
+    private int neutralMinionsKilled;
     private boolean win;
 
 }

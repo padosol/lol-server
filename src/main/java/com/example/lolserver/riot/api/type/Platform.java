@@ -8,7 +8,7 @@ public enum Platform {
     EUROPE_NORTH_EAST("EUN1", "en_GB", "EUROPE"),
     EUROPE_WEST("EUW1", "en_GB", "EUROPE"),
     JAPAN("JP1", "ja_JP", "ASIA"),
-    KOREA("kr", "ko_KR", "ASIA"),
+    KOREA("KR", "ko_KR", "ASIA"),
     LATIN_AMERICA_NORTH("LA1", "es_MX", "AMERICAS"),
     LATIN_AMERICA_SOUTH("LA2", "es_AR", "AMERICAS"),
     NORTH_AMERICA("NA1", "en_US", "AMERICAS"),

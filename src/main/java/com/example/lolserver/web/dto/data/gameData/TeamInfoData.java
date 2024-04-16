@@ -15,9 +15,7 @@ public class TeamInfoData {
     private	int teamId;
     private	boolean win;
 
-    private int kills;
-    private int deaths;
-    private int assists;
+    private int championKills;
 
     private	List<Integer> championId = new ArrayList<>();
     private	List<Integer> pickTurn = new ArrayList<>();
@@ -25,6 +23,8 @@ public class TeamInfoData {
     public TeamInfoData(MatchTeam matchTeam, List<MatchTeamBan> matchTeamBanList) {
         this.teamId = matchTeam.getTeamId();
         this.win = matchTeam.isWin();
+
+        this.championKills = matchTeam.getChampionKills();
 
         for(MatchTeamBan matchTeamBan : matchTeamBanList) {
             this.championId.add(matchTeamBan.getChampionId());

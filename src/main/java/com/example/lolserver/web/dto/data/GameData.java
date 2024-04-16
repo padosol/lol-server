@@ -7,7 +7,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -23,6 +25,8 @@ public class GameData {
     private List<ParticipantData> participantData = new ArrayList<>();
     
     // 게임 팀 정보
-    private List<TeamInfoData> teamInfoData = new ArrayList<>();
+//    private List<TeamInfoData> teamInfoData = new ArrayList<>();
+
+    private Map<String, TeamInfoData> teamInfoData = new HashMap<>();
 
 }

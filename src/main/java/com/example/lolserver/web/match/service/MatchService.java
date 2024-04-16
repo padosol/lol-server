@@ -103,7 +103,7 @@ public abstract class MatchService {
             GameData gameData = new GameData();
 
             List<ParticipantData> participantData = new ArrayList<>();
-            List<TeamInfoData> teamInfoDataList = new ArrayList<>();
+            Map<String, TeamInfoData> teamInfoData = new HashMap<>();
 
             // gameInfo
             Match match = matchSummoner.getMatch();
@@ -133,11 +133,11 @@ public abstract class MatchService {
             for(MatchTeam matchTeam : matchTeamList) {
                 List<MatchTeamBan> matchTeamBanList = matchTeamBanRepository.findMatchTeamBansByMatchTeam(matchTeam);
 
-                TeamInfoData teamInfoData = new TeamInfoData(matchTeam, matchTeamBanList);
-                teamInfoDataList.add(teamInfoData);
+                TeamInfoData teamInfo = new TeamInfoData(matchTeam, matchTeamBanList);
+                teamInfoData.put(String.valueOf(teamInfo.getTeamId()), teamInfo);
             }
 
-            gameData.setTeamInfoData(teamInfoDataList);
+            gameData.setTeamInfoData(teamInfoData);
 
             gameDataList.add(gameData);
         }

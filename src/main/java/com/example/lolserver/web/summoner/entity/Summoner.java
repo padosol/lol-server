@@ -1,13 +1,11 @@
 package com.example.lolserver.web.summoner.entity;
 
 
+import com.example.lolserver.riot.api.type.Platform;
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.web.summoner.dto.SummonerResponse;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -125,6 +123,9 @@ public class Summoner {
         return StringUtils.hasText(this.puuid);
     }
 
+    public void addRegion(String region) {
+        this.region = region.toUpperCase();
+    }
 
     @PrePersist
     public void defaultSetting() {

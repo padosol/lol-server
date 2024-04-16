@@ -179,6 +179,8 @@ public class MatchSummoner {
                 .timePlayed(timePlayed)
                 .tripleKills(tripleKills)
                 .visionScore(visionScore)
+                .totalMinionsKilled(totalMinionsKilled)
+                .neutralMinionsKilled(neutralMinionsKilled)
                 .win(win)
                 .build();
     }

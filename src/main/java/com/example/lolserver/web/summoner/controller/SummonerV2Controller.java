@@ -24,7 +24,6 @@ public class SummonerV2Controller {
             @PathVariable String summonerName
     ) {
 
-
         return null;
     }
 
