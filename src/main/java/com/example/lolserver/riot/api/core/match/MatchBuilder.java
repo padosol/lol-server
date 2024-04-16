@@ -35,8 +35,6 @@ public class MatchBuilder {
         this.path = MatchPath.TIMELINE.pathParam(matchId);
         return this;
     }
-
-
     public MatchDto get() throws IOException, InterruptedException {
 
         RiotExecute execute = RiotExecute.getInstance();
