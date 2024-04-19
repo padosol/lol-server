@@ -24,7 +24,7 @@ public class ChampionBuilder {
 
         URI uri = UriComponentsBuilder.newInstance()
                 .scheme("https")
-                .host(this.platform.getCountry() + ".api.riotgames.com")
+                .host(this.platform.getRegion() + ".api.riotgames.com")
                 .path("/lol/platform/v3/champion-rotations")
                 .build().toUri();
 

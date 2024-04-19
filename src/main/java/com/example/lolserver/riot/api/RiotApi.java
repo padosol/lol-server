@@ -1,5 +1,6 @@
 package com.example.lolserver.riot.api;
 
+import com.example.lolserver.riot.api.core.champion.ChampionAPI;
 import com.example.lolserver.riot.api.core.match.MatchAPI;
 import com.example.lolserver.riot.api.core.spectator.SpectatorAPI;
 import com.example.lolserver.riot.api.core.summoner.SummonerAPI;
@@ -16,5 +17,7 @@ public class RiotApi {
     public static MatchAPI match() {return MatchAPI.getInstance();}
 
     public static SpectatorAPI spectator() {return SpectatorAPI.getInstance();}
+
+    public static ChampionAPI champion() {return ChampionAPI.getInstance();}
 
 }
