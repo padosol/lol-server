@@ -10,7 +10,7 @@ import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.web.dto.SearchData;
 import com.example.lolserver.web.summoner.dto.SummonerResponse;
 import com.example.lolserver.web.dto.request.MatchRequest;
-import com.example.lolserver.web.match.service.MatchService;
+import com.example.lolserver.web.match.service.MatchServiceAPI;
 import com.example.lolserver.web.summoner.repository.SummonerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ public class SummonerServiceImpl implements SummonerService {
 
     private final SummonerRepository summonerRepository;
     private final RiotClient riotClient;
-    private final MatchService matchService;
+    private final MatchServiceAPI matchService;
 
     @Override
     @Transactional
@@ -122,11 +122,15 @@ public class SummonerServiceImpl implements SummonerService {
             if(!summonerDTO.isError()) {
                 AccountDto accountDto = riotClient.getAccountByPuuid(summonerDTO.getPuuid());
 
+                // 기존에 서머너가 있으면
+                Optional<Summoner> findSummoner = summonerRepository.findById(summonerDTO.getId());
+
                 summoner = summonerDTO.toEntity(accountDto);
             }
         }
 
         if(summoner.isPuuid()) {
+            summoner.convertEpochToLocalDateTime();
             Summoner saveSummoner = summonerRepository.save(summoner);
             summonerList.add(saveSummoner);
         }

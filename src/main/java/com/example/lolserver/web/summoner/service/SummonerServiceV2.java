@@ -3,15 +3,15 @@ package com.example.lolserver.web.summoner.service;
 import com.example.lolserver.riot.RiotClient;
 import com.example.lolserver.riot.SummonerPathType;
 import com.example.lolserver.riot.api.RiotApi;
-import com.example.lolserver.riot.api.core.match.MatchListBuilder;
 import com.example.lolserver.riot.api.type.Platform;
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.match.MatchDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.web.dto.SearchData;
+import com.example.lolserver.web.exception.ExceptionResponse;
+import com.example.lolserver.web.exception.WebException;
 import com.example.lolserver.web.match.repository.MatchRepository;
 import com.example.lolserver.web.match.repository.dsl.MatchSummonerRepositoryCustom;
-import com.example.lolserver.web.match.service.MatchService;
 import com.example.lolserver.web.match.service.MatchServiceImpl;
 import com.example.lolserver.web.summoner.dto.SummonerResponse;
 import com.example.lolserver.web.summoner.entity.Summoner;
@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service("summonerServiceV2")
@@ -67,6 +68,8 @@ public class SummonerServiceV2 implements SummonerService{
         }
 
         SummonerDTO summonerDTO;
+
+        // 태그라인 포함 
         if(summoner.hasTagLine()){
             AccountDto accountDto = riotClient.getAccount(summoner.getGameName(), summoner.getTagLine());
 
@@ -75,7 +78,8 @@ public class SummonerServiceV2 implements SummonerService{
 
                 summoner = summonerDTO.toEntity(accountDto);
             }
-
+            
+        // 태그라인 미포함
         } else {
 
             summonerDTO = RiotApi.summoner().byName(Platform.KOREA, summoner.getName()).get();
@@ -83,16 +87,22 @@ public class SummonerServiceV2 implements SummonerService{
 
             if(!summonerDTO.isError()) {
                 AccountDto accountDto = riotClient.getAccountByPuuid(summonerDTO.getPuuid());
+                
+                // 태그라인으로 검색
 
                 summoner = summonerDTO.toEntity(accountDto);
             }
         }
-
+        
         if(summoner.isPuuid()) {
             summoner.addRegion(region);
+            
+            // DB 에 데이터가 있는지 확인해야함
+            
             Summoner saveSummoner = summonerRepository.save(summoner);
             summonerList.add(saveSummoner);
         }
+
 
         return summonerList.stream().map(Summoner::toData).toList();
     }
@@ -114,6 +124,15 @@ public class SummonerServiceV2 implements SummonerService{
             return false;
         }
 
+
+        // 갱신중 동시성 제어
+        ConcurrentHashMap<String, Integer> renewalList = RiotApi.getRenewalList();
+
+        if(renewalList.containsKey(summoner.getPuuid())) {
+            throw new WebException(new ExceptionResponse("101", "갱신중 입니다. 잠시만 기디려주세요."));
+        }
+        renewalList.put(summoner.getPuuid(), 0);
+
         // 유저 정보 가져오기 닉네임이나 기타등등 변했을 수 있음
         List<String> matchIds = RiotApi.match().byPuuid(Platform.KOREA, summoner.getPuuid()).getAll();
 
@@ -123,6 +142,8 @@ public class SummonerServiceV2 implements SummonerService{
         List<MatchDto> matchDtoList = RiotApi.match().allMatches(Platform.KOREA, allMatchIds);
 
         matchServiceImpl.saveMatches(matchDtoList);
+
+        renewalList.remove(summoner.getPuuid());
 
         return true;
     }

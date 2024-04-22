@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.util.*;
 
 @Service("matchServiceImpl")
-public class MatchServiceImpl extends MatchService{
+public class MatchServiceImpl extends MatchServiceAPI {
 
     public MatchServiceImpl(RiotClient client, MatchRepository matchRepository, MatchTeamRepository matchTeamRepository, MatchTeamBanRepository matchTeamBanRepository, MatchSummonerRepository matchSummonerRepository, MatchSummonerRepositoryCustom matchSummonerRepositoryCustom) {
         super(client, matchRepository, matchTeamRepository, matchTeamBanRepository, matchSummonerRepository, matchSummonerRepositoryCustom);

@@ -8,15 +8,5 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class LolServerApplicationTests {
 
-    @Test
-    void contextLoads() {
-    }
-
-    @Test
-    void enum_test() {
-
-
-
-    }
 
 }
