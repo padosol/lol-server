@@ -80,19 +80,22 @@ public class SummonerServiceV2 implements SummonerService{
             }
             
         // 태그라인 미포함
-        } else {
-
-            summonerDTO = RiotApi.summoner().byName(Platform.KOREA, summoner.getName()).get();
-            summonerDTO.setName(summoner.getName());
-
-            if(!summonerDTO.isError()) {
-                AccountDto accountDto = riotClient.getAccountByPuuid(summonerDTO.getPuuid());
-                
-                // 태그라인으로 검색
-
-                summoner = summonerDTO.toEntity(accountDto);
-            }
         }
+
+//        duplicate
+//        else {
+//
+//            summonerDTO = RiotApi.summoner().byName(Platform.KOREA, summoner.getName()).get();
+//            summonerDTO.setName(summoner.getName());
+//
+//            if(!summonerDTO.isError()) {
+//                AccountDto accountDto = riotClient.getAccountByPuuid(summonerDTO.getPuuid());
+//
+//                // 태그라인으로 검색
+//
+//                summoner = summonerDTO.toEntity(accountDto);
+//            }
+//        }
         
         if(summoner.isPuuid()) {
             summoner.addRegion(region);
