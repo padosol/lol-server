@@ -47,6 +47,8 @@ public class RiotExecute {
 
         int statusCode = response.statusCode();
 
+        log.info("statusCode: {}", statusCode);
+
         switch(statusCode) {
             case 200:
                 log.info("Request Success");
