@@ -83,6 +83,8 @@ public class RiotExecute {
 
         T result = mapper.readValue(response.body(), clazz);
 
+        log.info("[body]: {}", result);
+
         return result;
     }
 
