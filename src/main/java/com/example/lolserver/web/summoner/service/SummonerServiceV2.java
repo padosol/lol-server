@@ -78,27 +78,12 @@ public class SummonerServiceV2 implements SummonerService{
 
                 summoner = summonerDTO.toEntity(accountDto);
             }
-            
-        // 태그라인 미포함
         }
 
-//        duplicate
-//        else {
-//
-//            summonerDTO = RiotApi.summoner().byName(Platform.KOREA, summoner.getName()).get();
-//            summonerDTO.setName(summoner.getName());
-//
-//            if(!summonerDTO.isError()) {
-//                AccountDto accountDto = riotClient.getAccountByPuuid(summonerDTO.getPuuid());
-//
-//                // 태그라인으로 검색
-//
-//                summoner = summonerDTO.toEntity(accountDto);
-//            }
-//        }
         
         if(summoner.isPuuid()) {
             summoner.addRegion(region);
+            summoner.convertEpochToLocalDateTime();
             
             // DB 에 데이터가 있는지 확인해야함
             
