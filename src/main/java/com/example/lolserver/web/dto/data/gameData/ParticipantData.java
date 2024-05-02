@@ -50,5 +50,10 @@ public class ParticipantData {
     private int totalMinionsKilled;
     private int neutralMinionsKilled;
     private boolean win;
+    private int totalDamageDealtToChampions;
+
+    private int visionWardsBoughtInGame;
+    private int wardsKilled;
+    private int wardsPlaced;
 
 }

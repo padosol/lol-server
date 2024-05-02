@@ -182,6 +182,10 @@ public class MatchSummoner {
                 .totalMinionsKilled(totalMinionsKilled)
                 .neutralMinionsKilled(neutralMinionsKilled)
                 .win(win)
+                .totalDamageDealtToChampions(totalDamageDealtToChampions)
+                .visionWardsBoughtInGame(visionWardsBoughtInGame)
+                .wardsKilled(wardsKilled)
+                .wardsPlaced(wardsPlaced)
                 .build();
     }
 
