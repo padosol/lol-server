@@ -4,10 +4,15 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-        show_sql: false
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
         use_sql_comments: true
+        jdbc:
+          batch_size: 1000
+          order_inserts: true
+          order_updates: true
+
+    show-sql: false
 
   datasource:
     url: jdbc:postgresql://localhost:5555/postgres
@@ -15,5 +20,21 @@ spring:
     username: postgres
     password: 1234
 
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+
+logging:
+  level:
+    com.example.lolserver.riot: INFO
+    com.example.lolserver.aspect: WARN
+
 server:
-  port: 8080
+  port: 8085
+
+
+
+riot.api.key: ${API_KEY}
+
