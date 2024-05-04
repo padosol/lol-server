@@ -49,6 +49,7 @@ public class RLeagueServiceImpl implements RLeagueService{
             Optional<League> findLeague = leagueRepository.findById(leagueId);
 
             // 리그 정보가 없으면 리그에 관한 api를 불러와야함
+            // 리그 로직변경
             league = findLeague.orElseGet(() -> leagueRepository.save(
                     League.builder()
                             .leagueId(leagueId)
