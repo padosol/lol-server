@@ -35,6 +35,8 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.projectreactor:reactor-test'
 
+    // webClient
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
     // query dsl
     implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'

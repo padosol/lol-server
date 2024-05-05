@@ -7,8 +7,10 @@ import com.example.lolserver.riot.dto.match.MatchDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
@@ -30,6 +32,7 @@ import java.util.Set;
 @Component
 public class RiotClient {
 
+    private final WebClient webClient;
     private final HttpClient client;
     private final ObjectMapper objectMapper;
     private final Long START_TIME = 1704855600L;
@@ -37,7 +40,8 @@ public class RiotClient {
     private static int retryCount = 0;
     private static int retryTime = 0;
 
-    RiotClient() {
+    RiotClient(WebClient webClient) {
+        this.webClient = webClient;
         this.client = HttpClient.newHttpClient();
         this.objectMapper = new ObjectMapper();
     }
@@ -158,6 +162,8 @@ public class RiotClient {
 
     public MatchDto getMatchesByMatchId(String matchId) throws IOException, InterruptedException {
 
+        Long start = System.currentTimeMillis();
+
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
                 .uri(URI.create("https://asia.api.riotgames.com/lol/match/v5/matches/" + matchId))
@@ -166,7 +172,30 @@ public class RiotClient {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
+        Long end = System.currentTimeMillis();
+
+        log.info("getMatchesByMatchId: {}ms", end - start);
+
         return objectMapper.readValue(response.body(), MatchDto.class);
+    }
+
+    public List<MatchDto> getMatchesByMatchIds(List<String> matchIds) {
+
+
+        for (String matchId : matchIds) {
+
+            webClient
+                    .get()
+                    .uri(URI.create("https://asia.api.riotgames.com/lol/match/v5/matches/" + matchId))
+                    .retrieve()
+
+
+        }
+
+
+
+
+        return null;
     }
 
     public List<String> getAllMatchesByPuuid(String puuid) throws IOException, InterruptedException {

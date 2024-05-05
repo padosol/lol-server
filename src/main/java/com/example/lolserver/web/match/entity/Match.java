@@ -3,6 +3,7 @@ package com.example.lolserver.web.match.entity;
 import com.example.lolserver.web.dto.data.gameData.GameInfoData;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,6 +13,8 @@ import org.springframework.cglib.core.Local;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -42,6 +45,9 @@ public class Match {
     private LocalDateTime gameCreationDateTime;
     private LocalDateTime gameEndDateTime;
     private LocalDateTime gameStartDateTime;
+
+    @OneToMany(mappedBy = "match")
+    private List<MatchSummoner> matchSummoners = new ArrayList<>();
 
     public void convertEpochToLocalDateTime() {
         this.gameCreationDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(gameCreation), ZoneOffset.UTC);

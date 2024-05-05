@@ -16,6 +16,7 @@ import com.example.lolserver.web.match.repository.MatchSummonerRepository;
 import com.example.lolserver.web.match.repository.MatchTeamBanRepository;
 import com.example.lolserver.web.match.repository.MatchTeamRepository;
 import com.example.lolserver.web.match.repository.dsl.MatchSummonerRepositoryCustom;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.util.*;
 
+@Slf4j
 @Service("matchServiceImpl")
 public class MatchServiceImpl extends MatchServiceAPI {
 
@@ -36,6 +38,7 @@ public class MatchServiceImpl extends MatchServiceAPI {
     @Override
     public List<GameData> getMatches(MatchRequest matchRequest) throws IOException, InterruptedException {
 
+        Long start = System.currentTimeMillis();
         Pageable pageable = PageRequest.of(matchRequest.getPageNo(), 20, Sort.by(Sort.Direction.DESC, "match"));
         Page<MatchSummoner> matchSummoners = matchSummonerRepositoryCustom.findAllByPuuidAndQueueId(matchRequest, pageable);
 
@@ -43,6 +46,8 @@ public class MatchServiceImpl extends MatchServiceAPI {
 
             return createGameData(matchSummoners.getContent(), matchRequest.getPuuid());
         }
+        Long end = System.currentTimeMillis();
+        log.info("getMatches: {}ms", end-start);
 
         return getMatchesUseRiotApi(matchRequest, pageable);
     }
@@ -52,34 +57,37 @@ public class MatchServiceImpl extends MatchServiceAPI {
 
         for (MatchDto matchDto : matchDtoList) {
 
-            if(!matchDto.isError()) {
-                // match 저장
-                Match match = matchDto.toEntity();
-                Match saveMatch = matchRepository.save(match);
+            try {
+                if(!matchDto.isError()) {
+                    // match 저장
+                    Match match = matchDto.toEntity();
 
-                List<ParticipantDto> participantDtoList = matchDto.getInfo().getParticipants();
-                List<TeamDto> teamDtos = matchDto.getInfo().getTeams();
+                    Match saveMatch = matchRepository.save(match);
 
-                for (ParticipantDto participantDto : participantDtoList) {
-                    MatchSummoner matchSummoner = participantDto.toEntity(saveMatch);
-                    MatchSummoner saveMatchSummoner = matchSummonerRepository.save(matchSummoner);
-                }
+                    List<ParticipantDto> participantDtoList = matchDto.getInfo().getParticipants();
+                    List<TeamDto> teamDtos = matchDto.getInfo().getTeams();
 
-                for (TeamDto teamDto : teamDtos) {
-                    MatchTeam matchTeam = teamDto.toEntity(saveMatch);
-                    MatchTeam saveMatchTeam = matchTeamRepository.save(matchTeam);
+                    for (ParticipantDto participantDto : participantDtoList) {
+                        MatchSummoner matchSummoner = participantDto.toEntity(saveMatch);
+                        MatchSummoner saveMatchSummoner = matchSummonerRepository.save(matchSummoner);
+                    }
 
-                    List<BanDto> banDtos = teamDto.getBans();
+                    for (TeamDto teamDto : teamDtos) {
+                        MatchTeam matchTeam = teamDto.toEntity(saveMatch);
+                        MatchTeam saveMatchTeam = matchTeamRepository.save(matchTeam);
 
-                    for (BanDto banDto : banDtos) {
-                        MatchTeamBan matchTeamBan = banDto.toEntity(saveMatchTeam);
-                        MatchTeamBan saveMatchTeamBan = matchTeamBanRepository.save(matchTeamBan);
+                        List<BanDto> banDtos = teamDto.getBans();
+
+                        for (BanDto banDto : banDtos) {
+                            MatchTeamBan matchTeamBan = banDto.toEntity(saveMatchTeam);
+                            MatchTeamBan saveMatchTeamBan = matchTeamBanRepository.save(matchTeamBan);
+                        }
                     }
                 }
+            } catch(Exception e) {
+                log.info("이미 등록된 게임 기록입니다. MatchId: {}", matchDto.getMetadata().getMatchId());
             }
         }
-
-
 
     }
 
