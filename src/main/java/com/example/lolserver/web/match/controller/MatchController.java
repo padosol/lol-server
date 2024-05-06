@@ -25,12 +25,7 @@ public class MatchController {
         @ModelAttribute MatchRequest matchRequest
     ) throws IOException, InterruptedException {
 
-        Long start = System.currentTimeMillis();
         List<GameData> gameData = matchService.getMatches(matchRequest);
-        Long end = System.currentTimeMillis();
-
-        log.info("게임 데이터 불러오는 시간: {}ms", end - start );
-
 
         return new ResponseEntity<>(gameData, HttpStatus.OK);
     }

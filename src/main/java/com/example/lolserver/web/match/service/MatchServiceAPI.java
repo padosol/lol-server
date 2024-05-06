@@ -50,10 +50,9 @@ public abstract class MatchServiceAPI {
                 .queue(matchRequest.getQueueId())
                 .build());
 
-        Long start = System.currentTimeMillis();
-        for (String matchId : matchList) {
+        List<MatchDto> findMatches = client.getMatchesByMatchIds(matchList);
 
-            MatchDto matchDto = client.getMatchesByMatchId(matchId);
+        for (MatchDto matchDto : findMatches) {
 
             if(!matchDto.isError()) {
                 InfoDto info = matchDto.getInfo();
@@ -63,7 +62,7 @@ public abstract class MatchServiceAPI {
                 Match match = matchDto.toEntity();
                 match.convertEpochToLocalDateTime();
 
-                Optional<Match> findMatchSummoner = matchRepository.findById(matchId);
+                Optional<Match> findMatchSummoner = matchRepository.findById(matchDto.getMetadata().getMatchId());
 
                 if (findMatchSummoner.isEmpty()) {
                     Match saveMatch = matchRepository.save(match);
@@ -90,13 +89,48 @@ public abstract class MatchServiceAPI {
                 }
             }
         }
-        Long end = System.currentTimeMillis();
-
-        log.info("getMatchesUseRiotApi: {}ms", end-start);
+        
+//        for (String matchId : matchList) {
+//
+//            MatchDto matchDto = client.getMatchesByMatchId(matchId);
+//
+//            if(!matchDto.isError()) {
+//                InfoDto info = matchDto.getInfo();
+//                List<ParticipantDto> participantDtos = info.getParticipants();
+//                List<TeamDto> teamDtos = info.getTeams();
+//
+//                Match match = matchDto.toEntity();
+//                match.convertEpochToLocalDateTime();
+//
+//                Optional<Match> findMatchSummoner = matchRepository.findById(matchId);
+//
+//                if (findMatchSummoner.isEmpty()) {
+//                    Match saveMatch = matchRepository.save(match);
+//
+//                    for (ParticipantDto participantDto : participantDtos) {
+//                        MatchSummoner matchSummoner = participantDto.toEntity(saveMatch);
+//
+//                        MatchSummoner saveMatchSummoner = matchSummonerRepository.save(matchSummoner);
+//                    }
+//
+//                    for (TeamDto teamDto : teamDtos) {
+//                        MatchTeam matchTeam = teamDto.toEntity(saveMatch);
+//
+//                        MatchTeam saveMatchTeam = matchTeamRepository.save(matchTeam);
+//
+//                        List<BanDto> banDtos = teamDto.getBans();
+//
+//                        for (BanDto banDto : banDtos) {
+//                            MatchTeamBan matchTeamBan = banDto.toEntity(saveMatchTeam);
+//                            MatchTeamBan saveMatchTeamBan = matchTeamBanRepository.save(matchTeamBan);
+//                        }
+//
+//                    }
+//                }
+//            }
+//        }
 
         Page<MatchSummoner> matchSummoners = matchSummonerRepositoryCustom.findAllByPuuidAndQueueId(matchRequest, pageable);
-
-
 
         return createGameData(matchSummoners.getContent(), matchRequest.getPuuid());
     }

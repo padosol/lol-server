@@ -46,9 +46,6 @@ public class Match {
     private LocalDateTime gameEndDateTime;
     private LocalDateTime gameStartDateTime;
 
-    @OneToMany(mappedBy = "match")
-    private List<MatchSummoner> matchSummoners = new ArrayList<>();
-
     public void convertEpochToLocalDateTime() {
         this.gameCreationDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(gameCreation), ZoneOffset.UTC);
         this.gameEndDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(gameEndTimestamp), ZoneOffset.UTC);

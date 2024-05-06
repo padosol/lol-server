@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.net.URI;
@@ -20,12 +22,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
 
 
 @Slf4j
@@ -181,21 +182,41 @@ public class RiotClient {
 
     public List<MatchDto> getMatchesByMatchIds(List<String> matchIds) {
 
+        CountDownLatch latch = new CountDownLatch(matchIds.size());
 
+        List<MatchDto> matchList = Collections.synchronizedList(new ArrayList<MatchDto>());
+
+        List<Mono<MatchDto>> monoList = new ArrayList<>();
         for (String matchId : matchIds) {
-
-            webClient
-                    .get()
+            Mono<MatchDto> matchDtoMono = webClient.get()
                     .uri(URI.create("https://asia.api.riotgames.com/lol/match/v5/matches/" + matchId))
                     .retrieve()
+                    .bodyToMono(MatchDto.class);
 
-
+            monoList.add(matchDtoMono);
         }
 
+        Flux.fromIterable(monoList)
+                .delayElements(Duration.ofMillis(50))
+                .subscribe(
+                        matchDtoMono -> matchDtoMono.subscribe(
+                                matchDto -> {
+                                    matchList.add(matchDto);
+                                    latch.countDown();
+                                    System.out.println(matchDto.getMetadata().getMatchId());
+                                    System.out.println(latch.getCount());
+                                }
+                        )
+                );
 
 
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
-        return null;
+        return matchList;
     }
 
     public List<String> getAllMatchesByPuuid(String puuid) throws IOException, InterruptedException {

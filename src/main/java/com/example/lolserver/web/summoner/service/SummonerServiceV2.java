@@ -32,7 +32,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class SummonerServiceV2 implements SummonerService{
 
-    private final MatchRepository matchRepository;
     private final SummonerRepository summonerRepository;
     private final RiotClient riotClient;
     private final MatchSummonerRepositoryCustom matchSummonerRepositoryCustom;
@@ -127,7 +126,8 @@ public class SummonerServiceV2 implements SummonerService{
         // repository 에서 존재하지 않는 matchId만 가져옴
         List<String> allMatchIds = matchSummonerRepositoryCustom.findAllByMatchIdNotExist(matchIds);
 
-        List<MatchDto> matchDtoList = RiotApi.match().allMatches(Platform.KOREA, allMatchIds);
+        List<MatchDto> matchDtoList = riotClient.getMatchesByMatchIds(allMatchIds);
+//        List<MatchDto> matchDtoList = RiotApi.match().allMatches(Platform.KOREA, allMatchIds);
 
         matchServiceImpl.saveMatches(matchDtoList);
 

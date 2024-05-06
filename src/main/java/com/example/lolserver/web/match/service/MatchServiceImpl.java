@@ -55,6 +55,10 @@ public class MatchServiceImpl extends MatchServiceAPI {
     @Transactional
     public void saveMatches(List<MatchDto> matchDtoList) {
 
+        Long start = System.currentTimeMillis();
+
+
+        List<Match> matchList = new ArrayList<>();
         for (MatchDto matchDto : matchDtoList) {
 
             try {
@@ -88,6 +92,9 @@ public class MatchServiceImpl extends MatchServiceAPI {
                 log.info("이미 등록된 게임 기록입니다. MatchId: {}", matchDto.getMetadata().getMatchId());
             }
         }
+
+        Long end = System.currentTimeMillis();
+        log.info("saveMatches: {}ms", end - start);
 
     }
 
