@@ -117,41 +117,6 @@ public class MatchListBuilder {
         return matchIds;
     }
 
-//    public List<String> getAll() throws IOException, InterruptedException {
-//
-//        List<String> matchList = new ArrayList<>();
-//
-//        boolean flag = true;
-//        long endTime = Instant.now().getEpochSecond();
-//
-//        if(this.query == null) {
-//            this.query = MatchQuery.builder().build();
-//        }
-//
-//        this.query.setStartTime(RiotApi.START_TIME);
-//        this.query.setCount(100);
-//        this.query.setStart(0);
-//
-//        MatchBuilder matchBuilder = new MatchBuilder();
-//
-//        while(flag) {
-//
-//            List<String> matchIds = get();
-//            matchList.addAll(matchIds);
-//
-//            if(matchIds.size() == 100) {
-//                MatchDto matchDto = matchBuilder.withPlatform(this.platform).withMatchId(matchIds.get(99)).get();
-//                endTime = matchDto.getInfo().getGameCreation() / 1000;
-//                this.query.setEndTime(endTime);
-//            } else {
-//                flag = false;
-//            }
-//
-//        }
-//
-//        return matchList;
-//    }
-
     public List<String> getAll() throws IOException, InterruptedException {
 
         List<String> matchList = new ArrayList<>();
@@ -164,13 +129,48 @@ public class MatchListBuilder {
         }
 
         this.query.setStartTime(RiotApi.START_TIME);
-        this.query.setCount(20);
+        this.query.setCount(100);
         this.query.setStart(0);
 
-        List<String> matchIds = get();
-        matchList.addAll(matchIds);
+        MatchBuilder matchBuilder = new MatchBuilder();
+
+        while(flag) {
+
+            List<String> matchIds = get();
+            matchList.addAll(matchIds);
+
+            if(matchIds.size() == 100) {
+                MatchDto matchDto = matchBuilder.withPlatform(this.platform).withMatchId(matchIds.get(99)).get();
+                endTime = matchDto.getInfo().getGameCreation() / 1000;
+                this.query.setEndTime(endTime);
+            } else {
+                flag = false;
+            }
+
+        }
 
         return matchList;
     }
+
+//    public List<String> getAll() throws IOException, InterruptedException {
+//
+//        List<String> matchList = new ArrayList<>();
+//
+//        boolean flag = true;
+//        long endTime = Instant.now().getEpochSecond();
+//
+//        if(this.query == null) {
+//            this.query = MatchQuery.builder().build();
+//        }
+//
+//        this.query.setStartTime(RiotApi.START_TIME);
+//        this.query.setCount(20);
+//        this.query.setStart(0);
+//
+//        List<String> matchIds = get();
+//        matchList.addAll(matchIds);
+//
+//        return matchList;
+//    }
 
 }

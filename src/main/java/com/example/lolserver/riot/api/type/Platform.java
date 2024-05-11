@@ -20,7 +20,6 @@ public enum Platform {
     THAILAND("TH2", "th_TH", "SEA"),
     TAIWAN("TW2", "zh_TW", "SEA"),
     VIETNAM("VN2", "vn_VN", "SEA"),
-    KR("test", "test", "test"),
     ;
 
     final String region;

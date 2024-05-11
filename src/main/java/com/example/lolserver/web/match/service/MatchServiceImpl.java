@@ -57,7 +57,6 @@ public class MatchServiceImpl extends MatchServiceAPI {
 
         Long start = System.currentTimeMillis();
 
-
         List<Match> matchList = new ArrayList<>();
         for (MatchDto matchDto : matchDtoList) {
 

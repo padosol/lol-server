@@ -14,6 +14,8 @@ import com.example.lolserver.web.match.service.MatchServiceAPI;
 import com.example.lolserver.web.summoner.repository.SummonerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -24,7 +26,8 @@ import java.io.IOException;
 import java.util.*;
 
 @Slf4j
-@Service("summonerServiceV1")
+@Service
+@Primary
 @RequiredArgsConstructor
 public class SummonerServiceImpl implements SummonerService {
 

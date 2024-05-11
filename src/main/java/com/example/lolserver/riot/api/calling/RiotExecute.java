@@ -1,7 +1,10 @@
 package com.example.lolserver.riot.api.calling;
 
+import com.example.lolserver.riot.RiotClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.yaml.snakeyaml.util.UriEncoder;
 
 import java.io.IOException;
@@ -13,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
+@Component
 public class RiotExecute {
 
     private HttpClient client = HttpClient.newHttpClient();
@@ -24,7 +28,7 @@ public class RiotExecute {
         return INSTANCE;
     }
 
-    private RiotExecute() {};
+    public RiotExecute(){};
 
     public <T> T execute(Class<T> clazz, URI uri) throws IOException, InterruptedException {
 
@@ -90,13 +94,12 @@ public class RiotExecute {
         return result;
     }
 
-
     public String[] headers() {
         return new String[] {
                 "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
                 "Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
                 "Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8",
-                "X-Riot-Token", "RGAPI-e6d2cce3-37b3-4b2a-bb54-3859139142d3"
+                "X-Riot-Token", ""
         };
     }
 

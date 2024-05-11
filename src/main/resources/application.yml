@@ -22,3 +22,5 @@ logging:
 
 server:
   port: 8080
+
+riot.api.key: ${API_KEY}

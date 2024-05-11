@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -37,14 +38,19 @@ public class RiotClient {
     private final HttpClient client;
     private final ObjectMapper objectMapper;
     private final Long START_TIME = 1704855600L;
+    private final String API_KEY;
 
     private static int retryCount = 0;
     private static int retryTime = 0;
 
-    RiotClient(WebClient webClient) {
+    RiotClient(
+            WebClient webClient,
+            @Value("${riot.api.key}") String apiKey
+               ) {
         this.webClient = webClient;
         this.client = HttpClient.newHttpClient();
         this.objectMapper = new ObjectMapper();
+        this.API_KEY = apiKey;
     }
 
     public AccountDto getAccount(String gameName, String tagLine) throws IOException, InterruptedException {
@@ -280,13 +286,17 @@ public class RiotClient {
     }
 
 
+    public String getAPI_KEY() {
+        return this.API_KEY;
+    }
+
 
     public String[] headers() {
         return new String[] {
                 "User-Agent", "MMR",
                 "Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
                 "Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8",
-                "X-Riot-Token", "RGAPI-e6d2cce3-37b3-4b2a-bb54-3859139142d3"
+                "X-Riot-Token", API_KEY
         };
     }
 

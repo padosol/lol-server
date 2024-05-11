@@ -5,6 +5,7 @@ import com.example.lolserver.web.dto.SearchData;
 import com.example.lolserver.web.summoner.dto.SummonerResponse;
 import com.example.lolserver.web.summoner.service.SummonerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,14 +18,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SummonerController {
 
-    private final SummonerService summonerServiceV1;
+    @Qualifier("summonerServiceImpl")
+    private final SummonerService summonerServiceImpl;
 
     @GetMapping("/v1/summoners/{summonerName}")
     public ResponseEntity<SearchData> searchSummonerV1(
             @PathVariable String summonerName
     ) throws IOException, InterruptedException {
 
-        SearchData result = summonerServiceV1.findSummoner(summonerName);
+        SearchData result = summonerServiceImpl.findSummoner(summonerName);
 
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
@@ -34,7 +36,7 @@ public class SummonerController {
             @RequestParam("q") String q
     ) throws IOException, InterruptedException {
 
-        List<SummonerResponse> result = summonerServiceV1.getAllSummoner(Summoner.builder()
+        List<SummonerResponse> result = summonerServiceImpl.getAllSummoner(Summoner.builder()
                 .name(q)
                 .build());
 
@@ -45,7 +47,7 @@ public class SummonerController {
     public ResponseEntity<Boolean> renewalSummonerInfo(
         @RequestParam("puuid") String puuid
     ) throws IOException, InterruptedException {
-        boolean result = summonerServiceV1.renewalSummonerInfo(puuid);
+        boolean result = summonerServiceImpl.renewalSummonerInfo(puuid);
 
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
