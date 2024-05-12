@@ -19,6 +19,7 @@ public class MatchAPI {
     private final MatchBuilder matchBuilder = new MatchBuilder();
     private final MatchListBuilder matchListBuilder = new MatchListBuilder();
     public MatchListBuilder byPuuid(Platform platform, String puuid) throws UnsupportedEncodingException {
+        //
         return matchListBuilder.withPlatform(platform).withPuuid(puuid);
     }
 
