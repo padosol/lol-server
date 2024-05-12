@@ -99,7 +99,7 @@ public class RiotExecute {
                 "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
                 "Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
                 "Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8",
-                "X-Riot-Token", "test"
+                "X-Riot-Token", "RGAPI-52362cc0-ea2d-4a26-8e56-bb060f2be226"
         };
     }
 
