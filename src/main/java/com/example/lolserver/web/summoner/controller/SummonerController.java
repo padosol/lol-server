@@ -1,5 +1,6 @@
 package com.example.lolserver.web.summoner.controller;
 
+import com.example.lolserver.web.summoner.dto.SummonerRequest;
 import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.dto.SearchData;
 import com.example.lolserver.web.summoner.dto.SummonerResponse;
@@ -18,27 +19,26 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SummonerController {
 
-    @Qualifier("summonerServiceImpl")
-    private final SummonerService summonerServiceImpl;
+    private final SummonerService summonerService;
 
-    @GetMapping("/v1/summoners/{summonerName}")
-    public ResponseEntity<SearchData> searchSummonerV1(
-            @PathVariable String summonerName
-    ) throws IOException, InterruptedException {
+    @GetMapping("/v1/summoners/search")
+    public ResponseEntity<List<SummonerResponse>> searchSummoner(
+            @RequestParam(value = "q") String q,
+            @RequestParam(value = "region", required = false) String region
+    ) {
 
-        SearchData result = summonerServiceImpl.findSummoner(summonerName);
+        List<SummonerResponse> allSummoner = summonerService.getAllSummoner(q, region);
 
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return new ResponseEntity<>(allSummoner, HttpStatus.OK);
     }
 
-    @GetMapping("/v1/summoners")
+    @GetMapping("/v1/summoners/{region}/{gameName}")
     public ResponseEntity<List<SummonerResponse>> getAllSummoner(
-            @RequestParam("q") String q
+            @PathVariable(value = "region") String region,
+            @PathVariable(value = "gameName") String gameName
     ) throws IOException, InterruptedException {
 
-        List<SummonerResponse> result = summonerServiceImpl.getAllSummoner(Summoner.builder()
-                .name(q)
-                .build());
+        List<SummonerResponse> result = summonerService.getAllSummoner(region ,gameName);
 
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
@@ -47,7 +47,7 @@ public class SummonerController {
     public ResponseEntity<Boolean> renewalSummonerInfo(
         @RequestParam("puuid") String puuid
     ) throws IOException, InterruptedException {
-        boolean result = summonerServiceImpl.renewalSummonerInfo(puuid);
+        boolean result = summonerService.renewalSummonerInfo(puuid);
 
         return new ResponseEntity<>(result, HttpStatus.OK);
     }

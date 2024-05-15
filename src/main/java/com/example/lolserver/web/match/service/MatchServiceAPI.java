@@ -4,9 +4,6 @@ import com.example.lolserver.web.match.entity.Match;
 import com.example.lolserver.web.match.entity.MatchSummoner;
 import com.example.lolserver.web.match.entity.MatchTeam;
 import com.example.lolserver.web.match.entity.MatchTeamBan;
-import com.example.lolserver.riot.MatchParameters;
-import com.example.lolserver.riot.RiotClient;
-import com.example.lolserver.riot.dto.match.*;
 import com.example.lolserver.web.dto.data.GameData;
 import com.example.lolserver.web.dto.data.gameData.GameInfoData;
 import com.example.lolserver.web.dto.data.gameData.ParticipantData;
@@ -33,7 +30,6 @@ public abstract class MatchServiceAPI {
     // 시즌 시작 일
     private final Long START_TIME = 1704855600L;
 
-    protected final RiotClient client;
     protected final MatchRepository matchRepository;
     protected final MatchTeamRepository matchTeamRepository;
     protected final MatchTeamBanRepository matchTeamBanRepository;
@@ -45,54 +41,14 @@ public abstract class MatchServiceAPI {
     @Transactional
     public List<GameData> getMatchesUseRiotApi(MatchRequest matchRequest, Pageable pageable) throws IOException, InterruptedException {
 
-        List<String> matchList = client.getMatchesByPuuid(matchRequest.getPuuid(), MatchParameters.builder()
-                .startTime(START_TIME)
-                .queue(matchRequest.getQueueId())
-                .build());
-
-        List<MatchDto> findMatches = client.getMatchesByMatchIds(matchList);
-
-        for (MatchDto matchDto : findMatches) {
-
-            if(!matchDto.isError()) {
-                InfoDto info = matchDto.getInfo();
-                List<ParticipantDto> participantDtos = info.getParticipants();
-                List<TeamDto> teamDtos = info.getTeams();
-
-                Match match = matchDto.toEntity();
-                match.convertEpochToLocalDateTime();
-
-                Optional<Match> findMatchSummoner = matchRepository.findById(matchDto.getMetadata().getMatchId());
-
-                if (findMatchSummoner.isEmpty()) {
-                    Match saveMatch = matchRepository.save(match);
-
-                    for (ParticipantDto participantDto : participantDtos) {
-                        MatchSummoner matchSummoner = participantDto.toEntity(saveMatch);
-
-                        MatchSummoner saveMatchSummoner = matchSummonerRepository.save(matchSummoner);
-                    }
-
-                    for (TeamDto teamDto : teamDtos) {
-                        MatchTeam matchTeam = teamDto.toEntity(saveMatch);
-
-                        MatchTeam saveMatchTeam = matchTeamRepository.save(matchTeam);
-
-                        List<BanDto> banDtos = teamDto.getBans();
-
-                        for (BanDto banDto : banDtos) {
-                            MatchTeamBan matchTeamBan = banDto.toEntity(saveMatchTeam);
-                            MatchTeamBan saveMatchTeamBan = matchTeamBanRepository.save(matchTeamBan);
-                        }
-
-                    }
-                }
-            }
-        }
-        
-//        for (String matchId : matchList) {
+//        List<String> matchList = client.getMatchesByPuuid(matchRequest.getPuuid(), MatchParameters.builder()
+//                .startTime(START_TIME)
+//                .queue(matchRequest.getQueueId())
+//                .build());
 //
-//            MatchDto matchDto = client.getMatchesByMatchId(matchId);
+//        List<MatchDto> findMatches = client.getMatchesByMatchIds(matchList);
+//
+//        for (MatchDto matchDto : findMatches) {
 //
 //            if(!matchDto.isError()) {
 //                InfoDto info = matchDto.getInfo();
@@ -102,7 +58,7 @@ public abstract class MatchServiceAPI {
 //                Match match = matchDto.toEntity();
 //                match.convertEpochToLocalDateTime();
 //
-//                Optional<Match> findMatchSummoner = matchRepository.findById(matchId);
+//                Optional<Match> findMatchSummoner = matchRepository.findById(matchDto.getMetadata().getMatchId());
 //
 //                if (findMatchSummoner.isEmpty()) {
 //                    Match saveMatch = matchRepository.save(match);
@@ -129,7 +85,7 @@ public abstract class MatchServiceAPI {
 //                }
 //            }
 //        }
-
+        
         Page<MatchSummoner> matchSummoners = matchSummonerRepositoryCustom.findAllByPuuidAndQueueId(matchRequest, pageable);
 
         return createGameData(matchSummoners.getContent(), matchRequest.getPuuid());

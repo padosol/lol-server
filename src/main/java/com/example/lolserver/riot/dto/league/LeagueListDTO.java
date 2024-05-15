@@ -1,7 +1,5 @@
 package com.example.lolserver.riot.dto.league;
 
-import com.example.lolserver.web.league.entity.League;
-import com.example.lolserver.web.league.entity.QueueType;
 import com.example.lolserver.riot.dto.error.ErrorDTO;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,14 +16,6 @@ public class LeagueListDTO extends ErrorDTO {
     private	String name;
     private	String queue;
 
-    public League toEntity() {
-        return League.builder()
-                .leagueId(leagueId)
-                .tier(tier)
-                .name(name)
-                .queue(QueueType.valueOf(queue))
-                .build();
-    }
 
 
 }

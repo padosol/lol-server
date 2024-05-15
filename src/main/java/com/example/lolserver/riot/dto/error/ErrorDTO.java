@@ -1,6 +1,6 @@
 package com.example.lolserver.riot.dto.error;
 
-import com.example.lolserver.web.exception.ExceptionResponse;
+import com.example.lolserver.riot.dto.error.exception.ExceptionResponse;
 import lombok.Getter;
 import lombok.Setter;
 

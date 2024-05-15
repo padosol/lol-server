@@ -1,50 +1,27 @@
 package com.example.lolserver.api;
 
-import com.example.lolserver.riot.api.RiotApi;
-import com.example.lolserver.riot.api.core.match.MatchBuilder;
-import com.example.lolserver.riot.api.core.summoner.SummonerAPI;
-import com.example.lolserver.riot.api.type.Platform;
-import com.example.lolserver.riot.dto.match.MatchDto;
+import com.example.lolserver.riot.core.api.RiotAPI;
+import com.example.lolserver.riot.core.calling.DefaultRiotExecute;
+import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
+import com.example.lolserver.riot.type.Platform;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.util.List;
-
+import java.util.concurrent.ExecutionException;
 
 public class ApiTest {
 
     @Test
-    @Disabled
-    void 소환사_불러오기_테스트() throws IOException, InterruptedException {
+    void SUMMONER_API_TEST() throws ExecutionException, InterruptedException {
 
-        SummonerDTO summonerDTO = RiotApi.summoner().byName(Platform.KOREA, "타 잔").get();
+        DefaultRiotExecute execute = new DefaultRiotExecute("RGAPI-e6d2cce3-37b3-4b2a-bb54-3859139142d3");
+        RiotAPI.setRiotExecute(execute);
 
-        Assertions.assertThat("타 잔").isEqualTo(summonerDTO.getName());
+        AccountDto accountDto = RiotAPI.account(Platform.KR).byRiotId("타 잔", "KR1").get();
+        SummonerDTO summonerDTO = RiotAPI.summoner(Platform.KR).byPuuid(accountDto.getPuuid());
 
-    }
-
-    @Test
-    void 소환사_모든_MatchId_가져오기() throws IOException, InterruptedException {
-        SummonerDTO summonerDTO = RiotApi.summoner().byName(Platform.KOREA, "타 잔").get();
-
-        List<String> all = RiotApi.match().byPuuid(Platform.KOREA, summonerDTO.getPuuid()).getAll();
-
-        Assertions.assertThat(0).isLessThanOrEqualTo(all.size());
-    }
-
-    @Test
-    void 소환사_모든게임정보_가져오기() throws IOException, InterruptedException {
-
-        SummonerDTO summonerDTO = RiotApi.summoner().byName(Platform.KOREA, "타 잔").get();
-
-        List<String> all = RiotApi.match().byPuuid(Platform.KOREA, summonerDTO.getPuuid()).getAll();
-
-        List<MatchDto> matchDtoList = RiotApi.match().allMatches(Platform.KOREA, all);
-
-        Assertions.assertThat(all.size()).isEqualTo(matchDtoList.size());
+        Assertions.assertThat(accountDto.getPuuid()).isEqualTo(summonerDTO.getPuuid());
 
     }
 

@@ -1,7 +1,6 @@
 package com.example.lolserver.web.summoner.entity;
 
 
-import com.example.lolserver.riot.api.type.Platform;
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.web.summoner.dto.SummonerResponse;
@@ -14,8 +13,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.Date;
+import java.time.ZoneId;
 
 @Entity
 @Getter
@@ -27,111 +25,53 @@ public class Summoner {
     @Id
     @Column(name = "summoner_id")
     private String id;
-    @Column(name = "account_id")
     private String accountId;
-    @Column(name = "puuid")
     private String puuid;
 
-    @Column(name = "name")
-    private String name;
-    @Column(name = "profile_icon_id")
     private int profileIconId;
-    @Column(name = "revision_date")
     private long revisionDate;
-    @Column(name = "summoner_level")
     private long summonerLevel;
 
-    @Column(name = "game_name")
     private String gameName;
-    @Column(name = "tag_line")
     private String tagLine;
-
-    @Column(name = "revision_date_time")
-    private LocalDateTime revisionDateTime;
-
-    @Column(name = "last_revision_date_time")
-    private LocalDateTime lastRevisionDateTime;
 
     private String region;
 
-    public SummonerResponse toData() {
+    public Summoner(AccountDto account, SummonerDTO summoner, String region) {
+        this.id = summoner.getId();
+        this.accountId = summoner.getAccountId();
+        this.profileIconId = summoner.getProfileIconId();
+        this.revisionDate = summoner.getRevisionDate();
+        this.summonerLevel = summoner.getSummonerLevel();
+
+        this.puuid = account.getPuuid();
+        this.gameName = account.getGameName();
+        this.tagLine = account.getTagLine();
+
+        this.region = region;
+    }
+
+    public void splitGameNameTagLine() {
+        if(StringUtils.hasText(this.gameName)) {
+
+            String[] split = this.gameName.split("-");
+
+            this.gameName = split[0];
+            this.tagLine = split[1];
+        }
+    }
+
+    public SummonerResponse toResponse() {
         return SummonerResponse.builder()
-                .summonerId(id)
-                .accountId(accountId)
-                .name(name)
-                .profileIconId(profileIconId)
-                .puuid(puuid)
-//                .revisionDate(revisionDate)
-                .summonerLevel(summonerLevel)
-                .gameName(gameName)
-                .tagLine(tagLine)
-                .lastRevisionDateTime(lastRevisionDateTime)
+                .summonerId(this.id)
+                .accountId(this.accountId)
+                .summonerLevel(this.summonerLevel)
+                .profileIconId(this.profileIconId)
+                .lastRevisionDateTime(LocalDateTime.ofInstant(Instant.ofEpochMilli(this.revisionDate), ZoneId.systemDefault()))
+                .puuid(this.puuid)
+                .gameName(this.gameName)
+                .tagLine(this.tagLine)
                 .build();
     }
 
-
-    public void convertEpochToLocalDateTime() {
-        this.revisionDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(this.revisionDate), ZoneOffset.UTC);
-    }
-
-    public boolean isPossibleRenewal() {
-
-        this.lastRevisionDateTime = LocalDateTime.now();
-
-        Date now = new Date();
-        Date beforeRenewalDate = new Date(this.revisionDate);
-
-        long gap = now.getTime() - beforeRenewalDate.getTime();
-
-        return gap >= 5 * 60 * 1000;
-    }
-
-    public void revisionSummoner(SummonerDTO summonerDTO, AccountDto accountDto) {
-
-        this.name = summonerDTO.getName();
-        this.profileIconId = summonerDTO.getProfileIconId();
-        this.revisionDate = summonerDTO.getRevisionDate();
-        this.summonerLevel = summonerDTO.getSummonerLevel();
-
-        this.gameName = accountDto.getGameName();
-        this.tagLine = accountDto.getTagLine();
-
-        this.convertEpochToLocalDateTime();
-    }
-
-
-    public void summonerNameSetting() {
-
-        if (StringUtils.hasText(this.name)) {
-
-            String[] splitName = this.name.split("-");
-
-            if (splitName.length > 1) {
-                this.gameName = splitName[0];
-                this.tagLine = splitName[1];
-            }
-
-        }
-
-    }
-
-    public boolean hasTagLine() {
-        return StringUtils.hasText(this.tagLine);
-    }
-
-    public boolean isPuuid() {
-        return StringUtils.hasText(this.puuid);
-    }
-
-    public void addRegion(String region) {
-        this.region = region.toUpperCase();
-    }
-
-    @PrePersist
-    public void defaultSetting() {
-        if (this.lastRevisionDateTime == null) {
-            convertEpochToLocalDateTime();
-            this.lastRevisionDateTime = this.revisionDateTime;
-        }
-    }
 }

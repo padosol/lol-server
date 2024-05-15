@@ -25,10 +25,6 @@ public class QSummoner extends EntityPathBase<Summoner> {
 
     public final StringPath id = createString("id");
 
-    public final DateTimePath<java.time.LocalDateTime> lastRevisionDateTime = createDateTime("lastRevisionDateTime", java.time.LocalDateTime.class);
-
-    public final StringPath name = createString("name");
-
     public final NumberPath<Integer> profileIconId = createNumber("profileIconId", Integer.class);
 
     public final StringPath puuid = createString("puuid");
@@ -36,8 +32,6 @@ public class QSummoner extends EntityPathBase<Summoner> {
     public final StringPath region = createString("region");
 
     public final NumberPath<Long> revisionDate = createNumber("revisionDate", Long.class);
-
-    public final DateTimePath<java.time.LocalDateTime> revisionDateTime = createDateTime("revisionDateTime", java.time.LocalDateTime.class);
 
     public final NumberPath<Long> summonerLevel = createNumber("summonerLevel", Long.class);
 

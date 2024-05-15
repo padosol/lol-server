@@ -1,14 +1,10 @@
 package com.example.lolserver.riot.dto.league;
 
-import com.example.lolserver.web.league.entity.League;
-import com.example.lolserver.web.league.entity.LeagueSummoner;
-import com.example.lolserver.web.summoner.entity.Summoner;
+import com.example.lolserver.riot.dto.error.ErrorDTO;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
-public class LeagueItemDTO {
+public class LeagueItemDTO extends ErrorDTO {
 
     private	boolean freshBlood;
     private	int wins;
@@ -20,21 +16,5 @@ public class LeagueItemDTO {
     private	int leaguePoints;
     private	int losses;
     private	String summonerId;
-
-    public LeagueSummoner toEntity(League league, Summoner summoner) {
-
-        return LeagueSummoner.builder()
-                .leaguePoints(leaguePoints)
-                .rank(rank)
-                .wins(wins)
-                .losses(losses)
-                .veteran(veteran)
-                .inactive(inactive)
-                .freshBlood(freshBlood)
-                .hotStreak(hotStreak)
-                .league(league)
-                .summoner(summoner)
-                .build();
-    }
 
 }
