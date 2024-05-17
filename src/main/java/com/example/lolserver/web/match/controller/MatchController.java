@@ -2,7 +2,7 @@ package com.example.lolserver.web.match.controller;
 
 import com.example.lolserver.web.dto.data.GameData;
 import com.example.lolserver.web.dto.request.MatchRequest;
-import com.example.lolserver.web.match.service.MatchServiceAPI;
+import com.example.lolserver.web.match.service.MatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MatchController {
 
-    private final MatchServiceAPI matchService;
+    private final MatchService matchService;
 
     @GetMapping("/v1/matches")
     public ResponseEntity<List<GameData>> fetchGameData(

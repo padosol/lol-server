@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,6 +36,11 @@ public class SummonerServiceV1 implements SummonerService{
 
         if(summonerList.size() < 1) {
             Summoner findSummoner = rSummonerService.getSummoner(summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
+
+            if(findSummoner == null) {
+                return Collections.emptyList();
+            }
+
             return List.of(findSummoner.toResponse());
         }
 

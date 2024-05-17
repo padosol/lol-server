@@ -23,6 +23,11 @@ public class RSummonerServiceImpl implements RSummonerService{
         try {
             AccountDto accountDto = RiotAPI.account(Platform.valueOfName(region)).byRiotId(gameName, tagLine).get();
             SummonerDTO summonerDTO = RiotAPI.summoner(Platform.valueOfName(region)).byPuuid(accountDto.getPuuid());
+
+            if(summonerDTO.isError()) {
+                return null;
+            }
+
             Summoner summoner = new Summoner(accountDto, summonerDTO, region.toLowerCase());
 
             return summonerRepository.save(summoner);

@@ -81,4 +81,14 @@ public class RiotAPI {
 
     public static RiotExecute getExecute() {return defaultRiotExecute;}
 
+
+    public static String createRegionPath(Platform platform) {
+        return platform.getRegion() + DEFAULT_HOST;
+    }
+
+    public static String createCountryPath(Platform platform) {
+        return platform.getPlatform() + DEFAULT_HOST;
+    }
+
+
 }

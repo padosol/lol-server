@@ -30,8 +30,6 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
         QMatchSummoner matchSummoner = QMatchSummoner.matchSummoner;
         QMatch match = QMatch.match;
 
-        Integer queueId = matchRequest.getQueueId();
-
         List<MatchSummoner> content = jpaQueryFactory.selectFrom(matchSummoner)
                 .join(matchSummoner.match, match)
                 .where(
