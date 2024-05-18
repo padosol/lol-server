@@ -1,6 +1,7 @@
-package com.example.lolserver.web.match.entity.value;
+package com.example.lolserver.web.match.entity.value.matchsummoner;
 
 
+import com.example.lolserver.riot.dto.match.ParticipantDto;
 import jakarta.persistence.Embeddable;
 import lombok.*;
 
@@ -18,4 +19,7 @@ public class StyleValue {
 
     private int secondaryRuneId;
     private String secondaryRuneIds;
+
+    public StyleValue(ParticipantDto participantDto) {
+    }
 }

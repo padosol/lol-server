@@ -1,10 +1,12 @@
 package com.example.lolserver.web.match.entity;
 
 
-import com.example.lolserver.web.match.entity.value.ItemValue;
-import com.example.lolserver.web.match.entity.value.StatValue;
-import com.example.lolserver.web.match.entity.value.StyleValue;
-import com.example.lolserver.web.dto.data.gameData.ParticipantData;
+import com.example.lolserver.riot.dto.match.ParticipantDto;
+import com.example.lolserver.web.match.entity.id.MatchSummonerId;
+import com.example.lolserver.web.match.entity.value.matchsummoner.ItemValue;
+import com.example.lolserver.web.match.entity.value.matchsummoner.StatValue;
+import com.example.lolserver.web.match.entity.value.matchsummoner.StyleValue;
+import com.example.lolserver.web.summoner.entity.Summoner;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,87 +21,36 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MatchSummoner {
 
-    @Id
-    @GeneratedValue
-    @Column(name = "match_summoner_id")
-    private Long id;
-
+    @EmbeddedId
+    private MatchSummonerId id;
 
     // match 정보 필요
     // summoner 정보 필요
+    @MapsId("matchId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "match_id")
     private Match match;
 
-    private int assists;
-    private int baronKills;
-    private int bountyLevel;
-    private int champExperience;
+    @MapsId("summonerId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "summoner_id")
+    private Summoner summoner;
+
+    // 유저 정보
+    private String riotIdGameName;
+    private String riotIdTagline;
+    private String puuid;
+    private int profileIcon;
+    private String summonerName;
+    private int participantId;
+
+    // 챔피언, 룬, 스펠 정보
     private int champLevel;
     private int championId;
     private String championName;
-    private int championTransform;
-    private int consumablesPurchased;
-    private int damageDealtToBuildings;
-    private int damageDealtToObjectives;
-    private int damageDealtToTurrets;
-    private int damageSelfMitigated;
-    private int deaths;
-    private int detectorWardsPlaced;
-    private int doubleKills;
-    private int dragonKills;
-    private boolean firstBloodAssist;
-    private boolean firstBloodKill;
-    private boolean firstTowerAssist;
-    private boolean firstTowerKill;
-    private boolean gameEndedInEarlySurrender;
-    private boolean gameEndedInSurrender;
-    private int goldEarned;
-    private int goldSpent;
-    private String individualPosition;
-    private int inhibitorKills;
-    private int inhibitorTakedowns;
-    private int inhibitorsLost;
-
-    @Embedded
-    private ItemValue item;
-
-    private int itemsPurchased;
-    private int killingSprees;
-    private int kills;
     private String lane;
-    private int largestCriticalStrike;
-    private int largestKillingSpree;
-    private int largestMultiKill;
-    private int longestTimeSpentLiving;
-    private int magicDamageDealt;
-    private int magicDamageDealtToChampions;
-    private int magicDamageTaken;
-    private int neutralMinionsKilled;
-    private int nexusKills;
-    private int nexusTakedowns;
-    private int nexusLost;
-    private int objectivesStolen;
-    private int objectivesStolenAssists;
-    private int participantId;
-    private int pentaKills;
-
-    @Embedded
-    private StatValue statValue;
-
-    @Embedded
-    private StyleValue styleValue;
-
-    private int physicalDamageDealt;
-    private int physicalDamageDealtToChampions;
-    private int physicalDamageTaken;
-    private int profileIcon;
-    private String puuid;
-    private int quadraKills;
-    private String riotIdGameName;
-    private String riotIdTagline;
+    private int champExperience;
     private String role;
-    private int sightWardsBoughtInGame;
     private int spell1Casts;
     private int spell2Casts;
     private int spell3Casts;
@@ -108,84 +59,115 @@ public class MatchSummoner {
     private int summoner1Id;
     private int summoner2Casts;
     private int summoner2Id;
-    private String summonerId;
     private int summonerLevel;
-    private String summonerName;
-    private boolean teamEarlySurrendered;
-    private int teamId;
-    private String teamPosition;
-    private int timeCCingOthers;
-    private int timePlayed;
-    private int totalDamageDealt;
-    private int totalDamageDealtToChampions;
-    private int totalDamageShieldedOnTeammates;
-    private int totalDamageTaken;
-    private int totalHeal;
-    private int totalHealsOnTeammates;
-    private int totalMinionsKilled;
-    private int totalTimeCCDealt;
-    private int totalTimeSpentDead;
-    private int totalUnitsHealed;
+    private int bountyLevel;
+
+    // 킬 관련
+    private int kills;
+    private int assists;
+    private int deaths;
+    private int doubleKills;
     private int tripleKills;
-    private int trueDamageDealt;
-    private int trueDamageDealtToChampions;
-    private int trueDamageTaken;
-    private int turretKills;
-    private int turretTakedowns;
-    private int turretsLost;
+    private int quadraKills;
+    private int pentaKills;
     private int unrealKills;
+
+    // 케인 전용
+    private int championTransform;
+
+    // 골드 관련, 아이템 구매
+    private int goldEarned;
+    private int goldSpent;
+    private int itemsPurchased;
+    private int consumablesPurchased;
+
+    // 미니언 관련
+    private int neutralMinionsKilled;
+    private int totalMinionsKilled;
+    private int objectivesStolen;
+    private int objectivesStolenAssists;
+
+    // 와드 관련
+    private int detectorWardsPlaced;
+    private int sightWardsBoughtInGame;
     private int visionScore;
     private int visionWardsBoughtInGame;
     private int wardsKilled;
     private int wardsPlaced;
+
+    // 오브젝트 관련
+    private int baronKills;
+    private int dragonKills;
+    private boolean firstBloodAssist;
+    private boolean firstBloodKill;
+    private boolean firstTowerAssist;
+    private boolean firstTowerKill;
+    private int inhibitorKills;
+    private int inhibitorTakedowns;
+    private int inhibitorsLost;
+    private int nexusKills;
+    private int nexusTakedowns;
+    private int nexusLost;
+    private int turretKills;
+    private int turretTakedowns;
+    private int turretsLost;
+
+    // 게임 정보
+    private boolean gameEndedInEarlySurrender;
+    private boolean gameEndedInSurrender;
+    private boolean teamEarlySurrendered;
+    private String teamPosition;
+    private int teamId;
     private boolean win;
+    private int timePlayed;
+    private String individualPosition;
 
+    // 피해, 받은 피해, 회복, CC
+    private int magicDamageDealt;
+    private int magicDamageDealtToChampions;
+    private int magicDamageTaken;
+    private int physicalDamageDealt;
+    private int physicalDamageDealtToChampions;
+    private int physicalDamageTaken;
+    private int damageDealtToBuildings;
+    private int damageDealtToObjectives;
+    private int damageDealtToTurrets;
+    private int damageSelfMitigated;
+    private int totalDamageDealt;
+    private int totalDamageDealtToChampions;
+    private int totalDamageShieldedOnTeammates;
+    private int totalDamageTaken;
+    private int trueDamageDealt;
+    private int trueDamageDealtToChampions;
+    private int trueDamageTaken;
+    private int totalHeal;
+    private int totalHealsOnTeammates;
+    private int totalTimeCCDealt;
+    private int totalTimeSpentDead;
+    private int totalUnitsHealed;
+    private int timeCCingOthers;
+    private int killingSprees;
+    private int largestCriticalStrike;
+    private int largestKillingSpree;
+    private int largestMultiKill;
+    private int longestTimeSpentLiving;
 
+    @Embedded
+    private ItemValue item;
 
-    public ParticipantData toData() {
-        return ParticipantData.builder()
-                .assists(assists)
-                .champExperience(champExperience)
-                .champLevel(champLevel)
-                .championId(championId)
-                .championName(championName)
-                .consumablesPurchased(consumablesPurchased)
-                .deaths(deaths)
-                .doubleKills(doubleKills)
-                .goldEarned(goldEarned)
-                .individualPosition(individualPosition)
-                .item(item)
-                .itemsPurchased(itemsPurchased)
-                .kills(kills)
-                .lane(lane)
-                .participantId(participantId)
-                .pentaKills(pentaKills)
-                .statValue(statValue)
-                .styleValue(styleValue)
-                .profileIcon(profileIcon)
-                .puuid(puuid)
-                .quadraKills(quadraKills)
-                .riotIdGameName(riotIdGameName)
-                .riotIdTagline(riotIdTagline)
-                .role(role)
-                .summoner1Id(summoner1Id)
-                .summoner2Id(summoner2Id)
-                .summonerId(summonerId)
-                .summonerLevel(summonerLevel)
-                .summonerName(summonerName)
-                .teamId(teamId)
-                .teamPosition(teamPosition)
-                .timeCCingOthers(timeCCingOthers)
-                .timePlayed(timePlayed)
-                .tripleKills(tripleKills)
-                .visionScore(visionScore)
-                .totalMinionsKilled(totalMinionsKilled)
-                .neutralMinionsKilled(neutralMinionsKilled)
-                .win(win)
-                .totalDamageDealtToChampions(totalDamageDealtToChampions)
-                .visionWardsBoughtInGame(visionWardsBoughtInGame)
-                .wardsKilled(wardsKilled)
-                .wardsPlaced(wardsPlaced)
+    @Embedded
+    private StatValue statValue;
+
+    @Embedded
+    private StyleValue styleValue;
+
+    public MatchSummoner of(MatchSummonerId id, Match match, Summoner summoner, ParticipantDto participantDto) {
+        return MatchSummoner.builder()
+                .id(id)
+                .match(match)
+                .summoner(summoner)
+                .item(new ItemValue(participantDto))
+                .statValue(new StatValue(participantDto))
                 .build();
     }
 

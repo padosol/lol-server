@@ -2,6 +2,7 @@ package com.example.lolserver.web.match.entity.value;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
+import com.example.lolserver.web.match.entity.value.matchsummoner.ItemValue;
 import com.querydsl.core.types.dsl.*;
 
 import com.querydsl.core.types.PathMetadata;

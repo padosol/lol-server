@@ -1,8 +1,8 @@
 package com.example.lolserver.web.dto.data.gameData;
 
-import com.example.lolserver.web.match.entity.value.ItemValue;
-import com.example.lolserver.web.match.entity.value.StatValue;
-import com.example.lolserver.web.match.entity.value.StyleValue;
+import com.example.lolserver.web.match.entity.value.matchsummoner.ItemValue;
+import com.example.lolserver.web.match.entity.value.matchsummoner.StatValue;
+import com.example.lolserver.web.match.entity.value.matchsummoner.StyleValue;
 import lombok.*;
 
 @Getter

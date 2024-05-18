@@ -25,11 +25,7 @@ public class QMatch extends EntityPathBase<Match> {
 
     public final NumberPath<Long> gameCreation = createNumber("gameCreation", Long.class);
 
-    public final DateTimePath<java.time.LocalDateTime> gameCreationDateTime = createDateTime("gameCreationDateTime", java.time.LocalDateTime.class);
-
     public final NumberPath<Long> gameDuration = createNumber("gameDuration", Long.class);
-
-    public final DateTimePath<java.time.LocalDateTime> gameEndDateTime = createDateTime("gameEndDateTime", java.time.LocalDateTime.class);
 
     public final NumberPath<Long> gameEndTimestamp = createNumber("gameEndTimestamp", Long.class);
 
@@ -38,8 +34,6 @@ public class QMatch extends EntityPathBase<Match> {
     public final StringPath gameMode = createString("gameMode");
 
     public final StringPath gameName = createString("gameName");
-
-    public final DateTimePath<java.time.LocalDateTime> gameStartDateTime = createDateTime("gameStartDateTime", java.time.LocalDateTime.class);
 
     public final NumberPath<Long> gameStartTimestamp = createNumber("gameStartTimestamp", Long.class);
 
@@ -54,6 +48,8 @@ public class QMatch extends EntityPathBase<Match> {
     public final StringPath platformId = createString("platformId");
 
     public final NumberPath<Integer> queueId = createNumber("queueId", Integer.class);
+
+    public final NumberPath<Integer> season = createNumber("season", Integer.class);
 
     public final StringPath tournamentCode = createString("tournamentCode");
 

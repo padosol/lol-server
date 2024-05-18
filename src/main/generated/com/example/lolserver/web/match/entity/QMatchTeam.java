@@ -22,35 +22,13 @@ public class QMatchTeam extends EntityPathBase<MatchTeam> {
 
     public static final QMatchTeam matchTeam = new QMatchTeam("matchTeam");
 
-    public final BooleanPath baronFirst = createBoolean("baronFirst");
-
-    public final NumberPath<Integer> baronKills = createNumber("baronKills", Integer.class);
-
-    public final BooleanPath championFirst = createBoolean("championFirst");
-
-    public final NumberPath<Integer> championKills = createNumber("championKills", Integer.class);
-
-    public final BooleanPath dragonFirst = createBoolean("dragonFirst");
-
-    public final NumberPath<Integer> dragonKills = createNumber("dragonKills", Integer.class);
-
-    public final NumberPath<Long> id = createNumber("id", Long.class);
-
-    public final BooleanPath inhibitorFirst = createBoolean("inhibitorFirst");
-
-    public final NumberPath<Integer> inhibitorKills = createNumber("inhibitorKills", Integer.class);
+    public final com.example.lolserver.web.match.entity.id.QMatchTeamId id;
 
     public final QMatch match;
 
-    public final BooleanPath riftHeraldFirst = createBoolean("riftHeraldFirst");
+    public final com.example.lolserver.web.match.entity.value.team.QTeamBanValue teamBan;
 
-    public final NumberPath<Integer> riftHeraldKills = createNumber("riftHeraldKills", Integer.class);
-
-    public final NumberPath<Integer> teamId = createNumber("teamId", Integer.class);
-
-    public final BooleanPath towerFirst = createBoolean("towerFirst");
-
-    public final NumberPath<Integer> towerKills = createNumber("towerKills", Integer.class);
+    public final com.example.lolserver.web.match.entity.value.team.QTeamObjectValue teamObject;
 
     public final BooleanPath win = createBoolean("win");
 
@@ -72,7 +50,10 @@ public class QMatchTeam extends EntityPathBase<MatchTeam> {
 
     public QMatchTeam(Class<? extends MatchTeam> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
+        this.id = inits.isInitialized("id") ? new com.example.lolserver.web.match.entity.id.QMatchTeamId(forProperty("id")) : null;
         this.match = inits.isInitialized("match") ? new QMatch(forProperty("match")) : null;
+        this.teamBan = inits.isInitialized("teamBan") ? new com.example.lolserver.web.match.entity.value.team.QTeamBanValue(forProperty("teamBan")) : null;
+        this.teamObject = inits.isInitialized("teamObject") ? new com.example.lolserver.web.match.entity.value.team.QTeamObjectValue(forProperty("teamObject")) : null;
     }
 
 }
