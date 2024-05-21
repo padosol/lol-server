@@ -33,14 +33,13 @@ public class SummonerController {
     }
 
     @GetMapping("/v1/summoners/{region}/{gameName}")
-    public ResponseEntity<List<SummonerResponse>> getAllSummoner(
+    public ResponseEntity<SummonerResponse> getAllSummoner(
             @PathVariable(value = "region") String region,
             @PathVariable(value = "gameName") String gameName
-    ) throws IOException, InterruptedException {
+    ) {
+        SummonerResponse summoner = summonerService.getSummoner(gameName, region);
 
-        List<SummonerResponse> result = summonerService.getAllSummoner(region ,gameName);
-
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return new ResponseEntity<>(summoner, HttpStatus.OK);
     }
 
     @GetMapping("/v1/summoners/renewal")

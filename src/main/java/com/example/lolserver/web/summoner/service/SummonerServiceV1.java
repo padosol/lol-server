@@ -1,5 +1,6 @@
 package com.example.lolserver.web.summoner.service;
 
+import com.example.lolserver.riot.type.Platform;
 import com.example.lolserver.web.dto.SearchData;
 import com.example.lolserver.web.summoner.dto.SummonerRequest;
 import com.example.lolserver.web.summoner.dto.SummonerResponse;
@@ -23,7 +24,17 @@ public class SummonerServiceV1 implements SummonerService{
 
     @Override
     public SummonerResponse getSummoner(String q, String region) {
-        return null;
+
+        Summoner summoner = new Summoner(q, Platform.getValueOfName(region));
+        summoner.splitGameNameTagLine();
+
+        List<Summoner> findSummoner = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegion(summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
+
+        if(findSummoner.size() == 1) {
+            return findSummoner.get(0).toResponse();
+        }
+
+        return SummonerResponse.builder().notFound(true).build();
     }
 
     @Override

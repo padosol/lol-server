@@ -19,10 +19,9 @@ public class LeagueController {
 
     private final LeagueService leagueService;
 
-
     @GetMapping("/v1/leagues/by-summoner/{summonerId}")
     public ResponseEntity<LeagueData> fetchLeaguesBySummoner(
-            @PathVariable String summonerId
+            @PathVariable("summonerId") String summonerId
     ) throws IOException, InterruptedException {
 
         LeagueData leagueData = leagueService.getLeaguesBySummoner(summonerId);

@@ -47,4 +47,13 @@ public enum Platform {
         return PLATFORM_NAME.get(name.toUpperCase());
     }
 
+    public static String getValueOfName(String name) {
+
+        if(PLATFORM_NAME.containsKey(name.toUpperCase())) {
+            return PLATFORM_NAME.get(name.toUpperCase()).name();
+        }
+
+        return null;
+    }
+
 }

@@ -1,4 +1,4 @@
-package com.example.lolserver.web.match.repository;
+package com.example.lolserver.web.match.repository.match;
 
 import com.example.lolserver.web.match.entity.Match;
 import org.springframework.data.jpa.repository.JpaRepository;

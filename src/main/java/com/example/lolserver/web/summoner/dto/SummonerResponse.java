@@ -16,6 +16,9 @@ public class SummonerResponse {
     private long summonerLevel;
     private String gameName;
     private String tagLine;
+    private String platform;
     private LocalDateTime lastRevisionDateTime;
+
+    private boolean notFound;
 
 }

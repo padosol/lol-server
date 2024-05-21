@@ -1,7 +1,7 @@
-package com.example.lolserver.web.match.repository.dsl;
+package com.example.lolserver.web.match.repository.matchsummoner.dsl;
 
+import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.entity.MatchSummoner;
-import com.example.lolserver.web.dto.request.MatchRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

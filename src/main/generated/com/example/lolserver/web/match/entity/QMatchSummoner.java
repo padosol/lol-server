@@ -72,7 +72,7 @@ public class QMatchSummoner extends EntityPathBase<MatchSummoner> {
 
     public final NumberPath<Integer> goldSpent = createNumber("goldSpent", Integer.class);
 
-    public final NumberPath<Long> id = createNumber("id", Long.class);
+    public final com.example.lolserver.web.match.entity.id.QMatchSummonerId id;
 
     public final StringPath individualPosition = createString("individualPosition");
 
@@ -82,7 +82,7 @@ public class QMatchSummoner extends EntityPathBase<MatchSummoner> {
 
     public final NumberPath<Integer> inhibitorTakedowns = createNumber("inhibitorTakedowns", Integer.class);
 
-    public final com.example.lolserver.web.match.entity.value.QItemValue item;
+    public final com.example.lolserver.web.match.entity.value.matchsummoner.QItemValue item;
 
     public final NumberPath<Integer> itemsPurchased = createNumber("itemsPurchased", Integer.class);
 
@@ -152,9 +152,9 @@ public class QMatchSummoner extends EntityPathBase<MatchSummoner> {
 
     public final NumberPath<Integer> spell4Casts = createNumber("spell4Casts", Integer.class);
 
-    public final com.example.lolserver.web.match.entity.value.QStatValue statValue;
+    public final com.example.lolserver.web.match.entity.value.matchsummoner.QStatValue statValue;
 
-    public final com.example.lolserver.web.match.entity.value.QStyleValue styleValue;
+    public final com.example.lolserver.web.match.entity.value.matchsummoner.QStyleValue styleValue;
 
     public final NumberPath<Integer> summoner1Casts = createNumber("summoner1Casts", Integer.class);
 
@@ -163,8 +163,6 @@ public class QMatchSummoner extends EntityPathBase<MatchSummoner> {
     public final NumberPath<Integer> summoner2Casts = createNumber("summoner2Casts", Integer.class);
 
     public final NumberPath<Integer> summoner2Id = createNumber("summoner2Id", Integer.class);
-
-    public final StringPath summonerId = createString("summonerId");
 
     public final NumberPath<Integer> summonerLevel = createNumber("summonerLevel", Integer.class);
 
@@ -244,10 +242,11 @@ public class QMatchSummoner extends EntityPathBase<MatchSummoner> {
 
     public QMatchSummoner(Class<? extends MatchSummoner> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.item = inits.isInitialized("item") ? new com.example.lolserver.web.match.entity.value.QItemValue(forProperty("item")) : null;
+        this.id = inits.isInitialized("id") ? new com.example.lolserver.web.match.entity.id.QMatchSummonerId(forProperty("id")) : null;
+        this.item = inits.isInitialized("item") ? new com.example.lolserver.web.match.entity.value.matchsummoner.QItemValue(forProperty("item")) : null;
         this.match = inits.isInitialized("match") ? new QMatch(forProperty("match")) : null;
-        this.statValue = inits.isInitialized("statValue") ? new com.example.lolserver.web.match.entity.value.QStatValue(forProperty("statValue")) : null;
-        this.styleValue = inits.isInitialized("styleValue") ? new com.example.lolserver.web.match.entity.value.QStyleValue(forProperty("styleValue")) : null;
+        this.statValue = inits.isInitialized("statValue") ? new com.example.lolserver.web.match.entity.value.matchsummoner.QStatValue(forProperty("statValue")) : null;
+        this.styleValue = inits.isInitialized("styleValue") ? new com.example.lolserver.web.match.entity.value.matchsummoner.QStyleValue(forProperty("styleValue")) : null;
     }
 
 }

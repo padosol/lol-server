@@ -7,6 +7,7 @@ import com.querydsl.core.types.dsl.*;
 import com.querydsl.core.types.PathMetadata;
 import javax.annotation.processing.Generated;
 import com.querydsl.core.types.Path;
+import com.querydsl.core.types.dsl.PathInits;
 
 
 /**
@@ -44,6 +45,8 @@ public class QMatch extends EntityPathBase<Match> {
     public final NumberPath<Integer> mapId = createNumber("mapId", Integer.class);
 
     public final StringPath matchId = createString("matchId");
+
+    public final ListPath<MatchSummoner, QMatchSummoner> matchSummoners = this.<MatchSummoner, QMatchSummoner>createList("matchSummoners", MatchSummoner.class, QMatchSummoner.class, PathInits.DIRECT2);
 
     public final StringPath platformId = createString("platformId");
 

@@ -1,4 +1,4 @@
-package com.example.lolserver.web.match.repository;
+package com.example.lolserver.web.match.repository.matchteam;
 
 import com.example.lolserver.web.match.entity.Match;
 import com.example.lolserver.web.match.entity.MatchTeam;

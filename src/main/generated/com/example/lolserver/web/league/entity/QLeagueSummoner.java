@@ -26,7 +26,7 @@ public class QLeagueSummoner extends EntityPathBase<LeagueSummoner> {
 
     public final BooleanPath hotStreak = createBoolean("hotStreak");
 
-    public final NumberPath<Long> id = createNumber("id", Long.class);
+    public final com.example.lolserver.web.league.entity.id.QLeagueSummonerId id;
 
     public final BooleanPath inactive = createBoolean("inactive");
 
@@ -62,6 +62,7 @@ public class QLeagueSummoner extends EntityPathBase<LeagueSummoner> {
 
     public QLeagueSummoner(Class<? extends LeagueSummoner> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
+        this.id = inits.isInitialized("id") ? new com.example.lolserver.web.league.entity.id.QLeagueSummonerId(forProperty("id")) : null;
         this.league = inits.isInitialized("league") ? new QLeague(forProperty("league")) : null;
         this.summoner = inits.isInitialized("summoner") ? new com.example.lolserver.web.summoner.entity.QSummoner(forProperty("summoner")) : null;
     }

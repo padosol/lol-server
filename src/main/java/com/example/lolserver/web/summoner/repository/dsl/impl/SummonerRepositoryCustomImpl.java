@@ -43,15 +43,15 @@ public class SummonerRepositoryCustomImpl implements SummonerRepositoryCustom {
     }
 
     public BooleanExpression gameNameEq(String gameName) {
-        return StringUtils.hasText(gameName) ? QSummoner.summoner.gameName.eq(gameName) : null;
+        return StringUtils.hasText(gameName) ? QSummoner.summoner.gameName.equalsIgnoreCase(gameName) : null;
     }
 
     public BooleanExpression tagLineEq(String tagLine) {
-        return StringUtils.hasText(tagLine) ? QSummoner.summoner.tagLine.eq(tagLine) : null;
+        return StringUtils.hasText(tagLine) ? QSummoner.summoner.tagLine.equalsIgnoreCase(tagLine) : null;
     }
 
     public BooleanExpression regionEq(String region) {
-        return StringUtils.hasText(region) ? QSummoner.summoner.region.eq(region) : null;
+        return StringUtils.hasText(region) ? QSummoner.summoner.region.equalsIgnoreCase(region) : null;
     }
 
 }

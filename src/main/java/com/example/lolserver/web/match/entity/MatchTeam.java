@@ -57,25 +57,29 @@ public class MatchTeam {
                 .build();
 
         List<BanDto> bans = teamDto.getBans();
-        TeamBanValue teamBanValue = TeamBanValue.builder()
-                .champion1Id(bans.get(0).getChampionId())
-                .pick1Turn(bans.get(0).getPickTurn())
-                .champion2Id(bans.get(1).getChampionId())
-                .pick2Turn(bans.get(1).getPickTurn())
-                .champion3Id(bans.get(2).getChampionId())
-                .pick3Turn(bans.get(2).getPickTurn())
-                .champion4Id(bans.get(3).getChampionId())
-                .pick4Turn(bans.get(3).getPickTurn())
-                .champion5Id(bans.get(4).getChampionId())
-                .pick5Turn(bans.get(4).getPickTurn())
-                .build();
+
+        TeamBanValue.TeamBanValueBuilder builder = TeamBanValue.builder();
+
+        if(!bans.isEmpty()) {
+            TeamBanValue.builder()
+                    .champion1Id(bans.get(0).getChampionId())
+                    .pick1Turn(bans.get(0).getPickTurn())
+                    .champion2Id(bans.get(1).getChampionId())
+                    .pick2Turn(bans.get(1).getPickTurn())
+                    .champion3Id(bans.get(2).getChampionId())
+                    .pick3Turn(bans.get(2).getPickTurn())
+                    .champion4Id(bans.get(3).getChampionId())
+                    .pick4Turn(bans.get(3).getPickTurn())
+                    .champion5Id(bans.get(4).getChampionId())
+                    .pick5Turn(bans.get(4).getPickTurn());
+        }
 
         return new MatchTeam(
                 id,
                 match,
                 teamDto.isWin(),
                 teamObjectValue,
-                teamBanValue
+                builder.build()
         );
     }
 

@@ -1,7 +1,7 @@
 package com.example.lolserver.web.match.controller;
 
 import com.example.lolserver.web.dto.data.GameData;
-import com.example.lolserver.web.dto.request.MatchRequest;
+import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.service.MatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

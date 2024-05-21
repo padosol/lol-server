@@ -37,6 +37,12 @@ public class Summoner {
 
     private String region;
 
+    public Summoner(String summonerName, String region) {
+        this.gameName = summonerName;
+        this.region = region;
+    }
+
+
     public Summoner(AccountDto account, SummonerDTO summoner, String region) {
         this.id = summoner.getId();
         this.accountId = summoner.getAccountId();
@@ -71,6 +77,7 @@ public class Summoner {
                 .puuid(this.puuid)
                 .gameName(this.gameName)
                 .tagLine(this.tagLine)
+                .platform(this.region)
                 .build();
     }
 

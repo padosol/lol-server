@@ -1,14 +1,15 @@
-package com.example.lolserver.web.dto.request;
+package com.example.lolserver.web.match.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MatchRequest {
     private String puuid;
     private Integer queueId;
     private Integer pageNo;
+    private String platform;
 }

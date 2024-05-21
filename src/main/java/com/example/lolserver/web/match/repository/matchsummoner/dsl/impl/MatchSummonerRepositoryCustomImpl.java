@@ -1,10 +1,10 @@
-package com.example.lolserver.web.match.repository.dsl.impl;
+package com.example.lolserver.web.match.repository.matchsummoner.dsl.impl;
 
+import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.entity.MatchSummoner;
-import com.example.lolserver.web.dto.request.MatchRequest;
 import com.example.lolserver.web.match.entity.QMatch;
 import com.example.lolserver.web.match.entity.QMatchSummoner;
-import com.example.lolserver.web.match.repository.dsl.MatchSummonerRepositoryCustom;
+import com.example.lolserver.web.match.repository.matchsummoner.dsl.MatchSummonerRepositoryCustom;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;

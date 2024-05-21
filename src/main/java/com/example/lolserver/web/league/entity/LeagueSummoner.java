@@ -1,6 +1,8 @@
 package com.example.lolserver.web.league.entity;
 
 
+import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
+import com.example.lolserver.web.league.entity.id.LeagueSummonerId;
 import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.dto.data.leagueData.LeagueSummonerData;
 import jakarta.persistence.*;
@@ -18,10 +20,22 @@ import lombok.NoArgsConstructor;
 @Table(name = "league_summoner")
 public class LeagueSummoner {
 
-    @Id
-    @GeneratedValue
-    @Column(name = "league_summoner_id")
-    private Long id;
+//    @Id
+//    @GeneratedValue
+//    @Column(name = "league_summoner_id")
+//    private Long id;
+    @EmbeddedId
+    private LeagueSummonerId id;
+
+    @MapsId("summonerId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "summoner_id")
+    private Summoner summoner;
+
+    @MapsId("leagueId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "league_id")
+    private League league;
 
     private int leaguePoints;
     private String rank;
@@ -32,13 +46,23 @@ public class LeagueSummoner {
     private boolean freshBlood;
     private boolean hotStreak;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "summoner_id")
-    private Summoner summoner;
+    public LeagueSummoner of(LeagueSummonerId id, League league, Summoner summoner, LeagueEntryDTO leagueEntryDTO) {
+       return LeagueSummoner.builder()
+                .id(id)
+                .league(league)
+                .summoner(summoner)
+                .losses(leagueEntryDTO.getLosses())
+                .leaguePoints(leagueEntryDTO.getLeaguePoints())
+                .freshBlood(leagueEntryDTO.isFreshBlood())
+                .hotStreak(leagueEntryDTO.isHotStreak())
+                .inactive(leagueEntryDTO.isInactive())
+                .rank(leagueEntryDTO.getRank())
+                .veteran(leagueEntryDTO.isVeteran())
+                .wins(leagueEntryDTO.getWins())
+                .build();
+    }
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "league_id")
-    private League league;
+
 
     public LeagueSummonerData toData() {
         return LeagueSummonerData.builder()

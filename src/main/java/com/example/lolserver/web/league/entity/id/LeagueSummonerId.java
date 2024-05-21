@@ -1,4 +1,4 @@
-package com.example.lolserver.web.match.entity.id;
+package com.example.lolserver.web.league.entity.id;
 
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
@@ -11,10 +11,10 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Embeddable
 @EqualsAndHashCode
-public class MatchSummonerId implements Serializable {
+public class LeagueSummonerId implements Serializable {
 
-    private String matchId;
-
+    private String leagueId;
     private String summonerId;
 
 }
+

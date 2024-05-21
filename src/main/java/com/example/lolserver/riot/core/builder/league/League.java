@@ -2,6 +2,7 @@ package com.example.lolserver.riot.core.builder.league;
 
 import com.example.lolserver.riot.core.api.RiotAPI;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
+import com.example.lolserver.riot.dto.league.LeagueListDTO;
 import com.example.lolserver.riot.type.Division;
 import com.example.lolserver.riot.type.Platform;
 import com.example.lolserver.riot.type.Queue;
@@ -59,9 +60,7 @@ public class League {
                     .path("/lol/league/v4/entries/by-summoner/" + this.summonerId)
                     .build()
                     .toUri();
-
             try {
-
                 ObjectMapper mapper = new ObjectMapper();
                 Object[] objects = RiotAPI.getExecute().execute(Object[].class, uri).get();
                 Set<LeagueEntryDTO> result = new HashSet<>();
@@ -80,14 +79,30 @@ public class League {
             }
         }
 
+        public LeagueListDTO getLeagueList() {
+
+            URI uri = UriComponentsBuilder.newInstance()
+                    .scheme("https")
+                    .host(RiotAPI.createRegionPath(this.platform))
+                    .path("/lol/league/v4/leagues/" + this.leagueId)
+                    .build()
+                    .toUri();
+
+            try {
+                return RiotAPI.getExecute().execute(LeagueListDTO.class, uri).get();
+            } catch(ExecutionException | InterruptedException e) {
+                throw new IllegalStateException();
+            }
+        }
+
     }
 
     public Set<LeagueEntryDTO> bySummonerId(String summonerId) {
         return new Builder().summonerId(summonerId).platform(this.platform).getLeagueEntry();
     }
 
-    public void byLeagueId(String leagueId) {
-
+    public LeagueListDTO byLeagueId(String leagueId) {
+        return new Builder().leagueId(leagueId).platform(this.platform).getLeagueList();
     }
 
     public void byLeagueTier(LeagueTier tier) {

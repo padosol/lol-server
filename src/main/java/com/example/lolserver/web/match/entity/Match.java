@@ -1,16 +1,14 @@
 package com.example.lolserver.web.match.entity;
 
 import com.example.lolserver.riot.dto.match.MatchDto;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -19,10 +17,15 @@ import java.time.ZoneOffset;
 @AllArgsConstructor
 public class Match {
 
-    // metaData
     @Id
     private String matchId;
     private String dateVersion;
+
+    @OneToMany(mappedBy = "match")
+    private List<MatchSummoner> matchSummoners = new ArrayList<>();
+
+//    @OneToMany(mappedBy = "match", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+//    private List<MatchTeam> matchTeams = new ArrayList<>();
 
     // info
     private String endOfGameResult;
@@ -46,26 +49,26 @@ public class Match {
     private int season;
 
     public Match of(MatchDto matchDto, int season) {
+        return Match.builder()
+                .matchId(matchDto.getMetadata().getMatchId())
+                .dateVersion(matchDto.getMetadata().getDataVersion())
+                .endOfGameResult(matchDto.getInfo().getEndOfGameResult())
+                .gameCreation(matchDto.getInfo().getGameCreation())
+                .gameDuration(matchDto.getInfo().getGameDuration())
+                .gameEndTimestamp(matchDto.getInfo().getGameEndTimestamp())
+                .gameStartTimestamp(matchDto.getInfo().getGameStartTimestamp())
+                .gameId(matchDto.getInfo().getGameId())
+                .gameMode(matchDto.getInfo().getGameMode())
+                .gameName(matchDto.getInfo().getGameName())
+                .gameType(matchDto.getInfo().getGameType())
+                .gameVersion(matchDto.getInfo().getGameVersion())
+                .mapId(matchDto.getInfo().getMapId())
+                .queueId(matchDto.getInfo().getQueueId())
+                .platformId(matchDto.getInfo().getPlatformId())
+                .tournamentCode(matchDto.getInfo().getTournamentCode())
+                .season(season)
+                .build();
 
-        return new Match(
-            matchDto.getMetadata().getMatchId(),
-            matchDto.getMetadata().getDataVersion(),
-            matchDto.getInfo().getEndOfGameResult(),
-            matchDto.getInfo().getGameCreation(),
-            matchDto.getInfo().getGameDuration(),
-            matchDto.getInfo().getGameEndTimestamp(),
-            matchDto.getInfo().getGameStartTimestamp(),
-            matchDto.getInfo().getGameId(),
-            matchDto.getInfo().getGameMode(),
-            matchDto.getInfo().getGameName(),
-            matchDto.getInfo().getGameType(),
-            matchDto.getInfo().getGameVersion(),
-            matchDto.getInfo().getMapId(),
-            matchDto.getInfo().getQueueId(),
-            matchDto.getInfo().getPlatformId(),
-            matchDto.getInfo().getTournamentCode(),
-            season
-        );
     }
 
 }
