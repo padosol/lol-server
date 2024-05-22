@@ -5,23 +5,22 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Getter
-@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@IdClass(MemberId.class)
 public class Member {
 
-    @EmbeddedId
-    private MemberId id;
+    @Id
+    private Long memberId;
+
+    @Id
+    @ManyToOne
+    @JoinColumn(name = "team_id")
+    private Team team;
 
     private String name;
     private int age;
-
-    @MapsId("teamId")
-    @JoinColumn(name = "team_id")
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Team team;
 
 
 }

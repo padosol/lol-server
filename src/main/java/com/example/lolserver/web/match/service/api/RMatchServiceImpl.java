@@ -10,10 +10,13 @@ import com.example.lolserver.web.match.entity.MatchSummoner;
 import com.example.lolserver.web.match.entity.id.MatchSummonerId;
 import com.example.lolserver.web.match.repository.match.MatchRepository;
 import com.example.lolserver.web.match.repository.matchsummoner.MatchSummonerRepository;
+import com.example.lolserver.web.summoner.entity.Summoner;
+import com.example.lolserver.web.summoner.repository.SummonerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +24,7 @@ public class RMatchServiceImpl implements RMatchService{
 
     private final MatchRepository matchRepository;
     private final MatchSummonerRepository matchSummonerRepository;
+    private final SummonerRepository summonerRepository;
 
 
     @Override
@@ -43,7 +47,6 @@ public class RMatchServiceImpl implements RMatchService{
             for (ParticipantDto participant : participants) {
                 MatchSummoner matchSummoner = matchSummonerRepository.save(
                         new MatchSummoner().of(
-                                new MatchSummonerId(match.getMatchId(), participant.getSummonerId()),
                                 match,
                                 participant
                         )

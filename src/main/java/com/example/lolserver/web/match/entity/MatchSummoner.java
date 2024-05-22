@@ -6,12 +6,13 @@ import com.example.lolserver.web.match.entity.id.MatchSummonerId;
 import com.example.lolserver.web.match.entity.value.matchsummoner.ItemValue;
 import com.example.lolserver.web.match.entity.value.matchsummoner.StatValue;
 import com.example.lolserver.web.match.entity.value.matchsummoner.StyleValue;
-import com.example.lolserver.web.summoner.entity.Summoner;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Entity
 @Table(name = "match_summoner")
@@ -19,17 +20,18 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@IdClass(MatchSummonerId.class)
 public class MatchSummoner {
-
-    @EmbeddedId
-    private MatchSummonerId id;
 
     // match 정보 필요
     // summoner 정보 필요
-    @MapsId("matchId")
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "match_id")
     private Match match;
+
+    @Id
+    private String summonerId;
 
     // 유저 정보
     private String riotIdGameName;
@@ -156,10 +158,10 @@ public class MatchSummoner {
     @Embedded
     private StyleValue styleValue;
 
-    public MatchSummoner of(MatchSummonerId id, Match match, ParticipantDto participantDto) {
+    public MatchSummoner of(Match match, ParticipantDto participantDto) {
         return MatchSummoner.builder()
-                .id(id)
                 .match(match)
+                .summonerId(participantDto.getSummonerId())
         .riotIdGameName(participantDto.getRiotIdGameName())
         .riotIdTagline(participantDto.getRiotIdTagline())
         .puuid(participantDto.getPuuid())

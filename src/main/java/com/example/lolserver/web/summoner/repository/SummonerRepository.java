@@ -11,5 +11,6 @@ import java.util.Optional;
 @Repository
 public interface SummonerRepository extends JpaRepository<Summoner, String> {
 
+    Optional<Summoner> findSummonerByPuuid(String puuid);
 
 }

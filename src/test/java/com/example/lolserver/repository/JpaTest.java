@@ -28,6 +28,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -99,8 +100,9 @@ public class JpaTest {
             Match saveMatch = matchRepository.save(match);
 
             for (ParticipantDto participant : participants) {
+
                 MatchSummonerId matchSummonerId = new MatchSummonerId(saveMatch.getMatchId(), participant.getSummonerId());
-                MatchSummoner matchSummoner = new MatchSummoner().of(matchSummonerId, saveMatch, participant);
+                MatchSummoner matchSummoner = new MatchSummoner().of(saveMatch, participant);
 
                 matchSummonerRepository.save(matchSummoner);
             }
@@ -121,21 +123,18 @@ public class JpaTest {
 
     @Test
     @Order(2)
+    @Transactional
     void MATCH_QUERY_DSL_REPOSITORY_TEST() {
 
         JPAQueryFactory queryFactory = new JPAQueryFactory(em);
         QMatch match = QMatch.match;
         QMatchSummoner summoner = QMatchSummoner.matchSummoner;
 
-        List<MatchSummoner> matchSummoners = matchSummonerRepository.findAll();
-
-        List<Match> fetch = queryFactory.selectFrom(match)
-                .leftJoin(match.matchSummoners, summoner)
-                .fetch();
-
         List<Match> all = matchRepository.findAll();
 
-        System.out.println(fetch);
+        List<MatchSummoner> matchSummoners = matchSummonerRepository.findAll();
+
+        System.out.println(matchSummoners);
 
     }
 }

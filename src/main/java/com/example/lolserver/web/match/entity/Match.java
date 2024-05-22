@@ -21,11 +21,9 @@ public class Match {
     private String matchId;
     private String dateVersion;
 
-    @OneToMany(mappedBy = "match")
-    private List<MatchSummoner> matchSummoners = new ArrayList<>();
 
-//    @OneToMany(mappedBy = "match", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-//    private List<MatchTeam> matchTeams = new ArrayList<>();
+    @OneToMany(mappedBy = "match", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MatchSummoner> matchSummoners;
 
     // info
     private String endOfGameResult;

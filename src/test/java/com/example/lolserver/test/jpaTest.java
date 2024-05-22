@@ -6,7 +6,8 @@ import com.example.lolserver.test.entity.Team;
 import com.example.lolserver.test.entity.id.MemberId;
 import com.example.lolserver.test.repository.MemberRepository;
 import com.example.lolserver.test.repository.TeamRepository;
-import jakarta.persistence.EntityManager;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,24 +43,30 @@ public class jpaTest {
 
     @Test
     void 일대다_테스트() {
-        Team teamA = teamRepository.save(Team.builder().teamName("teamA").build());
 
-        Member a = Member.builder().name("A").age(21).id(new MemberId(1L, teamA.getId())).build();
-        Member b = Member.builder().name("B").age(22).id(new MemberId(2L, teamA.getId())).build();
+        Team teamA = Team.builder().teamName("teamA").build();
 
-        a.setTeam(teamA);
-        b.setTeam(teamA);
+        em.persist(teamA);
+        em.flush();
 
-        Member saveA = memberRepository.save(a);
-        Member saveB = memberRepository.save(b);
+        Member memberA = new Member(1L, teamA, "A", 22);
+        Member memberB = new Member(2L, teamA, "B", 22);
+
+        em.persist(memberA);
+        em.persist(memberB);
+
+        em.getTransaction().commit();
 
         em.clear();
+        // 조회
 
-        List<Member> all1 = memberRepository.findAll();
-        List<Team> all = teamRepository.findAll();
+        Team team = em.find(Team.class, teamA.getId());
+
+        System.out.println("Member Size: " + team.getMemberList().size());
+
+        em.close();
 
 
-        System.out.println(all);
     }
 
 }
