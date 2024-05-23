@@ -48,6 +48,8 @@ public class QMatch extends EntityPathBase<Match> {
 
     public final ListPath<MatchSummoner, QMatchSummoner> matchSummoners = this.<MatchSummoner, QMatchSummoner>createList("matchSummoners", MatchSummoner.class, QMatchSummoner.class, PathInits.DIRECT2);
 
+    public final ListPath<MatchTeam, QMatchTeam> matchTeams = this.<MatchTeam, QMatchTeam>createList("matchTeams", MatchTeam.class, QMatchTeam.class, PathInits.DIRECT2);
+
     public final StringPath platformId = createString("platformId");
 
     public final NumberPath<Integer> queueId = createNumber("queueId", Integer.class);

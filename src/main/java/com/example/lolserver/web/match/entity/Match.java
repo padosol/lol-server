@@ -1,14 +1,22 @@
 package com.example.lolserver.web.match.entity;
 
 import com.example.lolserver.riot.dto.match.MatchDto;
+import com.example.lolserver.web.dto.data.GameData;
+import com.example.lolserver.web.dto.data.gameData.GameInfoData;
+import com.example.lolserver.web.dto.data.gameData.ParticipantData;
+import com.example.lolserver.web.dto.data.gameData.TeamInfoData;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.type.MapType;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Getter
@@ -18,12 +26,18 @@ import java.util.List;
 public class Match {
 
     @Id
+    @Column(name = "match_id")
     private String matchId;
+
     private String dateVersion;
 
-
-    @OneToMany(mappedBy = "match", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 10)
+    @OneToMany(mappedBy = "match", fetch = FetchType.LAZY)
     private List<MatchSummoner> matchSummoners;
+
+    @BatchSize(size = 2)
+    @OneToMany(mappedBy = "match", fetch = FetchType.LAZY)
+    private List<MatchTeam> matchTeams;
 
     // info
     private String endOfGameResult;
@@ -46,6 +60,22 @@ public class Match {
     // 시즌
     private int season;
 
+    public void addMatchSummoner(MatchSummoner matchSummoner) {
+        if(this.matchSummoners == null) {
+            this.matchSummoners = new ArrayList<>();
+        }
+
+        this.matchSummoners.add(matchSummoner);
+    }
+
+    public void addMatchTeam(MatchTeam matchTeam) {
+        if(this.matchTeams == null) {
+            this.matchTeams = new ArrayList<>();
+        }
+
+        this.matchTeams.add(matchTeam);
+    }
+
     public Match of(MatchDto matchDto, int season) {
         return Match.builder()
                 .matchId(matchDto.getMetadata().getMatchId())
@@ -66,7 +96,37 @@ public class Match {
                 .tournamentCode(matchDto.getInfo().getTournamentCode())
                 .season(season)
                 .build();
+    }
 
+    public GameData toGameData(String puuid) {
+
+        GameData gameData = new GameData();
+
+        // 게임 정보
+        GameInfoData gameInfoData = new GameInfoData(this);
+        gameData.setGameInfoData(gameInfoData);
+
+        // 유저 정보
+        List<ParticipantData> participantData = new ArrayList<>();
+        for (MatchSummoner matchSummoner : this.matchSummoners) {
+            ParticipantData data = matchSummoner.toData();
+            participantData.add(data);
+
+            if(data.getPuuid().equals(puuid)) {
+                gameData.setMyData(data);
+            }
+        }
+        gameData.setParticipantData(participantData);
+
+        // 팀정보
+        Map<Integer, TeamInfoData> teamInfoDataMap = new HashMap<>();
+        for (MatchTeam matchTeam : this.matchTeams) {
+            teamInfoDataMap.put(matchTeam.getTeamId(), matchTeam.toData());
+
+        }
+        gameData.setTeamInfoData(teamInfoDataMap);
+
+        return gameData;
     }
 
 }

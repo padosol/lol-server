@@ -2,7 +2,10 @@ package com.example.lolserver.web.match.service;
 
 import com.example.lolserver.web.dto.data.GameData;
 import com.example.lolserver.web.match.dto.MatchRequest;
+import com.example.lolserver.web.match.dto.MatchResponse;
+import com.example.lolserver.web.match.entity.Match;
 import com.example.lolserver.web.match.entity.MatchSummoner;
+import com.example.lolserver.web.match.repository.match.dsl.MatchRepositoryCustom;
 import com.example.lolserver.web.match.repository.matchsummoner.dsl.MatchSummonerRepositoryCustom;
 import com.example.lolserver.web.match.service.api.RMatchService;
 import lombok.RequiredArgsConstructor;
@@ -22,19 +25,21 @@ public class MatchServiceImpl implements MatchService {
 
     private final RMatchService rMatchService;
     private final MatchSummonerRepositoryCustom matchSummonerRepositoryCustom;
+    private final MatchRepositoryCustom matchRepositoryCustom;
 
     @Override
-    public List<GameData> getMatches(MatchRequest matchRequest) {
+    public MatchResponse getMatches(MatchRequest matchRequest) {
 
         Pageable pageable = PageRequest.of(matchRequest.getPageNo(), 20, Sort.by(Sort.Direction.DESC, "match"));
-        Page<MatchSummoner> matchSummoners = matchSummonerRepositoryCustom.findAllByPuuidAndQueueId(matchRequest, pageable);
 
-        if(matchSummoners.getTotalPages() == 0) {
+        Page<Match> matches = matchRepositoryCustom.getMatches(matchRequest, pageable);
 
+        if(matches.getSize() == 0) {
+            return rMatchService.getMatches(matchRequest);
         }
 
-        List<MatchSummoner> list = matchSummoners.get().toList();
+        List<GameData> gameDataList = matches.getContent().stream().map(match -> match.toGameData(matchRequest.getPuuid())).toList();
 
-        return null;
+        return new MatchResponse(gameDataList, matches.getSize());
     }
 }

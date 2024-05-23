@@ -2,6 +2,7 @@ package com.example.lolserver.web.match.entity;
 
 
 import com.example.lolserver.riot.dto.match.ParticipantDto;
+import com.example.lolserver.web.dto.data.gameData.ParticipantData;
 import com.example.lolserver.web.match.entity.id.MatchSummonerId;
 import com.example.lolserver.web.match.entity.value.matchsummoner.ItemValue;
 import com.example.lolserver.web.match.entity.value.matchsummoner.StatValue;
@@ -23,15 +24,16 @@ import java.util.List;
 @IdClass(MatchSummonerId.class)
 public class MatchSummoner {
 
+
+    @Id
+    private String summonerId;
+
     // match 정보 필요
     // summoner 정보 필요
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "match_id")
     private Match match;
-
-    @Id
-    private String summonerId;
 
     // 유저 정보
     private String riotIdGameName;
@@ -262,6 +264,15 @@ public class MatchSummoner {
                 .statValue(new StatValue(participantDto))
                 .styleValue(new StyleValue(participantDto))
                 .build();
+    }
+
+
+
+
+    public ParticipantData toData() {
+
+
+        return null;
     }
 
 }

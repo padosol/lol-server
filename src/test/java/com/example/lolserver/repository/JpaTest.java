@@ -9,6 +9,7 @@ import com.example.lolserver.riot.dto.match.ParticipantDto;
 import com.example.lolserver.riot.dto.match.TeamDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.riot.type.Platform;
+import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.entity.*;
 import com.example.lolserver.web.match.entity.id.MatchSummonerId;
 import com.example.lolserver.web.match.entity.id.MatchTeamId;
@@ -28,6 +29,10 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -92,33 +97,57 @@ public class JpaTest {
             List<ParticipantDto> participants = matchDto.getInfo().getParticipants();
             List<TeamDto> teams = matchDto.getInfo().getTeams();
 
-            Summoner summoner = new Summoner(accountDto, summonerDTO, "kr");
-            Summoner findSummoner = summonerRepository.save(summoner);
-
             // 저장 로직
             Match match = new Match().of(matchDto, 23);
             Match saveMatch = matchRepository.save(match);
 
             for (ParticipantDto participant : participants) {
-
-                MatchSummonerId matchSummonerId = new MatchSummonerId(saveMatch.getMatchId(), participant.getSummonerId());
-                MatchSummoner matchSummoner = new MatchSummoner().of(saveMatch, participant);
-
-                matchSummonerRepository.save(matchSummoner);
+                MatchSummoner matchSummoner = matchSummonerRepository.save(new MatchSummoner().of(saveMatch, participant));
+                saveMatch.addMatchSummoner(matchSummoner);
             }
 
             for (TeamDto team : teams) {
-                MatchTeamId matchTeamId = new MatchTeamId(saveMatch.getMatchId(), team.getTeamId());
-
-                MatchTeam matchTeam = new MatchTeam().of(match, matchTeamId, team);
-
-                matchTeamRepository.save(matchTeam);
+                MatchTeam matchTeam = matchTeamRepository.save(new MatchTeam().of(match, team));
+                saveMatch.addMatchTeam(matchTeam);
             }
-
         }
 
-        List<MatchTeam> matchTeams = matchTeamRepository.findAll();
-        List<MatchSummoner> matchSummoners = matchSummonerRepository.findAll();
+        em.getTransaction().commit();
+        em.clear();
+
+        JPAQueryFactory queryFactory = new JPAQueryFactory(em);
+
+        QMatch match = QMatch.match;
+        QMatchSummoner matchSummoner = QMatchSummoner.matchSummoner;
+
+        String puuid = accountDto.getPuuid();
+
+        List<Match> all = matchRepository.findAll();
+
+
+        MatchRequest request = new MatchRequest();
+        request.setPuuid(puuid);
+        request.setPageNo(0);
+        request.setQueueId(440);
+
+        PageRequest pageRequest = PageRequest.of(request.getPageNo(), 10);
+
+        List<Match> result = queryFactory.selectFrom(match)
+                .join(match.matchSummoners, matchSummoner).on(matchSummoner.puuid.eq(puuid))
+                .offset(pageRequest.getOffset())
+                .limit(pageRequest.getPageSize())
+                .where(match.queueId.eq(request.getQueueId()))
+                .fetch();
+
+        JPAQuery<Match> countQuery = queryFactory.selectFrom(match)
+                .join(match.matchSummoners, matchSummoner).on(matchSummoner.puuid.eq(puuid));
+
+        Page<Match> page = PageableExecutionUtils.getPage(result, pageRequest, () -> countQuery.fetch().size());
+
+        List<Match> content = page.getContent();
+
+        System.out.println("test");
+
     }
 
     @Test
@@ -126,15 +155,14 @@ public class JpaTest {
     @Transactional
     void MATCH_QUERY_DSL_REPOSITORY_TEST() {
 
-        JPAQueryFactory queryFactory = new JPAQueryFactory(em);
-        QMatch match = QMatch.match;
-        QMatchSummoner summoner = QMatchSummoner.matchSummoner;
-
         List<Match> all = matchRepository.findAll();
+        
+        em.clear();
 
-        List<MatchSummoner> matchSummoners = matchSummonerRepository.findAll();
+        List<Match> all1 = matchRepository.findAll();
 
-        System.out.println(matchSummoners);
+        System.out.println("test");
+
 
     }
 }

@@ -62,11 +62,28 @@ public class jpaTest {
 
         Team team = em.find(Team.class, teamA.getId());
 
-        System.out.println("Member Size: " + team.getMemberList().size());
+        System.out.println("Member Size: " + team.getMemberList());
 
         em.close();
+    }
 
+    @Test
+    void 일대다_테스트_JPA_DATA() {
+        Team teamA = Team.builder().teamName("teamA").build();
+        teamRepository.save(teamA);
 
+        Member memberA = new Member(1L, teamA, "A", 22);
+        Member memberB = new Member(2L, teamA, "B", 22);
+
+        memberRepository.save(memberA);
+        memberRepository.save(memberB);
+
+        em.getTransaction().commit();
+        em.clear();
+
+        Team team = teamRepository.findById(teamA.getId()).orElseThrow();
+
+        System.out.println("Member size: " + team.getMemberList().size());
     }
 
 }

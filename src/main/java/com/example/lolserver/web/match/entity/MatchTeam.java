@@ -5,6 +5,7 @@ import com.example.lolserver.riot.dto.match.BanDto;
 import com.example.lolserver.riot.dto.match.MatchDto;
 import com.example.lolserver.riot.dto.match.ObjectivesDto;
 import com.example.lolserver.riot.dto.match.TeamDto;
+import com.example.lolserver.web.dto.data.gameData.TeamInfoData;
 import com.example.lolserver.web.match.entity.id.MatchTeamId;
 import com.example.lolserver.web.match.entity.value.team.TeamBanValue;
 import com.example.lolserver.web.match.entity.value.team.TeamObjectValue;
@@ -22,15 +23,17 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@IdClass(MatchTeamId.class)
 public class MatchTeam {
 
-    @EmbeddedId
-    private MatchTeamId id;
+    @Id
+    private int teamId;
 
-    @MapsId("matchId")
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "match_id")
     private Match match;
+
 
     private	boolean win;
 
@@ -40,7 +43,7 @@ public class MatchTeam {
     @Embedded
     private TeamBanValue teamBan;
 
-    public MatchTeam of(Match match, MatchTeamId id, TeamDto teamDto) {
+    public MatchTeam of(Match match, TeamDto teamDto) {
 
         ObjectivesDto objectives = teamDto.getObjectives();
         TeamObjectValue teamObjectValue = TeamObjectValue.builder()
@@ -75,12 +78,18 @@ public class MatchTeam {
         }
 
         return new MatchTeam(
-                id,
+                teamDto.getTeamId(),
                 match,
                 teamDto.isWin(),
                 teamObjectValue,
                 builder.build()
         );
+    }
+
+
+    public TeamInfoData toData() {
+
+        return null;
     }
 
 }

@@ -10,10 +10,9 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-@Embeddable
 public class MatchTeamId implements Serializable {
 
-    private String matchId;
+    private String match;
 
     private	int teamId;
 }

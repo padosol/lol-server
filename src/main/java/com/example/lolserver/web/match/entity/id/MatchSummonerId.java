@@ -11,10 +11,9 @@ import java.util.Objects;
 @AllArgsConstructor
 public class MatchSummonerId implements Serializable {
 
-    private String match;
-
     private String summonerId;
 
+    private String match;
 
     @Override
     public boolean equals(Object obj) {
