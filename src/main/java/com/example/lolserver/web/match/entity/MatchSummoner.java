@@ -265,14 +265,4 @@ public class MatchSummoner {
                 .styleValue(new StyleValue(participantDto))
                 .build();
     }
-
-
-
-
-    public ParticipantData toData() {
-
-
-        return null;
-    }
-
 }

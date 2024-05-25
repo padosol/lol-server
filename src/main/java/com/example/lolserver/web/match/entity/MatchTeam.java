@@ -86,10 +86,4 @@ public class MatchTeam {
         );
     }
 
-
-    public TeamInfoData toData() {
-
-        return null;
-    }
-
 }

@@ -109,7 +109,7 @@ public class Match {
         // 유저 정보
         List<ParticipantData> participantData = new ArrayList<>();
         for (MatchSummoner matchSummoner : this.matchSummoners) {
-            ParticipantData data = matchSummoner.toData();
+            ParticipantData data = new ParticipantData().of(matchSummoner);
             participantData.add(data);
 
             if(data.getPuuid().equals(puuid)) {
@@ -121,8 +121,7 @@ public class Match {
         // 팀정보
         Map<Integer, TeamInfoData> teamInfoDataMap = new HashMap<>();
         for (MatchTeam matchTeam : this.matchTeams) {
-            teamInfoDataMap.put(matchTeam.getTeamId(), matchTeam.toData());
-
+            teamInfoDataMap.put(matchTeam.getTeamId(), new TeamInfoData().of(matchTeam));
         }
         gameData.setTeamInfoData(teamInfoDataMap);
 

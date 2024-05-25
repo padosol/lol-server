@@ -1,5 +1,6 @@
 package com.example.lolserver.web.dto.data.gameData;
 
+import com.example.lolserver.web.match.entity.MatchSummoner;
 import com.example.lolserver.web.match.entity.value.matchsummoner.ItemValue;
 import com.example.lolserver.web.match.entity.value.matchsummoner.StatValue;
 import com.example.lolserver.web.match.entity.value.matchsummoner.StyleValue;
@@ -55,5 +56,53 @@ public class ParticipantData {
     private int visionWardsBoughtInGame;
     private int wardsKilled;
     private int wardsPlaced;
+
+    public ParticipantData of(MatchSummoner matchSummoner) {
+
+        this.assists = matchSummoner.getAssists();
+        this.champExperience = matchSummoner.getChampExperience();
+        this.champLevel = matchSummoner.getChampLevel();
+        this.championId = matchSummoner.getChampionId();
+        this.championName = matchSummoner.getChampionName();
+        this.consumablesPurchased = matchSummoner.getConsumablesPurchased();
+        this.deaths = matchSummoner.getDeaths();
+        this.doubleKills = matchSummoner.getDoubleKills();
+        this.goldEarned = matchSummoner.getGoldEarned();
+        this.individualPosition = matchSummoner.getIndividualPosition();
+        this.item = matchSummoner.getItem();
+        this.itemsPurchased = matchSummoner.getItemsPurchased();
+        this.kills = matchSummoner.getKills();
+        this.lane = matchSummoner.getLane();
+        this.participantId = matchSummoner.getParticipantId();
+        this.pentaKills = matchSummoner.getPentaKills();
+        this.statValue = matchSummoner.getStatValue();
+        this.styleValue = matchSummoner.getStyleValue();
+        this.profileIcon = matchSummoner.getProfileIcon();
+        this.puuid = matchSummoner.getPuuid();
+        this.quadraKills = matchSummoner.getQuadraKills();
+        this.riotIdGameName = matchSummoner.getRiotIdGameName();
+        this.riotIdTagline = matchSummoner.getRiotIdTagline();
+        this.role = matchSummoner.getRole();
+        this.summoner1Id = matchSummoner.getSummoner1Id();
+        this.summoner2Id = matchSummoner.getSummoner2Id();
+        this.summonerId = matchSummoner.getSummonerId();
+        this.summonerLevel = matchSummoner.getSummonerLevel();
+        this.summonerName = matchSummoner.getSummonerName();
+        this.teamId = matchSummoner.getTeamId();
+        this.teamPosition = matchSummoner.getTeamPosition();
+        this.timeCCingOthers = matchSummoner.getTimeCCingOthers();
+        this.timePlayed = matchSummoner.getTimePlayed();
+        this.tripleKills = matchSummoner.getTripleKills();
+        this.visionScore = matchSummoner.getVisionScore();
+        this.totalMinionsKilled = matchSummoner.getTotalMinionsKilled();
+        this.neutralMinionsKilled = matchSummoner.getNeutralMinionsKilled();
+        this.win = matchSummoner.isWin();
+        this.totalDamageDealtToChampions = matchSummoner.getTotalDamageDealtToChampions();
+        this.visionWardsBoughtInGame = matchSummoner.getVisionWardsBoughtInGame();
+        this.wardsKilled = matchSummoner.getWardsKilled();
+        this.wardsPlaced = matchSummoner.getWardsPlaced();
+
+        return this;
+    }
 
 }

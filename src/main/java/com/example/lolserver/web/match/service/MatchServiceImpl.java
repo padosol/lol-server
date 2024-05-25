@@ -34,7 +34,7 @@ public class MatchServiceImpl implements MatchService {
 
         Page<Match> matches = matchRepositoryCustom.getMatches(matchRequest, pageable);
 
-        if(matches.getSize() == 0) {
+        if(matches.getContent().size() == 0) {
             return rMatchService.getMatches(matchRequest);
         }
 

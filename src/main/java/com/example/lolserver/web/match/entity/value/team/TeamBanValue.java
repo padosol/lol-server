@@ -3,6 +3,9 @@ package com.example.lolserver.web.match.entity.value.team;
 import jakarta.persistence.Embeddable;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 @Builder
@@ -25,5 +28,9 @@ public class TeamBanValue {
 
     private	int champion5Id;
     private	int pick5Turn;
+
+    public String test() {
+        return "test";
+    }
 
 }
