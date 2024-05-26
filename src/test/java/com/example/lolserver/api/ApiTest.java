@@ -26,8 +26,10 @@ public class ApiTest {
     @Test
     void MATCH_API_TEST() throws ExecutionException, InterruptedException {
 
-        AccountDto accountDto = RiotAPI.account(Platform.KR).byRiotId("어쩌라궁내맴", "D 동").get();
+        AccountDto accountDto = RiotAPI.account(Platform.KR).byRiotId("NS Callme", "KR1");
         List<String> matchIds = RiotAPI.matchList(Platform.KR).byPuuid(accountDto.getPuuid()).get();
+
+        List<String> allMatchIds = RiotAPI.matchList(Platform.KR).getAllByPuuid(accountDto.getPuuid());
 
         List<MatchDto> matchDtoList = RiotAPI.match(Platform.KR).byMatchIds(matchIds);
 
@@ -36,7 +38,7 @@ public class ApiTest {
 
     @Test
     void SUMMONER_API_TEST() throws ExecutionException, InterruptedException {
-        AccountDto accountDto = RiotAPI.account(Platform.KR).byRiotId("타 잔", "KR1").get();
+        AccountDto accountDto = RiotAPI.account(Platform.KR).byRiotId("타 잔", "KR1");
         SummonerDTO summonerDTO = RiotAPI.summoner(Platform.KR).byPuuid(accountDto.getPuuid());
 
         Assertions.assertThat(accountDto.getPuuid()).isEqualTo(summonerDTO.getPuuid());
@@ -48,7 +50,7 @@ public class ApiTest {
         DefaultRiotExecute execute = new DefaultRiotExecute("RGAPI-e6d2cce3-37b3-4b2a-bb54-3859139142d3");
         RiotAPI.setRiotExecute(execute);
 
-        AccountDto accountDto = RiotAPI.account(Platform.KR).byRiotId("어쩌라궁내맴", "D 동").get();
+        AccountDto accountDto = RiotAPI.account(Platform.KR).byRiotId("어쩌라궁내맴", "D 동");
         SummonerDTO summonerDTO = RiotAPI.summoner(Platform.KR).byPuuid(accountDto.getPuuid());
 
         Set<LeagueEntryDTO> leagueEntryDTOS = RiotAPI.league(Platform.KR).bySummonerId(summonerDTO.getId());

@@ -56,4 +56,19 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
 
         return jpaQueryFactory.selectFrom(match).fetch();
     }
+
+    @Override
+    public List<String> getMatchIdsNotIn(List<String> matchIds) {
+
+        List<String> inMatchIds = jpaQueryFactory.selectFrom(match)
+                .where(match.matchId.in(matchIds))
+                .fetch()
+                .stream().map(Match::getMatchId).toList();
+
+        List<String> result = matchIds.stream().filter(matchId -> {
+            return !inMatchIds.contains(matchId);
+        }).toList();
+
+        return result;
+    }
 }

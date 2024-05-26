@@ -1,13 +1,16 @@
 package com.example.lolserver.riot.core.builder.match;
 
 import com.example.lolserver.riot.core.api.RiotAPI;
+import com.example.lolserver.riot.dto.match.MatchDto;
 import com.example.lolserver.riot.type.Platform;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -25,7 +28,9 @@ public class MatchList {
     @Setter
     @lombok.Builder
     public static class MatchQuery {
-        private Long startTime;
+
+        @lombok.Builder.Default
+        private Long startTime = 1715698800L;
         private Long endTime;
         private Integer queue;
         private String type;
@@ -110,10 +115,55 @@ public class MatchList {
             }
         }
 
+        public List<String> getAll() {
+
+            MatchQuery query = MatchQuery.builder().build();
+            query.setCount(100);
+
+            List<String> matchList = new ArrayList<>();
+
+            get(query, matchList);
+
+            return matchList;
+        }
+
+        private void get(MatchQuery query, List<String> matchList) {
+            UriComponentsBuilder builder = UriComponentsBuilder.newInstance()
+                    .scheme("https")
+                    .host(platform.getPlatform() + ".api.riotgames.com")
+                    .path("/lol/match/v5/matches/by-puuid/" + this.puuid + "/ids");
+
+            builder.queryParams(query.getParams());
+
+            try {
+                String[] result = RiotAPI.getExecute().execute(String[].class, builder.build().toUri()).get();
+
+                matchList.addAll(Arrays.asList(result));
+
+                if(result.length == 100) {
+                    String matchId = result[99];
+                    MatchDto matchDto = RiotAPI.match(platform).byMatchId(matchId);
+
+                    long gameEndTimestamp = matchDto.getInfo().getGameEndTimestamp() / 1000;
+                    query.setEndTime(gameEndTimestamp);
+
+                    get(query, matchList);
+                }
+
+            } catch (ExecutionException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+
     }
 
     public Builder byPuuid(String puuid) {
         return new Builder(puuid).platform(platform);
+    }
+
+    public List<String> getAllByPuuid(String puuid) {
+        return new Builder(puuid).platform(this.platform).getAll();
     }
 
 }

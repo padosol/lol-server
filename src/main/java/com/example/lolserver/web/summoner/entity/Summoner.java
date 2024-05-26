@@ -37,6 +37,8 @@ public class Summoner {
 
     private String region;
 
+    private LocalDateTime revisionClickDate;
+
     public Summoner(String summonerName, String region) {
         this.gameName = summonerName;
         this.region = region;
@@ -55,6 +57,8 @@ public class Summoner {
         this.tagLine = account.getTagLine();
 
         this.region = region;
+
+        this.revisionClickDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(summoner.getRevisionDate()), ZoneId.systemDefault());
     }
 
     public void splitGameNameTagLine() {
@@ -73,7 +77,8 @@ public class Summoner {
                 .accountId(this.accountId)
                 .summonerLevel(this.summonerLevel)
                 .profileIconId(this.profileIconId)
-                .lastRevisionDateTime(LocalDateTime.ofInstant(Instant.ofEpochMilli(this.revisionDate), ZoneId.systemDefault()))
+//                .lastRevisionDateTime(LocalDateTime.ofInstant(Instant.ofEpochMilli(this.revisionDate), ZoneId.systemDefault()))
+                .lastRevisionDateTime(this.revisionClickDate)
                 .puuid(this.puuid)
                 .gameName(this.gameName)
                 .tagLine(this.tagLine)
@@ -81,4 +86,22 @@ public class Summoner {
                 .build();
     }
 
+
+    public boolean isRevision() {
+        LocalDateTime now = LocalDateTime.now();
+
+        return now.minusMinutes(3).isAfter(this.revisionClickDate);
+    }
+
+
+    public void revision(SummonerDTO summonerDTO, AccountDto accountDto) {
+
+        this.profileIconId = summonerDTO.getProfileIconId();
+        this.revisionDate = summonerDTO.getRevisionDate();
+        this.summonerLevel = summonerDTO.getSummonerLevel();
+        this.gameName = accountDto.getGameName();
+        this.tagLine = accountDto.getTagLine();
+        this.revisionClickDate = LocalDateTime.now();
+
+    }
 }

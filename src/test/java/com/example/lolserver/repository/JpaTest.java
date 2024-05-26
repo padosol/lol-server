@@ -76,7 +76,7 @@ public class JpaTest {
     @Order(1)
     @DisplayName("매치 정보 가져와서 등록하는 함수")
     void MATCH_REPOSITORY_TEST() throws ExecutionException, InterruptedException {
-        AccountDto accountDto = RiotAPI.account(Platform.KR).byRiotId("어쩌라궁내맴", "D 동").get();
+        AccountDto accountDto = RiotAPI.account(Platform.KR).byRiotId("어쩌라궁내맴", "D 동");
         if(accountDto.isError()) {
             throw new IllegalStateException("존재하지 않는 유저 입니다.");
         }

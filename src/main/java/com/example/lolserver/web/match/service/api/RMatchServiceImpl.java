@@ -38,14 +38,26 @@ public class RMatchServiceImpl implements RMatchService{
     public MatchResponse getMatches(MatchRequest matchRequest) {
 
         // 최근 20게임
-        List<String> matchIds = RiotAPI.matchList(Platform.valueOfName(matchRequest.getPlatform())).byPuuid(matchRequest.getPuuid()).get();
+        List<String> matchIds = RiotAPI.matchList(Platform.valueOfName(matchRequest.getPlatform()))
+                .byPuuid(matchRequest.getPuuid())
+                .query(matchQueryBuilder -> matchQueryBuilder.queue(matchRequest.getQueueId()).build())
+                .get();
 
         List<MatchDto> matchDtoList = RiotAPI.match(Platform.valueOfName(matchRequest.getPlatform())).byMatchIds(matchIds);
         
         // match 저장해야함
         // matchSummoner 저장해야함
         // matchTeam 저장해야함
+        List<Match> matchList = insertMatches(matchDtoList);
 
+        List<GameData> dataList = matchList.stream().map(matchData -> matchData.toGameData(matchRequest.getPuuid())).toList();
+
+        return new MatchResponse(dataList, (long) dataList.size());
+    }
+
+    @Override
+    @Transactional
+    public List<Match> insertMatches(List<MatchDto> matchDtoList) {
         List<Match> matchList = new ArrayList<>();
         for (MatchDto matchDto : matchDtoList) {
             Match match = matchRepository.save(new Match().of(matchDto, 23));
@@ -66,8 +78,6 @@ public class RMatchServiceImpl implements RMatchService{
             matchList.add(match);
         }
 
-        List<GameData> dataList = matchList.stream().map(matchData -> matchData.toGameData(matchRequest.getPuuid())).toList();
-
-        return new MatchResponse(dataList, dataList.size());
+        return matchList;
     }
 }

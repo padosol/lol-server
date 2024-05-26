@@ -40,6 +40,6 @@ public class MatchServiceImpl implements MatchService {
 
         List<GameData> gameDataList = matches.getContent().stream().map(match -> match.toGameData(matchRequest.getPuuid())).toList();
 
-        return new MatchResponse(gameDataList, matches.getSize());
+        return new MatchResponse(gameDataList, matches.getTotalElements());
     }
 }

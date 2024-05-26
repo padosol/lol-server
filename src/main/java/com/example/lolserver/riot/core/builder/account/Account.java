@@ -37,7 +37,7 @@ public class Account {
             return this;
         }
 
-        public AccountDto get() throws ExecutionException, InterruptedException {
+        public AccountDto get() {
 
             if(this.platform == null) {
 
@@ -61,17 +61,22 @@ public class Account {
                 throw new IllegalStateException("Account Path 가 존재하지 않습니다.");
             }
 
-            return RiotAPI.getExecute().execute(AccountDto.class, builder.build().toUri()).get();
+            try {
+                return RiotAPI.getExecute().execute(AccountDto.class, builder.build().toUri()).get();
+            } catch (ExecutionException | InterruptedException e) {
+                return new AccountDto();
+            }
+
         }
 
     }
 
-    public Builder byPuuid(String puuid) {
-        return new Builder(puuid).platform(this.platform);
+    public AccountDto byPuuid(String puuid) {
+        return new Builder(puuid).platform(this.platform).get();
     }
 
-    public Builder byRiotId(String gameName, String tagLine) {
-        return new Builder(gameName, tagLine).platform(this.platform);
+    public AccountDto byRiotId(String gameName, String tagLine) {
+        return new Builder(gameName, tagLine).platform(this.platform).get();
     }
 
 }

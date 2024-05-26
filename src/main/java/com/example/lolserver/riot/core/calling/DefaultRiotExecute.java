@@ -41,6 +41,8 @@ public class DefaultRiotExecute implements RiotExecute{
 
                     Map<String, String> headerMap = clientResponse.headers().asHttpHeaders().toSingleValueMap();
 
+                    log.info("URI: {}", uri.toString());
+
                     for(String key : headerMap.keySet()) {
                         String header = headerMap.get(key);
 

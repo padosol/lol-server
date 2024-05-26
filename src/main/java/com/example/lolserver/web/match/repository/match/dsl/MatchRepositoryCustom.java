@@ -12,4 +12,6 @@ public interface MatchRepositoryCustom {
     Page<Match> getMatches(MatchRequest matchRequest, Pageable pageable);
 
     List<Match> getAllMatches();
+
+    List<String> getMatchIdsNotIn(List<String> matchId);
 }

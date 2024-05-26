@@ -11,11 +11,11 @@ import java.util.List;
 public class MatchResponse {
 
     private List<GameData> gameData;
-    private int totalCount;
+    private Long totalCount;
 
     public MatchResponse(){};
 
-    public MatchResponse(List<GameData> gameData, int totalCount) {
+    public MatchResponse(List<GameData> gameData, Long totalCount) {
         this.gameData = gameData;
         this.totalCount = totalCount;
     }
