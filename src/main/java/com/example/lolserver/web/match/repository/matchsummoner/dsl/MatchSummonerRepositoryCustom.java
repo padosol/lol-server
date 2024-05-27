@@ -1,5 +1,6 @@
 package com.example.lolserver.web.match.repository.matchsummoner.dsl;
 
+import com.example.lolserver.web.match.dto.MSChampionResponse;
 import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.entity.MatchSummoner;
 import org.springframework.data.domain.Page;
@@ -13,5 +14,6 @@ public interface MatchSummonerRepositoryCustom {
 
     List<String> findAllByMatchIdNotExist(List<String> matchIds);
 
+    List<MSChampionResponse> findAllChampionKDAByPuuidAndSeasonAndQueueType(String puuid, int season, int queueType);
 
 }
