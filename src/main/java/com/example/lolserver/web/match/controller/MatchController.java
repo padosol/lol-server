@@ -1,6 +1,8 @@
 package com.example.lolserver.web.match.controller;
 
 import com.example.lolserver.web.dto.data.GameData;
+import com.example.lolserver.web.match.dto.MSChampionRequest;
+import com.example.lolserver.web.match.dto.MSChampionResponse;
 import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.dto.MatchResponse;
 import com.example.lolserver.web.match.service.MatchService;
@@ -29,6 +31,16 @@ public class MatchController {
         MatchResponse response = matchService.getMatches(matchRequest);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/v1/rank/champions")
+    public ResponseEntity<List<MSChampionResponse>> getRankChampions(
+            @ModelAttribute MSChampionRequest request
+            ) {
+
+        List<MSChampionResponse> result = matchService.getRankChampions(request);
+
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
 }

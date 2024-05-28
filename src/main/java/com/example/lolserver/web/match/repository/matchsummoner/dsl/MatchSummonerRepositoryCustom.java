@@ -14,6 +14,6 @@ public interface MatchSummonerRepositoryCustom {
 
     List<String> findAllByMatchIdNotExist(List<String> matchIds);
 
-    List<MSChampionResponse> findAllChampionKDAByPuuidAndSeasonAndQueueType(String puuid, int season, int queueType);
+    List<MSChampionResponse> findAllChampionKDAByPuuidAndSeasonAndQueueType(String puuid, Integer season, Integer queueType);
 
 }

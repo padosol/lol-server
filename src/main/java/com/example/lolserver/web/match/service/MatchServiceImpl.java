@@ -1,6 +1,8 @@
 package com.example.lolserver.web.match.service;
 
 import com.example.lolserver.web.dto.data.GameData;
+import com.example.lolserver.web.match.dto.MSChampionRequest;
+import com.example.lolserver.web.match.dto.MSChampionResponse;
 import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.dto.MatchResponse;
 import com.example.lolserver.web.match.entity.Match;
@@ -41,5 +43,15 @@ public class MatchServiceImpl implements MatchService {
         List<GameData> gameDataList = matches.getContent().stream().map(match -> match.toGameData(matchRequest.getPuuid())).toList();
 
         return new MatchResponse(gameDataList, matches.getTotalElements());
+    }
+
+    @Override
+    public List<MSChampionResponse> getRankChampions(MSChampionRequest request) {
+
+        return matchSummonerRepositoryCustom.findAllChampionKDAByPuuidAndSeasonAndQueueType(
+                request.getPuuid(),
+                request.getSeason(),
+                request.getQueueId()
+        );
     }
 }

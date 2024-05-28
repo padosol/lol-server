@@ -8,6 +8,7 @@ import com.example.lolserver.web.match.entity.QMatchSummoner;
 import com.example.lolserver.web.match.repository.matchsummoner.dsl.MatchSummonerRepositoryCustom;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Ops;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -69,47 +70,37 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
     }
 
     @Override
-    public List<MSChampionResponse> findAllChampionKDAByPuuidAndSeasonAndQueueType(String puuid, int season, int queueType) {
+    public List<MSChampionResponse> findAllChampionKDAByPuuidAndSeasonAndQueueType(String puuid, Integer season, Integer queueType) {
 
-        List<Tuple> fetch = jpaQueryFactory.select(
-                        matchSummoner.championId,
-                        matchSummoner.championName,
-                        matchSummoner.kills.avg().as("kills"),
-                        matchSummoner.deaths.avg().as("deaths"),
-                        matchSummoner.assists.avg().as("assists"),
-                        matchSummoner.neutralMinionsKilled.add(matchSummoner.totalMinionsKilled).avg().as("cs"),
-                        match.gameDuration.avg().as("duration"),
-                        matchSummoner.count().as("playCount")
+        List<MSChampionResponse> result = jpaQueryFactory.select(
+                        Projections.fields(MSChampionResponse.class,
+                                matchSummoner.championId,
+                                matchSummoner.championName,
+                                Expressions.template(Double.class, "ROUND({0}, 2)", matchSummoner.kills.avg()).as("kills"),
+                                Expressions.template(Double.class, "ROUND({0}, 2)", matchSummoner.deaths.avg()).as("deaths"),
+                                Expressions.template(Double.class, "ROUND({0}, 2)", matchSummoner.assists.avg()).as("assists"),
+                                Expressions.template(Double.class, "ROUND({0}, 2)", matchSummoner.assists.avg()).as("assists"),
+                                Expressions.template(Double.class, "ROUND({0}, 2)", matchSummoner.neutralMinionsKilled.add(matchSummoner.totalMinionsKilled).avg()).as("cs"),
+                                Expressions.template(Double.class, "ROUND({0}, 2)", match.gameDuration.avg()).as("duration"),
+                                matchSummoner.count().as("playCount")
+                        )
                 ).from(matchSummoner)
                 .join(matchSummoner.match, match)
                 .where(
                         matchSummoner.puuid.eq(puuid),
                         match.season.eq(season),
-                        match.queueId.eq(queueType)
+                        queueIdEqOrAll(queueType)
                 )
                 .groupBy(matchSummoner.championId, matchSummoner.championName)
+                .limit(7)
                 .orderBy(Expressions.stringPath("playCount").desc())
                 .fetch();
 
+        return result;
+    }
 
-//        select
-//        ms.champion_id ,
-//                ms.champion_name,
-//                round(avg(ms.kills), 1) kills,
-//                round(avg(ms.deaths), 1) deaths,
-//                round(avg(ms.assists), 1) assists,
-//                round(avg(ms.neutral_minions_killed + ms.total_minions_killed)) cs,
-//                round(avg(m.game_duration)) duration,
-//                count(ms.puuid) playCount
-//        from match_summoner ms
-//        join "match" m on m.match_id  = ms.match_id
-//        where ms.puuid = 'TF8jxtZ_8d98Rlwb9C2CRewl1yBN4P_1GzlOWJ36Nbehjj8ZIRdKWa3qEVPCGUoJONsrR1W-ql6KcA'
-//        and m.season = 23
-//        group by ms.champion_id, ms.champion_name
-//        order by playCount desc;
-
-
-        return null;
+    private BooleanExpression queueIdEqOrAll(Integer queueId) {
+        return queueId == null ? match.queueId.eq(420).or(match.queueId.eq(440)) : match.queueId.eq(queueId);
     }
 
     private BooleanExpression puuidEq(String puuid) {

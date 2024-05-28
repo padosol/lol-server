@@ -9,6 +9,7 @@ import com.example.lolserver.riot.dto.match.ParticipantDto;
 import com.example.lolserver.riot.dto.match.TeamDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.riot.type.Platform;
+import com.example.lolserver.web.match.dto.MSChampionResponse;
 import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.entity.*;
 import com.example.lolserver.web.match.entity.id.MatchSummonerId;
@@ -19,6 +20,9 @@ import com.example.lolserver.web.match.repository.matchsummoner.MatchSummonerRep
 import com.example.lolserver.web.match.repository.matchteam.MatchTeamRepository;
 import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.summoner.repository.SummonerRepository;
+import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -37,6 +41,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+
+import static com.example.lolserver.web.match.entity.QMatch.match;
+import static com.example.lolserver.web.match.entity.QMatchSummoner.matchSummoner;
 
 @DataJpaTest
 @AutoConfigureTestDatabase
@@ -124,7 +131,6 @@ public class JpaTest {
 
         List<Match> all = matchRepository.findAll();
 
-
         MatchRequest request = new MatchRequest();
         request.setPuuid(puuid);
         request.setPageNo(0);
@@ -164,5 +170,38 @@ public class JpaTest {
         System.out.println("test");
 
 
+    }
+
+    @Test
+    void MATCH_SUMMONER_CHAMPION_DATA() {
+        JPAQueryFactory queryFactory = new JPAQueryFactory(em);
+
+        List<MSChampionResponse> result = queryFactory.select(
+                        Projections.fields(MSChampionResponse.class,
+                                matchSummoner.championId,
+                                matchSummoner.championName,
+                                Expressions.template(Double.class, "ROUND({0}, 1)", matchSummoner.kills.avg()).as("kills"),
+                                Expressions.template(Double.class, "ROUND({0}, 1)", matchSummoner.deaths.avg()).as("deaths"),
+                                Expressions.template(Double.class, "ROUND({0}, 1)", matchSummoner.assists.avg()).as("assists"),
+                                Expressions.template(Double.class, "ROUND({0}, 1)", matchSummoner.neutralMinionsKilled.add(matchSummoner.totalMinionsKilled).avg()).as("cs"),
+                                Expressions.template(Double.class, "ROUND({0}, 1)", match.gameDuration.avg()).as("duration"),
+                                matchSummoner.count().as("playCount")
+                        )
+                ).from(matchSummoner)
+                .join(matchSummoner.match, match)
+                .where(
+                        matchSummoner.puuid.eq("VdrbsTgjdgoU5-1opSF9FQ4418WYdynOj7Qf8dxYPOwWb85Kjyo7d-Fj7oG1FanBn-j6qikIMXpTlQ"),
+                        match.season.eq(23),
+                        queueIdEqOrAll(null)
+                )
+                .groupBy(matchSummoner.championId, matchSummoner.championName)
+                .orderBy(Expressions.stringPath("playCount").desc())
+                .fetch();
+
+        System.out.println(result);
+    }
+
+    private BooleanExpression queueIdEqOrAll(Integer queueId) {
+        return queueId == null ? match.queueId.eq(420).or(match.queueId.eq(440)) : match.queueId.eq(queueId);
     }
 }

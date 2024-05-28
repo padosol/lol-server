@@ -9,13 +9,11 @@ public class MSChampionResponse {
 
     private int championId;
     private String championName;
-    private long kills;
-    private long deaths;
-    private long assists;
-    private int playCount;
-
-
-    public void kdaCalculator() {
-    }
+    private Double kills;
+    private Double deaths;
+    private Double assists;
+    private Double cs;
+    private Double duration;
+    private Long playCount;
 
 }
