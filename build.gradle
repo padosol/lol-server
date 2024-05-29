@@ -47,6 +47,9 @@ dependencies {
 
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 
+    // aop
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+
 
     // test
     testCompileOnly 'org.projectlombok:lombok'

@@ -37,7 +37,13 @@ public class SummonerServiceV1 implements SummonerService{
             return findSummoner.get(0).toResponse();
         }
 
-        return SummonerResponse.builder().notFound(true).build();
+        Summoner apiSummoner = rSummonerService.getSummoner(summoner.getGameName(), summoner.getTagLine(), region);
+
+        if(apiSummoner == null) {
+            return SummonerResponse.builder().notFound(true).build();
+        }
+
+        return apiSummoner.toResponse();
     }
 
     @Override

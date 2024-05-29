@@ -76,12 +76,12 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                         Projections.fields(MSChampionResponse.class,
                                 matchSummoner.championId,
                                 matchSummoner.championName,
-                                Expressions.template(Double.class, "ROUND({0}, 2)", matchSummoner.kills.avg()).as("kills"),
-                                Expressions.template(Double.class, "ROUND({0}, 2)", matchSummoner.deaths.avg()).as("deaths"),
-                                Expressions.template(Double.class, "ROUND({0}, 2)", matchSummoner.assists.avg()).as("assists"),
-                                Expressions.template(Double.class, "ROUND({0}, 2)", matchSummoner.assists.avg()).as("assists"),
-                                Expressions.template(Double.class, "ROUND({0}, 2)", matchSummoner.neutralMinionsKilled.add(matchSummoner.totalMinionsKilled).avg()).as("cs"),
-                                Expressions.template(Double.class, "ROUND({0}, 2)", match.gameDuration.avg()).as("duration"),
+                                Expressions.template(Double.class, "ROUND({0}, 1)", matchSummoner.kills.avg()).as("kills"),
+                                Expressions.template(Double.class, "ROUND({0}, 1)", matchSummoner.deaths.avg()).as("deaths"),
+                                Expressions.template(Double.class, "ROUND({0}, 1)", matchSummoner.assists.avg()).as("assists"),
+                                Expressions.template(Double.class, "ROUND({0}, 1)", matchSummoner.assists.avg()).as("assists"),
+                                Expressions.template(Double.class, "ROUND({0}, 1)", matchSummoner.neutralMinionsKilled.add(matchSummoner.totalMinionsKilled).avg()).as("cs"),
+                                Expressions.template(Double.class, "ROUND({0}, 1)", match.gameDuration.avg()).as("duration"),
                                 matchSummoner.count().as("playCount")
                         )
                 ).from(matchSummoner)
