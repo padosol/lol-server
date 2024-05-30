@@ -58,26 +58,43 @@ public class RMatchServiceImpl implements RMatchService{
     @Override
     @Transactional
     public List<Match> insertMatches(List<MatchDto> matchDtoList) {
+        return bulkInsertMatches(matchDtoList);
+    }
+
+    public List<Match> bulkInsertMatches(List<MatchDto> matchDtoList) {
+
         List<Match> matchList = new ArrayList<>();
+        List<MatchSummoner> matchSummonerList = new ArrayList<>();
+        List<MatchTeam> matchTeamList = new ArrayList<>();
+
         for (MatchDto matchDto : matchDtoList) {
-            Match match = matchRepository.save(new Match().of(matchDto, 23));
+
+            Match match = new Match().of(matchDto, 23);
 
             List<ParticipantDto> participants = matchDto.getInfo().getParticipants();
             List<TeamDto> teams = matchDto.getInfo().getTeams();
 
             for (ParticipantDto participant : participants) {
-                MatchSummoner matchSummoner = matchSummonerRepository.save(new MatchSummoner().of(match, participant));
+                MatchSummoner matchSummoner = new MatchSummoner().of(match, participant);
                 match.addMatchSummoner(matchSummoner);
+
+                matchSummonerList.add(matchSummoner);
             }
 
             for (TeamDto team : teams) {
-                MatchTeam matchTeam = matchTeamRepository.save(new MatchTeam().of(match, team));
+                MatchTeam matchTeam = new MatchTeam().of(match, team);
                 match.addMatchTeam(matchTeam);
+
+                matchTeamList.add(matchTeam);
             }
 
             matchList.add(match);
         }
 
-        return matchList;
+        List<Match> result = matchRepository.saveAll(matchList);
+        matchSummonerRepository.saveAll(matchSummonerList);
+        matchTeamRepository.saveAll(matchTeamList);
+
+        return result;
     }
 }

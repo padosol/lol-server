@@ -15,13 +15,13 @@ public class LoggingAspect {
     @Around("execution(* com.example.lolserver.web..*(..))")
     public Object execute(ProceedingJoinPoint joinPoint) throws Throwable {
         long start = System.currentTimeMillis();
-        log.debug("Start: {}", joinPoint);
+        log.info("Start: {}", joinPoint);
         try {
             return joinPoint.proceed();
         } finally {
             long finish = System.currentTimeMillis();
             long timeMs = finish - start;
-            log.debug("End: {} {}ms", joinPoint, timeMs);
+            log.info("End: {} {}ms", joinPoint, timeMs);
         }
     }
 }
