@@ -1,6 +1,9 @@
 package com.example.lolserver.aspect;
 
 
+import com.example.lolserver.aspect.log.LogTrace;
+import com.example.lolserver.aspect.log.TraceStatus;
+import com.example.lolserver.aspect.log.impl.ThreadLocalLogTrace;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -12,16 +15,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class LoggingAspect {
 
+    private LogTrace logTrace = new ThreadLocalLogTrace();
+
     @Around("execution(* com.example.lolserver.web..*(..))")
     public Object execute(ProceedingJoinPoint joinPoint) throws Throwable {
-        long start = System.currentTimeMillis();
-        log.info("Start: {}", joinPoint);
+
+        TraceStatus status = logTrace.begin(String.valueOf(joinPoint));
+
         try {
             return joinPoint.proceed();
         } finally {
-            long finish = System.currentTimeMillis();
-            long timeMs = finish - start;
-            log.info("End: {} {}ms", joinPoint, timeMs);
+            logTrace.end(status);
         }
     }
 }

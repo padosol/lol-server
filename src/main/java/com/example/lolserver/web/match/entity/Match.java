@@ -31,11 +31,11 @@ public class Match {
 
     private String dateVersion;
 
-    @BatchSize(size = 10)
+    @BatchSize(size = 100)
     @OneToMany(mappedBy = "match", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MatchSummoner> matchSummoners;
 
-    @BatchSize(size = 2)
+    @BatchSize(size = 20)
     @OneToMany(mappedBy = "match", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MatchTeam> matchTeams;
 

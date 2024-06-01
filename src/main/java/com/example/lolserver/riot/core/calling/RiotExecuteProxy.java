@@ -17,13 +17,12 @@ public class RiotExecuteProxy implements RiotExecute{
     @Override
     public <T> CompletableFuture<T> execute(Class<T> clazz, URI uri) {
 
-        Long start = System.currentTimeMillis();
+//        Long start = System.currentTimeMillis();
 
         CompletableFuture<T> result = execute.execute(clazz, uri);
 
-        Long end = System.currentTimeMillis();
-
-        log.info("API 요청/응답 시간: {}ms", end - start);
+//        Long end = System.currentTimeMillis();
+//        log.info("API 요청/응답 시간: {}ms", end - start);
 
         return result;
     }

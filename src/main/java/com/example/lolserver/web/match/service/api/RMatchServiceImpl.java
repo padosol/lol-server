@@ -18,6 +18,7 @@ import com.example.lolserver.web.match.repository.matchteam.MatchTeamRepository;
 import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.summoner.repository.SummonerRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class RMatchServiceImpl implements RMatchService{
 
@@ -63,6 +65,7 @@ public class RMatchServiceImpl implements RMatchService{
 
     public List<Match> bulkInsertMatches(List<MatchDto> matchDtoList) {
 
+
         List<Match> matchList = new ArrayList<>();
         List<MatchSummoner> matchSummonerList = new ArrayList<>();
         List<MatchTeam> matchTeamList = new ArrayList<>();
@@ -91,9 +94,15 @@ public class RMatchServiceImpl implements RMatchService{
             matchList.add(match);
         }
 
+        Long start = System.currentTimeMillis();
         List<Match> result = matchRepository.saveAll(matchList);
-        matchSummonerRepository.saveAll(matchSummonerList);
-        matchTeamRepository.saveAll(matchTeamList);
+        Long end = System.currentTimeMillis();
+
+        log.info("데이터베이스 saveALl 실행시간 {} ms", (end - start));
+
+//        matchSummonerRepository.saveAll(matchSummonerList);
+//
+//        matchTeamRepository.saveAll(matchTeamList);
 
         return result;
     }

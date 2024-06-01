@@ -8,6 +8,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public class Summoner {
@@ -25,7 +26,6 @@ public class Summoner {
         private String summonerId;
 
         private Platform platform;
-
 
         public Builder platform(Platform platform) {
             this.platform = platform;
@@ -49,7 +49,43 @@ public class Summoner {
 
 
         public SummonerDTO get() {
+
+            try {
+                return getLazy().get();
+            } catch(ExecutionException | InterruptedException e) {
+                return null;
+            }
             // puuid, accountId, summonerId
+
+//            String host = this.platform.getRegion() + RiotAPI.DEFAULT_HOST;
+//            String path = null;
+//
+//            if(StringUtils.hasText(this.puuid)) {
+//                path = "/lol/summoner/v4/summoners/by-puuid/" + this.puuid;
+//            }
+//
+//            if(StringUtils.hasText(this.accountId)) {
+//                path = "/lol/summoner/v4/summoners/by-account/" + this.accountId;
+//            }
+//
+//            if(StringUtils.hasText(this.summonerId)) {
+//                path = "/lol/summoner/v4/summoners/" + this.summonerId;
+//            }
+//
+//            assert path != null;
+//            URI uri = UriComponentsBuilder.newInstance()
+//                    .scheme("https")
+//                    .host(host)
+//                    .path(path).build().toUri();
+//
+//            try {
+//                return RiotAPI.getExecute().execute(SummonerDTO.class, uri).get();
+//            } catch(ExecutionException | InterruptedException e) {
+//                return null;
+//            }
+        }
+
+        public CompletableFuture<SummonerDTO> getLazy() {
 
             String host = this.platform.getRegion() + RiotAPI.DEFAULT_HOST;
             String path = null;
@@ -72,12 +108,7 @@ public class Summoner {
                     .host(host)
                     .path(path).build().toUri();
 
-            try {
-                return RiotAPI.getExecute().execute(SummonerDTO.class, uri).get();
-            } catch(ExecutionException | InterruptedException e) {
-                return null;
-            }
-
+            return RiotAPI.getExecute().execute(SummonerDTO.class, uri);
         }
 
     }
@@ -88,6 +119,10 @@ public class Summoner {
 
     public SummonerDTO byPuuid(String puuid) {
         return new Builder().platform(this.platform).puuid(puuid).get();
+    }
+
+    public CompletableFuture<SummonerDTO> byPuuidLazy(String puuid) {
+        return new Builder().platform(this.platform).puuid(puuid).getLazy();
     }
 
     public void bySummonerId(String summonerId) {

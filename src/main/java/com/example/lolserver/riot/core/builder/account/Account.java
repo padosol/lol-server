@@ -6,6 +6,7 @@ import com.example.lolserver.riot.type.Platform;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public class Account {
@@ -39,6 +40,43 @@ public class Account {
 
         public AccountDto get() {
 
+            try {
+                return getLazy().get();
+            } catch(ExecutionException | InterruptedException e) {
+                return new AccountDto();
+            }
+
+//            if(this.platform == null) {
+//
+//                Platform defaultPlatform = RiotAPI.getPlatform();
+//
+//                if(defaultPlatform == null) {
+//                    throw new IllegalStateException("Default Platform 이 존재하지 않습니다.");
+//                }
+//
+//                this.platform = defaultPlatform;
+//            }
+//
+//            UriComponentsBuilder builder = UriComponentsBuilder.newInstance();
+//            builder.scheme("https").host(this.platform.getPlatform() + ".api.riotgames.com");
+//
+//            if(StringUtils.hasText(this.puuid)) {
+//                builder.path("riot/account/v1/accounts/by-puuid/" + this.puuid);
+//            } else if (StringUtils.hasText(this.gameName) && StringUtils.hasText(this.tagLine)) {
+//                builder.path("riot/account/v1/accounts/by-riot-id/" + this.gameName + "/" + this.tagLine);
+//            } else {
+//                throw new IllegalStateException("Account Path 가 존재하지 않습니다.");
+//            }
+//
+//            try {
+//                return RiotAPI.getExecute().execute(AccountDto.class, builder.build().toUri()).get();
+//            } catch (ExecutionException | InterruptedException e) {
+//                return new AccountDto();
+//            }
+        }
+
+        public CompletableFuture<AccountDto> getLazy() {
+
             if(this.platform == null) {
 
                 Platform defaultPlatform = RiotAPI.getPlatform();
@@ -61,18 +99,17 @@ public class Account {
                 throw new IllegalStateException("Account Path 가 존재하지 않습니다.");
             }
 
-            try {
-                return RiotAPI.getExecute().execute(AccountDto.class, builder.build().toUri()).get();
-            } catch (ExecutionException | InterruptedException e) {
-                return new AccountDto();
-            }
-
+            return RiotAPI.getExecute().execute(AccountDto.class, builder.build().toUri());
         }
 
     }
 
     public AccountDto byPuuid(String puuid) {
         return new Builder(puuid).platform(this.platform).get();
+    }
+
+    public CompletableFuture<AccountDto> byPuuidLazy(String puuid) {
+        return new Builder(puuid).platform(this.platform).getLazy();
     }
 
     public AccountDto byRiotId(String gameName, String tagLine) {

@@ -18,13 +18,16 @@ import com.example.lolserver.web.match.service.api.RMatchService;
 import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.summoner.repository.SummonerRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class RSummonerServiceImpl implements RSummonerService{
 
@@ -54,42 +57,83 @@ public class RSummonerServiceImpl implements RSummonerService{
 
     @Override
     public void revisionSummoner(Summoner summoner) {
-        Platform platform = Platform.valueOfName(summoner.getRegion());
 
-        AccountDto accountDto = RiotAPI.account(platform).byPuuid(summoner.getPuuid());
-        if(accountDto.isError()) {
-            throw new IllegalStateException("존재하지 않는 유저정보 입니다.");
+        Long start = System.currentTimeMillis();
+        Long end;
+        try {
+
+            Platform platform = Platform.valueOfName(summoner.getRegion());
+
+            CompletableFuture<AccountDto> accountDtoCompletableFuture = CompletableFuture.supplyAsync(
+                    () -> RiotAPI.account(platform).byPuuid(summoner.getPuuid())
+            );
+
+            CompletableFuture<SummonerDTO> summonerDTOCompletableFuture = CompletableFuture.supplyAsync(
+                    () -> RiotAPI.summoner(platform).byPuuid(summoner.getPuuid())
+            );
+
+            CompletableFuture<List<String>> listCompletableFuture = CompletableFuture.supplyAsync(
+                    () -> RiotAPI.matchList(platform).getAllByPuuid(summoner.getPuuid())
+            );
+
+            CompletableFuture<Set<LeagueEntryDTO>> setCompletableFuture = CompletableFuture.supplyAsync(
+                    () -> RiotAPI.league(platform).bySummonerId(summoner.getId())
+            );
+
+            CompletableFuture.allOf(accountDtoCompletableFuture, summonerDTOCompletableFuture, listCompletableFuture).join();
+
+            end = System.currentTimeMillis();
+
+            log.info("전체 api 호출 시간, 실행시간: {} ms ", (end-start));
+
+            AccountDto accountDto = accountDtoCompletableFuture.get();
+            if(accountDto.isError()) {
+                throw new IllegalStateException("존재하지 않는 유저정보 입니다.");
+            }
+
+            SummonerDTO summonerDTO = summonerDTOCompletableFuture.get();
+            if(summonerDTO.isError()) {
+                throw new IllegalStateException("존재하지 않는 유저정보 입니다.");
+            }
+
+            // 유저정보 초기화
+            summoner.revision(summonerDTO, accountDto);
+
+            // 리그정보 초기화
+            Set<LeagueEntryDTO> leagueEntryDTOS = setCompletableFuture.get();
+            for (LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
+
+                String leagueId = leagueEntryDTO.getLeagueId();
+                League league = leagueRepository.findById(leagueId).orElseThrow();
+
+                LeagueSummonerId leagueSummonerId = new LeagueSummonerId(leagueId, summoner.getId());
+                LeagueSummoner leagueSummoner = new LeagueSummoner().of(leagueSummonerId, league, summoner, leagueEntryDTO);
+                leagueSummonerRepository.save(leagueSummoner);
+            }
+
+            // 게임 정보 초기화
+            // 모든 게임정보 가져와야함
+            List<String> allMatchIds = listCompletableFuture.get();
+
+            // 데이터베이스에서 존재하지 않는 MatchId 만 가져옴
+            List<String> matchIdsNotIn = matchRepositoryCustom.getMatchIdsNotIn(allMatchIds);
+
+            // 0.5
+            List<MatchDto> matchDtoList = RiotAPI.match(platform).byMatchIds(matchIdsNotIn);
+
+            end = System.currentTimeMillis();
+
+            log.info("등록할 MatchList 가져오는데 까지 걸리는 시간: {} ms ", (end-start));
+
+            rMatchService.insertMatches(matchDtoList);
+
+            end = System.currentTimeMillis();
+
+            log.info("데이터베이스에 등록을 마치는데 까지 걸린 시간: {} ms ", (end-start));
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException(e);
         }
 
-        SummonerDTO summonerDTO = RiotAPI.summoner(platform).byPuuid(summoner.getPuuid());
-        if(summonerDTO.isError()) {
-            throw new IllegalStateException("존재하지 않는 유저정보 입니다.");
-        }
-
-        // 유저정보 초기화
-        summoner.revision(summonerDTO, accountDto);
-
-        // 리그정보 초기화
-        Set<LeagueEntryDTO> leagueEntryDTOS = RiotAPI.league(platform).bySummonerId(summoner.getId());
-        for (LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
-
-            String leagueId = leagueEntryDTO.getLeagueId();
-            League league = leagueRepository.findById(leagueId).orElseThrow();
-
-            LeagueSummonerId leagueSummonerId = new LeagueSummonerId(leagueId, summoner.getId());
-            LeagueSummoner leagueSummoner = new LeagueSummoner().of(leagueSummonerId, league, summoner, leagueEntryDTO);
-            LeagueSummoner saveLeagueSummoner = leagueSummonerRepository.save(leagueSummoner);
-        }
-
-        // 게임 정보 초기화
-        // 모든 게임정보 가져와야함
-        List<String> allMatchIds = RiotAPI.matchList(platform).getAllByPuuid(summoner.getPuuid());
-
-        // 데이터베이스에서 존재하지 않는 MatchId 만 가져옴
-        List<String> matchIdsNotIn = matchRepositoryCustom.getMatchIdsNotIn(allMatchIds);
-
-        List<MatchDto> matchDtoList = RiotAPI.match(platform).byMatchIds(matchIdsNotIn);
-        List<Match> matchList = rMatchService.insertMatches(matchDtoList);
     }
 
 }
