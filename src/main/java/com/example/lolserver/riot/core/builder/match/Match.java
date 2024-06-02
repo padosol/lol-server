@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -63,6 +64,10 @@ public class Match {
 
         private List<MatchDto> getAll()  {
 
+
+            Long start = System.currentTimeMillis();
+            Long end;
+
             List<CompletableFuture<MatchDto>> matchList = new ArrayList<>();
 
             for(String matchId : this.matchIds) {
@@ -70,15 +75,22 @@ public class Match {
                 matchList.add(future);
             }
 
-            CompletableFuture<List<MatchDto>> allMatchDto = CompletableFuture.allOf(matchList.toArray(new CompletableFuture[matchList.size()]))
-                    .thenApply( v -> matchList.stream()
-                            .map(CompletableFuture::join)
-                            .collect(Collectors.toList()));
-
             try {
-                return allMatchDto.get();
-            } catch(ExecutionException | InterruptedException e) {
-                return null;
+
+                List<MatchDto> result = matchList.stream().map(CompletableFuture::join).toList();
+
+//                CompletableFuture<List<MatchDto>> allMatchDto = CompletableFuture.allOf(matchList.toArray(new CompletableFuture[matchList.size()]))
+//                        .thenApply( v -> matchList.stream()
+//                                .map(CompletableFuture::join)
+//                                .collect(Collectors.toList()));
+
+                return result;
+            } finally {
+
+                end = System.currentTimeMillis();
+
+                log.info("getAll() 걸린 시간: {} ms", end - start);
+
             }
         }
 

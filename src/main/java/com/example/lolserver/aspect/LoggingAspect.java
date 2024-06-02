@@ -28,4 +28,16 @@ public class LoggingAspect {
             logTrace.end(status);
         }
     }
+
+    @Around("execution(* com.example.lolserver.riot..*(..))")
+    public Object riotAPI(ProceedingJoinPoint joinPoint) throws Throwable {
+
+        TraceStatus status = logTrace.begin(String.valueOf(joinPoint));
+
+        try {
+            return joinPoint.proceed();
+        } finally {
+            logTrace.end(status);
+        }
+    }
 }

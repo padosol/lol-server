@@ -9,6 +9,7 @@ import com.example.lolserver.riot.type.Platform;
 import com.example.lolserver.web.dto.data.GameData;
 import com.example.lolserver.web.league.entity.League;
 import com.example.lolserver.web.league.entity.LeagueSummoner;
+import com.example.lolserver.web.league.entity.QueueType;
 import com.example.lolserver.web.league.entity.id.LeagueSummonerId;
 import com.example.lolserver.web.league.repository.LeagueRepository;
 import com.example.lolserver.web.league.repository.LeagueSummonerRepository;
@@ -22,9 +23,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+
+import static com.example.lolserver.web.league.entity.QLeague.league;
 
 @Service
 @Slf4j
@@ -86,6 +90,8 @@ public class RSummonerServiceImpl implements RSummonerService{
 
             log.info("전체 api 호출 시간, 실행시간: {} ms ", (end-start));
 
+            start = end;
+
             AccountDto accountDto = accountDtoCompletableFuture.get();
             if(accountDto.isError()) {
                 throw new IllegalStateException("존재하지 않는 유저정보 입니다.");
@@ -99,24 +105,48 @@ public class RSummonerServiceImpl implements RSummonerService{
             // 유저정보 초기화
             summoner.revision(summonerDTO, accountDto);
 
+            end = System.currentTimeMillis();
+
             // 리그정보 초기화
+            // 리그가 존재하지 않으면 등록해줘야함
             Set<LeagueEntryDTO> leagueEntryDTOS = setCompletableFuture.get();
             for (LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
 
                 String leagueId = leagueEntryDTO.getLeagueId();
-                League league = leagueRepository.findById(leagueId).orElseThrow();
+
+                League league = leagueRepository.findById(leagueId).orElseGet(() -> leagueRepository.save(League.builder()
+                        .leagueId(leagueEntryDTO.getLeagueId())
+                        .tier(leagueEntryDTO.getTier())
+                        .queue(QueueType.valueOf(leagueEntryDTO.getQueueType()))
+                        .build()));
 
                 LeagueSummonerId leagueSummonerId = new LeagueSummonerId(leagueId, summoner.getId());
                 LeagueSummoner leagueSummoner = new LeagueSummoner().of(leagueSummonerId, league, summoner, leagueEntryDTO);
                 leagueSummonerRepository.save(leagueSummoner);
             }
 
+            log.info("리그 초기화 까지 걸린 시간: {} ms", end-start);
+
+            start = end;
+
             // 게임 정보 초기화
             // 모든 게임정보 가져와야함
             List<String> allMatchIds = listCompletableFuture.get();
 
+            end = System.currentTimeMillis();
+
+            log.info(" 모든 게임정보 가져오는데 걸린 시간: {} ms", end - start);
+
+            start = end;
+
             // 데이터베이스에서 존재하지 않는 MatchId 만 가져옴
             List<String> matchIdsNotIn = matchRepositoryCustom.getMatchIdsNotIn(allMatchIds);
+
+            end = System.currentTimeMillis();
+
+            log.info("데이터베이스에 존재하지 않는 matchId 가져오는데 걸린 시간: {} ms", end - start);
+
+            start = end;
 
             // 0.5
             List<MatchDto> matchDtoList = RiotAPI.match(platform).byMatchIds(matchIdsNotIn);
@@ -124,6 +154,8 @@ public class RSummonerServiceImpl implements RSummonerService{
             end = System.currentTimeMillis();
 
             log.info("등록할 MatchList 가져오는데 까지 걸리는 시간: {} ms ", (end-start));
+
+            start = end;
 
             rMatchService.insertMatches(matchDtoList);
 

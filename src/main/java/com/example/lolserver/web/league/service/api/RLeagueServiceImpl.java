@@ -48,14 +48,14 @@ public class RLeagueServiceImpl implements RLeagueService{
 
             if(findLeague.isEmpty()) {
                 // 리그 정보가 없으면 리그에 관한 api를 불러와야함
-                LeagueListDTO leagueListDTO = RiotAPI.league(Platform.valueOfName(summoner.getRegion())).byLeagueId(leagueId);
 
+//                LeagueListDTO leagueListDTO = RiotAPI.league(Platform.valueOfName(summoner.getRegion())).byLeagueId(leagueId);
                 league = leagueRepository.save(
                         League.builder()
                         .leagueId(leagueId)
-                        .name(leagueListDTO.getName())
-                        .tier(leagueListDTO.getTier())
-                        .queue(QueueType.valueOf(leagueListDTO.getQueue()))
+//                        .name(leagueEntryDTO.getName())
+                        .tier(leagueEntryDTO.getTier())
+                        .queue(QueueType.valueOf(leagueEntryDTO.getQueueType()))
                         .build()
                 );
             } else {

@@ -8,7 +8,6 @@ public class LeagueItemDTO extends ErrorDTO {
 
     private	boolean freshBlood;
     private	int wins;
-    private	String summonerName;
     private	boolean inactive;
     private	boolean veteran;
     private	boolean hotStreak;

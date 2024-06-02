@@ -13,12 +13,17 @@ import com.example.lolserver.web.match.entity.MatchSummoner;
 import com.example.lolserver.web.match.entity.MatchTeam;
 import com.example.lolserver.web.match.entity.id.MatchSummonerId;
 import com.example.lolserver.web.match.repository.match.MatchRepository;
+import com.example.lolserver.web.match.repository.match.dsl.MatchRepositoryCustom;
 import com.example.lolserver.web.match.repository.matchsummoner.MatchSummonerRepository;
 import com.example.lolserver.web.match.repository.matchteam.MatchTeamRepository;
 import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.summoner.repository.SummonerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +39,7 @@ public class RMatchServiceImpl implements RMatchService{
     private final MatchRepository matchRepository;
     private final MatchSummonerRepository matchSummonerRepository;
     private final MatchTeamRepository matchTeamRepository;
+    private final MatchRepositoryCustom matchRepositoryCustom;
 
     @Override
     @Transactional
@@ -65,7 +71,6 @@ public class RMatchServiceImpl implements RMatchService{
 
     public List<Match> bulkInsertMatches(List<MatchDto> matchDtoList) {
 
-
         List<Match> matchList = new ArrayList<>();
         List<MatchSummoner> matchSummonerList = new ArrayList<>();
         List<MatchTeam> matchTeamList = new ArrayList<>();
@@ -95,7 +100,10 @@ public class RMatchServiceImpl implements RMatchService{
         }
 
         Long start = System.currentTimeMillis();
-        List<Match> result = matchRepository.saveAll(matchList);
+
+        matchRepositoryCustom.matchBulkInsert(matchList);
+
+//        List<Match> result = matchRepository.saveAll(matchList);
         Long end = System.currentTimeMillis();
 
         log.info("데이터베이스 saveALl 실행시간 {} ms", (end - start));
@@ -104,6 +112,6 @@ public class RMatchServiceImpl implements RMatchService{
 //
 //        matchTeamRepository.saveAll(matchTeamList);
 
-        return result;
+        return matchList;
     }
 }
