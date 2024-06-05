@@ -79,11 +79,6 @@ public class Match {
 
                 List<MatchDto> result = matchList.stream().map(CompletableFuture::join).toList();
 
-//                CompletableFuture<List<MatchDto>> allMatchDto = CompletableFuture.allOf(matchList.toArray(new CompletableFuture[matchList.size()]))
-//                        .thenApply( v -> matchList.stream()
-//                                .map(CompletableFuture::join)
-//                                .collect(Collectors.toList()));
-
                 return result;
             } finally {
 

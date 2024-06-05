@@ -9,10 +9,14 @@ import com.example.lolserver.riot.core.builder.champion.Champion;
 import com.example.lolserver.riot.core.builder.match.Match;
 import com.example.lolserver.riot.core.builder.spectator.Spactator;
 import com.example.lolserver.riot.core.builder.summoner.Summoner;
+import com.example.lolserver.riot.dto.champion.ChampionInfo;
 import com.example.lolserver.riot.type.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @Getter
@@ -56,14 +60,29 @@ public class RiotAPI {
             return this;
         }
 
-        public RiotAPI build() {
+        public RiotAPI build()  {
+
+            UriComponentsBuilder builder = UriComponentsBuilder.newInstance();
+            builder.scheme("https").host(Platform.KR.getRegion() + ".api.riotgames.com");
+            builder.path("/lol/platform/v3/champion-rotations");
+
+            try {
+                ChampionInfo championInfo = execute.execute(ChampionInfo.class, builder.build().toUri()).get();
+                if(championInfo.isError()) {
+                    throw new IllegalStateException("유효하지 않은 API_KEY 입니다.");
+                }
+
+            } catch(ExecutionException | InterruptedException e) {
+                throw new RuntimeException();
+            }
+
             return new RiotAPI(this.apiKey, execute);
         }
     }
 
     public static Account account(Platform platform) {return new Account(platform);}
 
-    public static Champion champion() {return new Champion();}
+    public static Champion champion(Platform platform) {return new Champion(platform);}
 
     public static League league(Platform platform) {return new League(platform);}
 

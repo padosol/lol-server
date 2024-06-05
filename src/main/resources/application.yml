@@ -23,8 +23,7 @@ spring:
 
 logging:
   level:
-    com.example.lolserver.riot: DEBUG
-
+    com.example.lolserver.riot: INFO
 
 server:
   port: 8085
