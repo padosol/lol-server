@@ -1,8 +1,10 @@
 package com.example.lolserver.riot.config;
 
+import com.example.lolserver.bucket.BucketConfig;
 import com.example.lolserver.riot.core.calling.DefaultRiotExecute;
 import com.example.lolserver.riot.core.calling.RiotExecuteProxy;
 import com.example.lolserver.riot.core.api.RiotAPI;
+import io.github.bucket4j.Bucket;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -13,10 +15,10 @@ import java.util.concurrent.Executor;
 public class RiotApiConfig {
 
     @Bean
-    RiotAPI riotAPI(RiotAPIProperties properties) {
+    RiotAPI riotAPI(RiotAPIProperties properties, Bucket bucket) {
         return RiotAPI.builder()
                 .apiKey(properties.getKey())
-                .execute(new RiotExecuteProxy(new DefaultRiotExecute(properties.getKey())))
+                .execute(new RiotExecuteProxy(new DefaultRiotExecute(properties.getKey(), bucket)))
                 .build();
     }
 

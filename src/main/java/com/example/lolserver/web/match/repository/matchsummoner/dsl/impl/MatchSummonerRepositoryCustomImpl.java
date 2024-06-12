@@ -10,6 +10,7 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Ops;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -82,6 +83,7 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                                 Expressions.template(Double.class, "ROUND({0}, 1)", matchSummoner.assists.avg()).as("assists"),
                                 Expressions.template(Double.class, "ROUND({0}, 1)", matchSummoner.neutralMinionsKilled.add(matchSummoner.totalMinionsKilled).avg()).as("cs"),
                                 Expressions.template(Double.class, "ROUND({0}, 1)", match.gameDuration.avg()).as("duration"),
+                                new CaseBuilder().when(matchSummoner.win.isTrue()).then(1L).otherwise(0L).sum().as("win"),
                                 matchSummoner.count().as("playCount")
                         )
                 ).from(matchSummoner)

@@ -13,6 +13,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +36,7 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .where(queueIdEq(matchRequest.getQueueId()))
+                .orderBy(match.gameEndTimestamp.desc())
                 .fetch();
 
 
@@ -79,8 +82,15 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
 
         List<MatchSummoner> totalMatchSummoner = new ArrayList<>();
         List<MatchTeam> totalMatchTeams = new ArrayList<>();
+        List<Match> totalMatch = new ArrayList<>();
 
         for (Match match : matchList) {
+
+            totalMatch.add(match);
+
+            if(match.isAbortUnexpected()) {
+                continue;
+            }
 
             List<MatchSummoner> matchSummoners = match.getMatchSummoners();
             totalMatchSummoner.addAll(matchSummoners);
@@ -90,7 +100,7 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
 
         }
 
-        bulkInsertMatch(matchList);
+        bulkInsertMatch(totalMatch);
         bulkInsertMatchSummoner(totalMatchSummoner);
         bulkInsertMatchTeam(totalMatchTeams);
     }
@@ -113,9 +123,12 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
                         "   game_version," +
                         "   match_id," +
                         "   platform_id," +
-                        "   tournament_code"+
+                        "   tournament_code,"+
+                        "   game_create_datetime," +
+                        "   game_end_datetime," +
+                        "   game_start_datetime" +
                         ")" +
-                        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (match_id) DO NOTHING",
+                        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (match_id) DO NOTHING",
                 matchList,
                 100,
                 (PreparedStatement ps, Match match) -> {
@@ -136,6 +149,9 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
                     ps.setString(15, match.getMatchId());
                     ps.setString(16, match.getPlatformId());
                     ps.setString(17, match.getTournamentCode());
+                    ps.setTimestamp(18, Timestamp.valueOf(match.getGameCreateDatetime()));
+                    ps.setTimestamp(19, Timestamp.valueOf(match.getGameEndDatetime()));
+                    ps.setTimestamp(20, Timestamp.valueOf(match.getGameStartDatetime()));
                 }
         );
     }

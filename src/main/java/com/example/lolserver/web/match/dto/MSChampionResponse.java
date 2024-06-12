@@ -14,6 +14,7 @@ public class MSChampionResponse {
     private Double assists;
     private Double cs;
     private Double duration;
+    private Long win;
     private Long playCount;
 
 }

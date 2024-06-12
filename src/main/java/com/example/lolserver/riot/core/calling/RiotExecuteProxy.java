@@ -1,5 +1,6 @@
 package com.example.lolserver.riot.core.calling;
 
+import io.github.bucket4j.Bucket;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;

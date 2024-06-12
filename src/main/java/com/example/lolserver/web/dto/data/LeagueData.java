@@ -12,7 +12,6 @@ import java.util.List;
 public class LeagueData extends ErrorData {
 
     private List<LeagueSummonerData> leagues;
-
     public LeagueData(){};
     public LeagueData(boolean notFound) {
         super(notFound);

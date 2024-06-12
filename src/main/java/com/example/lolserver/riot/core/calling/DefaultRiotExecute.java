@@ -1,5 +1,6 @@
 package com.example.lolserver.riot.core.calling;
 
+import io.github.bucket4j.Bucket;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.util.LinkedMultiValueMap;
@@ -15,9 +16,10 @@ import java.util.concurrent.Executor;
 public class DefaultRiotExecute implements RiotExecute{
 
     private WebClient webClient;
+    private Bucket bucket;
     private Executor executor;
 
-    public DefaultRiotExecute(String apiKey) {
+    public DefaultRiotExecute(String apiKey, Bucket bucket) {
 
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
         headers.add("User-Agent", "MMRTR");
@@ -51,7 +53,10 @@ public class DefaultRiotExecute implements RiotExecute{
 
                     int statusCode = clientResponse.statusCode().value();
 
-                    log.debug("Status Code: [{}]", statusCode);
+                    if(statusCode != 200) {
+                        log.info("Status Code: [{}]", statusCode);
+                    }
+
 
                     return clientResponse.bodyToMono(clazz);
                 })

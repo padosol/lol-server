@@ -21,6 +21,7 @@ import com.example.lolserver.web.summoner.repository.SummonerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -62,8 +63,6 @@ public class RSummonerServiceImpl implements RSummonerService{
     @Override
     public void revisionSummoner(Summoner summoner) {
 
-        Long start = System.currentTimeMillis();
-        Long end;
         try {
 
             Platform platform = Platform.valueOfName(summoner.getRegion());
@@ -86,12 +85,6 @@ public class RSummonerServiceImpl implements RSummonerService{
 
             CompletableFuture.allOf(accountDtoCompletableFuture, summonerDTOCompletableFuture, listCompletableFuture).join();
 
-            end = System.currentTimeMillis();
-
-            log.info("전체 api 호출 시간, 실행시간: {} ms ", (end-start));
-
-            start = end;
-
             AccountDto accountDto = accountDtoCompletableFuture.get();
             if(accountDto.isError()) {
                 throw new IllegalStateException("존재하지 않는 유저정보 입니다.");
@@ -105,14 +98,16 @@ public class RSummonerServiceImpl implements RSummonerService{
             // 유저정보 초기화
             summoner.revision(summonerDTO, accountDto);
 
-            end = System.currentTimeMillis();
-
             // 리그정보 초기화
             // 리그가 존재하지 않으면 등록해줘야함
             Set<LeagueEntryDTO> leagueEntryDTOS = setCompletableFuture.get();
             for (LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
 
                 String leagueId = leagueEntryDTO.getLeagueId();
+
+                if(!StringUtils.hasText(leagueId)) {
+                    continue;
+                }
 
                 League league = leagueRepository.findById(leagueId).orElseGet(() -> leagueRepository.save(League.builder()
                         .leagueId(leagueEntryDTO.getLeagueId())
@@ -125,43 +120,19 @@ public class RSummonerServiceImpl implements RSummonerService{
                 leagueSummonerRepository.save(leagueSummoner);
             }
 
-            log.info("리그 초기화 까지 걸린 시간: {} ms", end-start);
-
-            start = end;
 
             // 게임 정보 초기화
             // 모든 게임정보 가져와야함
             List<String> allMatchIds = listCompletableFuture.get();
 
-            end = System.currentTimeMillis();
-
-            log.info(" 모든 게임정보 가져오는데 걸린 시간: {} ms", end - start);
-
-            start = end;
-
             // 데이터베이스에서 존재하지 않는 MatchId 만 가져옴
             List<String> matchIdsNotIn = matchRepositoryCustom.getMatchIdsNotIn(allMatchIds);
-
-            end = System.currentTimeMillis();
-
-            log.info("데이터베이스에 존재하지 않는 matchId 가져오는데 걸린 시간: {} ms", end - start);
-
-            start = end;
 
             // 0.5
             List<MatchDto> matchDtoList = RiotAPI.match(platform).byMatchIds(matchIdsNotIn);
 
-            end = System.currentTimeMillis();
-
-            log.info("등록할 MatchList 가져오는데 까지 걸리는 시간: {} ms ", (end-start));
-
-            start = end;
-
             rMatchService.insertMatches(matchDtoList);
 
-            end = System.currentTimeMillis();
-
-            log.info("데이터베이스에 등록을 마치는데 까지 걸린 시간: {} ms ", (end-start));
         } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
         }

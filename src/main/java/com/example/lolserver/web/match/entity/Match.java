@@ -12,6 +12,7 @@ import org.hibernate.type.MapType;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,6 +61,11 @@ public class Match {
     // 시즌
     private int season;
 
+    // date time
+    private LocalDateTime gameCreateDatetime;
+    private LocalDateTime gameEndDatetime;
+    private LocalDateTime gameStartDatetime;
+
     public void addMatchSummoner(MatchSummoner matchSummoner) {
         if(this.matchSummoners == null) {
             this.matchSummoners = new ArrayList<>();
@@ -95,6 +101,9 @@ public class Match {
                 .platformId(matchDto.getInfo().getPlatformId())
                 .tournamentCode(matchDto.getInfo().getTournamentCode())
                 .season(season)
+                .gameCreateDatetime(LocalDateTime.ofInstant(Instant.ofEpochMilli(this.gameCreation), ZoneId.systemDefault()))
+                .gameEndDatetime(LocalDateTime.ofInstant(Instant.ofEpochMilli(this.gameEndTimestamp), ZoneId.systemDefault()))
+                .gameStartDatetime(LocalDateTime.ofInstant(Instant.ofEpochMilli(this.gameStartTimestamp), ZoneId.systemDefault()))
                 .build();
     }
 
@@ -126,6 +135,14 @@ public class Match {
         gameData.setTeamInfoData(teamInfoDataMap);
 
         return gameData;
+    }
+
+    public boolean isGameResultOk() {
+        return this.endOfGameResult.equals("GameComplete");
+    }
+
+    public boolean isAbortUnexpected() {
+        return this.endOfGameResult.equals("Abort_Unexpected");
     }
 
 }

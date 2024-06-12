@@ -23,7 +23,6 @@ repositories {
 
 dependencies {
 
-
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
@@ -50,6 +49,10 @@ dependencies {
     // aop
     implementation 'org.springframework.boot:spring-boot-starter-aop'
 
+    // redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    implementation 'com.giffing.bucket4j.spring.boot.starter:bucket4j-spring-boot-starter:0.8.1'
 
     // test
     testCompileOnly 'org.projectlombok:lombok'
