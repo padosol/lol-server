@@ -1,11 +1,17 @@
 package com.example.lolserver.riot.core.builder.match;
 
+import com.example.lolserver.redis.model.MatchSession;
 import com.example.lolserver.riot.core.api.RiotAPI;
+import com.example.lolserver.riot.core.calling.RiotExecuteProxy;
 import com.example.lolserver.riot.dto.match.MatchDto;
 import com.example.lolserver.riot.type.Platform;
+import io.github.bucket4j.Bucket;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -53,6 +59,10 @@ public class Match {
 
         }
 
+        public CompletableFuture<MatchDto> getFuture(String matchId) {
+            return get(matchId);
+        }
+
         private CompletableFuture<MatchDto> get(String matchId) {
 
             UriComponentsBuilder builder = UriComponentsBuilder.newInstance();
@@ -64,32 +74,32 @@ public class Match {
 
         private List<MatchDto> getAll()  {
 
-
-            Long start = System.currentTimeMillis();
-            Long end;
-
             List<CompletableFuture<MatchDto>> matchList = new ArrayList<>();
 
+            Bucket bucket = RiotAPI.getBucket();
+
             for(String matchId : this.matchIds) {
-                CompletableFuture<MatchDto> future = get(matchId);
-                matchList.add(future);
+
+                if(bucket.getAvailableTokens() > 0) {
+                    CompletableFuture<MatchDto> future = get(matchId);
+                    matchList.add(future);
+                } else {
+                    ZSetOperations<String, Object> stringObjectZSetOperations = RiotAPI.getRedistemplate().opsForZSet();
+
+                    stringObjectZSetOperations.add("matchId", new MatchSession(matchId, this.platform), (double) System.currentTimeMillis() / 1000);
+                }
             }
 
-            try {
+            List<MatchDto> result = matchList.stream().map(CompletableFuture::join).toList();
 
-                List<MatchDto> result = matchList.stream().map(CompletableFuture::join).toList();
-
-                return result;
-            } finally {
-
-                end = System.currentTimeMillis();
-
-                log.info("getAll() 걸린 시간: {} ms", end - start);
-
-            }
+            return result;
         }
 
     }
+    public CompletableFuture<MatchDto> byMatchIdFuture(String matchId) {
+        return new Builder(matchId).platform(this.platform).getFuture(matchId);
+    }
+
 
     public MatchDto byMatchId(String matchId) {
         return new Builder(matchId).platform(this.platform).get();

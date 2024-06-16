@@ -1,5 +1,6 @@
 package com.example.lolserver.riot.core.calling;
 
+import com.example.lolserver.riot.core.api.RiotAPI;
 import io.github.bucket4j.Bucket;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,8 +17,9 @@ import java.util.concurrent.Executor;
 public class DefaultRiotExecute implements RiotExecute{
 
     private WebClient webClient;
-    private Bucket bucket;
     private Executor executor;
+    private Bucket bucket;
+
 
     public DefaultRiotExecute(String apiKey, Bucket bucket) {
 
@@ -26,6 +28,8 @@ public class DefaultRiotExecute implements RiotExecute{
         headers.add("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7");
         headers.add("Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8");
         headers.add("X-Riot-Token", apiKey);
+
+        this.bucket = bucket;
 
         this.webClient = WebClient.builder()
                 .defaultHeaders(
@@ -51,12 +55,13 @@ public class DefaultRiotExecute implements RiotExecute{
                         log.debug("{}: {}", key, header);
                     }
 
+                    log.debug("Bucket 토큰 수: {}", bucket.getAvailableTokens());
+
                     int statusCode = clientResponse.statusCode().value();
 
                     if(statusCode != 200) {
-                        log.info("Status Code: [{}]", statusCode);
+                        log.debug("Status Code: [{}]", statusCode);
                     }
-
 
                     return clientResponse.bodyToMono(clazz);
                 })

@@ -11,8 +11,10 @@ import com.example.lolserver.riot.core.builder.spectator.Spactator;
 import com.example.lolserver.riot.core.builder.summoner.Summoner;
 import com.example.lolserver.riot.dto.champion.ChampionInfo;
 import com.example.lolserver.riot.type.Platform;
+import io.github.bucket4j.Bucket;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -23,14 +25,19 @@ import java.util.concurrent.ExecutionException;
 public class RiotAPI {
 
     public static final String DEFAULT_HOST = ".api.riotgames.com";
+    private static Bucket BUCKET;
     private static RiotExecute defaultRiotExecute;
     private static Platform platform = Platform.KR;
     public final String API_KEY;
+    private static RedisTemplate<String, Object> REDISTEMPLATE;
 
-    public RiotAPI(String apiKey, RiotExecute execute) {
+    public RiotAPI(String apiKey, RiotExecute execute, RedisTemplate<String, Object> redisTemplate, Bucket bucket) {
         API_KEY = apiKey;
         defaultRiotExecute = execute;
+        REDISTEMPLATE = redisTemplate;
+        BUCKET = bucket;
     }
+
 
     public static void setRiotExecute(RiotExecute riotExecute) {
         defaultRiotExecute = riotExecute;
@@ -42,7 +49,9 @@ public class RiotAPI {
 
     public static class RiotApiBuilder{
 
+        private RedisTemplate<String, Object> redisTemplate;
         private RiotExecute execute;
+        private Bucket bucket;
         private String apiKey;
 
         public RiotApiBuilder apiKey(String apiKey) {
@@ -57,6 +66,16 @@ public class RiotAPI {
 
         public RiotApiBuilder execute(RiotExecute execute) {
             this.execute = execute;
+            return this;
+        }
+
+        public RiotApiBuilder redisTemplate(RedisTemplate<String, Object> redisTemplate) {
+            this.redisTemplate = redisTemplate;
+            return this;
+        }
+
+        public RiotApiBuilder bucket(Bucket bucket) {
+            this.bucket = bucket;
             return this;
         }
 
@@ -76,7 +95,7 @@ public class RiotAPI {
                 throw new RuntimeException();
             }
 
-            return new RiotAPI(this.apiKey, execute);
+            return new RiotAPI(this.apiKey, execute, this.redisTemplate, this.bucket);
         }
     }
 
@@ -100,6 +119,11 @@ public class RiotAPI {
 
     public static RiotExecute getExecute() {return defaultRiotExecute;}
 
+    public static Bucket getBucket() {
+        return BUCKET;
+    }
+
+    public static RedisTemplate<String, Object> getRedistemplate() {return REDISTEMPLATE;}
 
     public static String createRegionPath(Platform platform) {
         return platform.getRegion() + DEFAULT_HOST;

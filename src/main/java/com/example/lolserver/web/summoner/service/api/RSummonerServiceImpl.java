@@ -57,7 +57,6 @@ public class RSummonerServiceImpl implements RSummonerService{
         Summoner summoner = new Summoner(accountDto, summonerDTO, region.toLowerCase());
 
         return summonerRepository.save(summoner);
-
     }
 
     @Override
@@ -128,7 +127,6 @@ public class RSummonerServiceImpl implements RSummonerService{
             // 데이터베이스에서 존재하지 않는 MatchId 만 가져옴
             List<String> matchIdsNotIn = matchRepositoryCustom.getMatchIdsNotIn(allMatchIds);
 
-            // 0.5
             List<MatchDto> matchDtoList = RiotAPI.match(platform).byMatchIds(matchIdsNotIn);
 
             rMatchService.insertMatches(matchDtoList);

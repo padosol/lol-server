@@ -4,9 +4,10 @@ import jakarta.persistence.Id;
 import org.springframework.data.redis.core.RedisHash;
 
 @RedisHash
-public class RedisSession {
+public class RedisExecuteSession {
 
     @Id
     private String id;
-    private Long expirationInSeconds;
+
+
 }

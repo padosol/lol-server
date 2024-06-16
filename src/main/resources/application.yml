@@ -20,10 +20,16 @@ spring:
     username: postgres
     password: 1234
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
 
 logging:
   level:
-    com.example.lolserver.riot: INFO
+    com.example.lolserver.riot: DEBUG
+    com.example.lolserver.aspect: WARN
 
 server:
   port: 8085

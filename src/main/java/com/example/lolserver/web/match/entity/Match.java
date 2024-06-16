@@ -101,9 +101,9 @@ public class Match {
                 .platformId(matchDto.getInfo().getPlatformId())
                 .tournamentCode(matchDto.getInfo().getTournamentCode())
                 .season(season)
-                .gameCreateDatetime(LocalDateTime.ofInstant(Instant.ofEpochMilli(this.gameCreation), ZoneId.systemDefault()))
-                .gameEndDatetime(LocalDateTime.ofInstant(Instant.ofEpochMilli(this.gameEndTimestamp), ZoneId.systemDefault()))
-                .gameStartDatetime(LocalDateTime.ofInstant(Instant.ofEpochMilli(this.gameStartTimestamp), ZoneId.systemDefault()))
+                .gameCreateDatetime(LocalDateTime.ofInstant(Instant.ofEpochMilli(matchDto.getInfo().getGameCreation()), ZoneId.systemDefault()))
+                .gameEndDatetime(LocalDateTime.ofInstant(Instant.ofEpochMilli(matchDto.getInfo().getGameEndTimestamp()), ZoneId.systemDefault()))
+                .gameStartDatetime(LocalDateTime.ofInstant(Instant.ofEpochMilli(matchDto.getInfo().getGameStartTimestamp()), ZoneId.systemDefault()))
                 .build();
     }
 
@@ -142,7 +142,7 @@ public class Match {
     }
 
     public boolean isAbortUnexpected() {
-        return this.endOfGameResult.equals("Abort_Unexpected");
+        return this.endOfGameResult.equals("Abort_Unexpected") || this.endOfGameResult.equals("Abort_TooFewPlayers");
     }
 
 }

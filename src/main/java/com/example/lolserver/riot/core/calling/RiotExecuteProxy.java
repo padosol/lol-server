@@ -2,6 +2,8 @@ package com.example.lolserver.riot.core.calling;
 
 import io.github.bucket4j.Bucket;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.ListOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
@@ -10,21 +12,28 @@ import java.util.concurrent.CompletableFuture;
 public class RiotExecuteProxy implements RiotExecute{
 
     private RiotExecute execute;
+    private Bucket bucket;
+    private RedisTemplate<String, Object> redisTemplate;
 
-    public RiotExecuteProxy(RiotExecute execute) {
+    public RiotExecuteProxy(RiotExecute execute, Bucket bucket, RedisTemplate<String, Object> redisTemplate) {
         this.execute = execute;
+        this.bucket = bucket;
+        this.redisTemplate = redisTemplate;
     }
 
     @Override
     public <T> CompletableFuture<T> execute(Class<T> clazz, URI uri) {
 
-//        Long start = System.currentTimeMillis();
+        if(bucket.tryConsume(1L)) {
+            CompletableFuture<T> result = execute.execute(clazz, uri);
+            return result;
+        } else {
+            throw new IllegalStateException("429 Many too request");
+        }
 
-        CompletableFuture<T> result = execute.execute(clazz, uri);
+    }
 
-//        Long end = System.currentTimeMillis();
-//        log.info("API 요청/응답 시간: {}ms", end - start);
-
-        return result;
+    public RedisTemplate<String, Object> getRedisTemplate() {
+        return this.redisTemplate;
     }
 }

@@ -76,7 +76,6 @@ public class RMatchServiceImpl implements RMatchService{
         List<MatchTeam> matchTeamList = new ArrayList<>();
 
         for (MatchDto matchDto : matchDtoList) {
-
             Match match = new Match().of(matchDto, 23);
 
             List<ParticipantDto> participants = matchDto.getInfo().getParticipants();
@@ -99,18 +98,7 @@ public class RMatchServiceImpl implements RMatchService{
             matchList.add(match);
         }
 
-        Long start = System.currentTimeMillis();
-
         matchRepositoryCustom.matchBulkInsert(matchList);
-
-//        List<Match> result = matchRepository.saveAll(matchList);
-        Long end = System.currentTimeMillis();
-
-        log.info("데이터베이스 saveALl 실행시간 {} ms", (end - start));
-
-//        matchSummonerRepository.saveAll(matchSummonerList);
-//
-//        matchTeamRepository.saveAll(matchTeamList);
 
         return matchList;
     }
