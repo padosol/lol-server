@@ -24,11 +24,16 @@ public class RiotExecuteProxy implements RiotExecute{
     @Override
     public <T> CompletableFuture<T> execute(Class<T> clazz, URI uri) {
 
-        if(bucket.tryConsume(1L)) {
-            CompletableFuture<T> result = execute.execute(clazz, uri);
-            return result;
-        } else {
-            throw new IllegalStateException("429 Many too request");
+        synchronized (this) {
+
+            log.info("사용가능 토큰 수: {}", bucket.getAvailableTokens());
+            if(bucket.tryConsume(1L)) {
+                CompletableFuture<T> result = execute.execute(clazz, uri);
+                return result;
+            } else {
+                throw new IllegalStateException("429 Many too request");
+            }
+
         }
 
     }

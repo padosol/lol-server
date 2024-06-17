@@ -41,26 +41,21 @@ public class RLeagueServiceImpl implements RLeagueService{
         // 저장 후 서치
         for (LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
 
+            if(leagueEntryDTO.getQueueType().equals("CHERRY")) continue;
+
             League league = null;
 
             String leagueId = leagueEntryDTO.getLeagueId();
             Optional<League> findLeague = leagueRepository.findById(leagueId);
 
-            if(findLeague.isEmpty()) {
-                // 리그 정보가 없으면 리그에 관한 api를 불러와야함
-
-//                LeagueListDTO leagueListDTO = RiotAPI.league(Platform.valueOfName(summoner.getRegion())).byLeagueId(leagueId);
-                league = leagueRepository.save(
-                        League.builder()
-                        .leagueId(leagueId)
-//                        .name(leagueEntryDTO.getName())
-                        .tier(leagueEntryDTO.getTier())
-                        .queue(QueueType.valueOf(leagueEntryDTO.getQueueType()))
-                        .build()
-                );
-            } else {
-                league = findLeague.get();
-            }
+            // 리그 정보가 없으면 리그에 관한 api를 불러와야함
+            league = findLeague.orElseGet(() -> leagueRepository.save(
+                    League.builder()
+                            .leagueId(leagueId)
+                            .tier(leagueEntryDTO.getTier())
+                            .queue(QueueType.valueOf(leagueEntryDTO.getQueueType()))
+                            .build()
+            ));
 
             LeagueSummoner leagueSummoner = new LeagueSummoner().of(new LeagueSummonerId(leagueId, summoner.getId()), league, summoner, leagueEntryDTO);
             LeagueSummoner saveLeagueSummoner = leagueSummonerRepository.save(leagueSummoner);

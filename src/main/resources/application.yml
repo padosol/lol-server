@@ -28,7 +28,7 @@ spring:
 
 logging:
   level:
-    com.example.lolserver.riot: DEBUG
+    com.example.lolserver.riot: INFO
     com.example.lolserver.aspect: WARN
 
 server:

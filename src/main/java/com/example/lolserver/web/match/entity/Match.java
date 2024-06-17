@@ -142,7 +142,7 @@ public class Match {
     }
 
     public boolean isAbortUnexpected() {
-        return this.endOfGameResult.equals("Abort_Unexpected") || this.endOfGameResult.equals("Abort_TooFewPlayers");
+        return this.endOfGameResult.equals("Abort_TooFewPlayers");
     }
 
 }

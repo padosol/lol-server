@@ -123,9 +123,11 @@ public class RSummonerServiceImpl implements RSummonerService{
             // 게임 정보 초기화
             // 모든 게임정보 가져와야함
             List<String> allMatchIds = listCompletableFuture.get();
+            log.info("모든 게임 수: {}",allMatchIds.size());
 
             // 데이터베이스에서 존재하지 않는 MatchId 만 가져옴
             List<String> matchIdsNotIn = matchRepositoryCustom.getMatchIdsNotIn(allMatchIds);
+            log.info("등록할 게임 수: {}", matchIdsNotIn.size());
 
             List<MatchDto> matchDtoList = RiotAPI.match(platform).byMatchIds(matchIdsNotIn);
 

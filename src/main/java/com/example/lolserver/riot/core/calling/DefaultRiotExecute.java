@@ -55,13 +55,10 @@ public class DefaultRiotExecute implements RiotExecute{
                         log.debug("{}: {}", key, header);
                     }
 
-                    log.debug("Bucket 토큰 수: {}", bucket.getAvailableTokens());
-
                     int statusCode = clientResponse.statusCode().value();
 
-                    if(statusCode != 200) {
-                        log.debug("Status Code: [{}]", statusCode);
-                    }
+                    log.debug("Status Code: [{}]", statusCode);
+                    log.debug("Bucket 토큰 수: {}", bucket.getAvailableTokens());
 
                     return clientResponse.bodyToMono(clazz);
                 })

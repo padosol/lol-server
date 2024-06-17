@@ -91,7 +91,8 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                 .where(
                         matchSummoner.puuid.eq(puuid),
                         match.season.eq(season),
-                        queueIdEqOrAll(queueType)
+                        queueIdEqOrAll(queueType),
+                        matchSummoner.gameEndedInEarlySurrender.eq(false)
                 )
                 .groupBy(matchSummoner.championId, matchSummoner.championName)
                 .limit(7)
