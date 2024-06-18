@@ -76,6 +76,11 @@ public class RMatchServiceImpl implements RMatchService{
         List<MatchTeam> matchTeamList = new ArrayList<>();
 
         for (MatchDto matchDto : matchDtoList) {
+
+            if(matchDto.isError()) {
+                continue;
+            }
+
             Match match = new Match().of(matchDto, 23);
 
             List<ParticipantDto> participants = matchDto.getInfo().getParticipants();

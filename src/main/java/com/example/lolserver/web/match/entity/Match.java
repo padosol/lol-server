@@ -9,6 +9,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.type.MapType;
+import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -83,6 +84,7 @@ public class Match {
     }
 
     public Match of(MatchDto matchDto, int season) {
+
         return Match.builder()
                 .matchId(matchDto.getMetadata().getMatchId())
                 .dateVersion(matchDto.getMetadata().getDataVersion())
@@ -143,6 +145,11 @@ public class Match {
 
     public boolean isAbortUnexpected() {
         return this.endOfGameResult.equals("Abort_TooFewPlayers");
+    }
+
+
+    public boolean isGameId() {
+        return this.gameId != 0;
     }
 
 }

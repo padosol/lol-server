@@ -88,7 +88,7 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
 
             totalMatch.add(match);
 
-            if(match.isAbortUnexpected()) {
+            if(!match.isGameId()) {
                 continue;
             }
 
