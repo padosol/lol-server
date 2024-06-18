@@ -79,7 +79,14 @@ public class JpaTest {
 
     @BeforeAll
     static void beforeAll() {
-        DefaultRiotExecute execute = new DefaultRiotExecute("RGAPI-e6d2cce3-37b3-4b2a-bb54-3859139142d3");
+        Refill refill = Refill.intervally(500, Duration.ofSeconds(10));
+        Bandwidth limit = Bandwidth.classic(500, refill);
+
+        Bucket bucket = Bucket.builder()
+                .addLimit(limit)
+                .build();
+
+        DefaultRiotExecute execute = new DefaultRiotExecute("RGAPI-e6d2cce3-37b3-4b2a-bb54-3859139142d3", bucket);
         RiotAPI.setRiotExecute(execute);
     }
 
