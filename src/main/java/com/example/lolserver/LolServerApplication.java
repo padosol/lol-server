@@ -17,9 +17,4 @@ public class LolServerApplication {
     }
 
 
-    @Bean
-    public AuditorAware<String> auditorProvider() {
-        return () -> Optional.of()
-    }
-
 }
