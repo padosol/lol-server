@@ -20,10 +20,6 @@ import lombok.NoArgsConstructor;
 @Table(name = "league_summoner")
 public class LeagueSummoner {
 
-//    @Id
-//    @GeneratedValue
-//    @Column(name = "league_summoner_id")
-//    private Long id;
     @EmbeddedId
     private LeagueSummonerId id;
 
@@ -72,6 +68,7 @@ public class LeagueSummoner {
                 .losses(losses)
                 .oow( String.format("%.2f", (((double) wins / (wins + losses)))*100 ) + "%" )
                 .tier(league.getTier())
+                .rank(this.rank)
                 .build();
     }
 

@@ -15,5 +15,6 @@ public class LeagueSummonerData {
     private String oow;
     private String leagueImage;
     private String tier;
+    private String rank;
 
 }

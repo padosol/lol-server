@@ -1,5 +1,7 @@
 package com.example.lolserver.web.summoner.service.api;
 
+import com.example.lolserver.redis.model.SummonerRankSession;
+import com.example.lolserver.redis.service.RedisService;
 import com.example.lolserver.riot.core.api.RiotAPI;
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
@@ -20,9 +22,12 @@ import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.summoner.repository.SummonerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -44,6 +49,10 @@ public class RSummonerServiceImpl implements RSummonerService{
     private final MatchRepositoryCustom matchRepositoryCustom;
     private final RMatchService rMatchService;
 
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    private final RedisService redisService;
+
     @Override
     public Summoner getSummoner(String gameName, String tagLine, String region) {
 
@@ -60,7 +69,7 @@ public class RSummonerServiceImpl implements RSummonerService{
     }
 
     @Override
-    public void revisionSummoner(Summoner summoner) {
+    public boolean revisionSummoner(Summoner summoner) {
 
         try {
 
@@ -86,12 +95,14 @@ public class RSummonerServiceImpl implements RSummonerService{
 
             AccountDto accountDto = accountDtoCompletableFuture.get();
             if(accountDto.isError()) {
-                throw new IllegalStateException("존재하지 않는 유저정보 입니다.");
+                log.error("존재하지 않는 유저 정보 입니다. [유저정보: {}]", summoner);
+                return false;
             }
 
             SummonerDTO summonerDTO = summonerDTOCompletableFuture.get();
             if(summonerDTO.isError()) {
-                throw new IllegalStateException("존재하지 않는 유저정보 입니다.");
+                log.error("존재하지 않는 유저 정보 입니다. [유저정보: {}]", summoner);
+                return false;
             }
 
             // 유저정보 초기화
@@ -102,23 +113,30 @@ public class RSummonerServiceImpl implements RSummonerService{
             Set<LeagueEntryDTO> leagueEntryDTOS = setCompletableFuture.get();
             for (LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
 
+                if(leagueEntryDTO.isError()) {
+                    continue;
+                }
+
                 String leagueId = leagueEntryDTO.getLeagueId();
 
                 if(!StringUtils.hasText(leagueId)) {
                     continue;
                 }
 
+                // 리그가 존재하지 않을 시 등록해줌
                 League league = leagueRepository.findById(leagueId).orElseGet(() -> leagueRepository.save(League.builder()
                         .leagueId(leagueEntryDTO.getLeagueId())
                         .tier(leagueEntryDTO.getTier())
                         .queue(QueueType.valueOf(leagueEntryDTO.getQueueType()))
                         .build()));
 
-                LeagueSummonerId leagueSummonerId = new LeagueSummonerId(leagueId, summoner.getId());
+                LeagueSummonerId leagueSummonerId = new LeagueSummonerId(leagueId, summoner.getId(), LocalDateTime.now());
                 LeagueSummoner leagueSummoner = new LeagueSummoner().of(leagueSummonerId, league, summoner, leagueEntryDTO);
                 leagueSummonerRepository.save(leagueSummoner);
+                
+                // 솔로랭크와 자유랭크를 구분하여 zSet에 담아줌
+                redisService.addRankData(new SummonerRankSession(league, leagueSummoner));
             }
-
 
             // 게임 정보 초기화
             // 모든 게임정보 가져와야함
@@ -137,6 +155,7 @@ public class RSummonerServiceImpl implements RSummonerService{
             throw new RuntimeException(e);
         }
 
+        return true;
     }
 
 }

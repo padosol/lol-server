@@ -67,7 +67,11 @@ public class Summoner {
             String[] split = this.gameName.split("-");
 
             this.gameName = split[0];
-            this.tagLine = split[1];
+
+            if(split.length > 1) {
+                this.tagLine = split[1];
+            }
+
         }
     }
 
@@ -90,7 +94,7 @@ public class Summoner {
     public boolean isRevision() {
         LocalDateTime now = LocalDateTime.now();
 
-        return now.minusMinutes(3).isAfter(this.revisionClickDate);
+        return now.minusMinutes(2).isAfter(this.revisionClickDate);
     }
 
 

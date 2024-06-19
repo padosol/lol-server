@@ -1,5 +1,7 @@
 package com.example.lolserver.web.league.service.api;
 
+import com.example.lolserver.redis.model.SummonerRankSession;
+import com.example.lolserver.redis.service.RedisService;
 import com.example.lolserver.riot.core.api.RiotAPI;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.example.lolserver.riot.dto.league.LeagueListDTO;
@@ -16,6 +18,8 @@ import com.example.lolserver.web.summoner.entity.Summoner;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +32,8 @@ public class RLeagueServiceImpl implements RLeagueService{
 
     private final LeagueRepository leagueRepository;
     private final LeagueSummonerRepository leagueSummonerRepository;
+
+    private final RedisService redisService;
 
     @Override
     public LeagueData getLeagueSummoner(Summoner summoner) {
@@ -58,10 +64,12 @@ public class RLeagueServiceImpl implements RLeagueService{
                             .build()
             ));
 
-            LeagueSummoner leagueSummoner = new LeagueSummoner().of(new LeagueSummonerId(leagueId, summoner.getId()), league, summoner, leagueEntryDTO);
+            LeagueSummoner leagueSummoner = new LeagueSummoner().of(new LeagueSummonerId(leagueId, summoner.getId(), LocalDateTime.now()), league, summoner, leagueEntryDTO);
             LeagueSummoner saveLeagueSummoner = leagueSummonerRepository.save(leagueSummoner);
 
             leagueSummoners.add(saveLeagueSummoner);
+
+            redisService.addRankData(new SummonerRankSession(league, leagueSummoner));
         }
 
         List<LeagueSummonerData> result = leagueSummoners.stream().map(LeagueSummoner::toData).toList();
