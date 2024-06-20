@@ -58,8 +58,6 @@ public class LeagueSummoner {
                 .build();
     }
 
-
-
     public LeagueSummonerData toData() {
         return LeagueSummonerData.builder()
                 .leagueType(league.getQueue().name())
@@ -70,6 +68,10 @@ public class LeagueSummoner {
                 .tier(league.getTier())
                 .rank(this.rank)
                 .build();
+    }
+
+    public void addLeague(League league) {
+        this.league = league;
     }
 
 }

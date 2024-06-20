@@ -1,5 +1,6 @@
 package com.example.lolserver.web.league.service;
 
+import com.example.lolserver.web.dto.data.leagueData.LeagueSummonerData;
 import com.example.lolserver.web.league.entity.LeagueSummoner;
 import com.example.lolserver.web.league.service.api.RLeagueService;
 import com.example.lolserver.web.summoner.entity.Summoner;
@@ -35,7 +36,11 @@ public class LeagueServiceImpl implements LeagueService{
         List<LeagueSummoner> leagueSummoners = leagueSummonerRepository.findAllBySummoner(summoner);
 
         if(leagueSummoners.size() == 0) {
-            return rLeagueService.getLeagueSummoner(summoner);
+
+            List<LeagueSummonerData> result = rLeagueService.getLeagueSummoner(summoner).stream().map(LeagueSummoner::toData).toList();
+            leagueData.setLeagues(result);
+
+            return leagueData;
         }
 
         leagueData.setLeagues(leagueSummoners.stream().map( LeagueSummoner::toData).collect(Collectors.toList()));

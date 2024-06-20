@@ -16,4 +16,6 @@ public interface MatchRepositoryCustom {
     List<String> getMatchIdsNotIn(List<String> matchId);
 
     void matchBulkInsert(List<Match> matchList);
+
+
 }

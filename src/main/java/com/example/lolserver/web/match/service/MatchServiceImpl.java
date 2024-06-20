@@ -51,7 +51,8 @@ public class MatchServiceImpl implements MatchService {
         return matchSummonerRepositoryCustom.findAllChampionKDAByPuuidAndSeasonAndQueueType(
                 request.getPuuid(),
                 request.getSeason(),
-                request.getQueueId()
+                request.getQueueId(),
+                7L
         );
     }
 }

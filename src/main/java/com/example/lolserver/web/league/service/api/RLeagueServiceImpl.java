@@ -20,10 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,11 +33,11 @@ public class RLeagueServiceImpl implements RLeagueService{
     private final RedisService redisService;
 
     @Override
-    public LeagueData getLeagueSummoner(Summoner summoner) {
+    public List<LeagueSummoner> getLeagueSummoner(Summoner summoner) {
 
         Set<LeagueEntryDTO> leagueEntryDTOS = RiotAPI.league(Platform.valueOfName(summoner.getRegion())).bySummonerId(summoner.getId());
         if(leagueEntryDTOS.size() == 0) {
-            return new LeagueData(true);
+            return Collections.emptyList();
         }
 
         List<LeagueSummoner> leagueSummoners = new ArrayList<>();
@@ -64,18 +61,28 @@ public class RLeagueServiceImpl implements RLeagueService{
                             .build()
             ));
 
-            LeagueSummoner leagueSummoner = new LeagueSummoner().of(new LeagueSummonerId(leagueId, summoner.getId(), LocalDateTime.now()), league, summoner, leagueEntryDTO);
-            LeagueSummoner saveLeagueSummoner = leagueSummonerRepository.save(leagueSummoner);
+            LeagueSummoner leagueSummoner = leagueSummonerRepository.save(
+                    new LeagueSummoner().of(
+                            new LeagueSummonerId(leagueId, summoner.getId(), LocalDateTime.now()),
+                            league,
+                            summoner,
+                            leagueEntryDTO
+                    )
+            );
 
-            leagueSummoners.add(saveLeagueSummoner);
+            leagueSummoner.addLeague(league);
+
+            summoner.getLeagueSummoners().add(leagueSummoner);
+
+            leagueSummoners.add(leagueSummoner);
 
             redisService.addRankData(new SummonerRankSession(league, leagueSummoner));
         }
 
-        List<LeagueSummonerData> result = leagueSummoners.stream().map(LeagueSummoner::toData).toList();
-        LeagueData leagueData = new LeagueData();
-        leagueData.setLeagues(result);
+//        List<LeagueSummonerData> result = leagueSummoners.stream().map(LeagueSummoner::toData).toList();
+//        LeagueData leagueData = new LeagueData();
+//        leagueData.setLeagues(result);
 
-        return leagueData;
+        return leagueSummoners;
     }
 }

@@ -9,12 +9,16 @@ import com.example.lolserver.riot.dto.match.MatchDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.riot.type.Platform;
 import com.example.lolserver.web.dto.data.GameData;
+import com.example.lolserver.web.dto.data.LeagueData;
 import com.example.lolserver.web.league.entity.League;
 import com.example.lolserver.web.league.entity.LeagueSummoner;
 import com.example.lolserver.web.league.entity.QueueType;
 import com.example.lolserver.web.league.entity.id.LeagueSummonerId;
 import com.example.lolserver.web.league.repository.LeagueRepository;
 import com.example.lolserver.web.league.repository.LeagueSummonerRepository;
+import com.example.lolserver.web.league.service.api.RLeagueService;
+import com.example.lolserver.web.match.dto.MatchRequest;
+import com.example.lolserver.web.match.dto.MatchResponse;
 import com.example.lolserver.web.match.entity.Match;
 import com.example.lolserver.web.match.repository.match.dsl.MatchRepositoryCustom;
 import com.example.lolserver.web.match.service.api.RMatchService;
@@ -49,23 +53,39 @@ public class RSummonerServiceImpl implements RSummonerService{
     private final MatchRepositoryCustom matchRepositoryCustom;
     private final RMatchService rMatchService;
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RLeagueService rLeagueService;
 
     private final RedisService redisService;
+
 
     @Override
     public Summoner getSummoner(String gameName, String tagLine, String region) {
 
-        AccountDto accountDto = RiotAPI.account(Platform.valueOfName(region)).byRiotId(gameName, tagLine);
-        SummonerDTO summonerDTO = RiotAPI.summoner(Platform.valueOfName(region)).byPuuid(accountDto.getPuuid());
+        // 유저 정보를 가져올 때, 리그와 매치 정보도 함께 가져와야함;
+        Platform platform = Platform.valueOfName(region);
+
+        AccountDto accountDto = RiotAPI.account(platform).byRiotId(gameName, tagLine);
+        SummonerDTO summonerDTO = RiotAPI.summoner(platform).byPuuid(accountDto.getPuuid());
 
         if(summonerDTO.isError()) {
             return null;
         }
 
-        Summoner summoner = new Summoner(accountDto, summonerDTO, region.toLowerCase());
+        Summoner summoner = summonerRepository.save(new Summoner(accountDto, summonerDTO, region.toLowerCase()));
 
-        return summonerRepository.save(summoner);
+        List<LeagueSummoner> leagueSummonerList = rLeagueService.getLeagueSummoner(summoner);
+
+        MatchRequest request = new MatchRequest();
+        request.setPuuid(accountDto.getPuuid());
+        request.setPlatform(platform.getPlatform());
+
+        rMatchService.getMatches(request);
+
+        for (LeagueSummoner leagueSummoner : leagueSummonerList) {
+            redisService.addRankData(new SummonerRankSession(leagueSummoner.getLeague(), leagueSummoner));
+        }
+
+        return summoner;
     }
 
     @Override

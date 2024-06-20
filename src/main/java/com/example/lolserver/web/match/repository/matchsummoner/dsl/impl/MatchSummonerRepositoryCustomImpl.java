@@ -2,12 +2,9 @@ package com.example.lolserver.web.match.repository.matchsummoner.dsl.impl;
 
 import com.example.lolserver.web.match.dto.MSChampionResponse;
 import com.example.lolserver.web.match.dto.MatchRequest;
+import com.example.lolserver.web.match.dto.LinePosition;
 import com.example.lolserver.web.match.entity.MatchSummoner;
-import com.example.lolserver.web.match.entity.QMatch;
-import com.example.lolserver.web.match.entity.QMatchSummoner;
 import com.example.lolserver.web.match.repository.matchsummoner.dsl.MatchSummonerRepositoryCustom;
-import com.querydsl.core.Tuple;
-import com.querydsl.core.types.Ops;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
@@ -71,9 +68,9 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
     }
 
     @Override
-    public List<MSChampionResponse> findAllChampionKDAByPuuidAndSeasonAndQueueType(String puuid, Integer season, Integer queueType) {
+    public List<MSChampionResponse> findAllChampionKDAByPuuidAndSeasonAndQueueType(String puuid, Integer season, Integer queueType, Long limit) {
 
-        List<MSChampionResponse> result = jpaQueryFactory.select(
+        JPAQuery<MSChampionResponse> query = jpaQueryFactory.select(
                         Projections.fields(MSChampionResponse.class,
                                 matchSummoner.championId,
                                 matchSummoner.championName,
@@ -95,11 +92,33 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                         matchSummoner.gameEndedInEarlySurrender.eq(false)
                 )
                 .groupBy(matchSummoner.championId, matchSummoner.championName)
-                .limit(7)
-                .orderBy(Expressions.stringPath("playCount").desc())
-                .fetch();
+                .orderBy(Expressions.stringPath("playCount").desc());
 
-        return result;
+        if(limit != null) {
+            query.limit(limit);
+        }
+
+        return query.fetch();
+    }
+
+    @Override
+    public List<LinePosition> findAllPositionByPuuidAndLimit(String puuid, Long limit) {
+
+        JPAQuery<LinePosition> query = jpaQueryFactory.select(
+                        Projections.fields(
+                                LinePosition.class,
+                                matchSummoner.individualPosition.as("position"),
+                                matchSummoner.individualPosition.count().as("playCount")
+                        )
+                )
+                .from(matchSummoner)
+                .where(matchSummoner.puuid.eq(puuid));
+
+        if(limit != null) {
+            query.limit(limit);
+        }
+
+        return query.fetch();
     }
 
     private BooleanExpression queueIdEqOrAll(Integer queueId) {

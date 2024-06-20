@@ -55,6 +55,11 @@ public class SummonerServiceV1 implements SummonerService{
         List<Summoner> summonerList = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegion(summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
 
         if(summonerList.size() < 1) {
+
+            if(!summoner.isTagLine()) {
+                return Collections.emptyList();
+            }
+
             Summoner findSummoner = rSummonerService.getSummoner(summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
 
             if(findSummoner == null) {
