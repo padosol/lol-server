@@ -3,6 +3,8 @@ package com.example.lolserver.web.rank.dto;
 import com.example.lolserver.redis.model.SummonerRankSession;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 public class RankResponse {
 
@@ -13,6 +15,9 @@ public class RankResponse {
     private int point;
     private String tier;
     private long summonerLevel;
+    private String position;
+
+    private List<String> championNames;
 
     public RankResponse(SummonerRankSession session) {
         this.summonerName = session.getSummonerName();
@@ -22,6 +27,11 @@ public class RankResponse {
         this.point = session.getPoint();
         this.tier = session.getTier().name() + " " + session.getDivision().name();
         this.summonerLevel = session.getSummonerLevel();
+        this.position = session.getPosition();
+        this.championNames = session.getChampionNames();
+
     }
+
+
 
 }

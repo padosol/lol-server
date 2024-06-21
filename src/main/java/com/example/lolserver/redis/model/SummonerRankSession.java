@@ -32,6 +32,7 @@ public class SummonerRankSession implements Serializable {
     private int point;
     private Tier tier;
     private Division division;
+    private String puuid;
 
     private long summonerLevel;
 
@@ -44,6 +45,8 @@ public class SummonerRankSession implements Serializable {
     public SummonerRankSession(League league, LeagueSummoner leagueSummoner) {
         this.queueType = league.getQueue();
         this.tier = Tier.valueOf(league.getTier());
+
+        this.puuid = leagueSummoner.getSummoner().getPuuid();
 
         this.summonerName = leagueSummoner.getSummoner().getGameName();
         this.tagLine = leagueSummoner.getSummoner().getTagLine();

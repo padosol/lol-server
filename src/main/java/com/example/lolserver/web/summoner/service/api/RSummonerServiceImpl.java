@@ -75,12 +75,6 @@ public class RSummonerServiceImpl implements RSummonerService{
 
         List<LeagueSummoner> leagueSummonerList = rLeagueService.getLeagueSummoner(summoner);
 
-        MatchRequest request = new MatchRequest();
-        request.setPuuid(accountDto.getPuuid());
-        request.setPlatform(platform.getPlatform());
-
-        rMatchService.getMatches(request);
-
         for (LeagueSummoner leagueSummoner : leagueSummonerList) {
             redisService.addRankData(new SummonerRankSession(leagueSummoner.getLeague(), leagueSummoner));
         }

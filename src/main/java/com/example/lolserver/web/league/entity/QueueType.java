@@ -1,5 +1,17 @@
 package com.example.lolserver.web.league.entity;
 
+import lombok.Getter;
+
+@Getter
 public enum QueueType {
-    RANKED_SOLO_5x5, RANKED_FLEX_SR, RANKED_FLEX_TT
+    RANKED_SOLO_5x5(420),
+    RANKED_FLEX_SR(440),
+    RANKED_FLEX_TT(0);
+
+    private int queueId;
+
+    QueueType(int queueId) {
+        this.queueId = queueId;
+    }
+
 }

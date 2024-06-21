@@ -112,7 +112,9 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                         )
                 )
                 .from(matchSummoner)
-                .where(matchSummoner.puuid.eq(puuid));
+                .where(matchSummoner.puuid.eq(puuid))
+                .orderBy(Expressions.stringPath("playCount").desc())
+                .groupBy(matchSummoner.individualPosition);
 
         if(limit != null) {
             query.limit(limit);

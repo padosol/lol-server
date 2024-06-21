@@ -10,6 +10,8 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ParticipantDto {
 
+    private ChallengesDto challenges;
+
     private int assists;
     private int baronKills;
     private int bountyLevel;

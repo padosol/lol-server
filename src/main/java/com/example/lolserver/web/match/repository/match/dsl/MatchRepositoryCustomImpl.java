@@ -6,16 +6,22 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.annotations.Comment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.example.lolserver.web.match.entity.QMatch.match;
 import static com.example.lolserver.web.match.entity.QMatchSummoner.matchSummoner;
@@ -25,6 +31,7 @@ import static com.example.lolserver.web.match.entity.QMatchSummoner.matchSummone
 public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
 
     private final JPAQueryFactory jpaQueryFactory;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private final JdbcTemplate jdbcTemplate;
 
     @Override
@@ -55,9 +62,6 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
 
     @Override
     public List<Match> getAllMatches() {
-        QMatch match = QMatch.match;
-        QMatchSummoner matchSummoner = QMatchSummoner.matchSummoner;
-
         return jpaQueryFactory.selectFrom(match).fetch();
     }
 
@@ -82,6 +86,7 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
         List<MatchSummoner> totalMatchSummoner = new ArrayList<>();
         List<MatchTeam> totalMatchTeams = new ArrayList<>();
         List<Match> totalMatch = new ArrayList<>();
+        List<Challenges> totalChallenge = new ArrayList<>();
 
         for (Match match : matchList) {
 
@@ -94,6 +99,10 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
             List<MatchSummoner> matchSummoners = match.getMatchSummoners();
             totalMatchSummoner.addAll(matchSummoners);
 
+            for (MatchSummoner matchSummoner : matchSummoners) {
+                totalChallenge.add(matchSummoner.getChallenges());
+            }
+
             List<MatchTeam> matchTeams = match.getMatchTeams();
             totalMatchTeams.addAll(matchTeams);
 
@@ -101,10 +110,384 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
 
         bulkInsertMatch(totalMatch);
         bulkInsertMatchSummoner(totalMatchSummoner);
+        bulkInsertChallenge(totalChallenge);
         bulkInsertMatchTeam(totalMatchTeams);
     }
 
+    private void bulkInsertChallenge(List<Challenges> challenges) {
+
+        Map<String, Object>[] params = new Map[challenges.size()];
+        int size = challenges.size();
+        for (int i=0;i<size;i++) {
+            Challenges challenge = challenges.get(i);
+
+            Map<String, Object> param = new HashMap<>();
+
+            param.put("summonerId", challenge.getMatchSummoner().getSummonerId());
+            param.put("matchId", challenge.getMatchSummoner().getMatch().getMatchId());
+            param.put("assistStreakCount12", challenge.getAssistStreakCount12());
+            param.put("infernalScalePickup", challenge.getInfernalScalePickup());
+            param.put("abilityUses", challenge.getAbilityUses());
+            param.put("acesBefore15Minutes", challenge.getAcesBefore15Minutes());
+            param.put("alliedJungleMonsterKills", challenge.getAlliedJungleMonsterKills());
+            param.put("baronTakedowns", challenge.getBaronTakedowns());
+            param.put("blastConeOppositeOpponentCount", challenge.getBlastConeOppositeOpponentCount());
+            param.put("bountyGold", challenge.getBountyGold());
+            param.put("buffsStolen", challenge.getBuffsStolen());
+            param.put("completeSupportQuestInTime", challenge.getCompleteSupportQuestInTime());
+            param.put("controlWardTimeCoverageInRiverOrEnemyHalf", challenge.getControlWardTimeCoverageInRiverOrEnemyHalf());
+            param.put("controlWardsPlaced", challenge.getControlWardsPlaced());
+            param.put("damagePerMinute", challenge.getDamagePerMinute());
+            param.put("damageTakenOnTeamPercentage", challenge.getDamageTakenOnTeamPercentage());
+            param.put("dancedWithRiftHerald", challenge.getDancedWithRiftHerald());
+            param.put("deathsByEnemyChamps", challenge.getDeathsByEnemyChamps());
+            param.put("dodgeSkillShotsSmallWindow", challenge.getDodgeSkillShotsSmallWindow());
+            param.put("doubleAces", challenge.getDoubleAces());
+            param.put("dragonTakedowns", challenge.getDragonTakedowns());
+            param.put("earlyLaningPhaseGoldExpAdvantage", challenge.getEarlyLaningPhaseGoldExpAdvantage());
+            param.put("effectiveHealAndShielding", challenge.getEffectiveHealAndShielding());
+            param.put("elderDragonKillsWithOpposingSoul", challenge.getElderDragonKillsWithOpposingSoul());
+            param.put("elderDragonMultikills", challenge.getElderDragonMultikills());
+            param.put("enemyChampionImmobilizations", challenge.getEnemyChampionImmobilizations());
+            param.put("enemyJungleMonsterKills", challenge.getEnemyJungleMonsterKills());
+            param.put("epicMonsterKillsNearEnemyJungler", challenge.getEpicMonsterKillsNearEnemyJungler());
+            param.put("epicMonsterKillsWithin30SecondsOfSpawn", challenge.getEpicMonsterKillsWithin30SecondsOfSpawn());
+            param.put("epicMonsterSteals", challenge.getEpicMonsterSteals());
+            param.put("epicMonsterStolenWithoutSmite", challenge.getEpicMonsterStolenWithoutSmite());
+            param.put("firstTurretKilled", challenge.getFirstTurretKilled());
+            param.put("firstTurretKilledTime", challenge.getFirstTurretKilledTime());
+            param.put("fistBumpParticipation", challenge.getFistBumpParticipation());
+            param.put("flawlessAces", challenge.getFlawlessAces());
+            param.put("fullTeamTakedown", challenge.getFullTeamTakedown());
+            param.put("gameLength", challenge.getGameLength());
+            param.put("getTakedownsInAllLanesEarlyJungleAsLaner", challenge.getGetTakedownsInAllLanesEarlyJungleAsLaner());
+            param.put("goldPerMinute", challenge.getGoldPerMinute());
+            param.put("hadOpenNexus", challenge.getHadOpenNexus());
+            param.put("immobilizeAndKillWithAlly", challenge.getImmobilizeAndKillWithAlly());
+            param.put("initialBuffCount", challenge.getInitialBuffCount());
+            param.put("initialCrabCount", challenge.getInitialCrabCount());
+            param.put("jungleCsBefore10Minutes", challenge.getJungleCsBefore10Minutes());
+            param.put("junglerTakedownsNearDamagedEpicMonster", challenge.getJunglerTakedownsNearDamagedEpicMonster());
+            param.put("kTurretsDestroyedBeforePlatesFall", challenge.getKTurretsDestroyedBeforePlatesFall());
+            param.put("kda", challenge.getKda());
+            param.put("killAfterHiddenWithAlly", challenge.getKillAfterHiddenWithAlly());
+            param.put("killParticipation", challenge.getKillParticipation());
+            param.put("killedChampTookFullTeamDamageSurvived", challenge.getKilledChampTookFullTeamDamageSurvived());
+            param.put("killingSprees", challenge.getKillingSprees());
+            param.put("killsNearEnemyTurret", challenge.getKillsNearEnemyTurret());
+            param.put("killsOnOtherLanesEarlyJungleAsLaner", challenge.getKillsOnOtherLanesEarlyJungleAsLaner());
+            param.put("killsOnRecentlyHealedByAramPack", challenge.getKillsOnRecentlyHealedByAramPack());
+            param.put("killsUnderOwnTurret", challenge.getKillsUnderOwnTurret());
+            param.put("killsWithHelpFromEpicMonster", challenge.getKillsWithHelpFromEpicMonster());
+            param.put("knockEnemyIntoTeamAndKill", challenge.getKnockEnemyIntoTeamAndKill());
+            param.put("landSkillShotsEarlyGame", challenge.getLandSkillShotsEarlyGame());
+            param.put("laneMinionsFirst10Minutes", challenge.getLaneMinionsFirst10Minutes());
+            param.put("laningPhaseGoldExpAdvantage", challenge.getLaningPhaseGoldExpAdvantage());
+            param.put("legendaryCount", challenge.getLegendaryCount());
+            param.put("legendaryItemUsed", challenge.getLegendaryItemUsed());
+            param.put("lostAnInhibitor", challenge.getLostAnInhibitor());
+            param.put("maxCsAdvantageOnLaneOpponent", challenge.getMaxCsAdvantageOnLaneOpponent());
+            param.put("maxKillDeficit", challenge.getMaxKillDeficit());
+            param.put("maxLevelLeadLaneOpponent", challenge.getMaxLevelLeadLaneOpponent());
+            param.put("mejaisFullStackInTime", challenge.getMejaisFullStackInTime());
+            param.put("moreEnemyJungleThanOpponent", challenge.getMoreEnemyJungleThanOpponent());
+            param.put("multiKillOneSpell", challenge.getMultiKillOneSpell());
+            param.put("multiTurretRiftHeraldCount", challenge.getMultiTurretRiftHeraldCount());
+            param.put("multikills", challenge.getMultikills());
+            param.put("multikillsAfterAggressiveFlash", challenge.getMultikillsAfterAggressiveFlash());
+            param.put("outerTurretExecutesBefore10Minutes", challenge.getOuterTurretExecutesBefore10Minutes());
+            param.put("outnumberedKills", challenge.getOutnumberedKills());
+            param.put("outnumberedNexusKill", challenge.getOutnumberedNexusKill());
+            param.put("perfectDragonSoulsTaken", challenge.getPerfectDragonSoulsTaken());
+            param.put("perfectGame", challenge.getPerfectGame());
+            param.put("pickKillWithAlly", challenge.getPickKillWithAlly());
+            param.put("playedChampSelectPosition", challenge.getPlayedChampSelectPosition());
+            param.put("poroExplosions", challenge.getPoroExplosions());
+            param.put("quickCleanse", challenge.getQuickCleanse());
+            param.put("quickFirstTurret", challenge.getQuickFirstTurret());
+            param.put("quickSoloKills", challenge.getQuickSoloKills());
+            param.put("riftHeraldTakedowns", challenge.getRiftHeraldTakedowns());
+            param.put("saveAllyFromDeath", challenge.getSaveAllyFromDeath());
+            param.put("scuttleCrabKills", challenge.getScuttleCrabKills());
+            param.put("skillshotsDodged", challenge.getSkillshotsDodged());
+            param.put("skillshotsHit", challenge.getSkillshotsHit());
+            param.put("snowballsHit", challenge.getSnowballsHit());
+            param.put("soloBaronKills", challenge.getSoloBaronKills());
+            param.put("soloKills", challenge.getSoloKills());
+            param.put("stealthWardsPlaced", challenge.getStealthWardsPlaced());
+            param.put("survivedSingleDigitHpCount", challenge.getSurvivedSingleDigitHpCount());
+            param.put("survivedThreeImmobilizesInFight", challenge.getSurvivedThreeImmobilizesInFight());
+            param.put("takedownOnFirstTurret", challenge.getTakedownOnFirstTurret());
+            param.put("takedowns", challenge.getTakedowns());
+            param.put("takedownsAfterGainingLevelAdvantage", challenge.getTakedownsAfterGainingLevelAdvantage());
+            param.put("takedownsBeforeJungleMinionSpawn", challenge.getTakedownsBeforeJungleMinionSpawn());
+            param.put("takedownsFirstXMinutes", challenge.getTakedownsFirstXMinutes());
+            param.put("takedownsInAlcove", challenge.getTakedownsInAlcove());
+            param.put("takedownsInEnemyFountain", challenge.getTakedownsInEnemyFountain());
+            param.put("teamBaronKills", challenge.getTeamBaronKills());
+            param.put("teamDamagePercentage", challenge.getTeamDamagePercentage());
+            param.put("teamElderDragonKills", challenge.getTeamElderDragonKills());
+            param.put("teamRiftHeraldKills", challenge.getTeamRiftHeraldKills());
+            param.put("tookLargeDamageSurvived", challenge.getTookLargeDamageSurvived());
+            param.put("turretPlatesTaken", challenge.getTurretPlatesTaken());
+            param.put("turretTakedowns", challenge.getTurretTakedowns());
+            param.put("turretsTakenWithRiftHerald", challenge.getTurretsTakenWithRiftHerald());
+            param.put("twentyMinionsIn3SecondsCount", challenge.getTwentyMinionsIn3SecondsCount());
+            param.put("twoWardsOneSweeperCount", challenge.getTwoWardsOneSweeperCount());
+            param.put("unseenRecalls", challenge.getUnseenRecalls());
+            param.put("visionScoreAdvantageLaneOpponent", challenge.getVisionScoreAdvantageLaneOpponent());
+            param.put("visionScorePerMinute", challenge.getVisionScorePerMinute());
+            param.put("voidMonsterKill", challenge.getVoidMonsterKill());
+            param.put("wardTakedowns", challenge.getWardTakedowns());
+            param.put("wardTakedownsBefore20M", challenge.getWardTakedownsBefore20M());
+            param.put("wardsGuarded", challenge.getWardsGuarded());
+
+            params[i] = param;
+        }
+
+        namedParameterJdbcTemplate.batchUpdate("INSERT INTO challenges (" +
+                " summoner_id, " +
+                " match_id, " +
+                " assist_streak_count12, " +
+                " infernal_scale_pickup, " +
+                " ability_uses, " +
+                " aces_before15minutes, " +
+                " allied_jungle_monster_kills, " +
+                " baron_takedowns, " +
+                " blast_cone_opposite_opponent_count, " +
+                " bounty_gold, " +
+                " buffs_stolen, " +
+                " complete_support_quest_in_time, " +
+                " control_ward_time_coverage_in_river_or_enemy_half, " +
+                " control_wards_placed, " +
+                " damage_per_minute, " +
+                " damage_taken_on_team_percentage, " +
+                " danced_with_rift_herald, " +
+                " deaths_by_enemy_champs, " +
+                " dodge_skill_shots_small_window, " +
+                " double_aces, " +
+                " dragon_takedowns, " +
+                " early_laning_phase_gold_exp_advantage, " +
+                " effective_heal_and_shielding, " +
+                " elder_dragon_kills_with_opposing_soul, " +
+                " elder_dragon_multikills, " +
+                " enemy_champion_immobilizations, " +
+                " enemy_jungle_monster_kills, " +
+                " epic_monster_kills_near_enemy_jungler, " +
+                " epic_monster_kills_within30seconds_of_spawn, " +
+                " epic_monster_steals, " +
+                " epic_monster_stolen_without_smite, " +
+                " first_turret_killed, " +
+                " first_turret_killed_time, " +
+                " fist_bump_participation, " +
+                " flawless_aces, " +
+                " full_team_takedown, " +
+                " game_length, " +
+                " get_takedowns_in_all_lanes_early_jungle_as_laner, " +
+                " gold_per_minute, " +
+                " had_open_nexus, " +
+                " immobilize_and_kill_with_ally, " +
+                " initial_buff_count, " +
+                " initial_crab_count, " +
+                " jungle_cs_before10minutes, " +
+                " jungler_takedowns_near_damaged_epic_monster, " +
+                " k_turrets_destroyed_before_plates_fall, " +
+                " kda, " +
+                " kill_after_hidden_with_ally, " +
+                " kill_participation, " +
+                " killed_champ_took_full_team_damage_survived, " +
+                " killing_sprees, " +
+                " kills_near_enemy_turret, " +
+                " kills_on_other_lanes_early_jungle_as_laner, " +
+                " kills_on_recently_healed_by_aram_pack, " +
+                " kills_under_own_turret, " +
+                " kills_with_help_from_epic_monster, " +
+                " knock_enemy_into_team_and_kill, " +
+                " land_skill_shots_early_game, " +
+                " lane_minions_first10minutes, " +
+                " laning_phase_gold_exp_advantage, " +
+                " legendary_count, " +
+                " legendary_item_used, " +
+                " lost_an_inhibitor, " +
+                " max_cs_advantage_on_lane_opponent, " +
+                " max_kill_deficit, " +
+                " max_level_lead_lane_opponent, " +
+                " mejais_full_stack_in_time, " +
+                " more_enemy_jungle_than_opponent, " +
+                " multi_kill_one_spell, " +
+                " multi_turret_rift_herald_count, " +
+                " multikills, " +
+                " multikills_after_aggressive_flash, " +
+                " outer_turret_executes_before10minutes, " +
+                " outnumbered_kills, " +
+                " outnumbered_nexus_kill, " +
+                " perfect_dragon_souls_taken, " +
+                " perfect_game, " +
+                " pick_kill_with_ally, " +
+                " played_champ_select_position, " +
+                " poro_explosions, " +
+                " quick_cleanse, " +
+                " quick_first_turret, " +
+                " quick_solo_kills, " +
+                " rift_herald_takedowns, " +
+                " save_ally_from_death, " +
+                " scuttle_crab_kills, " +
+                " skillshots_dodged, " +
+                " skillshots_hit, " +
+                " snowballs_hit, " +
+                " solo_baron_kills, " +
+                " solo_kills, " +
+                " stealth_wards_placed, " +
+                " survived_single_digit_hp_count, " +
+                " survived_three_immobilizes_in_fight, " +
+                " takedown_on_first_turret, " +
+                " takedowns, " +
+                " takedowns_after_gaining_level_advantage, " +
+                " takedowns_before_jungle_minion_spawn, " +
+                " takedowns_firstxminutes, " +
+                " takedowns_in_alcove, " +
+                " takedowns_in_enemy_fountain, " +
+                " team_baron_kills, " +
+                " team_damage_percentage, " +
+                " team_elder_dragon_kills, " +
+                " team_rift_herald_kills, " +
+                " took_large_damage_survived, " +
+                " turret_plates_taken, " +
+                " turret_takedowns, " +
+                " turrets_taken_with_rift_herald, " +
+                " twenty_minions_in3seconds_count, " +
+                " two_wards_one_sweeper_count, " +
+                " unseen_recalls, " +
+                " vision_score_advantage_lane_opponent, " +
+                " vision_score_per_minute, " +
+                " void_monster_kill, " +
+                " ward_takedowns, " +
+                " ward_takedowns_before20m, " +
+                " wards_guarded"+
+                ") " +
+                "VALUES (" +
+                " :summonerId, " +
+                " :matchId, " +
+                " :assistStreakCount12, " +
+                " :infernalScalePickup, " +
+                " :abilityUses, " +
+                " :acesBefore15Minutes, " +
+                " :alliedJungleMonsterKills, " +
+                " :baronTakedowns, " +
+                " :blastConeOppositeOpponentCount, " +
+                " :bountyGold, " +
+                " :buffsStolen, " +
+                " :completeSupportQuestInTime, " +
+                " :controlWardTimeCoverageInRiverOrEnemyHalf, " +
+                " :controlWardsPlaced, " +
+                " :damagePerMinute, " +
+                " :damageTakenOnTeamPercentage, " +
+                " :dancedWithRiftHerald, " +
+                " :deathsByEnemyChamps, " +
+                " :dodgeSkillShotsSmallWindow, " +
+                " :doubleAces, " +
+                " :dragonTakedowns, " +
+                " :earlyLaningPhaseGoldExpAdvantage, " +
+                " :effectiveHealAndShielding, " +
+                " :elderDragonKillsWithOpposingSoul, " +
+                " :elderDragonMultikills, " +
+                " :enemyChampionImmobilizations, " +
+                " :enemyJungleMonsterKills, " +
+                " :epicMonsterKillsNearEnemyJungler, " +
+                " :epicMonsterKillsWithin30SecondsOfSpawn, " +
+                " :epicMonsterSteals, " +
+                " :epicMonsterStolenWithoutSmite, " +
+                " :firstTurretKilled, " +
+                " :firstTurretKilledTime, " +
+                " :fistBumpParticipation, " +
+                " :flawlessAces, " +
+                " :fullTeamTakedown, " +
+                " :gameLength, " +
+                " :getTakedownsInAllLanesEarlyJungleAsLaner, " +
+                " :goldPerMinute, " +
+                " :hadOpenNexus, " +
+                " :immobilizeAndKillWithAlly, " +
+                " :initialBuffCount, " +
+                " :initialCrabCount, " +
+                " :jungleCsBefore10Minutes, " +
+                " :junglerTakedownsNearDamagedEpicMonster, " +
+                " :kTurretsDestroyedBeforePlatesFall, " +
+                " :kda, " +
+                " :killAfterHiddenWithAlly, " +
+                " :killParticipation, " +
+                " :killedChampTookFullTeamDamageSurvived, " +
+                " :killingSprees, " +
+                " :killsNearEnemyTurret, " +
+                " :killsOnOtherLanesEarlyJungleAsLaner, " +
+                " :killsOnRecentlyHealedByAramPack, " +
+                " :killsUnderOwnTurret, " +
+                " :killsWithHelpFromEpicMonster, " +
+                " :knockEnemyIntoTeamAndKill, " +
+                " :landSkillShotsEarlyGame, " +
+                " :laneMinionsFirst10Minutes, " +
+                " :laningPhaseGoldExpAdvantage, " +
+                " :legendaryCount, " +
+                " :legendaryItemUsed, " +
+                " :lostAnInhibitor, " +
+                " :maxCsAdvantageOnLaneOpponent, " +
+                " :maxKillDeficit, " +
+                " :maxLevelLeadLaneOpponent, " +
+                " :mejaisFullStackInTime, " +
+                " :moreEnemyJungleThanOpponent, " +
+                " :multiKillOneSpell, " +
+                " :multiTurretRiftHeraldCount, " +
+                " :multikills, " +
+                " :multikillsAfterAggressiveFlash, " +
+                " :outerTurretExecutesBefore10Minutes, " +
+                " :outnumberedKills, " +
+                " :outnumberedNexusKill, " +
+                " :perfectDragonSoulsTaken, " +
+                " :perfectGame, " +
+                " :pickKillWithAlly, " +
+                " :playedChampSelectPosition, " +
+                " :poroExplosions, " +
+                " :quickCleanse, " +
+                " :quickFirstTurret, " +
+                " :quickSoloKills, " +
+                " :riftHeraldTakedowns, " +
+                " :saveAllyFromDeath, " +
+                " :scuttleCrabKills, " +
+                " :skillshotsDodged, " +
+                " :skillshotsHit, " +
+                " :snowballsHit, " +
+                " :soloBaronKills, " +
+                " :soloKills, " +
+                " :stealthWardsPlaced, " +
+                " :survivedSingleDigitHpCount, " +
+                " :survivedThreeImmobilizesInFight, " +
+                " :takedownOnFirstTurret, " +
+                " :takedowns, " +
+                " :takedownsAfterGainingLevelAdvantage, " +
+                " :takedownsBeforeJungleMinionSpawn, " +
+                " :takedownsFirstXMinutes, " +
+                " :takedownsInAlcove, " +
+                " :takedownsInEnemyFountain, " +
+                " :teamBaronKills, " +
+                " :teamDamagePercentage, " +
+                " :teamElderDragonKills, " +
+                " :teamRiftHeraldKills, " +
+                " :tookLargeDamageSurvived, " +
+                " :turretPlatesTaken, " +
+                " :turretTakedowns, " +
+                " :turretsTakenWithRiftHerald, " +
+                " :twentyMinionsIn3SecondsCount, " +
+                " :twoWardsOneSweeperCount, " +
+                " :unseenRecalls, " +
+                " :visionScoreAdvantageLaneOpponent, " +
+                " :visionScorePerMinute, " +
+                " :voidMonsterKill, " +
+                " :wardTakedowns, " +
+                " :wardTakedownsBefore20M, " +
+                " :wardsGuarded) ON CONFLICT (summoner_id, match_id) DO NOTHING", params);
+    }
+
     private void bulkInsertMatch(List<Match> matchList) {
+
         jdbcTemplate.batchUpdate("INSERT INTO \"match\" (" +
                         "   map_id," +
                         "   queue_id," +

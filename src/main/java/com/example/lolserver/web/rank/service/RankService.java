@@ -9,7 +9,4 @@ public interface RankService {
 
     List<RankResponse> getSummonerRank(RankSearchDto rankSearchDto);
 
-    void addSummonerRank();
-
-
 }

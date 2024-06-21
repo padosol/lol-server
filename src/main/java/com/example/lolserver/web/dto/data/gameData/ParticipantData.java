@@ -13,49 +13,57 @@ import lombok.*;
 @AllArgsConstructor
 public class ParticipantData {
 
+    // 유저 정보
+    private String summonerName;
+    private int profileIcon;
+    private String riotIdGameName;
+    private String riotIdTagline;
+    private String puuid;
+    private int summonerLevel;
+    private String summonerId;
+
+    // 게임 정보
+    private String individualPosition;
+    private int kills;
+    private int deaths;
     private int assists;
     private int champExperience;
     private int champLevel;
     private int championId;
     private String championName;
     private int consumablesPurchased;
-    private int deaths;
-    private int doubleKills;
     private int goldEarned;
-    private String individualPosition;
     private ItemValue item;
-    private int itemsPurchased;
-    private int kills;
-    private String lane;
-    private int participantId;
-    private int pentaKills;
-    private StatValue statValue;
-    private StyleValue styleValue;
-    private int profileIcon;
-    private String puuid;
-    private int quadraKills;
-    private String riotIdGameName;
-    private String riotIdTagline;
-    private String role;
     private int summoner1Id;
     private int summoner2Id;
-    private String summonerId;
-    private int summonerLevel;
-    private String summonerName;
-    private int teamId;
-    private String teamPosition;
-    private int timeCCingOthers;
-    private int timePlayed;
-    private int tripleKills;
+    private int itemsPurchased;
+    private int participantId;
+    private StatValue statValue;
+    private StyleValue styleValue;
     private int visionScore;
     private int totalMinionsKilled;
     private int neutralMinionsKilled;
-    private boolean win;
     private int totalDamageDealtToChampions;
-
     private int visionWardsBoughtInGame;
     private int wardsKilled;
     private int wardsPlaced;
+
+    private int doubleKills;
+    private int tripleKills;
+    private int quadraKills;
+    private int pentaKills;
+
+    // 팀 정보
+    private int teamId;
+    private String teamPosition;
+    private boolean win;
+
+    private int timePlayed;
+    private int timeCCingOthers;
+    private String lane;
+    private String role;
+
+
 
     public ParticipantData of(MatchSummoner matchSummoner) {
 

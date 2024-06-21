@@ -8,5 +8,5 @@ import lombok.Setter;
 public class LinePosition {
 
     private String position;
-    private int playCount;
+    private Long playCount;
 }

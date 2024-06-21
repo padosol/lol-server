@@ -8,6 +8,7 @@ import com.example.lolserver.riot.type.Platform;
 import com.example.lolserver.web.dto.data.GameData;
 import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.dto.MatchResponse;
+import com.example.lolserver.web.match.entity.Challenges;
 import com.example.lolserver.web.match.entity.Match;
 import com.example.lolserver.web.match.entity.MatchSummoner;
 import com.example.lolserver.web.match.entity.MatchTeam;
@@ -74,6 +75,7 @@ public class RMatchServiceImpl implements RMatchService{
         List<Match> matchList = new ArrayList<>();
         List<MatchSummoner> matchSummonerList = new ArrayList<>();
         List<MatchTeam> matchTeamList = new ArrayList<>();
+//        List<Challenges> challenges = new ArrayList<>();
 
         for (MatchDto matchDto : matchDtoList) {
 
@@ -88,6 +90,9 @@ public class RMatchServiceImpl implements RMatchService{
 
             for (ParticipantDto participant : participants) {
                 MatchSummoner matchSummoner = new MatchSummoner().of(match, participant);
+                Challenges challenges = new Challenges().of(matchSummoner, participant.getChallenges());
+
+                matchSummoner.addChallenges(challenges);
                 match.addMatchSummoner(matchSummoner);
 
                 matchSummonerList.add(matchSummoner);
