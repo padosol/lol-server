@@ -12,6 +12,8 @@ import java.util.Optional;
 @SpringBootApplication
 public class LolServerApplication {
 
+    // jenkins test
+
     public static void main(String[] args) {
         SpringApplication.run(LolServerApplication.class, args);
     }
