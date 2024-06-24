@@ -1,6 +1,7 @@
 package com.example.lolserver.web.match.entity;
 
 import com.example.lolserver.riot.dto.match.ChallengesDto;
+import com.example.lolserver.web.match.entity.id.ChallengesId;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Comment;
@@ -14,10 +15,15 @@ import org.hibernate.annotations.Comment;
 public class Challenges {
 
         @Id
+        private String summonerId;
+
+        @Id
+        private String matchId;
+
         @OneToOne
         @JoinColumns({
-                @JoinColumn(name = "summoner_id"),
-                @JoinColumn(name = "match_id")
+                @JoinColumn(name = "summoner_id", referencedColumnName = "summonerId"),
+                @JoinColumn(name = "match_id", referencedColumnName = "match")
         })
         private MatchSummoner matchSummoner;
 
@@ -67,7 +73,7 @@ public class Challenges {
         private int kTurretsDestroyedBeforePlatesFall;
 
         @Comment("K / D / A")
-        private int kda;
+        private double kda;
         private int killAfterHiddenWithAlly;
         private double killParticipation;
         private int killedChampTookFullTeamDamageSurvived;
@@ -83,6 +89,7 @@ public class Challenges {
         private int laningPhaseGoldExpAdvantage;
         private int legendaryCount;
 
+        @Column(length = 2000)
         private String legendaryItemUsed;
 
         private int lostAnInhibitor;
@@ -203,7 +210,7 @@ public class Challenges {
                         .kTurretsDestroyedBeforePlatesFall(challengesDto.getKTurretsDestroyedBeforePlatesFall())
                         .kda(challengesDto.getKda())
                         .killAfterHiddenWithAlly(challengesDto.getKillAfterHiddenWithAlly())
-                        .killParticipation(challengesDto.getKillParticipatio())
+                        .killParticipation(challengesDto.getKillParticipation())
                         .killedChampTookFullTeamDamageSurvived(challengesDto.getKilledChampTookFullTeamDamageSurvived())
                         .killingSprees(challengesDto.getKillingSprees())
                         .killsNearEnemyTurret(challengesDto.getKillsNearEnemyTurret())

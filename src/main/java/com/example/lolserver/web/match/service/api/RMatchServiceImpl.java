@@ -90,9 +90,13 @@ public class RMatchServiceImpl implements RMatchService{
 
             for (ParticipantDto participant : participants) {
                 MatchSummoner matchSummoner = new MatchSummoner().of(match, participant);
-                Challenges challenges = new Challenges().of(matchSummoner, participant.getChallenges());
 
-                matchSummoner.addChallenges(challenges);
+                if(participant.isChallenges()) {
+                    Challenges challenges = new Challenges().of(matchSummoner, participant.getChallenges());
+
+                    matchSummoner.addChallenges(challenges);
+                }
+
                 match.addMatchSummoner(matchSummoner);
 
                 matchSummonerList.add(matchSummoner);

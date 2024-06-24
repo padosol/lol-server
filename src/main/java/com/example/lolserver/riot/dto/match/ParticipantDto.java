@@ -119,4 +119,8 @@ public class ParticipantDto {
     private boolean win;
 
 
+    public boolean isChallenges() {
+        return this.challenges != null;
+    }
+
 }

@@ -53,6 +53,11 @@ public class ParticipantData {
     private int quadraKills;
     private int pentaKills;
 
+    private double kda;
+    private double teamDamagePercentage;
+    private double goldPerMinute;
+    private double killParticipation;
+
     // 팀 정보
     private int teamId;
     private String teamPosition;
@@ -66,6 +71,11 @@ public class ParticipantData {
 
 
     public ParticipantData of(MatchSummoner matchSummoner) {
+
+        this.kda = Math.round( (matchSummoner.getChallenges().getKda() * 100) ) / 100.0;
+        this.teamDamagePercentage = Math.round(( matchSummoner.getChallenges().getTeamDamagePercentage() * 100 * 100) ) / 100.0;
+        this.goldPerMinute = Math.round(( matchSummoner.getChallenges().getGoldPerMinute() * 100)) / 100.0;
+        this.killParticipation = Math.round( (matchSummoner.getChallenges().getKillParticipation() * 100));
 
         this.assists = matchSummoner.getAssists();
         this.champExperience = matchSummoner.getChampExperience();

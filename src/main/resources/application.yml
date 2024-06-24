@@ -12,7 +12,7 @@ spring:
           order_inserts: true
           order_updates: true
 
-    show-sql: true
+    show-sql: false
 
   datasource:
     url: jdbc:postgresql://localhost:5555/postgres
@@ -29,7 +29,7 @@ spring:
 logging:
   level:
     com.example.lolserver.riot: INFO
-    com.example.lolserver.aspect: WARN
+    com.example.lolserver.aspect: INFO
 
 server:
   port: 8085

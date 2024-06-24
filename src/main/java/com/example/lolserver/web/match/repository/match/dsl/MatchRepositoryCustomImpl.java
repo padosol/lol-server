@@ -6,6 +6,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.Comment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,7 @@ import java.util.Map;
 import static com.example.lolserver.web.match.entity.QMatch.match;
 import static com.example.lolserver.web.match.entity.QMatchSummoner.matchSummoner;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
@@ -108,10 +110,31 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
 
         }
 
+        Long start = System.currentTimeMillis();
+        Long end = 0L;
+
         bulkInsertMatch(totalMatch);
+        end = System.currentTimeMillis();
+
+        log.info("bulkInsertMatch: {}ms", end-start);
+
         bulkInsertMatchSummoner(totalMatchSummoner);
+
+        end = System.currentTimeMillis();
+
+        log.info("bulkInsertMatchSummoner: {}ms", end-start);
+
         bulkInsertChallenge(totalChallenge);
+
+        end = System.currentTimeMillis();
+
+        log.info("bulkInsertChallenge: {}ms", end-start);
+
         bulkInsertMatchTeam(totalMatchTeams);
+
+        end = System.currentTimeMillis();
+
+        log.info("bulkInsertMatchTeam: {}ms", end-start);
     }
 
     private void bulkInsertChallenge(List<Challenges> challenges) {

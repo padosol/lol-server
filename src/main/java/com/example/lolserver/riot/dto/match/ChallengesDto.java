@@ -57,9 +57,9 @@ public class ChallengesDto {
     private int jungleCsBefore10Minutes;
     private int junglerTakedownsNearDamagedEpicMonster;
     private int kTurretsDestroyedBeforePlatesFall;
-    private int kda;
+    private double kda;
     private int killAfterHiddenWithAlly;
-    private double killParticipatio;
+    private double killParticipation;
     private int killedChampTookFullTeamDamageSurvived;
     private int killingSprees;
     private int killsNearEnemyTurret;

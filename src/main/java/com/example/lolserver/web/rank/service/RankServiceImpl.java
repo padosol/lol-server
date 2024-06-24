@@ -28,7 +28,7 @@ public class RankServiceImpl implements RankService{
         List<RankResponse> result = new ArrayList<>();
 
         int blockSize = 20;
-        int start = blockSize * (1 - rankSearchDto.getPage());
+        int start = blockSize * (rankSearchDto.getPage() - 1);
 
         Set<Object> range = rank.range("rank_" + rankSearchDto.getType().getKey(), start, start + blockSize - 1);
 
