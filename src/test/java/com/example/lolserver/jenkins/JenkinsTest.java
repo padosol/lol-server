@@ -9,7 +9,6 @@ public class JenkinsTest {
     @Test
     void JENKINS_BUILD_TEST() {
 
-
         int i = 0;
 
         Assertions.assertThat(i).isEqualTo(1);
