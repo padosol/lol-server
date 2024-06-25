@@ -32,5 +32,4 @@ public class Bucket4jTest {
 
     }
 
-
 }
