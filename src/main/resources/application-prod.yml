@@ -1,7 +1,7 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     properties:
       hibernate:
         format_sql: true
@@ -29,7 +29,7 @@ spring:
 logging:
   level:
     com.example.lolserver.riot: INFO
-    com.example.lolserver.aspect: WARN
+    com.example.lolserver.aspect: INFO
 
 server:
   port: 8085
@@ -37,4 +37,3 @@ server:
 
 
 riot.api.key: ${API_KEY}
-

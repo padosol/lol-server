@@ -76,15 +76,8 @@ public class SummonerServiceV1 implements SummonerService{
     @Transactional
     public boolean renewalSummonerInfo(String puuid){
 
-        // 전적 갱신 시간, 전적갱신 버튼 클릭한 시간
-        Summoner summoner = summonerRepository.findSummonerByPuuid(puuid).orElseThrow(() -> new IllegalStateException("존재하지 않는 Summoner"));
+        boolean result = rSummonerService.revisionSummoner(puuid);
 
-        if(!summoner.isRevision()) {
-            return false;
-        }
-
-        rSummonerService.revisionSummoner(summoner);
-
-        return true;
+        return result;
     }
 }

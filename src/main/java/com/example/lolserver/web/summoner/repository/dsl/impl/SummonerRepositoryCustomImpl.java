@@ -40,7 +40,7 @@ public class SummonerRepositoryCustomImpl implements SummonerRepositoryCustom {
     }
 
     public BooleanExpression gameNameEq(String gameName) {
-        return StringUtils.hasText(gameName) ? Expressions.stringTemplate("REPLACE({0}, ' ', '')", summoner.gameName).equalsIgnoreCase(gameName) : null;
+        return StringUtils.hasText(gameName) ? Expressions.stringTemplate("REPLACE({0}, ' ', '')", summoner.gameName).equalsIgnoreCase(gameName.replace(" ","")) : null;
     }
 
     public BooleanExpression tagLineEq(String tagLine) {

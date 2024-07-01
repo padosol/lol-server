@@ -5,5 +5,5 @@ import com.example.lolserver.web.summoner.entity.Summoner;
 public interface RSummonerService {
     Summoner getSummoner(String gameName, String tagLine, String region);
 
-    boolean revisionSummoner(Summoner summoner);
+    boolean revisionSummoner(String puuid);
 }

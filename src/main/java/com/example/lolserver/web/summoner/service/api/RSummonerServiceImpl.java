@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -90,7 +91,15 @@ public class RSummonerServiceImpl implements RSummonerService{
     }
 
     @Override
-    public boolean revisionSummoner(Summoner summoner) {
+    @Transactional
+    public boolean revisionSummoner(String puuid) {
+
+        // 전적 갱신 시간, 전적갱신 버튼 클릭한 시간
+        Summoner summoner = summonerRepository.findSummonerByPuuid(puuid).orElseThrow(() -> new IllegalStateException("존재하지 않는 Summoner"));
+
+        if(!summoner.isRevision()) {
+            return false;
+        }
 
         try {
 
