@@ -20,7 +20,6 @@ public class Team {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Builder.Default
     @OneToMany(mappedBy = "team", fetch = FetchType.LAZY)
     private List<Member> memberList = new ArrayList<>();
 
