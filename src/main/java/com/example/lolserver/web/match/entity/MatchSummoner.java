@@ -164,6 +164,10 @@ public class MatchSummoner {
         this.challenges = challenges;
     }
 
+    public boolean isBot() {
+        return this.puuid.equalsIgnoreCase("BOT");
+    }
+
     public MatchSummoner of(Match match, ParticipantDto participantDto) {
         return MatchSummoner.builder()
                 .match(match)

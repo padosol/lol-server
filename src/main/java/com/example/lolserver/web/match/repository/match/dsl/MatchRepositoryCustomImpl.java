@@ -102,7 +102,11 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
             totalMatchSummoner.addAll(matchSummoners);
 
             for (MatchSummoner matchSummoner : matchSummoners) {
-                totalChallenge.add(matchSummoner.getChallenges());
+
+                if(!matchSummoner.isBot()) {
+                    totalChallenge.add(matchSummoner.getChallenges());
+                }
+
             }
 
             List<MatchTeam> matchTeams = match.getMatchTeams();

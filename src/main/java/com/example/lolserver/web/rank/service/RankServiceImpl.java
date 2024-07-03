@@ -9,9 +9,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -20,7 +18,9 @@ public class RankServiceImpl implements RankService{
     private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
-    public List<RankResponse> getSummonerRank(RankSearchDto rankSearchDto) {
+    public Map<String, Object> getSummonerRank(RankSearchDto rankSearchDto) {
+
+        Map<String, Object> data = new HashMap<>();
 
         ZSetOperations<String, Object> rank = redisTemplate.opsForZSet();
         HashOperations<String, Object, Object> summoner = redisTemplate.opsForHash();
@@ -30,7 +30,12 @@ public class RankServiceImpl implements RankService{
         int blockSize = 20;
         int start = blockSize * (rankSearchDto.getPage() - 1);
 
-        Set<Object> range = rank.range("rank_" + rankSearchDto.getType().getKey(), start, start + blockSize - 1);
+        String key = "rank_" + rankSearchDto.getType().getKey();
+
+        Set<Object> range = rank.range(key, start, start + blockSize - 1);
+
+        Long total = rank.zCard(key);
+        Long totalPage = (total / 20) + 1;
 
         assert range != null;
         for (Object summonerData : range) {
@@ -43,6 +48,10 @@ public class RankServiceImpl implements RankService{
             result.add(new RankResponse(summonerRankSession));
         }
 
-        return result;
+        data.put("result", result);
+        data.put("total", total);
+        data.put("totalPage", totalPage);
+
+        return data;
     }
 }

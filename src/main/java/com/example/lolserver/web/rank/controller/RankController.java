@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -20,10 +21,10 @@ public class RankController {
     private final RankService rankService;
 
     @GetMapping("/v1/rank")
-    public ResponseEntity<List<RankResponse>> getSummonerRank(
+    public ResponseEntity<Map<String, Object>> getSummonerRank(
         RankSearchDto rankSearchDto
     ) {
-        List<RankResponse> summonerRank = rankService.getSummonerRank(rankSearchDto);
+        Map<String, Object> summonerRank = rankService.getSummonerRank(rankSearchDto);
 
         return new ResponseEntity<>(summonerRank, HttpStatus.OK);
     }

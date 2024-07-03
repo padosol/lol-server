@@ -151,6 +151,10 @@ public class Challenges {
         private int wardTakedownsBefore20M;
         private int wardsGuarded;
 
+        public boolean isMatchSummoner() {
+                return this.matchSummoner != null;
+        }
+
         public Challenges of(MatchSummoner matchSummoner, ChallengesDto challengesDto) {
 
                 StringBuffer sb = new StringBuffer();
