@@ -31,7 +31,6 @@ public class MatchIdScheduling {
 
     @Scheduled(fixedDelay = 2000)
     public void run() {
-        log.info("Scheduling on");
         log.info("Bucket Count: {}", bucket.getAvailableTokens());
 
         ZSetOperations<String, Object> zSet = redisTemplate.opsForZSet();
