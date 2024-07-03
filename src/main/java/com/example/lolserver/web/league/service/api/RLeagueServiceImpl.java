@@ -79,10 +79,6 @@ public class RLeagueServiceImpl implements RLeagueService{
             redisService.addRankData(new SummonerRankSession(league, leagueSummoner));
         }
 
-//        List<LeagueSummonerData> result = leagueSummoners.stream().map(LeagueSummoner::toData).toList();
-//        LeagueData leagueData = new LeagueData();
-//        leagueData.setLeagues(result);
-
         return leagueSummoners;
     }
 }

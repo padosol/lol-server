@@ -8,12 +8,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.redis.core.RedisHash;
 
+import java.io.Serializable;
+
 @Getter
 @Setter
 @RedisHash
 @NoArgsConstructor
 @AllArgsConstructor
-public class MatchSession {
+public class MatchSession implements Serializable {
 
     @Id
     private String matchId;
