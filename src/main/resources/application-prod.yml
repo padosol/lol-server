@@ -31,8 +31,8 @@ spring:
 
 logging:
   level:
-    com.example.lolserver.riot: INFO
-    com.example.lolserver.aspect: INFO
+    com.example.lolserver.riot: WARN
+    com.example.lolserver.aspect: WARN
 
 server:
   port: 8085
