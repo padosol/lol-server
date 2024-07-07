@@ -51,9 +51,6 @@ public class SummonerController {
         @RequestParam("puuid") String puuid
     ) throws IOException, InterruptedException {
 
-        // 안정적으로 10개 이상일때만 전적 갱신 가능 하도록 함 0 개로 설정하면 너무 타이트함
-        log.info("사용가능한 Bucket 수: {}", bucket.getAvailableTokens());
-
         if(bucket.getAvailableTokens() > 10) {
             boolean result = summonerService.renewalSummonerInfo(puuid);
 

@@ -78,21 +78,27 @@ public class Match {
 
             Bucket bucket = RiotAPI.getBucket();
 
+            int i = 0;
             for(String matchId : this.matchIds) {
+
+                if( i > 20 ) {
+                    ZSetOperations<String, Object> matchSet = RiotAPI.getRedistemplate().opsForZSet();
+
+                    matchSet.add("matchId", new MatchSession(matchId, this.platform), (double) System.currentTimeMillis() / 1000);
+                }
 
                 if(bucket.getAvailableTokens() > 0) {
                     CompletableFuture<MatchDto> future = get(matchId);
                     matchList.add(future);
                 } else {
-                    ZSetOperations<String, Object> stringObjectZSetOperations = RiotAPI.getRedistemplate().opsForZSet();
+                    ZSetOperations<String, Object> matchSet = RiotAPI.getRedistemplate().opsForZSet();
 
-                    stringObjectZSetOperations.add("matchId", new MatchSession(matchId, this.platform), (double) System.currentTimeMillis() / 1000);
+                    matchSet.add("matchId", new MatchSession(matchId, this.platform), (double) System.currentTimeMillis() / 1000);
                 }
+                i++;
             }
 
-            List<MatchDto> result = matchList.stream().map(CompletableFuture::join).toList();
-
-            return result;
+            return matchList.stream().map(CompletableFuture::join).toList();
         }
 
     }

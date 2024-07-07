@@ -25,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,9 +38,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class RMatchServiceImpl implements RMatchService{
 
-    private final MatchRepository matchRepository;
-    private final MatchSummonerRepository matchSummonerRepository;
-    private final MatchTeamRepository matchTeamRepository;
     private final MatchRepositoryCustom matchRepositoryCustom;
 
     @Override
@@ -69,6 +67,16 @@ public class RMatchServiceImpl implements RMatchService{
     public List<Match> insertMatches(List<MatchDto> matchDtoList) {
         return bulkInsertMatches(matchDtoList);
     }
+
+    @Async
+    @Override
+    @Transactional
+    public void asyncInsertMatches(List<MatchDto> matchDtoList) {
+        log.info("Async bulk insert start");
+        insertMatches(matchDtoList);
+        log.info("Async bulk insert end");
+    }
+
 
     public List<Match> bulkInsertMatches(List<MatchDto> matchDtoList) {
 

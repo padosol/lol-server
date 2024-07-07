@@ -1,5 +1,7 @@
 package com.example.lolserver.web.summoner.service.api;
 
+import com.example.lolserver.kafka.producer.KafkaProducer;
+import com.example.lolserver.kafka.topic.Topic;
 import com.example.lolserver.redis.model.SummonerRankSession;
 import com.example.lolserver.redis.service.RedisService;
 import com.example.lolserver.riot.core.api.RiotAPI;
@@ -58,6 +60,8 @@ public class RSummonerServiceImpl implements RSummonerService{
 
     private final RedisService redisService;
 
+    private final KafkaProducer kafkaProducer;
+
 
     @Override
     public Summoner getSummoner(String gameName, String tagLine, String region) {
@@ -72,7 +76,10 @@ public class RSummonerServiceImpl implements RSummonerService{
             return null;
         }
 
+        // save 를 여기서 하는 것이 아니라 저장 서비스 에서 해야함
+//        Summoner summoner = new Summoner(accountDto, summonerDTO, region.toLowerCase());
         Summoner summoner = summonerRepository.save(new Summoner(accountDto, summonerDTO, region.toLowerCase()));
+//        kafkaProducer.send(Topic.SUMMONER, summoner);
 
         List<LeagueSummoner> leagueSummonerList = rLeagueService.getLeagueSummoner(summoner);
 

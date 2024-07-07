@@ -1,6 +1,7 @@
 package com.example.lolserver.web.summoner.entity;
 
 
+import com.example.lolserver.kafka.model.KafkaMessage;
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.web.league.entity.LeagueSummoner;
@@ -25,7 +26,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Summoner {
+public class Summoner extends KafkaMessage {
 
     @Id
     @Column(name = "summoner_id")

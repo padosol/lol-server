@@ -25,9 +25,8 @@ public class RiotExecuteProxy implements RiotExecute{
     public <T> CompletableFuture<T> execute(Class<T> clazz, URI uri) {
 
         synchronized (this) {
-
-            log.info("사용가능 토큰 수: {}", bucket.getAvailableTokens());
             if(bucket.tryConsume(1L)) {
+                log.debug("[URL]: {}", uri);
                 CompletableFuture<T> result = execute.execute(clazz, uri);
                 return result;
             } else {

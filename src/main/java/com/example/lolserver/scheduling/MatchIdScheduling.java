@@ -1,5 +1,7 @@
 package com.example.lolserver.scheduling;
 
+import com.example.lolserver.kafka.producer.KafkaProducer;
+import com.example.lolserver.kafka.topic.Topic;
 import com.example.lolserver.redis.model.MatchSession;
 import com.example.lolserver.riot.core.api.RiotAPI;
 import com.example.lolserver.riot.dto.match.MatchDto;
@@ -29,15 +31,18 @@ public class MatchIdScheduling {
 
     private final Bucket bucket;
 
-    @Scheduled(fixedDelay = 2000)
-    public void run() {
-        log.info("Bucket Count: {}", bucket.getAvailableTokens());
+    private final KafkaProducer kafkaProducer;
 
+    @Scheduled(fixedDelay = 1000)
+    public void run() {
         ZSetOperations<String, Object> zSet = redisTemplate.opsForZSet();
 
-        Set<Object> matchIds = zSet.range("matchId", 0, bucket.getAvailableTokens() - 1);
+        Set<Object> matchIds = zSet.range("matchId", 0, - 1);
+
+        log.info("사용가능 버킷수: {}", bucket.getAvailableTokens());
 
         if(matchIds != null && !matchIds.isEmpty()) {
+            log.info("MatchId Size: {}", matchIds.size());
             List<CompletableFuture<MatchDto>> futures = new ArrayList<>();
 
             for (Object matchId : matchIds) {
@@ -53,20 +58,28 @@ public class MatchIdScheduling {
                     log.info("API LIMIT 초과함, 사용가능 Bucket 수: {}", bucket.getAvailableTokens());
                     break;
                 }
+
+                if(bucket.getAvailableTokens() < 30) {
+                    break;
+                }
+
             }
 
-            List<MatchDto> response = futures.stream().map(CompletableFuture::join).filter((matchDto) -> {
-                if(matchDto.isError()) {
-                    return false;
-                } else {
-                    zSet.remove("matchId", new MatchSession(matchDto.getMetadata().getMatchId(), Platform.valueOfName(matchDto.getInfo().getPlatformId())));
-                    return true;
-                }
-            }).toList();
 
-            rMatchService.insertMatches(response);
+            if(futures.size() > 0) {
+                List<MatchDto> response = futures.stream().map(CompletableFuture::join).filter((matchDto) -> {
+                    if(matchDto.isError()) {
+                        return false;
+                    } else {
+                        zSet.remove("matchId", new MatchSession(matchDto.getMetadata().getMatchId(), Platform.valueOfName(matchDto.getMetadata().getMatchId().split("_")[0])));
+                        return true;
+                    }
+                }).toList();
+
+                log.info("Bulk insert start");
+                rMatchService.asyncInsertMatches(response);
+            }
         }
-
     }
 
 }
