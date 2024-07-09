@@ -172,8 +172,11 @@ public class RSummonerServiceImpl implements RSummonerService{
             log.info("등록할 게임 수: {}", matchIdsNotIn.size());
 
             List<MatchDto> matchDtoList = RiotAPI.match(platform).byMatchIds(matchIdsNotIn);
+            log.info("[API 호출 완료] [Total Size]: {}", matchDtoList.size());
 
+            log.info("Bulk insert 시작");
             rMatchService.insertMatches(matchDtoList);
+            log.info("Bulk insert 끝");
 
         } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
