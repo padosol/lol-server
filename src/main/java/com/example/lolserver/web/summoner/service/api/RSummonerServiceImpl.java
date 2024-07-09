@@ -179,6 +179,7 @@ public class RSummonerServiceImpl implements RSummonerService{
             List<String> matchIdsNotIn = matchRepositoryCustom.getMatchIdsNotIn(allMatchIds);
             log.info("등록할 게임 수: {}", matchIdsNotIn.size());
 
+            // 20건만 호출하고 나머지는 다른 스레드에게 위임함
             List<MatchDto> matchDtoList = RiotAPI.match(platform).byMatchIds(matchIdsNotIn);
             log.info("[API 호출 완료] [Total Size]: {}", matchDtoList.size());
 
