@@ -1,7 +1,5 @@
 package com.example.lolserver.scheduling;
 
-import com.example.lolserver.kafka.producer.KafkaProducer;
-import com.example.lolserver.kafka.topic.Topic;
 import com.example.lolserver.redis.model.MatchSession;
 import com.example.lolserver.riot.core.api.RiotAPI;
 import com.example.lolserver.riot.dto.match.MatchDto;
@@ -29,7 +27,8 @@ public class MatchIdScheduling {
 
     private final Bucket bucket;
 
-    private final KafkaProducer kafkaProducer;
+    private final RMatchService rMatchService;
+
 
     @Scheduled(fixedDelay = 1000)
     public void run() {
@@ -72,12 +71,7 @@ public class MatchIdScheduling {
                 }).toList();
 
                 log.info("Bulk insert start");
-
-                for (MatchDto matchDto : response) {
-                    kafkaProducer.send(Topic.MATCH, matchDto);
-                }
-
-//                rMatchService.asyncInsertMatches(response);
+                rMatchService.asyncInsertMatches(response);
             }
         }
     }

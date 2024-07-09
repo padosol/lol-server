@@ -1,7 +1,5 @@
 package com.example.lolserver.web.summoner.service.api;
 
-import com.example.lolserver.kafka.producer.KafkaProducer;
-import com.example.lolserver.kafka.topic.Topic;
 import com.example.lolserver.redis.model.SummonerRankSession;
 import com.example.lolserver.redis.service.RedisService;
 import com.example.lolserver.riot.core.api.RiotAPI;
@@ -10,8 +8,6 @@ import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.example.lolserver.riot.dto.match.MatchDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.riot.type.Platform;
-import com.example.lolserver.web.dto.data.GameData;
-import com.example.lolserver.web.dto.data.LeagueData;
 import com.example.lolserver.web.league.entity.League;
 import com.example.lolserver.web.league.entity.LeagueSummoner;
 import com.example.lolserver.web.league.entity.QueueType;
@@ -20,28 +16,21 @@ import com.example.lolserver.web.league.repository.LeagueRepository;
 import com.example.lolserver.web.league.repository.LeagueSummonerRepository;
 import com.example.lolserver.web.league.service.api.RLeagueService;
 import com.example.lolserver.web.match.dto.MatchRequest;
-import com.example.lolserver.web.match.dto.MatchResponse;
-import com.example.lolserver.web.match.entity.Match;
 import com.example.lolserver.web.match.repository.match.dsl.MatchRepositoryCustom;
 import com.example.lolserver.web.match.service.api.RMatchService;
 import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.summoner.repository.SummonerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-
-import static com.example.lolserver.web.league.entity.QLeague.league;
 
 @Service
 @Slf4j
@@ -59,8 +48,6 @@ public class RSummonerServiceImpl implements RSummonerService{
     private final RLeagueService rLeagueService;
 
     private final RedisService redisService;
-
-    private final KafkaProducer kafkaProducer;
 
 
     @Override
