@@ -58,7 +58,6 @@ public class DefaultRiotExecute implements RiotExecute{
                     int statusCode = clientResponse.statusCode().value();
 
                     log.debug("Status Code: [{}]", statusCode);
-                    log.debug("Bucket 토큰 수: {}", bucket.getAvailableTokens());
 
                     return clientResponse.bodyToMono(clazz);
                 })

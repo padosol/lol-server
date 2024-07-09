@@ -25,8 +25,6 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class MatchIdScheduling {
 
-    private final RMatchService rMatchService;
-
     private final RedisTemplate<String, Object> redisTemplate;
 
     private final Bucket bucket;
@@ -39,13 +37,14 @@ public class MatchIdScheduling {
 
         Set<Object> matchIds = zSet.range("matchId", 0, - 1);
 
-        log.info("사용가능 버킷수: {}", bucket.getAvailableTokens());
-
         if(matchIds != null && !matchIds.isEmpty()) {
-            log.info("MatchId Size: {}", matchIds.size());
             List<CompletableFuture<MatchDto>> futures = new ArrayList<>();
 
             for (Object matchId : matchIds) {
+
+                if(bucket.getAvailableTokens() < 30) {
+                    break;
+                }
 
                 try {
                     MatchSession matchSession = (MatchSession) matchId;
@@ -56,10 +55,6 @@ public class MatchIdScheduling {
 
                 } catch(Exception e) {
                     log.info("API LIMIT 초과함, 사용가능 Bucket 수: {}", bucket.getAvailableTokens());
-                    break;
-                }
-
-                if(bucket.getAvailableTokens() < 30) {
                     break;
                 }
 
@@ -77,7 +72,12 @@ public class MatchIdScheduling {
                 }).toList();
 
                 log.info("Bulk insert start");
-                rMatchService.asyncInsertMatches(response);
+
+                for (MatchDto matchDto : response) {
+                    kafkaProducer.send(Topic.MATCH, matchDto);
+                }
+
+//                rMatchService.asyncInsertMatches(response);
             }
         }
     }

@@ -26,7 +26,6 @@ public class RiotExecuteProxy implements RiotExecute{
 
         synchronized (this) {
             if(bucket.tryConsume(1L)) {
-                log.debug("[URL]: {}", uri);
                 CompletableFuture<T> result = execute.execute(clazz, uri);
                 return result;
             } else {
