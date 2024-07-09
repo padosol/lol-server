@@ -56,7 +56,7 @@ dependencies {
     implementation 'com.giffing.bucket4j.spring.boot.starter:bucket4j-spring-boot-starter:0.8.1'
 
     // kafka
-    implementation 'org.springframework.kafka:spring-kafka'
+//    implementation 'org.springframework.kafka:spring-kafka'
 
     // test
     testCompileOnly 'org.projectlombok:lombok'
