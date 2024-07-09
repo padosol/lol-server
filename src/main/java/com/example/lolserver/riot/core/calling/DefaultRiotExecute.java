@@ -41,13 +41,12 @@ public class DefaultRiotExecute implements RiotExecute{
     @Override
     public <T> CompletableFuture<T> execute(Class<T> clazz, URI uri) {
 
-        CompletableFuture<T> future = webClient.get()
+        return webClient.get()
                 .uri(uri)
                 .exchangeToMono(clientResponse -> {
 
+                    log.info("[URI 호출]: {}", uri.toString());
                     Map<String, String> headerMap = clientResponse.headers().asHttpHeaders().toSingleValueMap();
-
-                    log.debug("URI: {}", uri.toString());
 
                     for(String key : headerMap.keySet()) {
                         String header = headerMap.get(key);
@@ -62,8 +61,6 @@ public class DefaultRiotExecute implements RiotExecute{
                     return clientResponse.bodyToMono(clazz);
                 })
                 .toFuture();
-
-        return future;
     }
 
     public WebClient getWebClient() {

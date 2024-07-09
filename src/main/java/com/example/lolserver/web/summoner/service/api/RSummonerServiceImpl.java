@@ -22,6 +22,10 @@ import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.summoner.repository.SummonerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -31,9 +35,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 
-@Service
 @Slf4j
+@Service
 @RequiredArgsConstructor
 public class RSummonerServiceImpl implements RSummonerService{
 
@@ -49,6 +54,9 @@ public class RSummonerServiceImpl implements RSummonerService{
 
     private final RedisService redisService;
 
+    @Autowired
+    @Qualifier("taskExecutor")
+    private final Executor executor;
 
     @Override
     public Summoner getSummoner(String gameName, String tagLine, String region) {
@@ -175,7 +183,9 @@ public class RSummonerServiceImpl implements RSummonerService{
             log.info("[API 호출 완료] [Total Size]: {}", matchDtoList.size());
 
             log.info("Bulk insert 시작");
-            rMatchService.insertMatches(matchDtoList);
+            executor.execute(() -> {
+                rMatchService.insertMatches(matchDtoList);
+            });
             log.info("Bulk insert 끝");
 
         } catch (ExecutionException | InterruptedException e) {

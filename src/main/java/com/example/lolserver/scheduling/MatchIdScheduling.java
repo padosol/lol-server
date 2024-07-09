@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-@Component
 @Slf4j
+@Component
 @RequiredArgsConstructor
 public class MatchIdScheduling {
 
