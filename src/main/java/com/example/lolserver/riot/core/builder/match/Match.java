@@ -85,6 +85,7 @@ public class Match {
                     ZSetOperations<String, Object> matchSet = RiotAPI.getRedistemplate().opsForZSet();
 
                     matchSet.add("matchId", new MatchSession(matchId, this.platform), (double) System.currentTimeMillis() / 1000);
+                    continue;
                 }
 
                 if(bucket.getAvailableTokens() > 0) {
