@@ -15,10 +15,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Entity
 @Getter
@@ -127,6 +124,11 @@ public class Match {
                 gameData.setMyData(data);
             }
         }
+
+        if(gameData.getGameInfoData().getQueueId() == 1700 || gameData.getGameInfoData().getQueueId() == 1710) {
+            participantData.sort(Comparator.comparingInt(ParticipantData::getPlacement));
+        }
+
         gameData.setParticipantData(participantData);
 
         // 팀정보

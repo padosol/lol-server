@@ -68,6 +68,12 @@ public class ParticipantData {
     private String lane;
     private String role;
 
+    // 아레나 정보
+    private int placement;
+    private int playerAugment1;
+    private int playerAugment2;
+    private int playerAugment3;
+    private int playerAugment4;
 
 
     public ParticipantData of(MatchSummoner matchSummoner) {
@@ -119,6 +125,12 @@ public class ParticipantData {
         this.visionWardsBoughtInGame = matchSummoner.getVisionWardsBoughtInGame();
         this.wardsKilled = matchSummoner.getWardsKilled();
         this.wardsPlaced = matchSummoner.getWardsPlaced();
+
+        this.placement = matchSummoner.getPlacement();
+        this.playerAugment1 = matchSummoner.getPlayerAugment1();
+        this.playerAugment2 = matchSummoner.getPlayerAugment2();
+        this.playerAugment3 = matchSummoner.getPlayerAugment3();
+        this.playerAugment4 = matchSummoner.getPlayerAugment4();
 
         return this;
     }

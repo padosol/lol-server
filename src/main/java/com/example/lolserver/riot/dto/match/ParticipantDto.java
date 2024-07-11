@@ -118,6 +118,57 @@ public class ParticipantDto {
     private int wardsPlaced;
     private boolean win;
 
+    // 아레나 관련 정보
+    private int allInPings;
+    private int assistMePings;
+    private int commandPings;
+    private boolean eligibleForProgression;
+    private int enemyMissingPings;
+    private int enemyVisionPings;
+    private int holdPings;
+    private int getBackPings;
+    private int needVisionPings;
+    private int onMyWayPings;
+    private int playerScore0;
+    private int playerScore1;
+    private int playerScore2;
+    private int playerScore3;
+    private int playerScore4;
+    private int playerScore5;
+    private int playerScore6;
+    private int playerScore7;
+    private int playerScore8;
+    private int playerScore9;
+    private int playerScore10;
+    private int playerScore11;
+    private int placement;
+    private int playerAugment1;
+    private int playerAugment2;
+    private int playerAugment3;
+    private int playerAugment4;
+    private int playerSubteamId;
+    private int pushPings;
+    private String riotIdName;
+    private int subteamPlacement;
+    private int totalAllyJungleMinionsKilled;
+    private int totalEnemyJungleMinionsKilled;
+    private int visionClearedPings;
+    
+    // ping 관련 데이터
+
+// MissionsDto missions	;
+
+
+
+
+
+
+
+
+
+
+
+
 
     public boolean isChallenges() {
         return this.challenges != null;

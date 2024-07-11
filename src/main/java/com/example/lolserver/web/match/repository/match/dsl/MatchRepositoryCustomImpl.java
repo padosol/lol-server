@@ -681,7 +681,41 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
                         "   secondary_rune_ids," +
                         "   summoner_id," +
                         "   summoner_name," +
-                        "   team_position"+
+                        "   team_position," +
+                        "    all_in_pings," +
+                        "    assist_me_pings," +
+                        "    command_pings," +
+                        "    eligible_for_progression," +
+                        "    enemy_missing_pings," +
+                        "    enemy_vision_pings," +
+                        "    hold_pings," +
+                        "    get_back_pings," +
+                        "    need_vision_pings," +
+                        "    on_my_way_pings," +
+                        "    player_score0," +
+                        "    player_score1," +
+                        "    player_score2," +
+                        "    player_score3," +
+                        "    player_score4," +
+                        "    player_score5," +
+                        "    player_score6," +
+                        "    player_score7," +
+                        "    player_score8," +
+                        "    player_score9," +
+                        "    player_score10," +
+                        "    player_score11," +
+                        "    placement," +
+                        "    player_augment1," +
+                        "    player_augment2," +
+                        "    player_augment3," +
+                        "    player_augment4," +
+                        "    player_subteam_id," +
+                        "    push_pings," +
+                        "    riot_id_name," +
+                        "    subteam_placement," +
+                        "    total_ally_jungle_minions_killed," +
+                        "    total_enemy_jungle_minions_killed," +
+                        "    vision_cleared_pings" +
                         ")" +
                         "VALUES (" +
                         "?," +
@@ -795,7 +829,41 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
                         "?," +
                         "?," +
                         "?," +
-                        "?"+
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "?," +
+                        "? " +
                         ") ON CONFLICT (match_id, summoner_id) DO NOTHING",
                 matchSummoners,
                 100,
@@ -912,6 +980,42 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
                     ps.setString(110, matchSummoner.getSummonerId());
                     ps.setString(111, matchSummoner.getSummonerName());
                     ps.setString(112, matchSummoner.getTeamPosition());
+
+                    // 아레나
+                    ps.setInt(113, matchSummoner.getAllInPings());
+                    ps.setInt(114, matchSummoner.getAssistMePings());
+                    ps.setInt(115, matchSummoner.getCommandPings());
+                    ps.setBoolean(116, matchSummoner.isEligibleForProgression());
+                    ps.setInt(117, matchSummoner.getEnemyMissingPings());
+                    ps.setInt(118, matchSummoner.getEnemyVisionPings());
+                    ps.setInt(119, matchSummoner.getHoldPings());
+                    ps.setInt(120, matchSummoner.getGetBackPings());
+                    ps.setInt(121, matchSummoner.getNeedVisionPings());
+                    ps.setInt(122, matchSummoner.getOnMyWayPings());
+                    ps.setInt(123, matchSummoner.getPlayerScore0());
+                    ps.setInt(124, matchSummoner.getPlayerScore1());
+                    ps.setInt(125, matchSummoner.getPlayerScore2());
+                    ps.setInt(126, matchSummoner.getPlayerScore3());
+                    ps.setInt(127, matchSummoner.getPlayerScore4());
+                    ps.setInt(128, matchSummoner.getPlayerScore5());
+                    ps.setInt(129, matchSummoner.getPlayerScore6());
+                    ps.setInt(130, matchSummoner.getPlayerScore7());
+                    ps.setInt(131, matchSummoner.getPlayerScore8());
+                    ps.setInt(132, matchSummoner.getPlayerScore9());
+                    ps.setInt(133, matchSummoner.getPlayerScore10());
+                    ps.setInt(134, matchSummoner.getPlayerScore11());
+                    ps.setInt(135, matchSummoner.getPlacement());
+                    ps.setInt(136, matchSummoner.getPlayerAugment1());
+                    ps.setInt(137, matchSummoner.getPlayerAugment2());
+                    ps.setInt(138, matchSummoner.getPlayerAugment3());
+                    ps.setInt(139, matchSummoner.getPlayerAugment4());
+                    ps.setInt(140, matchSummoner.getPlayerSubteamId());
+                    ps.setInt(141, matchSummoner.getPushPings());
+                    ps.setString(142, matchSummoner.getRiotIdName());
+                    ps.setInt(143, matchSummoner.getSubteamPlacement());
+                    ps.setInt(144, matchSummoner.getTotalAllyJungleMinionsKilled());
+                    ps.setInt(145, matchSummoner.getTotalEnemyJungleMinionsKilled());
+                    ps.setInt(146, matchSummoner.getVisionClearedPings());
                 }
         );
 

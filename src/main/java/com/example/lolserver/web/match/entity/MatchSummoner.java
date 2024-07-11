@@ -150,6 +150,42 @@ public class MatchSummoner {
     private int largestMultiKill;
     private int longestTimeSpentLiving;
 
+    // 아레나
+    private int allInPings;
+    private int assistMePings;
+    private int commandPings;
+    private boolean eligibleForProgression;
+    private int enemyMissingPings;
+    private int enemyVisionPings;
+    private int holdPings;
+    private int getBackPings;
+    private int needVisionPings;
+    private int onMyWayPings;
+    private int playerScore0;
+    private int playerScore1;
+    private int playerScore2;
+    private int playerScore3;
+    private int playerScore4;
+    private int playerScore5;
+    private int playerScore6;
+    private int playerScore7;
+    private int playerScore8;
+    private int playerScore9;
+    private int playerScore10;
+    private int playerScore11;
+    private int placement;
+    private int playerAugment1;
+    private int playerAugment2;
+    private int playerAugment3;
+    private int playerAugment4;
+    private int playerSubteamId;
+    private int pushPings;
+    private String riotIdName;
+    private int subteamPlacement;
+    private int totalAllyJungleMinionsKilled;
+    private int totalEnemyJungleMinionsKilled;
+    private int visionClearedPings;
+
     @Embedded
     private ItemValue item;
 
@@ -271,6 +307,41 @@ public class MatchSummoner {
                 .item(new ItemValue(participantDto))
                 .statValue(new StatValue(participantDto))
                 .styleValue(new StyleValue(participantDto))
+                .allInPings(participantDto.getAllInPings())
+                .assistMePings(participantDto.getAssistMePings())
+                .commandPings(participantDto.getCommandPings())
+                .eligibleForProgression(participantDto.isEligibleForProgression())
+                .enemyMissingPings(participantDto.getEnemyMissingPings())
+                .enemyVisionPings(participantDto.getEnemyVisionPings())
+                .holdPings(participantDto.getHoldPings())
+                .getBackPings(participantDto.getGetBackPings())
+                .needVisionPings(participantDto.getNeedVisionPings())
+                .onMyWayPings(participantDto.getOnMyWayPings())
+                .playerScore0(participantDto.getPlayerScore0())
+                .playerScore1(participantDto.getPlayerScore1())
+                .playerScore2(participantDto.getPlayerScore2())
+                .playerScore3(participantDto.getPlayerScore3())
+                .playerScore4(participantDto.getPlayerScore4())
+                .playerScore5(participantDto.getPlayerScore5())
+                .playerScore6(participantDto.getPlayerScore6())
+                .playerScore7(participantDto.getPlayerScore7())
+                .playerScore8(participantDto.getPlayerScore8())
+                .playerScore9(participantDto.getPlayerScore9())
+                .playerScore10(participantDto.getPlayerScore10())
+                .playerScore11(participantDto.getPlayerScore11())
+                .placement(participantDto.getPlacement())
+                .playerAugment1(participantDto.getPlayerAugment1())
+                .playerAugment2(participantDto.getPlayerAugment2())
+                .playerAugment3(participantDto.getPlayerAugment3())
+                .playerAugment4(participantDto.getPlayerAugment4())
+                .playerSubteamId(participantDto.getPlayerSubteamId())
+                .pushPings(participantDto.getPushPings())
+                .riotIdName(participantDto.getRiotIdName())
+                .subteamPlacement(participantDto.getSubteamPlacement())
+                .totalAllyJungleMinionsKilled(participantDto.getTotalAllyJungleMinionsKilled())
+                .totalEnemyJungleMinionsKilled(participantDto.getTotalEnemyJungleMinionsKilled())
+                .visionClearedPings(participantDto.getVisionClearedPings())
+
                 .build();
     }
 }
