@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.net.URI;
@@ -31,10 +32,15 @@ public class DefaultRiotExecute implements RiotExecute{
 
         this.bucket = bucket;
 
+        ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
+                .codecs(clientCodecConfigurer -> clientCodecConfigurer.defaultCodecs().maxInMemorySize(2 * 1024 * 2024))   // 2MB
+                .build();
+
         this.webClient = WebClient.builder()
                 .defaultHeaders(
                         httpHeaders -> httpHeaders.addAll(headers)
                 )
+                .exchangeStrategies(exchangeStrategies)
                 .build();
     }
 

@@ -13,6 +13,8 @@ public interface SummonerService {
 
     List<SummonerResponse> getAllSummoner(String q, String region);
 
+    List<SummonerResponse> getAllSummonerAutoComplete(String q, String region);
+
     boolean renewalSummonerInfo(String puuid) throws IOException, InterruptedException;
 
 }

@@ -56,9 +56,7 @@ public class MatchIdScheduling {
                     log.info("API LIMIT 초과함, 사용가능 Bucket 수: {}", bucket.getAvailableTokens());
                     break;
                 }
-
             }
-
 
             if(futures.size() > 0) {
                 List<MatchDto> response = futures.stream().map(CompletableFuture::join).filter((matchDto) -> {

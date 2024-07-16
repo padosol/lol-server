@@ -12,7 +12,7 @@ spring:
           order_inserts: true
           order_updates: true
 
-    show-sql: false
+    show-sql: true
 
   datasource:
     url: jdbc:postgresql://localhost:5555/postgres

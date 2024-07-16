@@ -73,6 +73,16 @@ public class SummonerServiceV1 implements SummonerService{
     }
 
     @Override
+    public List<SummonerResponse> getAllSummonerAutoComplete(String q, String region) {
+        Summoner summoner = Summoner.builder().region(region).gameName(q).build();
+        summoner.splitGameNameTagLine();
+
+        List<Summoner> result = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegionLike(summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
+
+        return result.stream().map(Summoner::toResponse).toList();
+    }
+
+    @Override
     @Transactional
     public boolean renewalSummonerInfo(String puuid){
 

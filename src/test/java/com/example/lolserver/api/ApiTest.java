@@ -6,6 +6,7 @@ import com.example.lolserver.riot.core.calling.RiotExecute;
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.example.lolserver.riot.dto.match.MatchDto;
+import com.example.lolserver.riot.dto.match_timeline.TimelineDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.riot.type.Platform;
 import io.github.bucket4j.Bandwidth;
@@ -68,6 +69,14 @@ public class ApiTest {
         Set<LeagueEntryDTO> leagueEntryDTOS = RiotAPI.league(Platform.KR).bySummonerId(summonerDTO.getId());
 
         System.out.println(leagueEntryDTOS);
+    }
+
+    @Test
+    void MATCH_TIMELINE_TEST() {
+
+        TimelineDto timelineDto = RiotAPI.timeLine(Platform.KR).byMatchId("KR_7144295980");
+
+        System.out.println(timelineDto);
     }
 
 }

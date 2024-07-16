@@ -39,6 +39,26 @@ public class SummonerRepositoryCustomImpl implements SummonerRepositoryCustom {
         return result;
     }
 
+    @Override
+    public List<Summoner> findAllByGameNameAndTagLineAndRegionLike(String gameName, String tagLine, String region) {
+
+        return jpaQueryFactory.selectFrom(summoner)
+                .where(
+                        gameNameLike(gameName),
+                        tagLineLike(tagLine),
+                        regionEq(region)
+                )
+                .fetch();
+    }
+
+    public BooleanExpression gameNameLike(String gameName) {
+        return StringUtils.hasText(gameName) ? Expressions.stringTemplate("REPLACE({0}, ' ', '')", summoner.gameName).contains(gameName) : null;
+    }
+
+    public BooleanExpression tagLineLike(String tagLine) {
+        return StringUtils.hasText(tagLine) ? summoner.tagLine.contains(tagLine) : null;
+    }
+
     public BooleanExpression gameNameEq(String gameName) {
         return StringUtils.hasText(gameName) ? Expressions.stringTemplate("REPLACE({0}, ' ', '')", summoner.gameName).equalsIgnoreCase(gameName.replace(" ","")) : null;
     }

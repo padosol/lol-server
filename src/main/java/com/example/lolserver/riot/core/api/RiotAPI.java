@@ -3,6 +3,7 @@ package com.example.lolserver.riot.core.api;
 
 import com.example.lolserver.riot.core.builder.league.League;
 import com.example.lolserver.riot.core.builder.match.MatchList;
+import com.example.lolserver.riot.core.builder.match.TimeLine;
 import com.example.lolserver.riot.core.calling.RiotExecute;
 import com.example.lolserver.riot.core.builder.account.Account;
 import com.example.lolserver.riot.core.builder.champion.Champion;
@@ -106,6 +107,8 @@ public class RiotAPI {
     public static League league(Platform platform) {return new League(platform);}
 
     public static Match match(Platform platform) {return new Match(platform);}
+
+    public static TimeLine timeLine(Platform platform) {return new TimeLine(platform);}
 
     public static MatchList matchList(Platform platform) {return new MatchList(platform);}
 

@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -34,6 +35,16 @@ public class SummonerController {
         List<SummonerResponse> allSummoner = summonerService.getAllSummoner(q, region);
 
         return new ResponseEntity<>(allSummoner, HttpStatus.OK);
+    }
+
+    @GetMapping("/v1/summoners/autocomplete")
+    public ResponseEntity<List<SummonerResponse>> autoComplete(
+            @RequestParam(value = "q") String q,
+            @RequestParam(value = "region", required = false) String region
+    ) {
+        List<SummonerResponse> allSummonerAutoComplete = summonerService.getAllSummonerAutoComplete(q, region);
+
+        return new ResponseEntity<>(allSummonerAutoComplete, HttpStatus.OK);
     }
 
     @GetMapping("/v1/summoners/{region}/{gameName}")
@@ -59,7 +70,8 @@ public class SummonerController {
 
             return new ResponseEntity<>(HttpStatus.TOO_MANY_REQUESTS);
         }
-
     }
+
+
 
 }
