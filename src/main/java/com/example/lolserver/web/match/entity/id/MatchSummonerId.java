@@ -11,7 +11,7 @@ import java.util.Objects;
 @AllArgsConstructor
 public class MatchSummonerId implements Serializable {
 
-    private String summonerId;
+    private String puuid;
 
     private String match;
 
@@ -20,11 +20,11 @@ public class MatchSummonerId implements Serializable {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         MatchSummonerId matchSummonerId = (MatchSummonerId) obj;
-        return Objects.equals(this.match, matchSummonerId.match) && Objects.equals(this.summonerId, matchSummonerId.summonerId);
+        return Objects.equals(this.match, matchSummonerId.match) && Objects.equals(this.puuid, matchSummonerId.puuid);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(match, summonerId);
+        return Objects.hash(match, puuid);
     }
 }

@@ -2,6 +2,7 @@ package com.example.lolserver.web.match.repository.match.dsl;
 
 import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.entity.*;
+import com.example.lolserver.web.match.entity.timeline.QTimeLineEvent;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -16,6 +17,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
@@ -24,8 +26,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.example.lolserver.web.match.entity.QChallenges.challenges;
 import static com.example.lolserver.web.match.entity.QMatch.match;
 import static com.example.lolserver.web.match.entity.QMatchSummoner.matchSummoner;
+import static com.example.lolserver.web.match.entity.timeline.QTimeLineEvent.timeLineEvent;
+import static com.example.lolserver.web.match.entity.timeline.events.QItemEvents.itemEvents;
+import static com.example.lolserver.web.match.entity.timeline.events.QSkillEvents.skillEvents;
 
 @Slf4j
 @Repository
@@ -39,14 +45,27 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
     @Override
     public Page<Match> getMatches(MatchRequest matchRequest, Pageable pageable) {
 
-        List<Match> result = jpaQueryFactory.selectFrom(match)
-                .join(match.matchSummoners, matchSummoner).on(matchSummoner.puuid.eq(matchRequest.getPuuid()))
-                .offset(pageable.getOffset())
+        List<String> matchIds = jpaQueryFactory.select(matchSummoner.match.matchId).from(matchSummoner)
+                .join(matchSummoner.match, match)
+                .where(
+                        puuidEq(matchRequest.getPuuid()),
+                        queueIdEq(matchRequest.getQueueId())
+                )
+                .orderBy(matchSummoner.match.matchId.desc())
+                .offset((long) pageable.getPageNumber() * pageable.getPageSize())
                 .limit(pageable.getPageSize())
-                .where(queueIdEq(matchRequest.getQueueId()))
-                .orderBy(match.gameEndTimestamp.desc())
                 .fetch();
 
+        List<Match> result = jpaQueryFactory.selectFrom(match)
+                .join(match.matchSummoners, matchSummoner).fetchJoin()
+                .join(matchSummoner.challenges, challenges).fetchJoin()
+                .where(
+                        match.matchId.in(matchIds),
+                        queueIdEq(matchRequest.getQueueId()),
+                        match.gameMode.equalsIgnoreCase("CLASSIC").or(match.gameMode.equalsIgnoreCase("CHERRY"))
+                )
+                .orderBy(match.gameEndTimestamp.desc())
+                .fetch();
 
         JPAQuery<Match> countQuery = jpaQueryFactory.selectFrom(match)
                 .join(match.matchSummoners, matchSummoner).on(matchSummoner.puuid.eq(matchRequest.getPuuid()));
@@ -60,6 +79,10 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
         }
 
         return null;
+    }
+
+    private BooleanExpression puuidEq(String puuid) {
+        return StringUtils.hasText(puuid) ? matchSummoner.puuid.eq(puuid) : null;
     }
 
     @Override

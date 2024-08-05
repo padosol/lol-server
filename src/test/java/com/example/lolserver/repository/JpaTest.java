@@ -9,6 +9,7 @@ import com.example.lolserver.riot.dto.match.ParticipantDto;
 import com.example.lolserver.riot.dto.match.TeamDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.riot.type.Platform;
+import com.example.lolserver.web.bucket.BucketService;
 import com.example.lolserver.web.match.dto.MSChampionResponse;
 import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.entity.*;
@@ -55,6 +56,9 @@ import static com.example.lolserver.web.match.entity.QMatchSummoner.matchSummone
 public class JpaTest {
 
     @Autowired
+    private BucketService bucketService;
+
+    @Autowired
     private SummonerRepository summonerRepository;
 
     @Autowired
@@ -86,8 +90,6 @@ public class JpaTest {
                 .addLimit(limit)
                 .build();
 
-        DefaultRiotExecute execute = new DefaultRiotExecute("RGAPI-e6d2cce3-37b3-4b2a-bb54-3859139142d3", bucket);
-        RiotAPI.setRiotExecute(execute);
     }
 
     @Test

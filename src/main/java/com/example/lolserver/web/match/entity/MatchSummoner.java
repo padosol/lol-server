@@ -3,6 +3,7 @@ package com.example.lolserver.web.match.entity;
 
 import com.example.lolserver.riot.dto.match.ParticipantDto;
 import com.example.lolserver.web.match.entity.id.MatchSummonerId;
+import com.example.lolserver.web.match.entity.timeline.TimeLineEvent;
 import com.example.lolserver.web.match.entity.value.matchsummoner.ItemValue;
 import com.example.lolserver.web.match.entity.value.matchsummoner.StatValue;
 import com.example.lolserver.web.match.entity.value.matchsummoner.StyleValue;
@@ -11,6 +12,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
+
+import java.util.List;
 
 @Entity
 @Table(name = "match_summoner")
@@ -21,7 +25,10 @@ import lombok.NoArgsConstructor;
 @IdClass(MatchSummonerId.class)
 public class MatchSummoner {
 
+
     @Id
+    private String puuid;
+
     private String summonerId;
 
     // match 정보 필요
@@ -37,7 +44,7 @@ public class MatchSummoner {
     // 유저 정보
     private String riotIdGameName;
     private String riotIdTagline;
-    private String puuid;
+
     private int profileIcon;
     private String summonerName;
     private int participantId;

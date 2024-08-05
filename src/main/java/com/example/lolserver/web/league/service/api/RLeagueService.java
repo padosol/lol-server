@@ -11,4 +11,8 @@ import java.util.Set;
 public interface RLeagueService {
 
     List<LeagueSummoner> getLeagueSummoner(Summoner summoner);
+
+    Set<LeagueSummoner> getLeagueSummonerV2(Summoner summoner);
+
+    void fetchSummonerLeague(Summoner summoner);
 }

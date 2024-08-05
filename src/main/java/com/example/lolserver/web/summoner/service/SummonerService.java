@@ -7,6 +7,7 @@ import com.example.lolserver.web.summoner.dto.SummonerResponse;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public interface SummonerService {
     SummonerResponse getSummoner(String q, String region);
@@ -15,6 +16,6 @@ public interface SummonerService {
 
     List<SummonerResponse> getAllSummonerAutoComplete(String q, String region);
 
-    boolean renewalSummonerInfo(String puuid) throws IOException, InterruptedException;
+    SummonerResponse renewalSummonerInfo(String puuid) throws IOException, InterruptedException, ExecutionException;
 
 }

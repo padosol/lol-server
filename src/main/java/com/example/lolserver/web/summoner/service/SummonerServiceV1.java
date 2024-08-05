@@ -1,6 +1,7 @@
 package com.example.lolserver.web.summoner.service;
 
 import com.example.lolserver.riot.type.Platform;
+import com.example.lolserver.web.bucket.BucketService;
 import com.example.lolserver.web.dto.SearchData;
 import com.example.lolserver.web.summoner.dto.SummonerRequest;
 import com.example.lolserver.web.summoner.dto.SummonerResponse;
@@ -8,6 +9,10 @@ import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.summoner.repository.SummonerRepository;
 import com.example.lolserver.web.summoner.repository.dsl.SummonerRepositoryCustom;
 import com.example.lolserver.web.summoner.service.api.RSummonerService;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.distributed.BucketProxy;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,8 +29,9 @@ import java.util.stream.Collectors;
 public class SummonerServiceV1 implements SummonerService{
 
     private final SummonerRepositoryCustom summonerRepositoryCustom;
-    private final SummonerRepository summonerRepository;
     private final RSummonerService rSummonerService;
+
+    private final BucketService bucketService;
 
     @Override
     public SummonerResponse getSummoner(String q, String region) {
@@ -37,7 +45,10 @@ public class SummonerServiceV1 implements SummonerService{
             return findSummoner.get(0).toResponse();
         }
 
-        Summoner apiSummoner = rSummonerService.getSummoner(summoner.getGameName(), summoner.getTagLine(), region);
+        // 데이터 베이스에 유저가 존재하지 않을 시 해당 유저의 모든 데이터를 가져와야함
+        // 이때 최초 갱신 이므로 모든 게임 데이터를 가져와야함
+        Summoner apiSummoner = rSummonerService.fetchSummonerAllInfo(summoner.getGameName(), summoner.getTagLine(), region);
+        apiSummoner.resetRevistionClickDate();
 
         if(apiSummoner == null) {
             return SummonerResponse.builder().notFound(true).build();
@@ -60,7 +71,7 @@ public class SummonerServiceV1 implements SummonerService{
                 return Collections.emptyList();
             }
 
-            Summoner findSummoner = rSummonerService.getSummoner(summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
+            Summoner findSummoner = rSummonerService.fetchSummonerAllInfo(summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
 
             if(findSummoner == null) {
                 return Collections.emptyList();
@@ -83,11 +94,10 @@ public class SummonerServiceV1 implements SummonerService{
     }
 
     @Override
-    @Transactional
-    public boolean renewalSummonerInfo(String puuid){
+    public SummonerResponse renewalSummonerInfo(String puuid) throws ExecutionException, InterruptedException {
 
-        boolean result = rSummonerService.revisionSummoner(puuid);
+        Summoner summoner = rSummonerService.revisionSummonerV2(puuid);
 
-        return result;
+        return summoner.toResponse();
     }
 }

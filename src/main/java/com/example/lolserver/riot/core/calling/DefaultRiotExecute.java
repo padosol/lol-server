@@ -1,15 +1,15 @@
 package com.example.lolserver.riot.core.calling;
 
-import com.example.lolserver.riot.core.api.RiotAPI;
-import io.github.bucket4j.Bucket;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.util.retry.Retry;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -18,19 +18,15 @@ import java.util.concurrent.Executor;
 public class DefaultRiotExecute implements RiotExecute{
 
     private WebClient webClient;
-    private Executor executor;
-    private Bucket bucket;
 
 
-    public DefaultRiotExecute(String apiKey, Bucket bucket) {
+    public DefaultRiotExecute(String apiKey) {
 
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
         headers.add("User-Agent", "MMRTR");
         headers.add("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7");
         headers.add("Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8");
         headers.add("X-Riot-Token", apiKey);
-
-        this.bucket = bucket;
 
         ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
                 .codecs(clientCodecConfigurer -> clientCodecConfigurer.defaultCodecs().maxInMemorySize(2 * 1024 * 2024))   // 2MB
@@ -66,6 +62,8 @@ public class DefaultRiotExecute implements RiotExecute{
 
                     return clientResponse.bodyToMono(clazz);
                 })
+                .timeout(Duration.ofSeconds(3))
+                .retryWhen(Retry.backoff(2, Duration.ofSeconds(2)))
                 .toFuture();
     }
 

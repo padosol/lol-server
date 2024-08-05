@@ -122,12 +122,12 @@ public class MatchList {
 
             List<String> matchList = new ArrayList<>();
 
-            get(query, matchList);
+            getAll(query, matchList);
 
             return matchList;
         }
 
-        private void get(MatchQuery query, List<String> matchList) {
+        private void getAll(MatchQuery query, List<String> matchList) {
             UriComponentsBuilder builder = UriComponentsBuilder.newInstance()
                     .scheme("https")
                     .host(platform.getPlatform() + ".api.riotgames.com")
@@ -147,11 +147,11 @@ public class MatchList {
                     long gameEndTimestamp = matchDto.getInfo().getGameEndTimestamp() / 1000;
                     query.setEndTime(gameEndTimestamp);
 
-                    get(query, matchList);
+                    getAll(query, matchList);
                 }
 
             } catch (ExecutionException | InterruptedException e) {
-                throw new RuntimeException(e);
+                throw new IllegalStateException("[MatchList] Many too request");
             }
 
         }

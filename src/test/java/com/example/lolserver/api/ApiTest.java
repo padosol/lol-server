@@ -9,32 +9,33 @@ import com.example.lolserver.riot.dto.match.MatchDto;
 import com.example.lolserver.riot.dto.match_timeline.TimelineDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.riot.type.Platform;
+import com.example.lolserver.web.bucket.BucketService;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
+
+@SpringBootTest
 public class ApiTest {
 
+    @Autowired
+    private BucketService bucketService;
 
     @BeforeAll
     static void beforeAll() {
 
         Refill refill = Refill.intervally(500, Duration.ofSeconds(10));
         Bandwidth limit = Bandwidth.classic(500, refill);
-
-        Bucket bucket = Bucket.builder()
-                .addLimit(limit)
-                .build();
-
-        RiotAPI.setRiotExecute(new DefaultRiotExecute("RGAPI-e6d2cce3-37b3-4b2a-bb54-3859139142d3", bucket));
     }
 
     @Test
@@ -74,7 +75,7 @@ public class ApiTest {
     @Test
     void MATCH_TIMELINE_TEST() {
 
-        TimelineDto timelineDto = RiotAPI.timeLine(Platform.KR).byMatchId("KR_7144295980");
+        TimelineDto timelineDto = RiotAPI.timeLine(Platform.KR).byMatchId("KR_7180367309");
 
         System.out.println(timelineDto);
     }

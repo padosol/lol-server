@@ -16,6 +16,7 @@ import org.springframework.util.StringUtils;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -87,15 +88,12 @@ public class Summoner{
         String tier = null;
 
         for (LeagueSummoner leagueSummoner : this.leagueSummoners) {
-
             QueueType queue = leagueSummoner.getLeague().getQueue();
 
             if(QueueType.RANKED_SOLO_5x5.equals(queue)) {
                 tier = leagueSummoner.getLeague().getTier();
             }
-
         }
-
 
         return SummonerResponse.builder()
                 .summonerId(this.id)
@@ -104,7 +102,7 @@ public class Summoner{
                 .profileIconId(this.profileIconId)
 //                .lastRevisionDateTime(LocalDateTime.ofInstant(Instant.ofEpochMilli(this.revisionDate), ZoneId.systemDefault()))
                 .tier(tier)
-                .lastRevisionDateTime(this.revisionClickDate)
+                .lastRevisionDateTime(this.revisionClickDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
                 .puuid(this.puuid)
                 .gameName(this.gameName)
                 .tagLine(this.tagLine)
@@ -119,7 +117,6 @@ public class Summoner{
         return now.minusMinutes(2).isAfter(this.revisionClickDate);
     }
 
-
     public void revision(SummonerDTO summonerDTO, AccountDto accountDto) {
 
         this.profileIconId = summonerDTO.getProfileIconId();
@@ -133,5 +130,13 @@ public class Summoner{
 
     public boolean isTagLine() {
         return StringUtils.hasText(this.tagLine);
+    }
+
+    public void addLeagueSummoner(Set<LeagueSummoner> leagueSummoners) {
+        this.leagueSummoners = leagueSummoners;
+    }
+
+    public void resetRevistionClickDate() {
+        this.revisionClickDate = LocalDateTime.now();
     }
 }

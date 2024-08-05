@@ -63,14 +63,54 @@ public class TimeLine {
             return RiotAPI.getExecute().execute(TimelineDto.class, builder.build().toUri());
         }
 
+
+        // 수정 필요함
+        private List<TimelineDto> getAll()  {
+
+            List<CompletableFuture<TimelineDto>> timelineList = new ArrayList<>();
+
+            Bucket bucket = RiotAPI.getBucket();
+
+            int i = 0;
+            for(String matchId : this.matchIds) {
+
+                if( i > 20 ) {
+                    ZSetOperations<String, Object> matchSet = RiotAPI.getRedistemplate().opsForZSet();
+
+                    matchSet.add("timeline_matchId", new MatchSession(matchId, this.platform), (double) System.currentTimeMillis() / 1000);
+                    continue;
+                }
+
+                if(bucket.getAvailableTokens() > 0) {
+                    CompletableFuture<TimelineDto> future = get(matchId);
+                    timelineList.add(future);
+                } else {
+                    ZSetOperations<String, Object> matchSet = RiotAPI.getRedistemplate().opsForZSet();
+
+                    matchSet.add("timeline_matchId", new MatchSession(matchId, this.platform), (double) System.currentTimeMillis() / 1000);
+                }
+                i++;
+            }
+
+            return timelineList.stream().map(CompletableFuture::join).toList();
+        }
+
+        public CompletableFuture<TimelineDto> getFuture(String matchId) {
+            return get(matchId);
+        }
+
     }
 
-    public CompletableFuture<MatchDto> byMatchIdFuture(String matchId) {
-        return new Match.Builder(matchId).platform(this.platform).getFuture(matchId);
+    public CompletableFuture<TimelineDto> byMatchIdFuture(String matchId) {
+        return new TimeLine.Builder(matchId).platform(this.platform).getFuture(matchId);
     }
 
     public TimelineDto byMatchId(String matchId) {
         return new TimeLine.Builder(matchId).platform(this.platform).get();
+    }
+
+    public List<TimelineDto> byMatchIds(List<String> matchIds) {
+        return new Builder(matchIds).platform(this.platform).getAll();
     }
 
 }

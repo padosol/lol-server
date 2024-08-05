@@ -7,6 +7,6 @@ import lombok.Setter;
 @Setter
 public class ParticipantTimeLineDto {
 
-    int participantId;
-    String puuid;
+    private int participantId;
+    private String puuid;
 }

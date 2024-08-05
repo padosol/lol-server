@@ -1,5 +1,6 @@
 package com.example.lolserver.web.dto.data.gameData;
 
+import com.example.lolserver.riot.dto.match.MatchDto;
 import com.example.lolserver.web.match.entity.Match;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,6 +24,8 @@ public class GameInfoData {
     private	int queueId;
     private	String tournamentCode;
 
+    public GameInfoData(){};
+
     public GameInfoData(Match match) {
 
         this.dateVersion = match.getDateVersion();
@@ -39,6 +42,23 @@ public class GameInfoData {
         this.platformId = match.getPlatformId();
         this.queueId = match.getQueueId();
         this.tournamentCode = match.getTournamentCode();
+    }
+
+    public GameInfoData(MatchDto matchDto) {
+        this.dateVersion = matchDto.getMetadata().getDataVersion();
+        this.gameCreation = matchDto.getInfo().getGameCreation();
+        this.gameDuration = matchDto.getInfo().getGameDuration();
+        this.gameEndTimestamp = matchDto.getInfo().getGameEndTimestamp();
+        this.gameId = matchDto.getInfo().getGameId();
+        this.gameMode = matchDto.getInfo().getGameMode();
+        this.gameName = matchDto.getInfo().getGameName();
+        this.gameStartTimestamp = matchDto.getInfo().getGameStartTimestamp();
+        this.gameType = matchDto.getInfo().getGameType();
+        this.gameVersion = matchDto.getInfo().getGameVersion();
+        this.mapId = matchDto.getInfo().getMapId();
+        this.platformId = matchDto.getInfo().getPlatformId();
+        this.queueId = matchDto.getInfo().getQueueId();
+        this.tournamentCode = matchDto.getInfo().getTournamentCode();
     }
 
 
