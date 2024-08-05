@@ -28,7 +28,6 @@ public class StyleValue {
 
         List<PerkStyleDto> styles = participantDto.getPerks().getStyles();
 
-
         StringBuffer sb = new StringBuffer();
         for (PerkStyleDto style : styles) {
             sb.setLength(0);

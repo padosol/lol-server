@@ -3,6 +3,7 @@ package com.example.lolserver.web.match.repository.matchsummoner.dsl.impl;
 import com.example.lolserver.web.match.dto.MSChampionResponse;
 import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.dto.LinePosition;
+import com.example.lolserver.web.match.entity.Match;
 import com.example.lolserver.web.match.entity.MatchSummoner;
 import com.example.lolserver.web.match.repository.matchsummoner.dsl.MatchSummonerRepositoryCustom;
 import com.querydsl.core.types.Projections;
@@ -22,6 +23,10 @@ import java.util.List;
 
 import static com.example.lolserver.web.match.entity.QMatch.match;
 import static com.example.lolserver.web.match.entity.QMatchSummoner.matchSummoner;
+import static com.example.lolserver.web.match.entity.timeline.QTimeLineEvent.timeLineEvent;
+import static com.example.lolserver.web.match.entity.QChallenges.challenges;
+import static com.example.lolserver.web.match.entity.timeline.events.QItemEvents.itemEvents;
+import static com.example.lolserver.web.match.entity.timeline.events.QSkillEvents.skillEvents;
 
 @Repository
 @RequiredArgsConstructor
@@ -32,6 +37,26 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
 
     @Override
     public Page<MatchSummoner> findAllByPuuidAndQueueId(MatchRequest matchRequest, Pageable pageable) {
+
+        List<String> matchIds = jpaQueryFactory.select(matchSummoner.match.matchId).from(matchSummoner)
+                .join(matchSummoner.match, match)
+                .where(
+                        puuidEq(matchRequest.getPuuid()),
+                        queueIdEq(matchRequest.getQueueId())
+                )
+                .orderBy(matchSummoner.match.matchId.desc())
+                .offset((long) pageable.getPageNumber() * pageable.getPageSize())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        List<Match> fetch = jpaQueryFactory.selectFrom(match)
+                .join(match.matchSummoners, matchSummoner).fetchJoin()
+                .join(matchSummoner.challenges, challenges).fetchJoin()
+                .join(match.timeLineEvents, timeLineEvent).fetchJoin()
+                .join(timeLineEvent.itemEvents, itemEvents).fetchJoin()
+                .join(timeLineEvent.skillEvents, skillEvents).fetchJoin()
+                .where(match.matchId.in(matchIds))
+                .fetch();
 
         List<MatchSummoner> content = jpaQueryFactory.selectFrom(matchSummoner)
                 .join(matchSummoner.match, match)

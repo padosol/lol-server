@@ -4,7 +4,12 @@ import com.example.lolserver.riot.dto.match.MatchDto;
 import com.example.lolserver.web.dto.data.GameData;
 import com.example.lolserver.web.dto.data.gameData.GameInfoData;
 import com.example.lolserver.web.dto.data.gameData.ParticipantData;
+import com.example.lolserver.web.dto.data.gameData.SeqTypeData;
 import com.example.lolserver.web.dto.data.gameData.TeamInfoData;
+import com.example.lolserver.web.dto.data.gameData.seqType.SeqType;
+import com.example.lolserver.web.match.entity.timeline.TimeLineEvent;
+import com.example.lolserver.web.match.entity.timeline.events.ItemEvents;
+import com.example.lolserver.web.match.entity.timeline.events.SkillEvents;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
@@ -64,6 +69,11 @@ public class Match {
     private LocalDateTime gameEndDatetime;
     private LocalDateTime gameStartDatetime;
 
+    // timeline
+    @BatchSize(size = 500)
+    @OneToMany(mappedBy = "match")
+    private List<TimeLineEvent> timeLineEvents;
+
     public void addMatchSummoner(MatchSummoner matchSummoner) {
         if(this.matchSummoners == null) {
             this.matchSummoners = new ArrayList<>();
@@ -108,6 +118,8 @@ public class Match {
 
     public GameData toGameData(String puuid) {
 
+        Map<Integer, Map<String, List<SeqTypeData>>> timelineDataMap = getTimelineDataMap();
+
         GameData gameData = new GameData();
 
         // 게임 정보
@@ -119,6 +131,14 @@ public class Match {
         for (MatchSummoner matchSummoner : this.matchSummoners) {
             ParticipantData data = new ParticipantData().of(matchSummoner);
             participantData.add(data);
+
+            int participantId = data.getParticipantId();
+            Map<String, List<SeqTypeData>> dataMap = timelineDataMap.get(participantId);
+
+            if(dataMap != null) {
+                data.setItemSeq(dataMap.get(SeqType.ITEM_SEQ.name()));
+                data.setSkillSeq(dataMap.get(SeqType.SKILL_SEQ.name()));
+            }
 
             if(data.getPuuid().equals(puuid)) {
                 gameData.setMyData(data);
@@ -139,6 +159,48 @@ public class Match {
         gameData.setTeamInfoData(teamInfoDataMap);
 
         return gameData;
+    }
+
+    public Map<Integer, Map<String, List<SeqTypeData>>> getTimelineDataMap() {
+        Map<Integer, Map<String, List<SeqTypeData>>> timelineMap = new HashMap<>();
+
+        // 타임라인 데이터
+        for (TimeLineEvent timeLineEvent : this.timeLineEvents) {
+
+            List<ItemEvents> itemEvents = timeLineEvent.getItemEvents();
+            for (ItemEvents itemEvent : itemEvents) {
+
+                if(!itemEvent.getType().equalsIgnoreCase("ITEM_PURCHASED")) continue;
+
+                int participantId = itemEvent.getParticipantId();
+                if(!timelineMap.containsKey(participantId)) {
+                    timelineMap.put(participantId, new HashMap<>());
+                }
+
+                if(!timelineMap.get(participantId).containsKey(SeqType.ITEM_SEQ.name())) {
+                    timelineMap.get(participantId).put(SeqType.ITEM_SEQ.name(), new ArrayList<>());
+                }
+
+                List<SeqTypeData> itemSeq = timelineMap.get(participantId).get(SeqType.ITEM_SEQ.name());
+                itemSeq.add(new SeqTypeData(itemEvent));
+            }
+
+            List<SkillEvents> skillEvents = timeLineEvent.getSkillEvents();
+            for (SkillEvents skillEvent : skillEvents) {
+                int participantId = skillEvent.getParticipantId();
+                if(!timelineMap.containsKey(participantId)) {
+                    timelineMap.put(participantId, new HashMap<>());
+                }
+
+                if(!timelineMap.get(participantId).containsKey(SeqType.SKILL_SEQ.name())) {
+                    timelineMap.get(participantId).put(SeqType.SKILL_SEQ.name(), new ArrayList<>());
+                }
+
+                List<SeqTypeData> skillSeq = timelineMap.get(participantId).get(SeqType.SKILL_SEQ.name());
+                skillSeq.add(new SeqTypeData(skillEvent));
+            }
+        }
+        return timelineMap;
     }
 
     public boolean isGameResultOk() {

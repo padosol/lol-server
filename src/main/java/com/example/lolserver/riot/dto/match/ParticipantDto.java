@@ -159,17 +159,6 @@ public class ParticipantDto {
 // MissionsDto missions	;
 
 
-
-
-
-
-
-
-
-
-
-
-
     public boolean isChallenges() {
         return this.challenges != null;
     }

@@ -1,6 +1,7 @@
 package com.example.lolserver.web.dto.data.gameData;
 
 
+import com.example.lolserver.riot.dto.match.TeamDto;
 import com.example.lolserver.web.match.entity.MatchTeam;
 import lombok.*;
 
@@ -18,6 +19,14 @@ public class TeamInfoData {
 
     private	List<Integer> championId = new ArrayList<>();
     private	List<Integer> pickTurn = new ArrayList<>();
+
+    public TeamInfoData(){};
+
+    public TeamInfoData(TeamDto teamDto) {
+        this.teamId = teamDto.getTeamId();
+        this.win = teamDto.isWin();
+        this.championKills = teamDto.getObjectives().getChampion().getKills();
+    }
 
     public TeamInfoData of(MatchTeam matchTeam) {
         this.teamId = matchTeam.getTeamId();

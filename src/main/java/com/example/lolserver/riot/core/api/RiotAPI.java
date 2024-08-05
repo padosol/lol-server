@@ -12,6 +12,7 @@ import com.example.lolserver.riot.core.builder.spectator.Spactator;
 import com.example.lolserver.riot.core.builder.summoner.Summoner;
 import com.example.lolserver.riot.dto.champion.ChampionInfo;
 import com.example.lolserver.riot.type.Platform;
+import com.example.lolserver.web.bucket.BucketService;
 import io.github.bucket4j.Bucket;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -26,17 +27,17 @@ import java.util.concurrent.ExecutionException;
 public class RiotAPI {
 
     public static final String DEFAULT_HOST = ".api.riotgames.com";
-    private static Bucket BUCKET;
     private static RiotExecute defaultRiotExecute;
     private static Platform platform = Platform.KR;
     public final String API_KEY;
     private static RedisTemplate<String, Object> REDISTEMPLATE;
+    private static BucketService BUCKET_SERVICE;
 
-    public RiotAPI(String apiKey, RiotExecute execute, RedisTemplate<String, Object> redisTemplate, Bucket bucket) {
+    public RiotAPI(String apiKey, RiotExecute execute, RedisTemplate<String, Object> redisTemplate, BucketService bucketService) {
         API_KEY = apiKey;
         defaultRiotExecute = execute;
         REDISTEMPLATE = redisTemplate;
-        BUCKET = bucket;
+        BUCKET_SERVICE = bucketService;
     }
 
 
@@ -52,7 +53,7 @@ public class RiotAPI {
 
         private RedisTemplate<String, Object> redisTemplate;
         private RiotExecute execute;
-        private Bucket bucket;
+        private BucketService bucketService;
         private String apiKey;
 
         public RiotApiBuilder apiKey(String apiKey) {
@@ -75,8 +76,8 @@ public class RiotAPI {
             return this;
         }
 
-        public RiotApiBuilder bucket(Bucket bucket) {
-            this.bucket = bucket;
+        public RiotApiBuilder bucket(BucketService bucketService) {
+            this.bucketService = bucketService;
             return this;
         }
 
@@ -96,7 +97,7 @@ public class RiotAPI {
                 throw new RuntimeException();
             }
 
-            return new RiotAPI(this.apiKey, execute, this.redisTemplate, this.bucket);
+            return new RiotAPI(this.apiKey, execute, this.redisTemplate, this.bucketService);
         }
     }
 
@@ -123,7 +124,7 @@ public class RiotAPI {
     public static RiotExecute getExecute() {return defaultRiotExecute;}
 
     public static Bucket getBucket() {
-        return BUCKET;
+        return BUCKET_SERVICE.getBucket();
     }
 
     public static RedisTemplate<String, Object> getRedistemplate() {return REDISTEMPLATE;}

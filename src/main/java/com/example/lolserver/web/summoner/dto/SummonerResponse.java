@@ -1,6 +1,5 @@
 package com.example.lolserver.web.summoner.dto;
 
-import com.example.lolserver.web.dto.data.LeagueData;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,7 +17,7 @@ public class SummonerResponse {
     private String gameName;
     private String tagLine;
     private String platform;
-    private LocalDateTime lastRevisionDateTime;
+    private String lastRevisionDateTime;
 
     private String tier;
     private boolean notFound;

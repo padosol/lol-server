@@ -15,14 +15,14 @@ import org.hibernate.annotations.Comment;
 public class Challenges {
 
         @Id
-        private String summonerId;
+        private String puuid;
 
         @Id
         private String matchId;
 
         @OneToOne
         @JoinColumns({
-                @JoinColumn(name = "summoner_id", referencedColumnName = "summonerId"),
+                @JoinColumn(name = "puuid", referencedColumnName = "puuid"),
                 @JoinColumn(name = "match_id", referencedColumnName = "match")
         })
         private MatchSummoner matchSummoner;
@@ -168,6 +168,7 @@ public class Challenges {
 
                 return Challenges.builder()
                         .matchSummoner(matchSummoner)
+                        .puuid(matchSummoner.getPuuid())
                         .assistStreakCount12(challengesDto.getAssistStreakCount12())
                         .infernalScalePickup(challengesDto.getInfernalScalePickup())
                         .abilityUses(challengesDto.getAbilityUses())

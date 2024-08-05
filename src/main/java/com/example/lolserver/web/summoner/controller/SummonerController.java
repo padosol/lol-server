@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @RestController
@@ -58,12 +59,12 @@ public class SummonerController {
     }
 
     @GetMapping("/v1/summoners/renewal")
-    public ResponseEntity<Boolean> renewalSummonerInfo(
+    public ResponseEntity<SummonerResponse> renewalSummonerInfo(
         @RequestParam("puuid") String puuid
-    ) throws IOException, InterruptedException {
+    ) throws IOException, InterruptedException, ExecutionException {
 
         if(bucket.getAvailableTokens() > 10) {
-            boolean result = summonerService.renewalSummonerInfo(puuid);
+            SummonerResponse result = summonerService.renewalSummonerInfo(puuid);
 
             return new ResponseEntity<>(result, HttpStatus.OK);
         } else {
