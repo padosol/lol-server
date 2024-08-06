@@ -48,4 +48,5 @@ server:
       enabled: true
       pattern: "%{yyyy-MM-dd HH:mm:ss}t %s [%r: %{User-Agent}i %{Referer}i] [Remote Host: %a] [Size: %b]"
 
+
 riot.api.key: ${API_KEY}
