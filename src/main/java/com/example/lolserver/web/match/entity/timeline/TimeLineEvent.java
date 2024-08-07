@@ -4,6 +4,7 @@ import com.example.lolserver.web.match.entity.Match;
 
 import com.example.lolserver.web.match.entity.timeline.events.ItemEvents;
 import com.example.lolserver.web.match.entity.timeline.events.SkillEvents;
+import com.example.lolserver.web.match.entity.timeline.id.TimeLineEventId;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
@@ -16,6 +17,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@IdClass(TimeLineEventId.class)
 public class TimeLineEvent {
 
     @Id

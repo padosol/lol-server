@@ -13,8 +13,7 @@ import java.util.Objects;
 public class TimeLineEventId implements Serializable {
 
     private String match;
-    private Long timestamp;
-    private Long id;
+    private int timestamp;
 
     @Override
     public boolean equals(Object obj) {
@@ -22,12 +21,11 @@ public class TimeLineEventId implements Serializable {
         if (obj == null || getClass() != obj.getClass()) return false;
         TimeLineEventId timeLineEventId = (TimeLineEventId) obj;
         return Objects.equals(this.match, timeLineEventId.match)
-                && Objects.equals(this.timestamp, timeLineEventId.timestamp)
-                && Objects.equals(this.id, timeLineEventId.id);
+                && Objects.equals(this.timestamp, timeLineEventId.timestamp);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(match, timestamp, id);
+        return Objects.hash(match, timestamp);
     }
 }

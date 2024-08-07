@@ -86,12 +86,17 @@ public class MatchIdScheduling {
                                 MatchDto matchDto = matchDtoFuture.get();
                                 TimelineDto timelineDto = timelineDtoFuture.get();
 
-
                                 if(!matchDto.isError() && !timelineDto.isError()) {
                                     kafkaService.send(KafkaTopic.MATCH, matchDto);
                                     kafkaService.send(KafkaTopic.TIMELINE, timelineDto);
                                 } else {
-                                    zSet.add("matchId", matchSession, (double) System.currentTimeMillis() / 1000);
+
+                                    String matchDtoStatusCode = matchDto.getStatus().getStatusCode();
+                                    String timelineDtoStatusCode = timelineDto.getStatus().getStatusCode();
+
+                                    if(!(matchDtoStatusCode.equalsIgnoreCase("404") || timelineDtoStatusCode.equalsIgnoreCase("404"))){
+                                        zSet.add("matchId", matchSession, (double) System.currentTimeMillis() / 1000);
+                                    }
                                 }
 
                             } catch (InterruptedException | ExecutionException e) {
@@ -99,7 +104,6 @@ public class MatchIdScheduling {
                                 throw new IllegalStateException("Many too request");
                             }
 
-                            completableFuture.join();
                         });
                     } catch(Exception e) {
                         zSet.add("matchId", matchSession, (double) System.currentTimeMillis() / 1000);
