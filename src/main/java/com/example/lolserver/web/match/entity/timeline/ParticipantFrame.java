@@ -28,7 +28,7 @@ public class ParticipantFrame {
 
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "matchId")
+    @JoinColumn(name = "matchId", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private Match match;
 
     @Embedded

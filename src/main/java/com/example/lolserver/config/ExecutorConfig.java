@@ -12,12 +12,11 @@ import java.util.concurrent.Executor;
 @Configuration
 public class ExecutorConfig {
 
-    @Bean
+    @Bean("schedulerTask")
     public TaskScheduler taskScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-
         scheduler.setPoolSize(10);
-        scheduler.setThreadNamePrefix("scheduler-");
+        scheduler.setThreadNamePrefix("scheduler-thread-");
         scheduler.initialize();
 
         return scheduler;

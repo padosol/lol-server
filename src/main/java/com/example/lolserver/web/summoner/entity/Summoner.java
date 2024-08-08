@@ -136,7 +136,7 @@ public class Summoner{
         this.leagueSummoners = leagueSummoners;
     }
 
-    public void resetRevistionClickDate() {
+    public void resetRevisionClickDate() {
         this.revisionClickDate = LocalDateTime.now();
     }
 }

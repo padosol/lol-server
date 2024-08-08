@@ -1,6 +1,5 @@
 package com.example.lolserver.web.match.controller;
 
-import com.example.lolserver.web.dto.data.GameData;
 import com.example.lolserver.web.match.dto.MSChampionRequest;
 import com.example.lolserver.web.match.dto.MSChampionResponse;
 import com.example.lolserver.web.match.dto.MatchRequest;
@@ -12,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.List;
 
 @Slf4j

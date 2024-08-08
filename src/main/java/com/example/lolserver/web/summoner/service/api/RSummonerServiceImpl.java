@@ -157,6 +157,7 @@ public class RSummonerServiceImpl implements RSummonerService{
 
             Set<LeagueSummoner> leagueSummoners = rLeagueService.getLeagueSummonerV2(summoner);
             summoner.addLeagueSummoner(leagueSummoners);
+            summoner.resetRevisionClickDate();
 
             kafkaService.send(KafkaTopic.SUMMONER, new SummonerMessage(summoner));
             leagueSummoners.forEach((leagueSummoner) -> {
@@ -290,9 +291,6 @@ public class RSummonerServiceImpl implements RSummonerService{
             return summoner;
         }
         
-        // 현재 갱신중인지 redis 에서 확인
-        
-        
         // 갱신 중이지 않다면 로직 진행
         Bucket regionBucket = bucketService.getBucket(BucketService.BucketKey.PLATFORM_REGION);
         Bucket summonerBucket = bucketService.getBucket(BucketService.BucketKey.SUMMONER_V4_BY_PUUID);
@@ -310,7 +308,7 @@ public class RSummonerServiceImpl implements RSummonerService{
 
                 // riot api 를 통해 얻은 데이터와 일치한다면 갱신을 더이상 진행하지 않음.
                 if(summonerDTO.getRevisionDate() == summoner.getRevisionDate()) {
-                    summoner.resetRevistionClickDate();
+                    summoner.resetRevisionClickDate();
                     return summoner;
                 }
 
