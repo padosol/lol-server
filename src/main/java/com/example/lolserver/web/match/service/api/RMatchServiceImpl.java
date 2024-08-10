@@ -24,6 +24,8 @@ import com.example.lolserver.web.match.repository.matchsummoner.MatchSummonerRep
 import com.example.lolserver.web.match.repository.matchteam.MatchTeamRepository;
 import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.summoner.repository.SummonerRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -51,6 +53,7 @@ public class RMatchServiceImpl implements RMatchService{
     private final KafkaService kafkaService;
     private final BucketService bucketService;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     @Transactional
@@ -141,7 +144,7 @@ public class RMatchServiceImpl implements RMatchService{
      */
     @Async
     @Override
-    public void fetchSummonerMatches(Summoner summoner) {
+    public void fetchSummonerMatches(Summoner summoner) throws JsonProcessingException {
 
         Platform platform = Platform.valueOfName(summoner.getRegion());
 
@@ -153,7 +156,7 @@ public class RMatchServiceImpl implements RMatchService{
         ZSetOperations<String, Object> matchIdSet = redisTemplate.opsForZSet();
         // 존재하지 않는 matchId 만 redis 에 저장
         for (String matchId : matchIdsNotIn) {
-            matchIdSet.add("matchId", new MatchSession(matchId, platform), (double) System.currentTimeMillis() / 1000);
+            matchIdSet.add("matchId", objectMapper.writeValueAsString(new MatchSession(matchId, platform)), (double) System.currentTimeMillis() / 1000);
         }
     }
 

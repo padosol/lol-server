@@ -49,7 +49,8 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
                 .join(matchSummoner.match, match)
                 .where(
                         puuidEq(matchRequest.getPuuid()),
-                        queueIdEq(matchRequest.getQueueId())
+                        queueIdEq(matchRequest.getQueueId()),
+                        match.gameMode.equalsIgnoreCase("CLASSIC").or(match.gameMode.equalsIgnoreCase("CHERRY"))
                 )
                 .orderBy(matchSummoner.match.matchId.desc())
                 .offset((long) pageable.getPageNumber() * pageable.getPageSize())
@@ -61,14 +62,15 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
                 .join(matchSummoner.challenges, challenges).fetchJoin()
                 .where(
                         match.matchId.in(matchIds),
-                        queueIdEq(matchRequest.getQueueId()),
-                        match.gameMode.equalsIgnoreCase("CLASSIC").or(match.gameMode.equalsIgnoreCase("CHERRY"))
+                        queueIdEq(matchRequest.getQueueId())
+//                        match.gameMode.equalsIgnoreCase("CLASSIC").or(match.gameMode.equalsIgnoreCase("CHERRY"))
                 )
                 .orderBy(match.gameEndTimestamp.desc())
                 .fetch();
 
         JPAQuery<Match> countQuery = jpaQueryFactory.selectFrom(match)
-                .join(match.matchSummoners, matchSummoner).on(matchSummoner.puuid.eq(matchRequest.getPuuid()));
+                .join(match.matchSummoners, matchSummoner)
+                .where(matchSummoner.puuid.eq(matchRequest.getPuuid()));
 
         return PageableExecutionUtils.getPage(result, pageable, () ->  countQuery.fetch().size());
     }

@@ -2,6 +2,7 @@ package com.example.lolserver.kafka;
 
 import com.example.lolserver.web.summoner.entity.Summoner;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.record.CompressionType;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -28,7 +29,12 @@ public class KafkaProducerConfig {
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         config.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, "10485880"); // 10MB
-        config.put(ProducerConfig.BUFFER_MEMORY_CONFIG, "33554432"); // 32MB
+        config.put(ProducerConfig.BUFFER_MEMORY_CONFIG, "100000000"); // 32MB
+
+        config.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, CompressionType.LZ4.name);
+        config.put(ProducerConfig.BATCH_SIZE_CONFIG, 100000000);
+        config.put(ProducerConfig.LINGER_MS_CONFIG, 500);
+
 
         config.put(JsonSerializer.TYPE_MAPPINGS,
                 "summoner:com.example.lolserver.kafka.messageDto.SummonerMessage," +

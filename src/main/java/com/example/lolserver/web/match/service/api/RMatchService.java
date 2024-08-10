@@ -5,6 +5,7 @@ import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.dto.MatchResponse;
 import com.example.lolserver.web.match.entity.Match;
 import com.example.lolserver.web.summoner.entity.Summoner;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.scheduling.annotation.Async;
 
 import java.util.List;
@@ -18,6 +19,6 @@ public interface RMatchService {
 
     void asyncInsertMatches(List<MatchDto> matchDtoList);
 
-    void fetchSummonerMatches(Summoner summoner);
+    void fetchSummonerMatches(Summoner summoner) throws JsonProcessingException;
 
 }

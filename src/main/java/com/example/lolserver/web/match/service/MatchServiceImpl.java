@@ -38,9 +38,9 @@ public class MatchServiceImpl implements MatchService {
 
         Page<Match> matches = matchRepositoryCustom.getMatches(matchRequest, pageable);
 
-        if(matches.getContent().size() == 0) {
-            return rMatchService.getMatchesV2(matchRequest);
-        }
+//        if(matches.getContent().size() == 0) {
+//            return rMatchService.getMatchesV2(matchRequest);
+//        }
 
         List<GameData> gameDataList = matches.getContent().stream().map(match -> match.toGameData(matchRequest.getPuuid())).toList();
 

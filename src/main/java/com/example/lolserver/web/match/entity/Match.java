@@ -70,7 +70,7 @@ public class Match {
     private LocalDateTime gameStartDatetime;
 
     // timeline
-    @BatchSize(size = 500)
+    @BatchSize(size = 200)
     @OneToMany(mappedBy = "match")
     private List<TimeLineEvent> timeLineEvents;
 

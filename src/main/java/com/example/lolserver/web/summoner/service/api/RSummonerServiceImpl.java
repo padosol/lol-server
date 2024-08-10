@@ -25,6 +25,7 @@ import com.example.lolserver.web.match.repository.match.dsl.MatchRepositoryCusto
 import com.example.lolserver.web.match.service.api.RMatchService;
 import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.summoner.repository.SummonerRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
 import lombok.RequiredArgsConstructor;
@@ -165,7 +166,11 @@ public class RSummonerServiceImpl implements RSummonerService{
             });
 
             executor.execute(() -> {
-                rMatchService.fetchSummonerMatches(summoner);
+                try {
+                    rMatchService.fetchSummonerMatches(summoner);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
+                }
             });
 
             return summoner;
@@ -282,7 +287,7 @@ public class RSummonerServiceImpl implements RSummonerService{
 
     @Transactional
     @Override
-    public Summoner revisionSummonerV2(String puuid) throws ExecutionException, InterruptedException {
+    public Summoner revisionSummonerV2(String puuid) throws ExecutionException, InterruptedException, JsonProcessingException {
 
         Summoner summoner = summonerRepository.findSummonerByPuuid(puuid).orElseThrow(() -> new IllegalStateException("존재하지 않는 Summoner"));
 

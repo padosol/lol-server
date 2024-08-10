@@ -22,8 +22,8 @@ public class ChampionSpecialKillEvent {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumns({
-            @JoinColumn(name = "match_id", referencedColumnName = "match_id"),
-            @JoinColumn(name = "timeline_timestamp", referencedColumnName = "timestamp")
+            @JoinColumn(name = "match_id", referencedColumnName = "match_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)),
+            @JoinColumn(name = "timeline_timestamp", referencedColumnName = "timestamp", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     })
     private TimeLineEvent timeLineEvent;
 

@@ -28,11 +28,11 @@ public class TimeLineEvent {
     @Id
     private int timestamp;
 
-    @BatchSize(size = 200)
+    @BatchSize(size = 500)
     @OneToMany(mappedBy = "timeLineEvent")
     private List<ItemEvents> itemEvents;
 
-    @BatchSize(size = 200)
+    @BatchSize(size = 500)
     @OneToMany(mappedBy = "timeLineEvent")
     private List<SkillEvents> skillEvents;
 }

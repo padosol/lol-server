@@ -1,6 +1,7 @@
 package com.example.lolserver.web.summoner.service.api;
 
 import com.example.lolserver.web.summoner.entity.Summoner;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.concurrent.ExecutionException;
 
@@ -12,5 +13,5 @@ public interface RSummonerService {
 
     boolean revisionSummoner(String puuid);
 
-    Summoner revisionSummonerV2(String puuid) throws ExecutionException, InterruptedException;
+    Summoner revisionSummonerV2(String puuid) throws ExecutionException, InterruptedException, JsonProcessingException;
 }

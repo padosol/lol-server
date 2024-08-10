@@ -200,13 +200,6 @@ public class RLeagueServiceImpl implements RLeagueService{
                     redisService.addRankData(new SummonerRankSession(league, leagueSummoner));
                 }
             }
-
         }
-
-
-
-
-
-
     }
 }

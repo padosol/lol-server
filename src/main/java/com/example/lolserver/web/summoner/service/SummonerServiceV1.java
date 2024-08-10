@@ -9,6 +9,7 @@ import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.summoner.repository.SummonerRepository;
 import com.example.lolserver.web.summoner.repository.dsl.SummonerRepositoryCustom;
 import com.example.lolserver.web.summoner.service.api.RSummonerService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.BucketProxy;
@@ -94,7 +95,7 @@ public class SummonerServiceV1 implements SummonerService{
     }
 
     @Override
-    public SummonerResponse renewalSummonerInfo(String puuid) throws ExecutionException, InterruptedException {
+    public SummonerResponse renewalSummonerInfo(String puuid) throws ExecutionException, InterruptedException, JsonProcessingException {
 
         Summoner summoner = rSummonerService.revisionSummonerV2(puuid);
 
