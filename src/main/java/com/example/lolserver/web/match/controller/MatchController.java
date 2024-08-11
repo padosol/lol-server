@@ -1,5 +1,6 @@
 package com.example.lolserver.web.match.controller;
 
+import com.example.lolserver.web.dto.data.TimelineData;
 import com.example.lolserver.web.match.dto.MSChampionRequest;
 import com.example.lolserver.web.match.dto.MSChampionResponse;
 import com.example.lolserver.web.match.dto.MatchRequest;
@@ -39,6 +40,14 @@ public class MatchController {
         List<MSChampionResponse> result = matchService.getRankChampions(request);
 
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @GetMapping("/v1/match/timeline/{matchId}")
+    public ResponseEntity<TimelineData> getTimeline(@PathVariable("matchId") String matchId) {
+
+        TimelineData timelineData = matchService.getTimelineData(matchId);
+
+        return new ResponseEntity<>(timelineData, HttpStatus.OK);
     }
 
 }

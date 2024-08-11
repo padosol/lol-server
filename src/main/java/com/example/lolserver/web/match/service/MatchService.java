@@ -1,5 +1,6 @@
 package com.example.lolserver.web.match.service;
 
+import com.example.lolserver.web.dto.data.TimelineData;
 import com.example.lolserver.web.match.dto.MSChampionRequest;
 import com.example.lolserver.web.match.dto.MSChampionResponse;
 import com.example.lolserver.web.match.dto.MatchRequest;
@@ -14,4 +15,5 @@ public interface MatchService {
 
     List<MSChampionResponse> getRankChampions(MSChampionRequest request);
 
+    TimelineData getTimelineData(String matchId);
 }

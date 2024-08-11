@@ -49,15 +49,6 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        List<Match> fetch = jpaQueryFactory.selectFrom(match)
-                .join(match.matchSummoners, matchSummoner).fetchJoin()
-                .join(matchSummoner.challenges, challenges).fetchJoin()
-                .join(match.timeLineEvents, timeLineEvent).fetchJoin()
-                .join(timeLineEvent.itemEvents, itemEvents).fetchJoin()
-                .join(timeLineEvent.skillEvents, skillEvents).fetchJoin()
-                .where(match.matchId.in(matchIds))
-                .fetch();
-
         List<MatchSummoner> content = jpaQueryFactory.selectFrom(matchSummoner)
                 .join(matchSummoner.match, match)
                 .where(

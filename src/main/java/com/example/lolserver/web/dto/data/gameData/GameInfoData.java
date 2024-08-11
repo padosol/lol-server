@@ -13,9 +13,7 @@ public class GameInfoData {
     private	long gameCreation;
     private	long gameDuration;
     private	long gameEndTimestamp;
-    private	long gameId;
     private	String gameMode;
-    private	String gameName;
     private	long gameStartTimestamp;
     private	String gameType;
     private	String gameVersion;
@@ -23,6 +21,9 @@ public class GameInfoData {
     private	String platformId;
     private	int queueId;
     private	String tournamentCode;
+    private String matchId;
+//    private	long gameId;
+//    private	String gameName;
 
     public GameInfoData(){};
 
@@ -32,9 +33,7 @@ public class GameInfoData {
         this.gameCreation = match.getGameCreation();
         this.gameDuration = match.getGameDuration();
         this.gameEndTimestamp = match.getGameEndTimestamp();
-        this.gameId = match.getGameId();
         this.gameMode = match.getGameMode();
-        this.gameName = match.getGameName();
         this.gameStartTimestamp = match.getGameStartTimestamp();
         this.gameType = match.getGameType();
         this.gameVersion = match.getGameVersion();
@@ -42,6 +41,9 @@ public class GameInfoData {
         this.platformId = match.getPlatformId();
         this.queueId = match.getQueueId();
         this.tournamentCode = match.getTournamentCode();
+        this.matchId = match.getMatchId();
+//        this.gameId = match.getGameId();
+//        this.gameName = match.getGameName();
     }
 
     public GameInfoData(MatchDto matchDto) {
@@ -49,9 +51,7 @@ public class GameInfoData {
         this.gameCreation = matchDto.getInfo().getGameCreation();
         this.gameDuration = matchDto.getInfo().getGameDuration();
         this.gameEndTimestamp = matchDto.getInfo().getGameEndTimestamp();
-        this.gameId = matchDto.getInfo().getGameId();
         this.gameMode = matchDto.getInfo().getGameMode();
-        this.gameName = matchDto.getInfo().getGameName();
         this.gameStartTimestamp = matchDto.getInfo().getGameStartTimestamp();
         this.gameType = matchDto.getInfo().getGameType();
         this.gameVersion = matchDto.getInfo().getGameVersion();
@@ -59,6 +59,9 @@ public class GameInfoData {
         this.platformId = matchDto.getInfo().getPlatformId();
         this.queueId = matchDto.getInfo().getQueueId();
         this.tournamentCode = matchDto.getInfo().getTournamentCode();
+        this.matchId = matchDto.getMetadata().getMatchId();
+//        this.gameId = matchDto.getInfo().getGameId();
+//        this.gameName = matchDto.getInfo().getGameName();
     }
 
 

@@ -1,14 +1,19 @@
 package com.example.lolserver.web.match.service;
 
 import com.example.lolserver.web.dto.data.GameData;
+import com.example.lolserver.web.dto.data.TimelineData;
 import com.example.lolserver.web.match.dto.MSChampionRequest;
 import com.example.lolserver.web.match.dto.MSChampionResponse;
 import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.dto.MatchResponse;
 import com.example.lolserver.web.match.entity.Match;
 import com.example.lolserver.web.match.entity.MatchSummoner;
+import com.example.lolserver.web.match.entity.timeline.TimeLineEvent;
+import com.example.lolserver.web.match.entity.timeline.events.ItemEvents;
+import com.example.lolserver.web.match.entity.timeline.events.SkillEvents;
 import com.example.lolserver.web.match.repository.match.dsl.MatchRepositoryCustom;
 import com.example.lolserver.web.match.repository.matchsummoner.dsl.MatchSummonerRepositoryCustom;
+import com.example.lolserver.web.match.repository.timeline.TimelineRepositoryCustom;
 import com.example.lolserver.web.match.service.api.RMatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,9 +30,9 @@ import java.util.*;
 @RequiredArgsConstructor
 public class MatchServiceImpl implements MatchService {
 
-    private final RMatchService rMatchService;
     private final MatchSummonerRepositoryCustom matchSummonerRepositoryCustom;
     private final MatchRepositoryCustom matchRepositoryCustom;
+    private final TimelineRepositoryCustom timelineRepositoryCustom;
 
     @Override
     public MatchResponse getMatches(MatchRequest matchRequest) {
@@ -56,5 +61,14 @@ public class MatchServiceImpl implements MatchService {
                 request.getQueueId(),
                 7L
         );
+    }
+
+    @Override
+    public TimelineData getTimelineData(String matchId) {
+
+        List<ItemEvents> itemEvents = timelineRepositoryCustom.selectAllItemEventsByMatch(matchId);
+        List<SkillEvents> skillEvents = timelineRepositoryCustom.selectAllSkillEventsByMatch(matchId);
+
+        return new TimelineData(itemEvents, skillEvents);
     }
 }

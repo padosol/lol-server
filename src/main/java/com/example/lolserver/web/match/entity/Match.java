@@ -70,9 +70,9 @@ public class Match {
     private LocalDateTime gameStartDatetime;
 
     // timeline
-    @BatchSize(size = 200)
-    @OneToMany(mappedBy = "match")
-    private List<TimeLineEvent> timeLineEvents;
+//    @BatchSize(size = 200)
+//    @OneToMany(mappedBy = "match")
+//    private List<TimeLineEvent> timeLineEvents;
 
     public void addMatchSummoner(MatchSummoner matchSummoner) {
         if(this.matchSummoners == null) {
@@ -165,41 +165,42 @@ public class Match {
         Map<Integer, Map<String, List<SeqTypeData>>> timelineMap = new HashMap<>();
 
         // 타임라인 데이터
-        for (TimeLineEvent timeLineEvent : this.timeLineEvents) {
+//        for (TimeLineEvent timeLineEvent : this.timeLineEvents) {
+//
+//            List<ItemEvents> itemEvents = timeLineEvent.getItemEvents();
+//            for (ItemEvents itemEvent : itemEvents) {
+//
+//                if(!itemEvent.getType().equalsIgnoreCase("ITEM_PURCHASED")) continue;
+//
+//                int participantId = itemEvent.getParticipantId();
+//                if(!timelineMap.containsKey(participantId)) {
+//                    timelineMap.put(participantId, new HashMap<>());
+//                }
+//
+//                if(!timelineMap.get(participantId).containsKey(SeqType.ITEM_SEQ.name())) {
+//                    timelineMap.get(participantId).put(SeqType.ITEM_SEQ.name(), new ArrayList<>());
+//                }
+//
+//                List<SeqTypeData> itemSeq = timelineMap.get(participantId).get(SeqType.ITEM_SEQ.name());
+//                itemSeq.add(new SeqTypeData(itemEvent));
+//            }
+//
+//            List<SkillEvents> skillEvents = timeLineEvent.getSkillEvents();
+//            for (SkillEvents skillEvent : skillEvents) {
+//                int participantId = skillEvent.getParticipantId();
+//                if(!timelineMap.containsKey(participantId)) {
+//                    timelineMap.put(participantId, new HashMap<>());
+//                }
+//
+//                if(!timelineMap.get(participantId).containsKey(SeqType.SKILL_SEQ.name())) {
+//                    timelineMap.get(participantId).put(SeqType.SKILL_SEQ.name(), new ArrayList<>());
+//                }
+//
+//                List<SeqTypeData> skillSeq = timelineMap.get(participantId).get(SeqType.SKILL_SEQ.name());
+//                skillSeq.add(new SeqTypeData(skillEvent));
+//            }
+//        }
 
-            List<ItemEvents> itemEvents = timeLineEvent.getItemEvents();
-            for (ItemEvents itemEvent : itemEvents) {
-
-                if(!itemEvent.getType().equalsIgnoreCase("ITEM_PURCHASED")) continue;
-
-                int participantId = itemEvent.getParticipantId();
-                if(!timelineMap.containsKey(participantId)) {
-                    timelineMap.put(participantId, new HashMap<>());
-                }
-
-                if(!timelineMap.get(participantId).containsKey(SeqType.ITEM_SEQ.name())) {
-                    timelineMap.get(participantId).put(SeqType.ITEM_SEQ.name(), new ArrayList<>());
-                }
-
-                List<SeqTypeData> itemSeq = timelineMap.get(participantId).get(SeqType.ITEM_SEQ.name());
-                itemSeq.add(new SeqTypeData(itemEvent));
-            }
-
-            List<SkillEvents> skillEvents = timeLineEvent.getSkillEvents();
-            for (SkillEvents skillEvent : skillEvents) {
-                int participantId = skillEvent.getParticipantId();
-                if(!timelineMap.containsKey(participantId)) {
-                    timelineMap.put(participantId, new HashMap<>());
-                }
-
-                if(!timelineMap.get(participantId).containsKey(SeqType.SKILL_SEQ.name())) {
-                    timelineMap.get(participantId).put(SeqType.SKILL_SEQ.name(), new ArrayList<>());
-                }
-
-                List<SeqTypeData> skillSeq = timelineMap.get(participantId).get(SeqType.SKILL_SEQ.name());
-                skillSeq.add(new SeqTypeData(skillEvent));
-            }
-        }
         return timelineMap;
     }
 
