@@ -15,7 +15,7 @@ spring:
     show-sql: false
 
   datasource:
-    url: jdbc:postgresql://localhost:5555/postgres
+    url: jdbc:postgresql://db:5555/postgres
     driver-class-name: org.postgresql.Driver
     username: ${USERNAME}
     password: ${PASSWORD}
