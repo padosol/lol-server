@@ -86,12 +86,14 @@ public class Summoner{
     public SummonerResponse toResponse() {
 
         String tier = null;
+        Integer points = null;
 
         for (LeagueSummoner leagueSummoner : this.leagueSummoners) {
             QueueType queue = leagueSummoner.getLeague().getQueue();
 
             if(QueueType.RANKED_SOLO_5x5.equals(queue)) {
                 tier = leagueSummoner.getLeague().getTier();
+                points = leagueSummoner.getLeaguePoints();
             }
         }
 
@@ -107,6 +109,7 @@ public class Summoner{
                 .gameName(this.gameName)
                 .tagLine(this.tagLine)
                 .platform(this.region)
+                .point(points)
                 .build();
     }
 

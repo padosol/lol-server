@@ -27,16 +27,13 @@ public class SummonerRepositoryCustomImpl implements SummonerRepositoryCustom {
 
     @Override
     public List<Summoner> findAllByGameNameAndTagLineAndRegion(String gameName, String tagLine, String region) {
-
-        List<Summoner> result = jpaQueryFactory.selectFrom(summoner)
+        return jpaQueryFactory.selectFrom(summoner)
                 .where(
                         gameNameEq(gameName),
                         tagLineEq(tagLine),
                         regionEq(region)
                 )
                 .fetch();
-
-        return result;
     }
 
     @Override
@@ -52,7 +49,7 @@ public class SummonerRepositoryCustomImpl implements SummonerRepositoryCustom {
     }
 
     public BooleanExpression gameNameLike(String gameName) {
-        return StringUtils.hasText(gameName) ? Expressions.stringTemplate("REPLACE({0}, ' ', '')", summoner.gameName).contains(gameName) : null;
+        return StringUtils.hasText(gameName) ? Expressions.stringTemplate("REPLACE({0}, ' ', '')", summoner.gameName.toLowerCase()).contains(gameName.replaceAll(" ", "").toLowerCase()) : null;
     }
 
     public BooleanExpression tagLineLike(String tagLine) {

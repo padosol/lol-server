@@ -156,7 +156,8 @@ public class RMatchServiceImpl implements RMatchService{
         ZSetOperations<String, Object> matchIdSet = redisTemplate.opsForZSet();
         // 존재하지 않는 matchId 만 redis 에 저장
         for (String matchId : matchIdsNotIn) {
-            matchIdSet.add("matchId", objectMapper.writeValueAsString(new MatchSession(matchId, platform)), (double) System.currentTimeMillis() / 1000);
+            double gameId = Double.parseDouble(matchId.split("_")[1]);
+            matchIdSet.add("matchId", objectMapper.writeValueAsString(new MatchSession(matchId, platform)), gameId);
         }
     }
 

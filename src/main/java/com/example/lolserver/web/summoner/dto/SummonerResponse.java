@@ -19,6 +19,7 @@ public class SummonerResponse {
     private String platform;
     private String lastRevisionDateTime;
 
+    private int point;
     private String tier;
     private boolean notFound;
 
