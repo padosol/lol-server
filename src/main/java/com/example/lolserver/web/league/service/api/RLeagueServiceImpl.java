@@ -2,6 +2,7 @@ package com.example.lolserver.web.league.service.api;
 
 import com.example.lolserver.kafka.KafkaService;
 import com.example.lolserver.kafka.messageDto.LeagueMessage;
+import com.example.lolserver.kafka.messageDto.LeagueSummonerMessage;
 import com.example.lolserver.kafka.topic.KafkaTopic;
 import com.example.lolserver.redis.model.SummonerRankSession;
 import com.example.lolserver.redis.service.RedisService;
@@ -196,6 +197,7 @@ public class RLeagueServiceImpl implements RLeagueService{
                             summoner,
                             leagueEntryDTO
                     );
+                    kafkaService.send(KafkaTopic.LEAGUE_SUMMONER, new LeagueSummonerMessage(leagueSummoner));
 
                     redisService.addRankData(new SummonerRankSession(league, leagueSummoner));
                 }

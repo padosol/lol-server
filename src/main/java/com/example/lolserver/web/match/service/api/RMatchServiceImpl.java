@@ -150,6 +150,10 @@ public class RMatchServiceImpl implements RMatchService{
 
         List<String> matchIds = RiotAPI.matchList(platform).getAllByPuuid(summoner.getPuuid());
 
+        // 최근 20게임은 즉시 가져옴.
+
+
+
         // 데이터베이스에 해당 matchId 가 있는지 확인
         List<String> matchIdsNotIn = matchRepositoryCustom.getMatchIdsNotIn(matchIds);
 
