@@ -1,10 +1,12 @@
 package com.example.lolserver.web.summoner.controller;
 
+import com.example.lolserver.redis.service.RedisService;
 import com.example.lolserver.web.summoner.dto.SummonerRequest;
 import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.dto.SearchData;
 import com.example.lolserver.web.summoner.dto.SummonerResponse;
 import com.example.lolserver.web.summoner.service.SummonerService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.github.bucket4j.Bucket;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,7 @@ import java.util.concurrent.ExecutionException;
 @RequiredArgsConstructor
 public class SummonerController {
 
+    private final RedisService redisService;
     private final SummonerService summonerService;
     private final Bucket bucket;
 
@@ -73,6 +76,20 @@ public class SummonerController {
         }
     }
 
+    @GetMapping("/v1/summoners/{puuid}/renewal-status")
+    public ResponseEntity<Boolean> summonerRenewalStatus(
+            @PathVariable("puuid") String puuid
+    ) throws JsonProcessingException {
 
+        boolean status = redisService.summonerRenewalStatus(puuid);
+
+        log.info("[{}] status: {}", puuid, status);
+
+        if(status) {
+            return new ResponseEntity<>(true, HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity<>(false, HttpStatus.OK);
+        }
+    }
 
 }

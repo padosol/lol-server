@@ -2,6 +2,7 @@ package com.example.lolserver.web.match.service.api;
 
 import com.example.lolserver.kafka.KafkaService;
 import com.example.lolserver.kafka.topic.KafkaTopic;
+import com.example.lolserver.redis.model.MatchRenewalSession;
 import com.example.lolserver.redis.model.MatchSession;
 import com.example.lolserver.riot.core.api.RiotAPI;
 import com.example.lolserver.riot.dto.match.MatchDto;
@@ -17,32 +18,23 @@ import com.example.lolserver.web.match.entity.Challenges;
 import com.example.lolserver.web.match.entity.Match;
 import com.example.lolserver.web.match.entity.MatchSummoner;
 import com.example.lolserver.web.match.entity.MatchTeam;
-import com.example.lolserver.web.match.entity.id.MatchSummonerId;
-import com.example.lolserver.web.match.repository.match.MatchRepository;
 import com.example.lolserver.web.match.repository.match.dsl.MatchRepositoryCustom;
-import com.example.lolserver.web.match.repository.matchsummoner.MatchSummonerRepository;
-import com.example.lolserver.web.match.repository.matchteam.MatchTeamRepository;
 import com.example.lolserver.web.summoner.entity.Summoner;
-import com.example.lolserver.web.summoner.repository.SummonerRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.ConsumptionProbe;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @Slf4j
@@ -50,10 +42,10 @@ import java.util.Optional;
 public class RMatchServiceImpl implements RMatchService{
 
     private final MatchRepositoryCustom matchRepositoryCustom;
-    private final KafkaService kafkaService;
     private final BucketService bucketService;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final KafkaService kafkaService;
 
     @Override
     @Transactional
@@ -84,43 +76,51 @@ public class RMatchServiceImpl implements RMatchService{
 
     /**
      *
-     * @param matchRequest
+     * @param
      * @return
      */
     @Override
-    public MatchResponse getMatchesV2(MatchRequest matchRequest) {
+    public void getMatchesV2(String puuid, Platform platform) {
+
+        Bucket bucket = bucketService.getBucket(BucketService.BucketKey.PLATFORM_REGION);
 
         // 최근 20게임 API 1
-        List<String> matchIds = RiotAPI.matchList(Platform.valueOfName(matchRequest.getPlatform()))
-                .byPuuid(matchRequest.getPuuid())
-                .query(matchQueryBuilder -> matchQueryBuilder.queue(matchRequest.getQueueId()).build())
-                .get();
+        ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1L);
+        if(probe.isConsumed()) {
+            List<String> matchIds = RiotAPI.matchList(platform)
+                    .byPuuid(puuid)
+                    .get();
 
-        // 최근 20게임 정보 API max 20
-        List<MatchDto> matchDtoList = RiotAPI.match(Platform.valueOfName(matchRequest.getPlatform())).byMatchIds(matchIds);
-        List<TimelineDto> timelineDtos = RiotAPI.timeLine(Platform.valueOfName(matchRequest.getPlatform())).byMatchIds(matchIds);
+            List<String> matchIdsNotIn = matchRepositoryCustom.getMatchIdsNotIn(matchIds);
+            List<CompletableFuture<MatchDto>> matchDtoCompletableFuture = new ArrayList<>();
+            List<CompletableFuture<TimelineDto>> timelineDtoCompletableFuture = new ArrayList<>();
 
-        for (MatchDto matchDto : matchDtoList) {
-            kafkaService.send(KafkaTopic.MATCH, matchDto);
+            for (String matchId : matchIdsNotIn) {
+                ConsumptionProbe matchProbe = bucket.tryConsumeAndReturnRemaining(2L);
+
+                if(matchProbe.isConsumed()) {
+                    CompletableFuture<MatchDto> matchFuture = CompletableFuture.supplyAsync(() -> RiotAPI.match(platform).byMatchId(matchId));
+                    matchDtoCompletableFuture.add(matchFuture);
+
+                    CompletableFuture<TimelineDto> timelineFuture = CompletableFuture.supplyAsync(() -> RiotAPI.timeLine(platform).byMatchId(matchId));
+                    timelineDtoCompletableFuture.add(timelineFuture);
+                } else {
+                    break;
+                }
+            }
+
+            // 최근 20게임 정보 API max 20
+            List<MatchDto> matchDtoList = matchDtoCompletableFuture.stream().map(CompletableFuture::join).toList();
+            List<TimelineDto> timelineDtoList = timelineDtoCompletableFuture.stream().map(CompletableFuture::join).toList();
+
+            bulkInsertMatches(matchDtoList);
+
+
+
+        } else {
+            throw new IllegalStateException("Many too request");
         }
 
-        for (TimelineDto timelineDto : timelineDtos) {
-            kafkaService.send(KafkaTopic.TIMELINE, timelineDto);
-        }
-
-        List<GameData> gameData = new ArrayList<>();
-
-        int size = matchIds.size();
-        for (int i=0;i< size; i++) {
-
-            MatchDto matchDto = matchDtoList.get(i);
-            TimelineDto timelineDto = timelineDtos.get(i);
-
-            // return 데이터 생성
-            gameData.add(matchDto.toGameData(matchRequest.getPuuid(), timelineDto));
-        }
-
-        return new MatchResponse(gameData, (long) gameData.size());
     }
 
     @Override
@@ -144,25 +144,65 @@ public class RMatchServiceImpl implements RMatchService{
      */
     @Async
     @Override
-    public void fetchSummonerMatches(Summoner summoner) throws JsonProcessingException {
+    public void fetchSummonerMatches(Summoner summoner) throws JsonProcessingException, InterruptedException {
 
         Platform platform = Platform.valueOfName(summoner.getRegion());
 
         List<String> matchIds = RiotAPI.matchList(platform).getAllByPuuid(summoner.getPuuid());
-
-        // 최근 20게임은 즉시 가져옴.
-
-
 
         // 데이터베이스에 해당 matchId 가 있는지 확인
         List<String> matchIdsNotIn = matchRepositoryCustom.getMatchIdsNotIn(matchIds);
 
         ZSetOperations<String, Object> matchIdSet = redisTemplate.opsForZSet();
         // 존재하지 않는 matchId 만 redis 에 저장
-        for (String matchId : matchIdsNotIn) {
-            double gameId = Double.parseDouble(matchId.split("_")[1]);
-            matchIdSet.add("matchId", objectMapper.writeValueAsString(new MatchSession(matchId, platform)), gameId);
+
+        int size = Math.min(matchIdsNotIn.size(), 20);
+        List<String> first = matchIdsNotIn.subList(0, size);
+
+        if(first.size() > 0) {
+            log.info("Redis 전송 완료");
+            MatchRenewalSession session = new MatchRenewalSession(summoner.getPuuid(), first);
+            redisTemplate.convertAndSend("matchId", objectMapper.writeValueAsString(session));
         }
+
+        if(matchIdsNotIn.size() > 20) {
+            List<String> second = matchIdsNotIn.subList(size + 1, matchIdsNotIn.size());
+            if(second.size() > 0) {
+                for (String matchId : second) {
+                    double gameId = Double.parseDouble(matchId.split("_")[1]);
+                    matchIdSet.add("matchId", matchId, gameId);
+                }
+            }
+        }
+
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+//        for (int i=0;i<size;i++) {
+//            String matchId = matchIdsNotIn.get(i);
+//
+//            double gameId = Double.parseDouble(matchId.split("_")[1]);
+//            if(i >= 20 ) {
+//                matchIdSet.add("matchId", matchId, gameId);
+//            } else {
+//                redisTemplate.convertAndSend("matchId", matchId);
+//
+////                CompletableFuture<Void> completableFuture = kafkaService.send(KafkaTopic.MATCH_ID, matchId)
+////                        .thenAcceptAsync((kafkaData) -> {
+////                            log.info("MatchId 전송 성공: {}", matchId);
+////                        })
+////                        .exceptionallyAsync(ex -> {
+////                            matchIdSet.add("matchId", matchId, gameId);
+////                            return null;
+////                        });
+////
+////                futures.add(completableFuture);
+//            }
+//        }
+
+//        List<Void> list = futures.stream().map(CompletableFuture::join).toList();
+//        for (String matchId : matchIdsNotIn) {
+//            double gameId = Double.parseDouble(matchId.split("_")[1]);
+//            matchIdSet.add("matchId", matchId, gameId);
+//        }
     }
 
 
@@ -212,4 +252,5 @@ public class RMatchServiceImpl implements RMatchService{
 
         return matchList;
     }
+
 }

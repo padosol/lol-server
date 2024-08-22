@@ -2,20 +2,16 @@ package com.example.lolserver.web.match.repository.match.dsl;
 
 import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.entity.*;
-import com.example.lolserver.web.match.entity.timeline.QTimeLineEvent;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.Comment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
@@ -29,9 +25,6 @@ import java.util.Map;
 import static com.example.lolserver.web.match.entity.QChallenges.challenges;
 import static com.example.lolserver.web.match.entity.QMatch.match;
 import static com.example.lolserver.web.match.entity.QMatchSummoner.matchSummoner;
-import static com.example.lolserver.web.match.entity.timeline.QTimeLineEvent.timeLineEvent;
-import static com.example.lolserver.web.match.entity.timeline.events.QItemEvents.itemEvents;
-import static com.example.lolserver.web.match.entity.timeline.events.QSkillEvents.skillEvents;
 
 @Slf4j
 @Repository

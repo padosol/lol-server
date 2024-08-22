@@ -3,7 +3,6 @@ package com.example.lolserver.web.match.repository.timeline;
 import com.example.lolserver.web.match.entity.timeline.TimeLineEvent;
 import com.example.lolserver.web.match.entity.timeline.events.ItemEvents;
 import com.example.lolserver.web.match.entity.timeline.events.SkillEvents;
-import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-import static com.example.lolserver.web.match.entity.QMatch.match;
 import static com.example.lolserver.web.match.entity.timeline.QTimeLineEvent.timeLineEvent;
 import static com.example.lolserver.web.match.entity.timeline.events.QSkillEvents.skillEvents;
 import static com.example.lolserver.web.match.entity.timeline.events.QItemEvents.itemEvents;

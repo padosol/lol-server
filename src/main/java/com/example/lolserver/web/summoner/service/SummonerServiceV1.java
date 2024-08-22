@@ -32,8 +32,6 @@ public class SummonerServiceV1 implements SummonerService{
     private final SummonerRepositoryCustom summonerRepositoryCustom;
     private final RSummonerService rSummonerService;
 
-    private final BucketService bucketService;
-
     @Override
     public SummonerResponse getSummoner(String q, String region) {
 
@@ -49,11 +47,12 @@ public class SummonerServiceV1 implements SummonerService{
         // 데이터 베이스에 유저가 존재하지 않을 시 해당 유저의 모든 데이터를 가져와야함
         // 이때 최초 갱신 이므로 모든 게임 데이터를 가져와야함
         Summoner apiSummoner = rSummonerService.fetchSummonerAllInfo(summoner.getGameName(), summoner.getTagLine(), region);
-        apiSummoner.resetRevisionClickDate();
 
         if(apiSummoner == null) {
             return SummonerResponse.builder().notFound(true).build();
         }
+
+        apiSummoner.resetRevisionClickDate();
 
         return apiSummoner.toResponse();
     }

@@ -38,15 +38,7 @@ public class MatchServiceImpl implements MatchService {
     public MatchResponse getMatches(MatchRequest matchRequest) {
 
         Pageable pageable = PageRequest.of(matchRequest.getPageNo(), 20, Sort.by(Sort.Direction.DESC, "match"));
-
-//        Page<MatchSummoner> allByPuuidAndQueueId = matchSummonerRepositoryCustom.findAllByPuuidAndQueueId(matchRequest, pageable);
-
         Page<Match> matches = matchRepositoryCustom.getMatches(matchRequest, pageable);
-
-//        if(matches.getContent().size() == 0) {
-//            return rMatchService.getMatchesV2(matchRequest);
-//        }
-
         List<GameData> gameDataList = matches.getContent().stream().map(match -> match.toGameData(matchRequest.getPuuid())).toList();
 
         return new MatchResponse(gameDataList, matches.getTotalElements());

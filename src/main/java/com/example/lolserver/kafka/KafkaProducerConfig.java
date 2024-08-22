@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
 import java.util.HashMap;
@@ -29,12 +30,12 @@ public class KafkaProducerConfig {
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         config.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, "10485880"); // 10MB
-        config.put(ProducerConfig.BUFFER_MEMORY_CONFIG, "100000000"); // 32MB
+        config.put(ProducerConfig.BUFFER_MEMORY_CONFIG, "32000000"); // 32MB
 
         config.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, CompressionType.LZ4.name);
-        config.put(ProducerConfig.BATCH_SIZE_CONFIG, 100000000);
-        config.put(ProducerConfig.LINGER_MS_CONFIG, 500);
-
+        config.put(ProducerConfig.BATCH_SIZE_CONFIG, 100000);
+        config.put(ProducerConfig.LINGER_MS_CONFIG, 100);
+        config.put(ProducerConfig.ACKS_CONFIG, "all");
 
         config.put(JsonSerializer.TYPE_MAPPINGS,
                 "summoner:com.example.lolserver.kafka.messageDto.SummonerMessage," +

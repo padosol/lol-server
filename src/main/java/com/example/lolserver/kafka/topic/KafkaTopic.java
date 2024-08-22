@@ -6,7 +6,7 @@ import lombok.Getter;
 public enum KafkaTopic {
 
     LEAGUE("league"), LEAGUE_SUMMONER("league_summoner"),
-    MATCH("match"), TIMELINE("timeline"),
+    MATCH("match"), TIMELINE("timeline"), MATCH_ID("matchId"),
     SUMMONER("summoner"),
     SUMMONER_UPDATE("summoner_update"),
     ;

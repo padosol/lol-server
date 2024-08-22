@@ -4,7 +4,10 @@ import com.example.lolserver.kafka.KafkaService;
 import com.example.lolserver.kafka.messageDto.LeagueMessage;
 import com.example.lolserver.kafka.messageDto.LeagueSummonerMessage;
 import com.example.lolserver.kafka.topic.KafkaTopic;
+import com.example.lolserver.redis.model.MatchRenewalSession;
 import com.example.lolserver.redis.model.SummonerRankSession;
+import com.example.lolserver.redis.model.SummonerRenewalSession;
+import com.example.lolserver.redis.repository.SummonerRenewalRepository;
 import com.example.lolserver.redis.service.RedisService;
 import com.example.lolserver.riot.core.api.RiotAPI;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
@@ -20,8 +23,12 @@ import com.example.lolserver.web.league.entity.id.LeagueSummonerId;
 import com.example.lolserver.web.league.repository.LeagueRepository;
 import com.example.lolserver.web.league.repository.LeagueSummonerRepository;
 import com.example.lolserver.web.summoner.entity.Summoner;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.bucket4j.Bucket;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -36,12 +43,15 @@ public class RLeagueServiceImpl implements RLeagueService{
 
     private final LeagueRepository leagueRepository;
     private final LeagueSummonerRepository leagueSummonerRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final RedisService redisService;
 
     private final BucketService bucketService;
 
-    private final KafkaService kafkaService;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    private final SummonerRenewalRepository summonerRenewalRepository;
 
     @Override
     public List<LeagueSummoner> getLeagueSummoner(Summoner summoner) {
@@ -104,9 +114,9 @@ public class RLeagueServiceImpl implements RLeagueService{
     public Set<LeagueSummoner> getLeagueSummonerV2(Summoner summoner) {
 
         Bucket bucket = bucketService.getBucket(BucketService.BucketKey.PLATFORM_REGION);
-        Bucket leagueSummonerBUcket = bucketService.getBucket(BucketService.BucketKey.LEAGUE_V4_BY_SUMMONER);
+        Bucket leagueSummonerBucket = bucketService.getBucket(BucketService.BucketKey.LEAGUE_V4_BY_SUMMONER);
 
-        if(!leagueSummonerBUcket.tryConsume(1L)) {
+        if(!leagueSummonerBucket.tryConsume(1L)) {
             return Collections.emptySet();
         }
 
@@ -136,7 +146,8 @@ public class RLeagueServiceImpl implements RLeagueService{
                         .build();
 
                 // kafka 전송
-                kafkaService.send(KafkaTopic.LEAGUE, new LeagueMessage(saveLeague));
+                leagueRepository.save(saveLeague);
+//                kafkaService.send(KafkaTopic.LEAGUE, new LeagueMessage(saveLeague));
 
                 return saveLeague;
             });
@@ -149,9 +160,9 @@ public class RLeagueServiceImpl implements RLeagueService{
                     leagueEntryDTO
             );
 
-            // kafka 저장 전송
-            leagueSummoner.addLeague(league);
+            leagueSummonerRepository.save(leagueSummoner);
 
+            leagueSummoner.addLeague(league);
             summoner.getLeagueSummoners().add(leagueSummoner);
 
             leagueSummoners.add(leagueSummoner);
@@ -164,11 +175,13 @@ public class RLeagueServiceImpl implements RLeagueService{
 
     @Async
     @Override
-    public void fetchSummonerLeague(Summoner summoner) {
-        Bucket bucket = bucketService.getBucket(BucketService.BucketKey.PLATFORM_REGION);
-        Bucket leagueSummonerBUcket = bucketService.getBucket(BucketService.BucketKey.LEAGUE_V4_BY_SUMMONER);
+    public void fetchSummonerLeague(Summoner summoner) throws JsonProcessingException {
 
-        if(leagueSummonerBUcket.tryConsume(1L)) {
+
+        Bucket bucket = bucketService.getBucket(BucketService.BucketKey.PLATFORM_REGION);
+        Bucket leagueSummonerBucket = bucketService.getBucket(BucketService.BucketKey.LEAGUE_V4_BY_SUMMONER);
+
+        if(leagueSummonerBucket.tryConsume(1L)) {
             if(bucket.tryConsume(1L)) {
                 Set<LeagueEntryDTO> leagueEntryDTOS = RiotAPI.league(Platform.valueOfName(summoner.getRegion())).bySummonerId(summoner.getId());
                 for (LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
@@ -183,10 +196,9 @@ public class RLeagueServiceImpl implements RLeagueService{
                                 .tier(leagueEntryDTO.getTier())
                                 .queue(QueueType.valueOf(leagueEntryDTO.getQueueType()))
                                 .build();
-
+                        leagueRepository.save(saveLeague);
                         // kafka 전송
-                        kafkaService.send(KafkaTopic.LEAGUE, new LeagueMessage(saveLeague));
-
+//                        kafkaService.send(KafkaTopic.LEAGUE, new LeagueMessage(saveLeague));
                         return saveLeague;
                     });
 
@@ -197,11 +209,21 @@ public class RLeagueServiceImpl implements RLeagueService{
                             summoner,
                             leagueEntryDTO
                     );
-                    kafkaService.send(KafkaTopic.LEAGUE_SUMMONER, new LeagueSummonerMessage(leagueSummoner));
+
+                    leagueSummonerRepository.save(leagueSummoner);
+//                    kafkaService.send(KafkaTopic.LEAGUE_SUMMONER, new LeagueSummonerMessage(leagueSummoner));
 
                     redisService.addRankData(new SummonerRankSession(league, leagueSummoner));
                 }
             }
         }
+
+        Optional<SummonerRenewalSession> byId = summonerRenewalRepository.findById(summoner.getPuuid());
+        if(byId.isPresent()) {
+            SummonerRenewalSession summonerRenewalSession = byId.get();
+            summonerRenewalSession.leagueUpdate();
+            summonerRenewalRepository.save(summonerRenewalSession);
+        }
+
     }
 }

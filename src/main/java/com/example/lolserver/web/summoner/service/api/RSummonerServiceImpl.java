@@ -5,6 +5,8 @@ import com.example.lolserver.kafka.messageDto.LeagueSummonerMessage;
 import com.example.lolserver.kafka.messageDto.SummonerMessage;
 import com.example.lolserver.kafka.topic.KafkaTopic;
 import com.example.lolserver.redis.model.SummonerRankSession;
+import com.example.lolserver.redis.model.SummonerRenewalSession;
+import com.example.lolserver.redis.repository.SummonerRenewalRepository;
 import com.example.lolserver.redis.service.RedisService;
 import com.example.lolserver.riot.core.api.RiotAPI;
 import com.example.lolserver.riot.dto.account.AccountDto;
@@ -26,6 +28,7 @@ import com.example.lolserver.web.match.service.api.RMatchService;
 import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.summoner.repository.SummonerRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,10 +45,12 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -51,21 +58,17 @@ import java.util.concurrent.Executor;
 public class RSummonerServiceImpl implements RSummonerService{
 
     private final SummonerRepository summonerRepository;
-
     private final LeagueRepository leagueRepository;
     private final LeagueSummonerRepository leagueSummonerRepository;
-
     private final MatchRepositoryCustom matchRepositoryCustom;
     private final RMatchService rMatchService;
-
     private final RLeagueService rLeagueService;
-
     private final RedisService redisService;
-
     private final BucketService bucketService;
-
     private final KafkaService kafkaService;
-
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper;
+    private final SummonerRenewalRepository summonerRenewalRepository;
 
     @Autowired
     @Qualifier("taskExecutor")
@@ -135,13 +138,9 @@ public class RSummonerServiceImpl implements RSummonerService{
     }
 
     @Override
+    @Transactional
     public Summoner fetchSummonerAllInfo(String gameName, String tagLine, String region) {
-        // 데이터베이스에 유저가 존재하지 않음
-        
-        // 따라서 모든 유저 정보를 가져와야함
 
-        // summoner
-        // league
         Platform platform = Platform.valueOfName(region);
 
         try {
@@ -154,24 +153,26 @@ public class RSummonerServiceImpl implements RSummonerService{
 
             SummonerDTO summonerDTO = RiotAPI.summoner(platform).byPuuid(accountDto.getPuuid());
 
+            if(summonerDTO.isError()) {
+                log.info("해당 유저가 존재하지 않습니다. {}", summonerDTO.getStatus().getMessage());
+                return null;
+            }
+
             Summoner summoner = new Summoner(accountDto, summonerDTO, region.toLowerCase());
+            summonerRepository.save(summoner);
 
             Set<LeagueSummoner> leagueSummoners = rLeagueService.getLeagueSummonerV2(summoner);
             summoner.addLeagueSummoner(leagueSummoners);
             summoner.resetRevisionClickDate();
 
-            kafkaService.send(KafkaTopic.SUMMONER, new SummonerMessage(summoner));
-            leagueSummoners.forEach((leagueSummoner) -> {
-                kafkaService.send(KafkaTopic.LEAGUE_SUMMONER, new LeagueSummonerMessage(leagueSummoner));
-            });
+//            kafkaService.send(KafkaTopic.SUMMONER, new SummonerMessage(summoner));
+//            leagueSummoners.forEach((leagueSummoner) -> {
+//                kafkaService.send(KafkaTopic.LEAGUE_SUMMONER, new LeagueSummonerMessage(leagueSummoner));
+//            });
 
-            executor.execute(() -> {
-                try {
-                    rMatchService.fetchSummonerMatches(summoner);
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+            rMatchService.fetchSummonerMatches(summoner);
+            
+            log.info("유저 초기 데이터 가져오기 완료");
 
             return summoner;
         } catch(Exception e) {
@@ -285,17 +286,29 @@ public class RSummonerServiceImpl implements RSummonerService{
         return true;
     }
 
-    @Transactional
     @Override
+    @Transactional
     public Summoner revisionSummonerV2(String puuid) throws ExecutionException, InterruptedException, JsonProcessingException {
 
+        // account
+        // summoner
+        // league
+        // match
         Summoner summoner = summonerRepository.findSummonerByPuuid(puuid).orElseThrow(() -> new IllegalStateException("존재하지 않는 Summoner"));
 
-        // 갱신 불가능할 경우
+        // 갱신할 데이터가 없을 경우
         if(!summoner.isRevision()) {
             return summoner;
         }
-        
+
+        summoner.resetRevisionClickDate();
+        // redis 에서 해당 user 의 puuid 가 있고, update 가 true 이면 갱신을 하지 않아도 됨
+        SummonerRenewalSession summonerRenewalSession = summonerRenewalRepository.findById(puuid).orElse(new SummonerRenewalSession(puuid));
+
+        if(summonerRenewalSession.isUpdate()) {
+            return summoner;
+        }
+
         // 갱신 중이지 않다면 로직 진행
         Bucket regionBucket = bucketService.getBucket(BucketService.BucketKey.PLATFORM_REGION);
         Bucket summonerBucket = bucketService.getBucket(BucketService.BucketKey.SUMMONER_V4_BY_PUUID);
@@ -310,18 +323,27 @@ public class RSummonerServiceImpl implements RSummonerService{
                 Platform platform = Platform.valueOfName(summoner.getRegion());
 
                 SummonerDTO summonerDTO = RiotAPI.summoner(platform).byPuuid(summoner.getPuuid());
+                summonerRenewalSession.summonerUpdate();
+
 
                 // riot api 를 통해 얻은 데이터와 일치한다면 갱신을 더이상 진행하지 않음.
                 if(summonerDTO.getRevisionDate() == summoner.getRevisionDate()) {
-                    summoner.resetRevisionClickDate();
+                    summonerRenewalSession.allUpdate();
+                    summonerRenewalRepository.save(summonerRenewalSession);
                     return summoner;
                 }
+
+                summonerRenewalSession.summonerUpdate();
+                summonerRenewalRepository.save(summonerRenewalSession);
 
                 CompletableFuture<AccountDto> accountDtoCompletableFuture = CompletableFuture.supplyAsync(
                         () -> RiotAPI.account(platform).byPuuid(summoner.getPuuid())
                 );
 
                 AccountDto accountDto = accountDtoCompletableFuture.get();
+
+                summonerRenewalSession.accountUpdate();
+                summonerRenewalRepository.save(summonerRenewalSession);
 
                 summoner.revision(summonerDTO, accountDto);
 
@@ -330,6 +352,8 @@ public class RSummonerServiceImpl implements RSummonerService{
             }
 
         }
+
+        log.info("유저 초기화 완료");
 
         return summoner;
     }
