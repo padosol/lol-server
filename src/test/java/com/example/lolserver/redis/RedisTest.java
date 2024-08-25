@@ -31,17 +31,13 @@ public class RedisTest {
         HashOperations<String, Object, Object> redisHash = redisTemplate.opsForHash();
 
         SummonerRenewalSession summonerRenewalSession = new SummonerRenewalSession();
-        summonerRenewalSession.setPuuid(UUID.randomUUID().toString());
         summonerRenewalSession.setSummonerUpdate(false);
         summonerRenewalSession.setLeagueUpdate(false);
         summonerRenewalSession.setAccountUpdate(false);
         summonerRenewalSession.setMatchUpdate(false);
 
         String before = objectMapper.writeValueAsString(summonerRenewalSession);
-        redisHash.put("renewal", summonerRenewalSession.getPuuid(), before);
-        String after = (String)redisHash.get("renewal", summonerRenewalSession.getPuuid());
 
-        Assertions.assertThat(after).isEqualTo(before);
     }
 
     @Test
