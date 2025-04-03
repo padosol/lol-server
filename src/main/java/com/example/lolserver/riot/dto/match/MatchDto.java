@@ -1,5 +1,11 @@
 package com.example.lolserver.riot.dto.match;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.example.lolserver.riot.dto.error.ErrorDTO;
 import com.example.lolserver.riot.dto.match_timeline.TimelineDto;
 import com.example.lolserver.web.dto.data.GameData;
@@ -7,12 +13,9 @@ import com.example.lolserver.web.dto.data.gameData.GameInfoData;
 import com.example.lolserver.web.dto.data.gameData.ParticipantData;
 import com.example.lolserver.web.dto.data.gameData.SeqTypeData;
 import com.example.lolserver.web.dto.data.gameData.TeamInfoData;
-import com.example.lolserver.web.match.entity.MatchSummoner;
-import com.example.lolserver.web.match.entity.MatchTeam;
+
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.*;
 
 @Getter
 @Setter

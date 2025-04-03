@@ -1,13 +1,13 @@
 package com.example.lolserver.redis.model;
 
 
+import java.io.Serializable;
+
+import org.springframework.data.redis.core.RedisHash;
+
 import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.redis.core.RedisHash;
-import org.springframework.data.redis.core.index.Indexed;
-
-import java.io.Serializable;
 
 @Getter
 @Setter

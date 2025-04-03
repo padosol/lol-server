@@ -1,17 +1,14 @@
 package com.example.lolserver.kafka.messageDto;
 
-import com.example.lolserver.web.league.entity.LeagueSummoner;
-import com.example.lolserver.web.summoner.entity.Summoner;
-import jakarta.persistence.Column;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+
+import com.example.lolserver.web.league.entity.LeagueSummoner;
+import com.example.lolserver.web.summoner.entity.Summoner;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter

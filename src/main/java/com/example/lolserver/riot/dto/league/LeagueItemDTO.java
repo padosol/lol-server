@@ -1,6 +1,7 @@
 package com.example.lolserver.riot.dto.league;
 
 import com.example.lolserver.riot.dto.error.ErrorDTO;
+
 import lombok.Getter;
 
 @Getter

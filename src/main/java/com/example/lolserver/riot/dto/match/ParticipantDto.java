@@ -1,6 +1,7 @@
 package com.example.lolserver.riot.dto.match;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import lombok.Getter;
 import lombok.Setter;
 

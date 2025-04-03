@@ -1,6 +1,7 @@
 package com.example.lolserver.riot.dto.champion_mastery;
 
 import com.example.lolserver.riot.dto.error.ErrorDTO;
+
 import lombok.Getter;
 import lombok.Setter;
 

@@ -1,8 +1,8 @@
 package com.example.lolserver.redis.model;
 
-import lombok.Getter;
-
 import java.util.List;
+
+import lombok.Getter;
 
 @Getter
 public class MatchRenewalSession {

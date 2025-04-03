@@ -1,6 +1,7 @@
 package com.example.lolserver.riot.dto.error;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Getter;
 import lombok.Setter;
 

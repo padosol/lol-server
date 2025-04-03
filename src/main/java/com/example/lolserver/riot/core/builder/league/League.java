@@ -1,5 +1,12 @@
 package com.example.lolserver.riot.core.builder.league;
 
+import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+
+import org.springframework.web.util.UriComponentsBuilder;
+
 import com.example.lolserver.riot.core.api.RiotAPI;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.example.lolserver.riot.dto.league.LeagueListDTO;
@@ -9,12 +16,6 @@ import com.example.lolserver.riot.type.Queue;
 import com.example.lolserver.riot.type.Tier;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import java.net.URI;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 public class League {
 

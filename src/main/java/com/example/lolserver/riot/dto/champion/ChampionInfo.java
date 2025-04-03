@@ -1,10 +1,11 @@
 package com.example.lolserver.riot.dto.champion;
 
+import java.util.List;
+
 import com.example.lolserver.riot.dto.error.ErrorDTO;
+
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.List;
 
 @Getter
 @Setter

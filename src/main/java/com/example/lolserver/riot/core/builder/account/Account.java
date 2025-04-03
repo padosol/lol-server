@@ -1,13 +1,14 @@
 package com.example.lolserver.riot.core.builder.account;
 
-import com.example.lolserver.riot.core.api.RiotAPI;
-import com.example.lolserver.riot.dto.account.AccountDto;
-import com.example.lolserver.riot.type.Platform;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import com.example.lolserver.riot.core.api.RiotAPI;
+import com.example.lolserver.riot.dto.account.AccountDto;
+import com.example.lolserver.riot.type.Platform;
 
 public class Account {
 

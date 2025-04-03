@@ -1,14 +1,14 @@
 package com.example.lolserver.riot.config;
 
-import com.example.lolserver.riot.core.calling.DefaultRiotExecute;
-import com.example.lolserver.riot.core.calling.RiotExecuteProxy;
-import com.example.lolserver.riot.core.api.RiotAPI;
-import com.example.lolserver.web.bucket.BucketService;
-import io.github.bucket4j.Bucket;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.EnableAsync;
+
+import com.example.lolserver.riot.core.api.RiotAPI;
+import com.example.lolserver.riot.core.calling.DefaultRiotExecute;
+import com.example.lolserver.riot.core.calling.RiotExecuteProxy;
+import com.example.lolserver.web.bucket.BucketService;
 
 
 @EnableAsync

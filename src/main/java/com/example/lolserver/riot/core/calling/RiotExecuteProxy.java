@@ -1,13 +1,12 @@
 package com.example.lolserver.riot.core.calling;
 
-import com.example.lolserver.web.bucket.BucketService;
-import io.github.bucket4j.Bucket;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.ListOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
+
+import com.example.lolserver.web.bucket.BucketService;
+
+import io.github.bucket4j.Bucket;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class RiotExecuteProxy implements RiotExecute{

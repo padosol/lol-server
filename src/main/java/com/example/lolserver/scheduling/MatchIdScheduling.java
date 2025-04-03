@@ -1,31 +1,13 @@
 package com.example.lolserver.scheduling;
 
-import com.example.lolserver.kafka.KafkaService;
-import com.example.lolserver.kafka.topic.KafkaTopic;
-import com.example.lolserver.redis.model.MatchSession;
-import com.example.lolserver.riot.core.api.RiotAPI;
-import com.example.lolserver.riot.dto.match.MatchDto;
-import com.example.lolserver.riot.dto.match_timeline.TimelineDto;
-import com.example.lolserver.riot.type.Platform;
-import com.example.lolserver.web.bucket.BucketService;
-import com.example.lolserver.web.match.service.api.RMatchService;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.ConsumptionProbe;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.SetOperations;
-import org.springframework.data.redis.core.ZSetOperations;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import com.example.lolserver.kafka.KafkaService;
+import com.example.lolserver.web.bucket.BucketService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
