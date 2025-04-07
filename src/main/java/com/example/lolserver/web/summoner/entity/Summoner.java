@@ -46,6 +46,7 @@ public class Summoner{
     private LocalDateTime revisionClickDate;
 
     @OneToMany(mappedBy = "summoner", fetch = FetchType.LAZY)
+    @Builder.Default
     private Set<LeagueSummoner> leagueSummoners = new HashSet<>();
 
     public Summoner(String summonerName, String region) {

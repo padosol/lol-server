@@ -42,7 +42,6 @@ public class RiotAPI {
         BUCKET_SERVICE = bucketService;
     }
 
-
     public static void setRiotExecute(RiotExecute riotExecute) {
         defaultRiotExecute = riotExecute;
     }

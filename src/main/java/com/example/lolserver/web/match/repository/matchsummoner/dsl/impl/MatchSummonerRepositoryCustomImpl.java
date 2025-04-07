@@ -3,7 +3,6 @@ package com.example.lolserver.web.match.repository.matchsummoner.dsl.impl;
 import com.example.lolserver.web.match.dto.MSChampionResponse;
 import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.dto.LinePosition;
-import com.example.lolserver.web.match.entity.Match;
 import com.example.lolserver.web.match.entity.MatchSummoner;
 import com.example.lolserver.web.match.repository.matchsummoner.dsl.MatchSummonerRepositoryCustom;
 import com.querydsl.core.types.Projections;
@@ -23,10 +22,6 @@ import java.util.List;
 
 import static com.example.lolserver.web.match.entity.QMatch.match;
 import static com.example.lolserver.web.match.entity.QMatchSummoner.matchSummoner;
-import static com.example.lolserver.web.match.entity.timeline.QTimeLineEvent.timeLineEvent;
-import static com.example.lolserver.web.match.entity.QChallenges.challenges;
-import static com.example.lolserver.web.match.entity.timeline.events.QItemEvents.itemEvents;
-import static com.example.lolserver.web.match.entity.timeline.events.QSkillEvents.skillEvents;
 
 @Repository
 @RequiredArgsConstructor

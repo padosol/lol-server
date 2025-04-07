@@ -9,11 +9,11 @@ services:
     depends_on:
       - postgres
     container_name: mmr-server
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=1234
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    # environment:
+    #   - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres
+    #   - SPRING_DATASOURCE_USERNAME=postgres
+    #   - SPRING_DATASOURCE_PASSWORD=1234
+    #   - SPRING_JPA_HIBERNATE_DDL_AUTO=update
   
   postgres:
     image: postgres:latest

@@ -11,7 +11,6 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 
-import static com.example.lolserver.web.league.entity.QLeagueSummoner.leagueSummoner;
 import static com.example.lolserver.web.summoner.entity.QSummoner.summoner;
 @Repository
 @RequiredArgsConstructor
