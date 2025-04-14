@@ -1,6 +1,6 @@
 package com.example.lolserver.web.dto;
 
-import com.example.lolserver.web.summoner.dto.SummonerResponse;
+import com.example.lolserver.domain.summoner.api.dto.SummonerResponse;
 import lombok.Getter;
 import lombok.Setter;
 

@@ -1,7 +1,7 @@
 package com.example.lolserver.web.league.service.api;
 
+import com.example.lolserver.domain.summoner.domain.entity.Summoner;
 import com.example.lolserver.web.league.entity.LeagueSummoner;
-import com.example.lolserver.web.summoner.entity.Summoner;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.List;

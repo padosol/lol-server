@@ -16,7 +16,7 @@ import reactor.util.retry.Retry;
 @Slf4j
 public class DefaultRiotExecute implements RiotExecute{
 
-    private WebClient webClient;
+    private final WebClient webClient;
 
 
     public DefaultRiotExecute(String apiKey) {
@@ -28,7 +28,9 @@ public class DefaultRiotExecute implements RiotExecute{
         headers.add("X-Riot-Token", apiKey);
 
         ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
-                .codecs(clientCodecConfigurer -> clientCodecConfigurer.defaultCodecs().maxInMemorySize(2 * 1024 * 2024))   // 2MB
+                .codecs(clientCodecConfigurer -> clientCodecConfigurer
+                        .defaultCodecs()
+                        .maxInMemorySize(2 * 1024 * 2024))   // 2MB
                 .build();
 
         this.webClient = WebClient.builder()

@@ -15,14 +15,14 @@ spring:
     show-sql: false
 
   datasource:
-    url: jdbc:postgresql://db:5555/postgres
+    url: jdbc:postgresql://host.docker.internal:5432/postgres
     driver-class-name: org.postgresql.Driver
     username: ${USERNAME}
     password: ${PASSWORD}
 
   data:
     redis:
-      host: redis
+      host: host.docker.internal
       port: 6379
 
   jackson:
@@ -32,7 +32,7 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      bootstrap-servers: kafka:9094
+      bootstrap-servers: "host.docker.internal:10000,host.docker.internal:10001,host.docker.internal:10002"
 
 logging:
   level:
@@ -50,3 +50,8 @@ server:
 
 
 riot.api.key: ${API_KEY}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

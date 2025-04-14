@@ -1,28 +1,17 @@
-package com.example.lolserver.web.summoner.service;
+package com.example.lolserver.domain.summoner.application;
 
+import com.example.lolserver.domain.summoner.domain.entity.Summoner;
 import com.example.lolserver.riot.type.Platform;
-import com.example.lolserver.web.bucket.BucketService;
-import com.example.lolserver.web.dto.SearchData;
-import com.example.lolserver.web.summoner.dto.SummonerRequest;
-import com.example.lolserver.web.summoner.dto.SummonerResponse;
-import com.example.lolserver.web.summoner.entity.Summoner;
-import com.example.lolserver.web.summoner.repository.SummonerRepository;
-import com.example.lolserver.web.summoner.repository.dsl.SummonerRepositoryCustom;
-import com.example.lolserver.web.summoner.service.api.RSummonerService;
+import com.example.lolserver.domain.summoner.api.dto.SummonerResponse;
+import com.example.lolserver.domain.summoner.domain.repository.dsl.SummonerRepositoryCustom;
+import com.example.lolserver.domain.summoner.application.api.RSummonerService;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.distributed.BucketProxy;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Service

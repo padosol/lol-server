@@ -11,6 +11,7 @@ public class LeagueEntryDTO extends ErrorDTO {
 
     private String leagueId;
     private String summonerId;
+    private String puuid;
     private String summonerName;
     private String queueType;
     private String tier;

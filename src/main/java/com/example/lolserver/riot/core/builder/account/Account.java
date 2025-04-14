@@ -12,7 +12,7 @@ import com.example.lolserver.riot.type.Platform;
 
 public class Account {
 
-    private Platform platform;
+    private final Platform platform;
 
     public Account(Platform platform) {
         this.platform = platform;

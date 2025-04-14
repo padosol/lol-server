@@ -1,41 +1,30 @@
 package com.example.lolserver.web.league.service.api;
 
-import com.example.lolserver.kafka.KafkaService;
-import com.example.lolserver.kafka.messageDto.LeagueMessage;
-import com.example.lolserver.kafka.messageDto.LeagueSummonerMessage;
-import com.example.lolserver.kafka.topic.KafkaTopic;
-import com.example.lolserver.redis.model.MatchRenewalSession;
+import com.example.lolserver.domain.summoner.domain.entity.Summoner;
 import com.example.lolserver.redis.model.SummonerRankSession;
 import com.example.lolserver.redis.model.SummonerRenewalSession;
 import com.example.lolserver.redis.repository.SummonerRenewalRepository;
 import com.example.lolserver.redis.service.RedisService;
 import com.example.lolserver.riot.core.api.RiotAPI;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
-import com.example.lolserver.riot.dto.league.LeagueListDTO;
 import com.example.lolserver.riot.type.Platform;
 import com.example.lolserver.web.bucket.BucketService;
-import com.example.lolserver.web.dto.data.LeagueData;
-import com.example.lolserver.web.dto.data.leagueData.LeagueSummonerData;
 import com.example.lolserver.web.league.entity.League;
 import com.example.lolserver.web.league.entity.LeagueSummoner;
 import com.example.lolserver.web.league.entity.QueueType;
 import com.example.lolserver.web.league.entity.id.LeagueSummonerId;
 import com.example.lolserver.web.league.repository.LeagueRepository;
 import com.example.lolserver.web.league.repository.LeagueSummonerRepository;
-import com.example.lolserver.web.summoner.entity.Summoner;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.bucket4j.Bucket;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -163,7 +152,7 @@ public class RLeagueServiceImpl implements RLeagueService{
             leagueSummonerRepository.save(leagueSummoner);
 
             leagueSummoner.addLeague(league);
-            summoner.getLeagueSummoners().add(leagueSummoner);
+            summoner.addLeagueSummoner(leagueSummoner);
 
             leagueSummoners.add(leagueSummoner);
 

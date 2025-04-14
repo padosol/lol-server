@@ -1,6 +1,6 @@
-package com.example.lolserver.web.summoner.repository.dsl;
+package com.example.lolserver.domain.summoner.domain.repository.dsl;
 
-import com.example.lolserver.web.summoner.entity.Summoner;
+import com.example.lolserver.domain.summoner.domain.entity.Summoner;
 
 import java.util.List;
 

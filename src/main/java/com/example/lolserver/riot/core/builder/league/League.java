@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class League {
 
-    private Platform platform;
+    private final Platform platform;
 
     public League(Platform platform) {
         this.platform = platform;

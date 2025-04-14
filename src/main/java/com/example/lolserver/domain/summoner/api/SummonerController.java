@@ -1,22 +1,17 @@
-package com.example.lolserver.web.summoner.controller;
+package com.example.lolserver.domain.summoner.api;
 
+import com.example.lolserver.domain.summoner.api.dto.SummonerResponse;
+import com.example.lolserver.domain.summoner.application.SummonerService;
 import com.example.lolserver.redis.service.RedisService;
-import com.example.lolserver.web.summoner.dto.SummonerRequest;
-import com.example.lolserver.web.summoner.entity.Summoner;
-import com.example.lolserver.web.dto.SearchData;
-import com.example.lolserver.web.summoner.dto.SummonerResponse;
-import com.example.lolserver.web.summoner.service.SummonerService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.github.bucket4j.Bucket;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -30,6 +25,12 @@ public class SummonerController {
     private final SummonerService summonerService;
     private final Bucket bucket;
 
+    /**
+     * 유저 검색 API
+     * @param q 유저명
+     * @param region 지역명
+     * @return 유저 리스트
+     */
     @GetMapping("/v1/summoners/search")
     public ResponseEntity<List<SummonerResponse>> searchSummoner(
             @RequestParam(value = "q") String q,
@@ -41,6 +42,12 @@ public class SummonerController {
         return new ResponseEntity<>(allSummoner, HttpStatus.OK);
     }
 
+    /**
+     * 유저명 자동완성 API
+     * @param q 유저명
+     * @param region 지역명
+     * @return 유저 리스트
+     */
     @GetMapping("/v1/summoners/autocomplete")
     public ResponseEntity<List<SummonerResponse>> autoComplete(
             @RequestParam(value = "q") String q,
@@ -51,6 +58,12 @@ public class SummonerController {
         return new ResponseEntity<>(allSummonerAutoComplete, HttpStatus.OK);
     }
 
+    /**
+     * 유저 상세 정보 API
+     * @param region 지역명
+     * @param gameName 유저 게임명
+     * @return 유저 상세 정보
+     */
     @GetMapping("/v1/summoners/{region}/{gameName}")
     public ResponseEntity<SummonerResponse> getAllSummoner(
             @PathVariable(value = "region") String region,
@@ -68,10 +81,8 @@ public class SummonerController {
 
         if(bucket.getAvailableTokens() > 10) {
             SummonerResponse result = summonerService.renewalSummonerInfo(puuid);
-
             return new ResponseEntity<>(result, HttpStatus.OK);
         } else {
-
             return new ResponseEntity<>(HttpStatus.TOO_MANY_REQUESTS);
         }
     }
@@ -82,8 +93,6 @@ public class SummonerController {
     ) throws JsonProcessingException {
 
         boolean status = redisService.summonerRenewalStatus(puuid);
-
-        log.info("[{}] status: {}", puuid, status);
 
         if(status) {
             return new ResponseEntity<>(true, HttpStatus.CREATED);

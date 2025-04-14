@@ -68,9 +68,9 @@ public class Bucket4jTest {
     }
 
     @Test
-    void BUCKET4J_REDIS_MULTI_THREAD_TEST() throws InterruptedException, ExecutionException {
+    void BUCKET4J_REDIS_MULTI_THREAD_TEST() throws InterruptedException {
 
-        int threadCount = 30;
+        int threadCount = 100;
         CountDownLatch latch = new CountDownLatch(threadCount);
 
         ExecutorService executorService = Executors.newFixedThreadPool(32);

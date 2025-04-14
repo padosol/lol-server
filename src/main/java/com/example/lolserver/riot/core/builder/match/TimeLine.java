@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class TimeLine {
 
-    private Platform platform;
+    private final Platform platform;
 
     public TimeLine(Platform platform) {
         this.platform = platform;

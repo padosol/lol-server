@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Champion {
 
-    private Platform platform;
+    private final Platform platform;
 
     public Champion(Platform platform) {
         this.platform = platform;

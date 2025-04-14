@@ -1,11 +1,11 @@
-package com.example.lolserver.web.summoner.entity;
+package com.example.lolserver.domain.summoner.domain.entity;
 
 
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.web.league.entity.LeagueSummoner;
 import com.example.lolserver.web.league.entity.QueueType;
-import com.example.lolserver.web.summoner.dto.SummonerResponse;
+import com.example.lolserver.domain.summoner.api.dto.SummonerResponse;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -26,7 +25,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Summoner{
+public class Summoner {
 
     @Id
     @Column(name = "summoner_id")
@@ -138,6 +137,14 @@ public class Summoner{
 
     public void addLeagueSummoner(Set<LeagueSummoner> leagueSummoners) {
         this.leagueSummoners = leagueSummoners;
+    }
+
+    public void addLeagueSummoner(LeagueSummoner leagueSummoner) {
+        if (this.leagueSummoners == null) {
+            this.leagueSummoners = new HashSet<>();
+        }
+
+        this.leagueSummoners.add(leagueSummoner);
     }
 
     public void resetRevisionClickDate() {

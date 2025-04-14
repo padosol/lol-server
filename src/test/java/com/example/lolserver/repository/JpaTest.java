@@ -2,7 +2,6 @@ package com.example.lolserver.repository;
 
 import com.example.lolserver.config.TestConfig;
 import com.example.lolserver.riot.core.api.RiotAPI;
-import com.example.lolserver.riot.core.calling.DefaultRiotExecute;
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.match.MatchDto;
 import com.example.lolserver.riot.dto.match.ParticipantDto;
@@ -13,14 +12,10 @@ import com.example.lolserver.web.bucket.BucketService;
 import com.example.lolserver.web.match.dto.MSChampionResponse;
 import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.entity.*;
-import com.example.lolserver.web.match.entity.id.MatchSummonerId;
-import com.example.lolserver.web.match.entity.id.MatchTeamId;
 import com.example.lolserver.web.match.repository.match.MatchRepository;
-import com.example.lolserver.web.match.repository.match.dsl.MatchRepositoryCustom;
 import com.example.lolserver.web.match.repository.matchsummoner.MatchSummonerRepository;
 import com.example.lolserver.web.match.repository.matchteam.MatchTeamRepository;
-import com.example.lolserver.web.summoner.entity.Summoner;
-import com.example.lolserver.web.summoner.repository.SummonerRepository;
+import com.example.lolserver.domain.summoner.domain.repository.SummonerJpaRepository;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
@@ -30,7 +25,6 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
 import jakarta.persistence.EntityManager;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -39,7 +33,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,7 +52,7 @@ public class JpaTest {
     private BucketService bucketService;
 
     @Autowired
-    private SummonerRepository summonerRepository;
+    private SummonerJpaRepository summonerJpaRepository;
 
     @Autowired
     private MatchRepository matchRepository;

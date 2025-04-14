@@ -3,10 +3,10 @@ package com.example.lolserver.web.league.service;
 import com.example.lolserver.web.dto.data.leagueData.LeagueSummonerData;
 import com.example.lolserver.web.league.entity.LeagueSummoner;
 import com.example.lolserver.web.league.service.api.RLeagueService;
-import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.dto.data.LeagueData;
 import com.example.lolserver.web.league.repository.LeagueSummonerRepository;
-import com.example.lolserver.web.summoner.repository.SummonerRepository;
+import com.example.lolserver.domain.summoner.domain.entity.Summoner;
+import com.example.lolserver.domain.summoner.domain.repository.SummonerJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,14 +18,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class LeagueServiceImpl implements LeagueService{
 
-    private final SummonerRepository summonerRepository;
+    private final SummonerJpaRepository summonerJpaRepository;
     private final LeagueSummonerRepository leagueSummonerRepository;
     private final RLeagueService rLeagueService;
 
     @Override
     public LeagueData getLeaguesBySummoner(String summonerId) {
 
-        Optional<Summoner> summonerOptional = summonerRepository.findById(summonerId);
+        Optional<Summoner> summonerOptional = summonerJpaRepository.findById(summonerId);
         if(summonerOptional.isEmpty()) {
             return new LeagueData(true);
         }

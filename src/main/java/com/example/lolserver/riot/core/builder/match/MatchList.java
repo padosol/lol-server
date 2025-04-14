@@ -18,7 +18,7 @@ import java.util.function.Function;
 
 public class MatchList {
 
-    private Platform platform;
+    private final Platform platform;
 
     public MatchList(Platform platform) {
         this.platform = platform;

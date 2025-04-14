@@ -13,7 +13,7 @@ import java.util.concurrent.ExecutionException;
 
 public class Summoner {
 
-    private Platform platform;
+    private final Platform platform;
 
     public Summoner(Platform platform) {
         this.platform = platform;

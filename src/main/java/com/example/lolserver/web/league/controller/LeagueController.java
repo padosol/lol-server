@@ -1,8 +1,7 @@
 package com.example.lolserver.web.league.controller;
 
-import com.example.lolserver.web.dto.data.LeagueData;
-import com.example.lolserver.web.league.service.LeagueService;
-import lombok.RequiredArgsConstructor;
+import java.io.IOException;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,7 +9,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
+import com.example.lolserver.web.dto.data.LeagueData;
+import com.example.lolserver.web.league.service.LeagueService;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api")
@@ -21,7 +23,7 @@ public class LeagueController {
 
     @GetMapping("/v1/leagues/by-summoner/{summonerId}")
     public ResponseEntity<LeagueData> fetchLeaguesBySummoner(
-            @PathVariable("summonerId") String summonerId
+            @PathVariable String summonerId
     ) throws IOException, InterruptedException {
 
         LeagueData leagueData = leagueService.getLeaguesBySummoner(summonerId);

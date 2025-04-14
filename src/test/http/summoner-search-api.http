@@ -1,0 +1,4 @@
+GET http://localhost:8100/api/v1/summoners/search?q=hideonbush-kr1&region=KR
+Accept: application/json
+
+###

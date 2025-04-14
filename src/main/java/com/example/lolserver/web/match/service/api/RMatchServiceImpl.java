@@ -1,9 +1,8 @@
 package com.example.lolserver.web.match.service.api;
 
+import com.example.lolserver.domain.summoner.domain.entity.Summoner;
 import com.example.lolserver.kafka.KafkaService;
-import com.example.lolserver.kafka.topic.KafkaTopic;
 import com.example.lolserver.redis.model.MatchRenewalSession;
-import com.example.lolserver.redis.model.MatchSession;
 import com.example.lolserver.riot.core.api.RiotAPI;
 import com.example.lolserver.riot.dto.match.MatchDto;
 import com.example.lolserver.riot.dto.match.ParticipantDto;
@@ -19,7 +18,6 @@ import com.example.lolserver.web.match.entity.Match;
 import com.example.lolserver.web.match.entity.MatchSummoner;
 import com.example.lolserver.web.match.entity.MatchTeam;
 import com.example.lolserver.web.match.repository.match.dsl.MatchRepositoryCustom;
-import com.example.lolserver.web.summoner.entity.Summoner;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.bucket4j.Bucket;
@@ -28,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
-import org.springframework.kafka.support.SendResult;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,7 +1,6 @@
 package com.example.lolserver.web.exception;
 
 
-import jakarta.servlet.annotation.HandlesTypes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

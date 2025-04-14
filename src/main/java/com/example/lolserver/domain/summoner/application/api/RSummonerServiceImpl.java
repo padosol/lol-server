@@ -1,5 +1,7 @@
-package com.example.lolserver.web.summoner.service.api;
+package com.example.lolserver.domain.summoner.application.api;
 
+import com.example.lolserver.domain.summoner.domain.entity.Summoner;
+import com.example.lolserver.domain.summoner.domain.repository.SummonerJpaRepository;
 import com.example.lolserver.kafka.KafkaService;
 import com.example.lolserver.kafka.messageDto.LeagueSummonerMessage;
 import com.example.lolserver.kafka.messageDto.SummonerMessage;
@@ -22,42 +24,32 @@ import com.example.lolserver.web.league.entity.id.LeagueSummonerId;
 import com.example.lolserver.web.league.repository.LeagueRepository;
 import com.example.lolserver.web.league.repository.LeagueSummonerRepository;
 import com.example.lolserver.web.league.service.api.RLeagueService;
-import com.example.lolserver.web.match.dto.MatchRequest;
 import com.example.lolserver.web.match.repository.match.dsl.MatchRepositoryCustom;
 import com.example.lolserver.web.match.service.api.RMatchService;
-import com.example.lolserver.web.summoner.entity.Summoner;
-import com.example.lolserver.web.summoner.repository.SummonerRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.TaskExecutor;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class RSummonerServiceImpl implements RSummonerService{
 
-    private final SummonerRepository summonerRepository;
+    private final SummonerJpaRepository summonerJpaRepository;
     private final LeagueRepository leagueRepository;
     private final LeagueSummonerRepository leagueSummonerRepository;
     private final MatchRepositoryCustom matchRepositoryCustom;
@@ -66,8 +58,6 @@ public class RSummonerServiceImpl implements RSummonerService{
     private final RedisService redisService;
     private final BucketService bucketService;
     private final KafkaService kafkaService;
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final ObjectMapper objectMapper;
     private final SummonerRenewalRepository summonerRenewalRepository;
 
     @Autowired
@@ -93,7 +83,7 @@ public class RSummonerServiceImpl implements RSummonerService{
             return null;
         }
 
-        Summoner summoner = summonerRepository.save(new Summoner(accountDto, summonerDTO, region.toLowerCase()));
+        Summoner summoner = summonerJpaRepository.save(new Summoner(accountDto, summonerDTO, region.toLowerCase()));
 
         List<LeagueSummoner> leagueSummonerList = rLeagueService.getLeagueSummoner(summoner);
 
@@ -159,7 +149,7 @@ public class RSummonerServiceImpl implements RSummonerService{
             }
 
             Summoner summoner = new Summoner(accountDto, summonerDTO, region.toLowerCase());
-            summonerRepository.save(summoner);
+            summonerJpaRepository.save(summoner);
 
             Set<LeagueSummoner> leagueSummoners = rLeagueService.getLeagueSummonerV2(summoner);
             summoner.addLeagueSummoner(leagueSummoners);
@@ -186,7 +176,7 @@ public class RSummonerServiceImpl implements RSummonerService{
     public boolean revisionSummoner(String puuid) {
 
         // 전적 갱신 시간, 전적갱신 버튼 클릭한 시간
-        Summoner summoner = summonerRepository.findSummonerByPuuid(puuid).orElseThrow(() -> new IllegalStateException("존재하지 않는 Summoner"));
+        Summoner summoner = summonerJpaRepository.findSummonerByPuuid(puuid).orElseThrow(() -> new IllegalStateException("존재하지 않는 Summoner"));
 
         if(!summoner.isRevision()) {
             return false;
@@ -294,7 +284,7 @@ public class RSummonerServiceImpl implements RSummonerService{
         // summoner
         // league
         // match
-        Summoner summoner = summonerRepository.findSummonerByPuuid(puuid).orElseThrow(() -> new IllegalStateException("존재하지 않는 Summoner"));
+        Summoner summoner = summonerJpaRepository.findSummonerByPuuid(puuid).orElseThrow(() -> new IllegalStateException("존재하지 않는 Summoner"));
 
         // 갱신할 데이터가 없을 경우
         if(!summoner.isRevision()) {

@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class Match {
 
-    private Platform platform;
+    private final Platform platform;
 
     public Match(Platform platform) {
         this.platform = platform;
