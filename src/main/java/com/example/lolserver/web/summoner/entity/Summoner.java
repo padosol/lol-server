@@ -1,11 +1,11 @@
-package com.example.lolserver.domain.summoner.domain.entity;
+package com.example.lolserver.web.summoner.entity;
 
 
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import com.example.lolserver.web.league.entity.LeagueSummoner;
 import com.example.lolserver.web.league.entity.QueueType;
-import com.example.lolserver.domain.summoner.api.dto.SummonerResponse;
+import com.example.lolserver.web.summoner.dto.SummonerResponse;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -87,6 +87,7 @@ public class Summoner {
 
         String tier = null;
         Integer points = null;
+        String rank = null;
 
         for (LeagueSummoner leagueSummoner : this.leagueSummoners) {
             QueueType queue = leagueSummoner.getLeague().getQueue();
@@ -94,6 +95,7 @@ public class Summoner {
             if(QueueType.RANKED_SOLO_5x5.equals(queue)) {
                 tier = leagueSummoner.getLeague().getTier();
                 points = leagueSummoner.getLeaguePoints();
+                rank = leagueSummoner.getRank();
             }
         }
 
@@ -102,7 +104,6 @@ public class Summoner {
                 .accountId(this.accountId)
                 .summonerLevel(this.summonerLevel)
                 .profileIconId(this.profileIconId)
-//                .lastRevisionDateTime(LocalDateTime.ofInstant(Instant.ofEpochMilli(this.revisionDate), ZoneId.systemDefault()))
                 .tier(tier)
                 .lastRevisionDateTime(this.revisionClickDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
                 .puuid(this.puuid)
@@ -110,6 +111,7 @@ public class Summoner {
                 .tagLine(this.tagLine)
                 .platform(this.region)
                 .point(points)
+                .rank(rank)
                 .build();
     }
 

@@ -54,8 +54,6 @@ public class BucketService {
             this.maxRequestCount = maxRequestCount;
             this.duration = duration;
         }
-
-
     }
 
 }

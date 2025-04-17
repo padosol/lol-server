@@ -15,7 +15,7 @@ import com.example.lolserver.web.match.entity.*;
 import com.example.lolserver.web.match.repository.match.MatchRepository;
 import com.example.lolserver.web.match.repository.matchsummoner.MatchSummonerRepository;
 import com.example.lolserver.web.match.repository.matchteam.MatchTeamRepository;
-import com.example.lolserver.domain.summoner.domain.repository.SummonerJpaRepository;
+import com.example.lolserver.web.summoner.repository.SummonerJpaRepository;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;

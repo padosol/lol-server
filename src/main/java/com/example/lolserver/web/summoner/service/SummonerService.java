@@ -1,6 +1,6 @@
-package com.example.lolserver.domain.summoner.application;
+package com.example.lolserver.web.summoner.service;
 
-import com.example.lolserver.domain.summoner.api.dto.SummonerResponse;
+import com.example.lolserver.web.summoner.dto.SummonerResponse;
 
 import java.io.IOException;
 import java.util.List;

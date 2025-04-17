@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.example.lolserver.domain.summoner.domain.entity.Summoner;
+import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.league.entity.LeagueSummoner;
 
 import lombok.Getter;

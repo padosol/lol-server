@@ -1,6 +1,6 @@
 package com.example.lolserver.web.match.service.api;
 
-import com.example.lolserver.domain.summoner.domain.entity.Summoner;
+import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.kafka.KafkaService;
 import com.example.lolserver.redis.model.MatchRenewalSession;
 import com.example.lolserver.riot.core.api.RiotAPI;

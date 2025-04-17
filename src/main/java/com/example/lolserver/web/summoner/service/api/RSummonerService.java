@@ -1,6 +1,6 @@
-package com.example.lolserver.domain.summoner.application.api;
+package com.example.lolserver.web.summoner.service.api;
 
-import com.example.lolserver.domain.summoner.domain.entity.Summoner;
+import com.example.lolserver.web.summoner.entity.Summoner;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.concurrent.ExecutionException;

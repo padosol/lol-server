@@ -1,7 +1,7 @@
 package com.example.lolserver.web.league.entity;
 
 
-import com.example.lolserver.domain.summoner.domain.entity.Summoner;
+import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.example.lolserver.web.league.entity.id.LeagueSummonerId;
 import com.example.lolserver.web.dto.data.leagueData.LeagueSummonerData;

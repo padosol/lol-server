@@ -1,7 +1,7 @@
-package com.example.lolserver.domain.summoner.domain.repository.dsl.impl;
+package com.example.lolserver.web.summoner.repository.dsl.impl;
 
-import com.example.lolserver.domain.summoner.domain.entity.Summoner;
-import com.example.lolserver.domain.summoner.domain.repository.dsl.SummonerRepositoryCustom;
+import com.example.lolserver.web.summoner.entity.Summoner;
+import com.example.lolserver.web.summoner.repository.dsl.SummonerRepositoryCustom;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 
-import static com.example.lolserver.domain.summoner.domain.entity.QSummoner.summoner;
+import static com.example.lolserver.web.summoner.entity.QSummoner.summoner;
 
 @Repository
 @RequiredArgsConstructor

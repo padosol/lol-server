@@ -1,7 +1,20 @@
-package com.example.lolserver.domain.summoner.application.api;
+package com.example.lolserver.web.summoner.service.api;
 
-import com.example.lolserver.domain.summoner.domain.entity.Summoner;
-import com.example.lolserver.domain.summoner.domain.repository.SummonerJpaRepository;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+
+import com.example.lolserver.web.summoner.entity.Summoner;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import com.example.lolserver.web.summoner.repository.SummonerJpaRepository;
 import com.example.lolserver.kafka.KafkaService;
 import com.example.lolserver.kafka.messageDto.LeagueSummonerMessage;
 import com.example.lolserver.kafka.messageDto.SummonerMessage;
@@ -27,22 +40,11 @@ import com.example.lolserver.web.league.service.api.RLeagueService;
 import com.example.lolserver.web.match.repository.match.dsl.MatchRepositoryCustom;
 import com.example.lolserver.web.match.service.api.RMatchService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
 
 @Slf4j
 @Service

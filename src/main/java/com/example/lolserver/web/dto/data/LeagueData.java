@@ -1,11 +1,12 @@
 package com.example.lolserver.web.dto.data;
 
+import java.util.List;
+
 import com.example.lolserver.web.dto.data.leagueData.LeagueSummonerData;
 import com.example.lolserver.web.dto.error.ErrorData;
+
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.List;
 
 @Getter
 @Setter

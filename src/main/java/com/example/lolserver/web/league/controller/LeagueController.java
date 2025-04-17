@@ -21,6 +21,13 @@ public class LeagueController {
 
     private final LeagueService leagueService;
 
+    /**
+     * 소환사 리그 정보 조회 API    
+     * @param summonerId 소환사 ID
+     * @return 리그 정보
+     * @throws IOException
+     * @throws InterruptedException
+     */
     @GetMapping("/v1/leagues/by-summoner/{summonerId}")
     public ResponseEntity<LeagueData> fetchLeaguesBySummoner(
             @PathVariable String summonerId

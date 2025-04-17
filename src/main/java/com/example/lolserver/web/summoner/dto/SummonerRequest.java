@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.summoner.api.dto;
+package com.example.lolserver.web.summoner.dto;
 
 import lombok.Getter;
 

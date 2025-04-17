@@ -1,18 +1,20 @@
 package com.example.lolserver.web.league.service;
 
-import com.example.lolserver.web.dto.data.leagueData.LeagueSummonerData;
-import com.example.lolserver.web.league.entity.LeagueSummoner;
-import com.example.lolserver.web.league.service.api.RLeagueService;
-import com.example.lolserver.web.dto.data.LeagueData;
-import com.example.lolserver.web.league.repository.LeagueSummonerRepository;
-import com.example.lolserver.domain.summoner.domain.entity.Summoner;
-import com.example.lolserver.domain.summoner.domain.repository.SummonerJpaRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import com.example.lolserver.web.summoner.entity.Summoner;
+import org.springframework.stereotype.Service;
+
+import com.example.lolserver.web.summoner.repository.SummonerJpaRepository;
+import com.example.lolserver.web.dto.data.LeagueData;
+import com.example.lolserver.web.dto.data.leagueData.LeagueSummonerData;
+import com.example.lolserver.web.league.entity.LeagueSummoner;
+import com.example.lolserver.web.league.repository.LeagueSummonerRepository;
+import com.example.lolserver.web.league.service.api.RLeagueService;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

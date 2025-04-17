@@ -34,21 +34,8 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       bootstrap-servers: localhost:9094
 
-
-logging:
-  level:
-    com.example.lolserver.riot: WARN
-    com.example.lolserver.aspect: WARN
-
 server:
   port: 8100
-
-  tomcat:
-    basedir: .
-    accesslog:
-      enabled: true
-      pattern: "%{yyyy-MM-dd HH:mm:ss}t %s [%r: %{User-Agent}i %{Referer}i] [Remote Host: %a] [Size: %b]"
-
 
 riot.api.key: ${API_KEY}
 management:
