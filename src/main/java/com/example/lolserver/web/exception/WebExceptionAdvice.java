@@ -14,9 +14,13 @@ public class WebExceptionAdvice {
     @ExceptionHandler
     public ResponseEntity<ExceptionResponse> webException(WebException e) {
 
-        log.debug("error message: {}", e.getExceptionResponse().getMessage());
+        log.info("error message: {}", e.getMessage());
 
-        return new ResponseEntity<>(e.getExceptionResponse(), HttpStatus.OK);
+        return ResponseEntity.status(e.getStatus().value()).body(
+                new ExceptionResponse(
+                        e.getStatus().value(), e.getMessage()
+                )
+        );
     }
 
 }

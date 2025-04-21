@@ -7,10 +7,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
+import com.example.lolserver.web.exception.ExceptionResponse;
+import com.example.lolserver.web.exception.WebException;
 import com.example.lolserver.web.league.entity.QueueType;
 import com.example.lolserver.web.summoner.client.RiotSummonerClient;
 import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.summoner.vo.SummonerVO;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -46,6 +49,13 @@ public class SummonerServiceV1 implements SummonerService{
 
         if(findSummoner.size() == 1) {
             return findSummoner.get(0).toResponse();
+        }
+
+        if (!summoner.isTagLine()) {
+            throw new WebException(
+                    HttpStatus.BAD_REQUEST,
+                    "존재하지 않는 유저 입니다. " + q
+            );
         }
 
         ResponseEntity<SummonerVO> response = riotSummonerClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());

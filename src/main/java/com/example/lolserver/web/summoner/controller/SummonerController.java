@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +23,7 @@ import io.github.bucket4j.Bucket;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@Tag(name = "Summoner API")
 @Slf4j
 @RestController
 @RequestMapping("/api")
@@ -39,6 +42,7 @@ public class SummonerController {
      * @param region 지역명
      * @return 유저 리스트
      */
+    @Operation(description = "유저 검색 API", summary = "유저 검색 API")
     @GetMapping("/v1/summoners/search")
     public ResponseEntity<List<SummonerResponse>> searchSummoner(
             @RequestParam("q") String q,
@@ -57,8 +61,8 @@ public class SummonerController {
      */
     @GetMapping("/v1/summoners/{region}/{gameName}")
     public ResponseEntity<SummonerResponse> getAllSummoner(
-            @PathVariable String region,
-            @PathVariable String gameName
+            @PathVariable("region") String region,
+            @PathVariable("gameName") String gameName
     ) {
         SummonerResponse summoner = summonerService.getSummoner(gameName, region);
 

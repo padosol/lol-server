@@ -9,10 +9,10 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ExceptionResponse {
 
-    private String statusCode;
+    private int statusCode;
     private String message;
 
-    public ExceptionResponse(String statusCode, String message) {
+    public ExceptionResponse(int statusCode, String message) {
         this.statusCode = statusCode;
         this.message = message;
     }
