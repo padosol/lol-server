@@ -3,11 +3,9 @@ package com.example.lolserver.web.summoner.service;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
-import com.example.lolserver.web.exception.ExceptionResponse;
 import com.example.lolserver.web.exception.WebException;
 import com.example.lolserver.web.league.entity.QueueType;
 import com.example.lolserver.web.summoner.client.RiotSummonerClient;
@@ -18,10 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.example.lolserver.web.summoner.dto.SummonerResponse;
-import com.example.lolserver.web.summoner.service.api.RSummonerService;
 import com.example.lolserver.web.summoner.repository.dsl.SummonerRepositoryCustom;
 import com.example.lolserver.riot.type.Platform;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 public class SummonerServiceV1 implements SummonerService{
 
     private final SummonerRepositoryCustom summonerRepositoryCustom;
-    private final RSummonerService rSummonerService;
     private final RiotSummonerClient riotSummonerClient;
 
     /**
@@ -102,18 +97,43 @@ public class SummonerServiceV1 implements SummonerService{
         List<Summoner> summonerList = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegion(summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
 
         if(summonerList.size() < 1) {
-
             if(!summoner.isTagLine()) {
                 return Collections.emptyList();
             }
 
-            Summoner findSummoner = rSummonerService.fetchSummonerAllInfo(summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
+            ResponseEntity<SummonerVO> response = riotSummonerClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
 
-            if(findSummoner == null) {
-                return Collections.emptyList();
+            if (response.getStatusCode().is2xxSuccessful()) {
+                SummonerVO summonerVO = response.getBody();
+
+                assert summonerVO != null;
+
+                int leaguePoint = 0;
+                String tier = "";
+                String rank = "";
+                Set<LeagueEntryDTO> leagueEntryDTOS = summonerVO.getLeagueEntryDTOS();
+                for (LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
+                    if (leagueEntryDTO.getQueueType().equals(QueueType.RANKED_SOLO_5x5.name())) {
+                        leaguePoint = leagueEntryDTO.getLeaguePoints();
+                        tier = leagueEntryDTO.getTier();
+                        rank = leagueEntryDTO.getRank();
+                    }
+                }
+
+                SummonerResponse summonerResponse = SummonerResponse.builder()
+                        .accountId(summonerVO.getAccountId())
+                        .profileIconId(summonerVO.getProfileIconId())
+                        .puuid(summonerVO.getPuuid())
+                        .summonerLevel(summonerVO.getSummonerLevel())
+                        .gameName(summonerVO.getGameName())
+                        .tagLine(summonerVO.getTagLine())
+                        .point(leaguePoint)
+                        .tier(tier)
+                        .rank(rank)
+                        .build();
+
+                return List.of(summonerResponse);
             }
-
-            return List.of(findSummoner.toResponse());
         }
 
         return summonerList.stream().map(Summoner::toResponse).collect(Collectors.toList());
@@ -130,10 +150,8 @@ public class SummonerServiceV1 implements SummonerService{
     }
 
     @Override
-    public SummonerResponse renewalSummonerInfo(String puuid) throws ExecutionException, InterruptedException, JsonProcessingException {
+    public SummonerResponse renewalSummonerInfo(String puuid) {
 
-        Summoner summoner = rSummonerService.revisionSummonerV2(puuid);
-
-        return summoner.toResponse();
+        return null;
     }
 }
