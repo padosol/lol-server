@@ -7,7 +7,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
-import com.example.lolserver.web.exception.ExceptionResponse;
 import com.example.lolserver.web.exception.WebException;
 import com.example.lolserver.web.league.entity.QueueType;
 import com.example.lolserver.web.summoner.client.RiotSummonerClient;
