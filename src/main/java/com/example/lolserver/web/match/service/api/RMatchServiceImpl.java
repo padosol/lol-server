@@ -1,7 +1,6 @@
 package com.example.lolserver.web.match.service.api;
 
 import com.example.lolserver.web.summoner.entity.Summoner;
-import com.example.lolserver.kafka.KafkaService;
 import com.example.lolserver.redis.model.MatchRenewalSession;
 import com.example.lolserver.riot.core.api.RiotAPI;
 import com.example.lolserver.riot.dto.match.MatchDto;
@@ -42,7 +41,6 @@ public class RMatchServiceImpl implements RMatchService{
     private final BucketService bucketService;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final KafkaService kafkaService;
 
     @Override
     @Transactional
