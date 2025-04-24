@@ -73,6 +73,9 @@ dependencies {
     // swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
 
+    // rabbitmq
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+
     // test
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
