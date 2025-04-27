@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMqConfig {
 
-    /* MQTT 서버 정보 설정*/
     @Value("${spring.rabbitmq.host}")
     private String rabbitmqHost;
 
@@ -26,32 +25,46 @@ public class RabbitMqConfig {
     @Value("${spring.rabbitmq.password}")
     private String rabbitmqPassword;
 
-    /* RabbitMQ 큐, 익스체인지, 라우팅 키 설정 */
-    @Value("${spring.rabbitmq.queue.name}")
+    @Value("${rabbitmq.queue.name}")
     private String queueName;
 
-    @Value("${spring.rabbitmq.exchange.name}")
+    @Value("${rabbitmq.exchange.name}")
     private String exchangeName;
 
-    @Value("${spring.rabbitmq.routing.key}")
+    @Value("${rabbitmq.routing.key}")
     private String routingKey;
 
     /* Queue: Consumer 가 메시지를 소비하기 전 메시지 보관소 */
     @Bean
-    public Queue queue() {
-        return new Queue(queueName);
+    public Queue queue1() {
+        return new Queue("mmrtr.summoner");
     }
 
     @Bean
-    public DirectExchange directExchange() {
-        return new DirectExchange(exchangeName);
+    public Queue queue2() {
+        return new Queue("mmrtr.match");
     }
 
+    @Bean
+    public TopicExchange directExchange() {
+        return new TopicExchange(exchangeName);
+    }
 
     /* Binding: Queue 와 Exchange 관계 정의 */
     @Bean
-    public Binding binding(Queue queue, DirectExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(routingKey);
+    public Binding binding1() {
+        return BindingBuilder
+                .bind(queue1())
+                .to(directExchange())
+                .with(routingKey);
+    }
+
+    @Bean
+    public Binding binding2() {
+        return BindingBuilder
+                .bind(queue2())
+                .to(directExchange())
+                .with("mmrtr.routing.match");
     }
 
     /* RabbitMQ 연결 설정 */
