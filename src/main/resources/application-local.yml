@@ -33,12 +33,6 @@ spring:
     port: 5672
     username: guest
     password: guest
-    queue:
-      name: "mmrtr.renewal"
-    exchange:
-      name: "mmrtr"
-    routing:
-      key: "mmrtr.routing"
 
 server:
   port: 8100
@@ -49,3 +43,8 @@ management:
     web:
       exposure:
         include: health
+
+rabbitmq:
+  queue.name: mmrtr.queue
+  exchange.name: mmrtr.exchange
+  routing.key: mmrtr.key
