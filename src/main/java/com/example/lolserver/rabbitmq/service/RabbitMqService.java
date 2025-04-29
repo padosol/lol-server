@@ -1,5 +1,6 @@
 package com.example.lolserver.rabbitmq.service;
 
+import com.example.lolserver.rabbitmq.dto.SummonerMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -23,9 +24,9 @@ public class RabbitMqService {
      *
      * @param puuid 소환사 puuid
      */
-    public void sendMessage(String puuid) {
-        log.info("Message Summmoner: {}", puuid);
-        rabbitTemplate.convertAndSend(exchangeName, routingKey, puuid);
+    public void sendMessage(SummonerMessage summonerMessage) {
+        log.info("Message Summmoner: {}", summonerMessage);
+        rabbitTemplate.convertAndSend(exchangeName, routingKey, summonerMessage);
     }
 
 

@@ -60,10 +60,9 @@ public class RedisServiceImpl implements RedisService{
 
         try {
             SummonerRenewalSession summonerRenewalSession = summonerRenewalRepository.findById(puuid).orElseThrow(IllegalStateException::new);
-            summonerRenewalSession.updateCheck();
 
             summonerRenewalRepository.save(summonerRenewalSession);
-            return summonerRenewalSession.isUpdate();
+            return true;
         } catch(Exception e) {
             return false;
         }

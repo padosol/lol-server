@@ -24,4 +24,7 @@ public class SummonerResponse {
     private Integer point;
     private String tier;
     private String rank;
+
+    // 갱신 여부
+
 }
