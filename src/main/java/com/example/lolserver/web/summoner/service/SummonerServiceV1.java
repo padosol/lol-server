@@ -5,12 +5,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.example.lolserver.rabbitmq.dto.SummonerMessage;
+import com.example.lolserver.rabbitmq.service.RabbitMqService;
+import com.example.lolserver.redis.model.SummonerRenewalSession;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.example.lolserver.web.exception.WebException;
 import com.example.lolserver.web.league.entity.QueueType;
 import com.example.lolserver.web.summoner.client.RiotSummonerClient;
 import com.example.lolserver.web.summoner.entity.Summoner;
+import com.example.lolserver.web.summoner.repository.SummonerJpaRepository;
 import com.example.lolserver.web.summoner.vo.SummonerVO;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -27,6 +33,9 @@ public class SummonerServiceV1 implements SummonerService{
 
     private final SummonerRepositoryCustom summonerRepositoryCustom;
     private final RiotSummonerClient riotSummonerClient;
+    private final SummonerJpaRepository summonerJpaRepository;
+    private final RabbitMqService rabbitMqService;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 유저 상세 조회 함수
@@ -150,8 +159,38 @@ public class SummonerServiceV1 implements SummonerService{
     }
 
     @Override
-    public SummonerResponse renewalSummonerInfo(String puuid) {
+    public String renewalSummonerInfo(String platform, String puuid) {
+        HashOperations<String, Object, Object> renewalHash = redisTemplate.opsForHash();
+        Boolean aBoolean = renewalHash.hasKey("renewal", puuid);
+        if (aBoolean) {
+            throw new WebException(
+                    HttpStatus.BAD_REQUEST,
+                    "갱신중 입니다. " + puuid
+            );
+        }
 
-        return null;
+        Summoner summoner = summonerJpaRepository.findSummonerByPuuid(puuid).orElseThrow(() -> new WebException(
+                HttpStatus.BAD_REQUEST,
+                "존재하지 않는 PUUID 입니다. " + puuid
+        ));
+
+        if (!summoner.isRevision()) {
+            throw new WebException(
+                    HttpStatus.BAD_REQUEST,
+                    "잠시후 다시 시도해주세요."
+            );
+        }
+
+        // redis 에 갱신 정보 저장
+        SummonerRenewalSession newRenewalSession = new SummonerRenewalSession(
+                puuid
+        );
+        renewalHash.put("renewal", puuid, newRenewalSession);
+
+        rabbitMqService.sendMessage(new SummonerMessage(
+                platform, puuid, summoner.getRevisionDate()
+        ));
+
+        return puuid;
     }
 }
