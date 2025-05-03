@@ -11,7 +11,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@RedisHash(value = "summonerRenewal", timeToLive = 10)
+@RedisHash(value = "summonerRenewal", timeToLive = 120)
 public class SummonerRenewalSession implements Serializable {
 
     @Id

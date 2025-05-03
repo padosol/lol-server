@@ -2,12 +2,14 @@ package com.example.lolserver.web.summoner.service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.example.lolserver.rabbitmq.dto.SummonerMessage;
 import com.example.lolserver.rabbitmq.service.RabbitMqService;
 import com.example.lolserver.redis.model.SummonerRenewalSession;
+import com.example.lolserver.redis.repository.SummonerRenewalRepository;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.example.lolserver.web.exception.WebException;
 import com.example.lolserver.web.league.entity.QueueType;
@@ -37,7 +39,7 @@ public class SummonerServiceV1 implements SummonerService{
     private final SummonerJpaRepository summonerJpaRepository;
     private final RabbitMqService rabbitMqService;
     private final RedisTemplate<String, Object> redisTemplate;
-    private final ObjectMapper objectMapper;
+    private final SummonerRenewalRepository summonerRenewalRepository;
 
     /**
      * 유저 상세 조회 함수
@@ -162,9 +164,8 @@ public class SummonerServiceV1 implements SummonerService{
 
     @Override
     public String renewalSummonerInfo(String platform, String puuid) {
-        HashOperations<String, Object, Object> renewalHash = redisTemplate.opsForHash();
-        Boolean aBoolean = renewalHash.hasKey("renewal", puuid);
-        if (aBoolean) {
+        boolean isRenewal = summonerRenewalRepository.findById(puuid).isPresent();
+        if (isRenewal) {
             throw new WebException(
                     HttpStatus.BAD_REQUEST,
                     "갱신중 입니다. " + puuid
@@ -185,18 +186,7 @@ public class SummonerServiceV1 implements SummonerService{
 
         // redis 에 갱신 정보 저장
         SummonerRenewalSession newRenewalSession = new SummonerRenewalSession(puuid);
-        try {
-            renewalHash.put(
-                    "renewal",
-                    puuid,
-                    newRenewalSession
-            );
-        } catch(Exception e) {
-            throw new WebException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "서버에러 입니다."
-            );
-        }
+        summonerRenewalRepository.save(newRenewalSession);
 
         rabbitMqService.sendMessage(new SummonerMessage(
                 platform, puuid, summoner.getRevisionDate()
