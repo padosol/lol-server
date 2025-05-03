@@ -15,6 +15,7 @@ import com.example.lolserver.web.summoner.client.RiotSummonerClient;
 import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.summoner.repository.SummonerJpaRepository;
 import com.example.lolserver.web.summoner.vo.SummonerVO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
@@ -36,6 +37,7 @@ public class SummonerServiceV1 implements SummonerService{
     private final SummonerJpaRepository summonerJpaRepository;
     private final RabbitMqService rabbitMqService;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper;
 
     /**
      * 유저 상세 조회 함수
@@ -182,10 +184,19 @@ public class SummonerServiceV1 implements SummonerService{
         }
 
         // redis 에 갱신 정보 저장
-        SummonerRenewalSession newRenewalSession = new SummonerRenewalSession(
-                puuid
-        );
-        renewalHash.put("renewal", puuid, newRenewalSession);
+        SummonerRenewalSession newRenewalSession = new SummonerRenewalSession(puuid);
+        try {
+            renewalHash.put(
+                    "renewal",
+                    puuid,
+                    newRenewalSession
+            );
+        } catch(Exception e) {
+            throw new WebException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "서버에러 입니다."
+            );
+        }
 
         rabbitMqService.sendMessage(new SummonerMessage(
                 platform, puuid, summoner.getRevisionDate()

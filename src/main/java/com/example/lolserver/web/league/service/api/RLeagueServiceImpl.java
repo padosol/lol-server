@@ -217,7 +217,6 @@ public class RLeagueServiceImpl implements RLeagueService{
         Optional<SummonerRenewalSession> byId = summonerRenewalRepository.findById(summoner.getPuuid());
         if(byId.isPresent()) {
             SummonerRenewalSession summonerRenewalSession = byId.get();
-            summonerRenewalSession.leagueUpdate();
             summonerRenewalRepository.save(summonerRenewalSession);
         }
 

@@ -20,10 +20,6 @@ public class RabbitMqService {
 
     private final RabbitTemplate rabbitTemplate;
 
-    /**
-     *
-     * @param puuid 소환사 puuid
-     */
     public void sendMessage(SummonerMessage summonerMessage) {
         log.info("Message Summmoner: {}", summonerMessage);
         rabbitTemplate.convertAndSend(exchangeName, routingKey, summonerMessage);

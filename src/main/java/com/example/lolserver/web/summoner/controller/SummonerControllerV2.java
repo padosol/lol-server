@@ -6,8 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/api/v2")
@@ -15,6 +13,7 @@ import java.util.concurrent.ExecutionException;
 public class SummonerControllerV2 {
 
     private final SummonerService summonerService;
+    private final RabbitMqService rabbitMqService;
 
     @GetMapping("/summoners/renewal/{platform}/{puuid}")
     public ResponseEntity<String> renewalSummonerInfo(
@@ -23,6 +22,14 @@ public class SummonerControllerV2 {
     ) {
         summonerService.renewalSummonerInfo(platform, puuid);
         return ResponseEntity.ok(puuid);
+    }
+
+    @GetMapping("/rabbitmq/match/{matchId}")
+    public String rabbitTest(
+            @PathVariable("matchId") String matchId
+    ) {
+        rabbitMqService.sendMessageForMatch(matchId);
+        return "test";
     }
 
 }
