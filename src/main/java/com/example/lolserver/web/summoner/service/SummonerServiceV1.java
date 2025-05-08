@@ -2,7 +2,6 @@ package com.example.lolserver.web.summoner.service;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -14,17 +13,14 @@ import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.example.lolserver.web.exception.WebException;
 import com.example.lolserver.web.league.entity.QueueType;
 import com.example.lolserver.web.summoner.client.RiotSummonerClient;
+import com.example.lolserver.web.summoner.dto.SummonerResponse;
 import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.summoner.repository.SummonerJpaRepository;
 import com.example.lolserver.web.summoner.vo.SummonerVO;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.example.lolserver.web.summoner.dto.SummonerResponse;
 import com.example.lolserver.web.summoner.repository.dsl.SummonerRepositoryCustom;
 import com.example.lolserver.riot.type.Platform;
 
@@ -66,13 +62,9 @@ public class SummonerServiceV1 implements SummonerService{
             );
         }
 
-        ResponseEntity<SummonerVO> response = riotSummonerClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
+        SummonerVO summonerVO = riotSummonerClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
 
-        if (response.getStatusCode().is2xxSuccessful()) {
-            SummonerVO summonerVO = response.getBody();
-
-            assert summonerVO != null;
-
+        if (summonerVO != null) {
             int leaguePoint = 0;
             String tier = "";
             String rank = "";
@@ -86,10 +78,10 @@ public class SummonerServiceV1 implements SummonerService{
             }
 
             return SummonerResponse.builder()
-                    .accountId(summonerVO.getAccountId())
                     .profileIconId(summonerVO.getProfileIconId())
                     .puuid(summonerVO.getPuuid())
                     .summonerLevel(summonerVO.getSummonerLevel())
+                    .platform(region)
                     .gameName(summonerVO.getGameName())
                     .tagLine(summonerVO.getTagLine())
                     .point(leaguePoint)
@@ -114,13 +106,9 @@ public class SummonerServiceV1 implements SummonerService{
                 return Collections.emptyList();
             }
 
-            ResponseEntity<SummonerVO> response = riotSummonerClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
+            SummonerVO summonerVO = riotSummonerClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
 
-            if (response.getStatusCode().is2xxSuccessful()) {
-                SummonerVO summonerVO = response.getBody();
-
-                assert summonerVO != null;
-
+            if (summonerVO != null) {
                 int leaguePoint = 0;
                 String tier = "";
                 String rank = "";
@@ -134,7 +122,6 @@ public class SummonerServiceV1 implements SummonerService{
                 }
 
                 SummonerResponse summonerResponse = SummonerResponse.builder()
-                        .accountId(summonerVO.getAccountId())
                         .profileIconId(summonerVO.getProfileIconId())
                         .puuid(summonerVO.getPuuid())
                         .summonerLevel(summonerVO.getSummonerLevel())
@@ -172,7 +159,7 @@ public class SummonerServiceV1 implements SummonerService{
             );
         }
 
-        Summoner summoner = summonerJpaRepository.findSummonerByPuuid(puuid).orElseThrow(() -> new WebException(
+        Summoner summoner = summonerJpaRepository.findById(puuid).orElseThrow(() -> new WebException(
                 HttpStatus.BAD_REQUEST,
                 "존재하지 않는 PUUID 입니다. " + puuid
         ));

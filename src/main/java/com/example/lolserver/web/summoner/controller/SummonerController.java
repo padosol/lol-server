@@ -45,7 +45,7 @@ public class SummonerController {
     @Operation(description = "유저 검색 API", summary = "유저 검색 API")
     @GetMapping("/v1/summoners/search")
     public ResponseEntity<List<SummonerResponse>> searchSummoner(
-            @RequestParam("q") String q,
+            @RequestParam(name = "q", defaultValue = "hideonbush-kr1") String q,
             @RequestParam(name = "region", defaultValue = "kr", required = false) String region
     ) {
         List<SummonerResponse> allSummoner = summonerService.getAllSummoner(q, region);

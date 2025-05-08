@@ -28,10 +28,9 @@ import java.util.Set;
 public class Summoner {
 
     @Id
-    @Column(name = "summoner_id")
-    private String id;
-    private String accountId;
     private String puuid;
+    private String summonerId;
+    private String accountId;
 
     private int profileIconId;
     private long revisionDate;
@@ -54,7 +53,7 @@ public class Summoner {
     }
 
     public Summoner(AccountDto account, SummonerDTO summoner, String region) {
-        this.id = summoner.getId();
+        this.summonerId = summoner.getId();
         this.accountId = summoner.getAccountId();
         this.profileIconId = summoner.getProfileIconId();
         this.revisionDate = summoner.getRevisionDate();
@@ -100,8 +99,6 @@ public class Summoner {
         }
 
         return SummonerResponse.builder()
-                .summonerId(this.id)
-                .accountId(this.accountId)
                 .summonerLevel(this.summonerLevel)
                 .profileIconId(this.profileIconId)
                 .tier(tier)

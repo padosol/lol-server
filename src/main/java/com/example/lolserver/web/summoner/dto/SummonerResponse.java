@@ -12,8 +12,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SummonerResponse {
-    private String summonerId;
-    private String accountId;
     private int profileIconId;
     private String puuid;
     private long summonerLevel;
@@ -24,7 +22,4 @@ public class SummonerResponse {
     private Integer point;
     private String tier;
     private String rank;
-
-    // 갱신 여부
-
 }

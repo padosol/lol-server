@@ -1,7 +1,9 @@
 package com.example.lolserver.web.league.controller;
 
 import java.io.IOException;
+import java.util.List;
 
+import com.example.lolserver.web.dto.data.leagueData.LeagueSummonerData;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,18 +25,18 @@ public class LeagueController {
 
     /**
      * 소환사 리그 정보 조회 API    
-     * @param summonerId 소환사 ID
+     * @param puuid 소환사 puuid
      * @return 리그 정보
      * @throws IOException
      * @throws InterruptedException
      */
-    @GetMapping("/v1/leagues/by-summoner/{summonerId}")
-    public ResponseEntity<LeagueData> fetchLeaguesBySummoner(
-            @PathVariable String summonerId
-    ) throws IOException, InterruptedException {
+    @GetMapping("/v1/leagues/by-puuid/{puuid}")
+    public ResponseEntity<List<LeagueSummonerData>> fetchLeaguesBySummoner(
+            @PathVariable("puuid") String puuid
+    ) {
 
-        LeagueData leagueData = leagueService.getLeaguesBySummoner(summonerId);
+        List<LeagueSummonerData> leagueSummonerData = leagueService.getLeaguesBypuuid(puuid);
 
-        return new ResponseEntity<>(leagueData, HttpStatus.OK);
+        return new ResponseEntity<>(leagueSummonerData, HttpStatus.OK);
     }
 }
