@@ -161,6 +161,46 @@ public class Match {
         return gameData;
     }
 
+    public GameData toGameData() {
+        Map<Integer, Map<String, List<SeqTypeData>>> timelineDataMap = getTimelineDataMap();
+
+        GameData gameData = new GameData();
+
+        // 게임 정보
+        GameInfoData gameInfoData = new GameInfoData(this);
+        gameData.setGameInfoData(gameInfoData);
+
+        // 유저 정보
+        List<ParticipantData> participantData = new ArrayList<>();
+        for (MatchSummoner matchSummoner : this.matchSummoners) {
+            ParticipantData data = new ParticipantData().of(matchSummoner);
+            participantData.add(data);
+
+            int participantId = data.getParticipantId();
+            Map<String, List<SeqTypeData>> dataMap = timelineDataMap.get(participantId);
+
+            if(dataMap != null) {
+                data.setItemSeq(dataMap.get(SeqType.ITEM_SEQ.name()));
+                data.setSkillSeq(dataMap.get(SeqType.SKILL_SEQ.name()));
+            }
+        }
+
+        if(gameData.getGameInfoData().getQueueId() == 1700 || gameData.getGameInfoData().getQueueId() == 1710) {
+            participantData.sort(Comparator.comparingInt(ParticipantData::getPlacement));
+        }
+
+        gameData.setParticipantData(participantData);
+
+        // 팀정보
+        Map<Integer, TeamInfoData> teamInfoDataMap = new HashMap<>();
+        for (MatchTeam matchTeam : this.matchTeams) {
+            teamInfoDataMap.put(matchTeam.getTeamId(), new TeamInfoData().of(matchTeam));
+        }
+        gameData.setTeamInfoData(teamInfoDataMap);
+
+        return gameData;
+    }
+
     public Map<Integer, Map<String, List<SeqTypeData>>> getTimelineDataMap() {
         Map<Integer, Map<String, List<SeqTypeData>>> timelineMap = new HashMap<>();
 

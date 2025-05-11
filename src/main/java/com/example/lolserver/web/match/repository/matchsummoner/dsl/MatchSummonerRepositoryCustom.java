@@ -18,4 +18,6 @@ public interface MatchSummonerRepositoryCustom {
     List<MSChampionResponse> findAllChampionKDAByPuuidAndSeasonAndQueueType(String puuid, Integer season, Integer queueType, Long limit);
 
     List<LinePosition> findAllPositionByPuuidAndLimit(String puuid, Long limit);
+
+    Page<String> findAllMatchIdsByPuuidWithPage(MatchRequest matchRequest, Pageable pageable);
 }

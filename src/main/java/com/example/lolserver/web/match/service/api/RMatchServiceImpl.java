@@ -47,13 +47,13 @@ public class RMatchServiceImpl implements RMatchService{
     public MatchResponse getMatches(MatchRequest matchRequest) {
 
         // 최근 20게임 API 1
-        List<String> matchIds = RiotAPI.matchList(Platform.valueOfName(matchRequest.getPlatform()))
+        List<String> matchIds = RiotAPI.matchList(Platform.valueOfName(matchRequest.getRegion()))
                 .byPuuid(matchRequest.getPuuid())
                 .query(matchQueryBuilder -> matchQueryBuilder.queue(matchRequest.getQueueId()).build())
                 .get();
         
         // 최근 20게임 정보 API max 20
-        List<MatchDto> matchDtoList = RiotAPI.match(Platform.valueOfName(matchRequest.getPlatform())).byMatchIds(matchIds);
+        List<MatchDto> matchDtoList = RiotAPI.match(Platform.valueOfName(matchRequest.getRegion())).byMatchIds(matchIds);
 
         // 최근 20게임 타임라인 API max 20
 

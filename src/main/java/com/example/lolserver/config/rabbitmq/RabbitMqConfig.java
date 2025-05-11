@@ -34,15 +34,16 @@ public class RabbitMqConfig {
     @Value("${rabbitmq.routing.key}")
     private String routingKey;
 
-    /* Queue: Consumer 가 메시지를 소비하기 전 메시지 보관소 */
     @Bean
-    public Queue queue1() {
-        return new Queue("mmrtr.summoner");
+    public Queue summonerQueue() {
+        return QueueBuilder.durable("mmrtr.summoner")
+                .withArgument("x-dead-letter-exchange", "summoner.dlx.exchange")
+                .withArgument("x-dead-letter-routing-key", "deadLetter")
+                .build();
     }
 
-    @Bean
-    public Queue queue2() {
-        return new Queue("mmrtr.match");
+    @Bean Queue dlxSummonerQueue() {
+        return new Queue("mmrtr.summoner.dlx", true);
     }
 
     @Bean
@@ -50,21 +51,25 @@ public class RabbitMqConfig {
         return new TopicExchange(exchangeName);
     }
 
-    /* Binding: Queue 와 Exchange 관계 정의 */
+    @Bean
+    public DirectExchange summonerDlxExchange() {
+        return new DirectExchange("summoner.dlx.exchange");
+    }
+
     @Bean
     public Binding binding1() {
         return BindingBuilder
-                .bind(queue1())
+                .bind(summonerQueue())
                 .to(directExchange())
                 .with(routingKey);
     }
 
     @Bean
-    public Binding binding2() {
+    public Binding summonerDlxBinding() {
         return BindingBuilder
-                .bind(queue2())
-                .to(directExchange())
-                .with("mmrtr.routing.match");
+                .bind(dlxSummonerQueue())
+                .to(summonerDlxExchange())
+                .with("deadLetter");
     }
 
     /* RabbitMQ 연결 설정 */

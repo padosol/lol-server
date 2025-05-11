@@ -9,10 +9,4 @@ import java.util.List;
 
 @Repository
 public interface MatchRepository extends JpaRepository<Match, String> {
-
-
-    @Query("select m from Match m join fetch MatchSummoner ms on m.matchId = ms.match.matchId")
-    List<Match> findAllByTest();
-
-
 }

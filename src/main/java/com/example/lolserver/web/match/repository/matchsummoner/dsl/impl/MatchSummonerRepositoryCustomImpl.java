@@ -32,18 +32,6 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
 
     @Override
     public Page<MatchSummoner> findAllByPuuidAndQueueId(MatchRequest matchRequest, Pageable pageable) {
-
-        List<String> matchIds = jpaQueryFactory.select(matchSummoner.match.matchId).from(matchSummoner)
-                .join(matchSummoner.match, match)
-                .where(
-                        puuidEq(matchRequest.getPuuid()),
-                        queueIdEq(matchRequest.getQueueId())
-                )
-                .orderBy(matchSummoner.match.matchId.desc())
-                .offset((long) pageable.getPageNumber() * pageable.getPageSize())
-                .limit(pageable.getPageSize())
-                .fetch();
-
         List<MatchSummoner> content = jpaQueryFactory.selectFrom(matchSummoner)
                 .join(matchSummoner.match, match)
                 .where(
@@ -132,6 +120,31 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
         }
 
         return query.fetch();
+    }
+
+    @Override
+    public Page<String> findAllMatchIdsByPuuidWithPage(MatchRequest matchRequest, Pageable pageable) {
+        List<String> matchIds = jpaQueryFactory.select(matchSummoner.match.matchId).from(matchSummoner)
+                .join(matchSummoner.match, match)
+                .where(
+                        puuidEq(matchRequest.getPuuid()),
+                        queueIdEq(matchRequest.getQueueId())
+                )
+                .orderBy(matchSummoner.match.matchId.desc())
+                .offset((long) pageable.getPageNumber() * pageable.getPageSize())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        JPAQuery<Long> count = jpaQueryFactory.select(matchSummoner.count())
+                .from(matchSummoner)
+                .join(matchSummoner.match, match)
+                .where(
+                        puuidEq(matchRequest.getPuuid()),
+                        queueIdEq(matchRequest.getQueueId())
+                );
+
+
+        return PageableExecutionUtils.getPage(matchIds, pageable, count::fetchOne);
     }
 
     private BooleanExpression queueIdEqOrAll(Integer queueId) {

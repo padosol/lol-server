@@ -14,6 +14,8 @@ import com.example.lolserver.web.exception.WebException;
 import com.example.lolserver.web.league.entity.QueueType;
 import com.example.lolserver.web.summoner.client.RiotSummonerClient;
 import com.example.lolserver.web.summoner.dto.SummonerResponse;
+import com.example.lolserver.web.summoner.dto.response.RenewalStatus;
+import com.example.lolserver.web.summoner.dto.response.SummonerRenewalResponse;
 import com.example.lolserver.web.summoner.entity.Summoner;
 import com.example.lolserver.web.summoner.repository.SummonerJpaRepository;
 import com.example.lolserver.web.summoner.vo.SummonerVO;
@@ -34,7 +36,6 @@ public class SummonerServiceV1 implements SummonerService{
     private final RiotSummonerClient riotSummonerClient;
     private final SummonerJpaRepository summonerJpaRepository;
     private final RabbitMqService rabbitMqService;
-    private final RedisTemplate<String, Object> redisTemplate;
     private final SummonerRenewalRepository summonerRenewalRepository;
 
     /**
@@ -150,13 +151,10 @@ public class SummonerServiceV1 implements SummonerService{
     }
 
     @Override
-    public String renewalSummonerInfo(String platform, String puuid) {
+    public SummonerRenewalResponse renewalSummonerInfo(String platform, String puuid) {
         boolean isRenewal = summonerRenewalRepository.findById(puuid).isPresent();
         if (isRenewal) {
-            throw new WebException(
-                    HttpStatus.BAD_REQUEST,
-                    "갱신중 입니다. " + puuid
-            );
+            return new SummonerRenewalResponse(puuid, RenewalStatus.PROGRESS);
         }
 
         Summoner summoner = summonerJpaRepository.findById(puuid).orElseThrow(() -> new WebException(
@@ -165,10 +163,7 @@ public class SummonerServiceV1 implements SummonerService{
         ));
 
         if (!summoner.isRevision()) {
-            throw new WebException(
-                    HttpStatus.BAD_REQUEST,
-                    "잠시후 다시 시도해주세요."
-            );
+            return new SummonerRenewalResponse(puuid, RenewalStatus.SUCCESS);
         }
 
         // redis 에 갱신 정보 저장
@@ -179,6 +174,6 @@ public class SummonerServiceV1 implements SummonerService{
                 platform, puuid, summoner.getRevisionDate()
         ));
 
-        return puuid;
+        return new SummonerRenewalResponse(puuid, RenewalStatus.PROGRESS);
     }
 }

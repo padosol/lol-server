@@ -1,6 +1,8 @@
 package com.example.lolserver.riot.type;
 
+import com.example.lolserver.web.exception.WebException;
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,7 +55,10 @@ public enum Platform {
             return PLATFORM_NAME.get(name.toUpperCase()).name();
         }
 
-        return null;
+        throw new WebException(
+                HttpStatus.BAD_REQUEST,
+                "존재하지 않는 Platform 입니다. " + name
+        );
     }
 
 }

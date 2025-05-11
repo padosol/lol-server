@@ -1,6 +1,8 @@
 package com.example.lolserver.web.summoner.service;
 
 import com.example.lolserver.web.summoner.dto.SummonerResponse;
+import com.example.lolserver.web.summoner.dto.response.RenewalStatus;
+import com.example.lolserver.web.summoner.dto.response.SummonerRenewalResponse;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,6 +15,6 @@ public interface SummonerService {
 
     List<SummonerResponse> getAllSummonerAutoComplete(String q, String region);
 
-    String renewalSummonerInfo(String platform, String puuid);
+    SummonerRenewalResponse renewalSummonerInfo(String platform, String puuid);
 
 }
