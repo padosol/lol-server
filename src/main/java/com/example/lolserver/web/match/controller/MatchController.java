@@ -1,5 +1,6 @@
 package com.example.lolserver.web.match.controller;
 
+import com.example.lolserver.web.dto.data.GameData;
 import com.example.lolserver.web.dto.data.TimelineData;
 import com.example.lolserver.web.match.dto.MSChampionRequest;
 import com.example.lolserver.web.match.dto.MSChampionResponse;
@@ -16,13 +17,31 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class MatchController {
 
     private final MatchService matchService;
 
-    @GetMapping("/v1/matches")
+    @GetMapping("/matches/{matchId}")
+    public ResponseEntity<GameData> fetchMatchResponse(
+            @PathVariable("matchId") String matchId
+    ) {
+        GameData gameData = matchService.getGameData(matchId);
+
+        return ResponseEntity.ok(gameData);
+    }
+
+    @GetMapping("/matches/matchIds")
+    public ResponseEntity<List<String>> findAllMatchIds(
+        @ModelAttribute MatchRequest matchRequest
+    ) {
+        List<String> allMatchIds = matchService.findAllMatchIds(matchRequest);
+
+        return ResponseEntity.ok(allMatchIds);
+    }
+
+    @GetMapping("/matches")
     public ResponseEntity<MatchResponse> fetchGameData(
         @ModelAttribute MatchRequest matchRequest
     ) {
@@ -32,7 +51,7 @@ public class MatchController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping("/v1/rank/champions")
+    @GetMapping("/rank/champions")
     public ResponseEntity<List<MSChampionResponse>> getRankChampions(
             @ModelAttribute MSChampionRequest request
             ) {
@@ -42,7 +61,7 @@ public class MatchController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @GetMapping("/v1/match/timeline/{matchId}")
+    @GetMapping("/match/timeline/{matchId}")
     public ResponseEntity<TimelineData> getTimeline(@PathVariable("matchId") String matchId) {
 
         TimelineData timelineData = matchService.getTimelineData(matchId);

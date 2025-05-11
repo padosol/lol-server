@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class LeagueSummonerId implements Serializable {
 
     private String leagueId;
-    private String summonerId;
+    private String puuid;
     private LocalDateTime createAt;
 
 }

@@ -1,10 +1,9 @@
 package com.example.lolserver.web.league.service;
 
-import com.example.lolserver.web.dto.data.LeagueData;
+import com.example.lolserver.web.dto.data.leagueData.LeagueSummonerData;
 
-import java.io.IOException;
+import java.util.List;
 
 public interface LeagueService {
-
-    LeagueData getLeaguesBySummoner(String summonerId) throws IOException, InterruptedException;
+    List<LeagueSummonerData> getLeaguesBypuuid(String puuid);
 }

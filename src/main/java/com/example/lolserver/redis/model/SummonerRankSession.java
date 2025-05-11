@@ -53,7 +53,7 @@ public class SummonerRankSession implements Serializable {
         this.summonerLevel = leagueSummoner.getSummoner().getSummonerLevel();
 
         this.leagueId = league.getLeagueId();
-        this.summonerId = leagueSummoner.getSummoner().getId();
+        this.summonerId = leagueSummoner.getSummoner().getSummonerId();
 
         this.win = leagueSummoner.getWins();
         this.losses = leagueSummoner.getLosses();
@@ -78,7 +78,7 @@ public class SummonerRankSession implements Serializable {
         this.summonerLevel = leagueSummoner.getSummoner().getSummonerLevel();
 
         this.leagueId = league.getLeagueId();
-        this.summonerId = leagueSummoner.getSummoner().getId();
+        this.summonerId = leagueSummoner.getSummoner().getSummonerId();
 
         this.win = leagueSummoner.getWins();
         this.losses = leagueSummoner.getLosses();

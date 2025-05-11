@@ -1,7 +1,6 @@
 package com.example.lolserver.web.match.entity;
 
 import com.example.lolserver.riot.dto.match.ChallengesDto;
-import com.example.lolserver.web.match.entity.id.ChallengesId;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Comment;
@@ -13,7 +12,6 @@ import org.hibernate.annotations.Comment;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Challenges {
-
         @Id
         private String puuid;
 
@@ -132,7 +130,7 @@ public class Challenges {
         private int takedownsInAlcove;
         private int takedownsInEnemyFountain;
         private int teamBaronKills;
-        
+
         @Comment("팀 딜량 퍼센트")
         private double teamDamagePercentage;
         private int teamElderDragonKills;
@@ -288,6 +286,4 @@ public class Challenges {
                         .build();
 
         }
-
-
 }

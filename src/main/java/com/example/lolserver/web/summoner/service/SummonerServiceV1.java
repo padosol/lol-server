@@ -3,25 +3,28 @@ package com.example.lolserver.web.summoner.service;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+import com.example.lolserver.rabbitmq.dto.SummonerMessage;
+import com.example.lolserver.rabbitmq.service.RabbitMqService;
+import com.example.lolserver.redis.model.SummonerRenewalSession;
+import com.example.lolserver.redis.repository.SummonerRenewalRepository;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
-import com.example.lolserver.web.exception.ExceptionResponse;
 import com.example.lolserver.web.exception.WebException;
 import com.example.lolserver.web.league.entity.QueueType;
 import com.example.lolserver.web.summoner.client.RiotSummonerClient;
+import com.example.lolserver.web.summoner.dto.SummonerResponse;
+import com.example.lolserver.web.summoner.dto.response.RenewalStatus;
+import com.example.lolserver.web.summoner.dto.response.SummonerRenewalResponse;
 import com.example.lolserver.web.summoner.entity.Summoner;
+import com.example.lolserver.web.summoner.repository.SummonerJpaRepository;
 import com.example.lolserver.web.summoner.vo.SummonerVO;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.example.lolserver.web.summoner.dto.SummonerResponse;
-import com.example.lolserver.web.summoner.service.api.RSummonerService;
 import com.example.lolserver.web.summoner.repository.dsl.SummonerRepositoryCustom;
 import com.example.lolserver.riot.type.Platform;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,8 +33,10 @@ import lombok.RequiredArgsConstructor;
 public class SummonerServiceV1 implements SummonerService{
 
     private final SummonerRepositoryCustom summonerRepositoryCustom;
-    private final RSummonerService rSummonerService;
     private final RiotSummonerClient riotSummonerClient;
+    private final SummonerJpaRepository summonerJpaRepository;
+    private final RabbitMqService rabbitMqService;
+    private final SummonerRenewalRepository summonerRenewalRepository;
 
     /**
      * 유저 상세 조회 함수
@@ -58,13 +63,9 @@ public class SummonerServiceV1 implements SummonerService{
             );
         }
 
-        ResponseEntity<SummonerVO> response = riotSummonerClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
+        SummonerVO summonerVO = riotSummonerClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
 
-        if (response.getStatusCode().is2xxSuccessful()) {
-            SummonerVO summonerVO = response.getBody();
-
-            assert summonerVO != null;
-
+        if (summonerVO != null) {
             int leaguePoint = 0;
             String tier = "";
             String rank = "";
@@ -78,10 +79,10 @@ public class SummonerServiceV1 implements SummonerService{
             }
 
             return SummonerResponse.builder()
-                    .accountId(summonerVO.getAccountId())
                     .profileIconId(summonerVO.getProfileIconId())
                     .puuid(summonerVO.getPuuid())
                     .summonerLevel(summonerVO.getSummonerLevel())
+                    .platform(region)
                     .gameName(summonerVO.getGameName())
                     .tagLine(summonerVO.getTagLine())
                     .point(leaguePoint)
@@ -102,18 +103,38 @@ public class SummonerServiceV1 implements SummonerService{
         List<Summoner> summonerList = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegion(summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
 
         if(summonerList.size() < 1) {
-
             if(!summoner.isTagLine()) {
                 return Collections.emptyList();
             }
 
-            Summoner findSummoner = rSummonerService.fetchSummonerAllInfo(summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
+            SummonerVO summonerVO = riotSummonerClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
 
-            if(findSummoner == null) {
-                return Collections.emptyList();
+            if (summonerVO != null) {
+                int leaguePoint = 0;
+                String tier = "";
+                String rank = "";
+                Set<LeagueEntryDTO> leagueEntryDTOS = summonerVO.getLeagueEntryDTOS();
+                for (LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
+                    if (leagueEntryDTO.getQueueType().equals(QueueType.RANKED_SOLO_5x5.name())) {
+                        leaguePoint = leagueEntryDTO.getLeaguePoints();
+                        tier = leagueEntryDTO.getTier();
+                        rank = leagueEntryDTO.getRank();
+                    }
+                }
+
+                SummonerResponse summonerResponse = SummonerResponse.builder()
+                        .profileIconId(summonerVO.getProfileIconId())
+                        .puuid(summonerVO.getPuuid())
+                        .summonerLevel(summonerVO.getSummonerLevel())
+                        .gameName(summonerVO.getGameName())
+                        .tagLine(summonerVO.getTagLine())
+                        .point(leaguePoint)
+                        .tier(tier)
+                        .rank(rank)
+                        .build();
+
+                return List.of(summonerResponse);
             }
-
-            return List.of(findSummoner.toResponse());
         }
 
         return summonerList.stream().map(Summoner::toResponse).collect(Collectors.toList());
@@ -130,10 +151,29 @@ public class SummonerServiceV1 implements SummonerService{
     }
 
     @Override
-    public SummonerResponse renewalSummonerInfo(String puuid) throws ExecutionException, InterruptedException, JsonProcessingException {
+    public SummonerRenewalResponse renewalSummonerInfo(String platform, String puuid) {
+        boolean isRenewal = summonerRenewalRepository.findById(puuid).isPresent();
+        if (isRenewal) {
+            return new SummonerRenewalResponse(puuid, RenewalStatus.PROGRESS);
+        }
 
-        Summoner summoner = rSummonerService.revisionSummonerV2(puuid);
+        Summoner summoner = summonerJpaRepository.findById(puuid).orElseThrow(() -> new WebException(
+                HttpStatus.BAD_REQUEST,
+                "존재하지 않는 PUUID 입니다. " + puuid
+        ));
 
-        return summoner.toResponse();
+        if (!summoner.isRevision()) {
+            return new SummonerRenewalResponse(puuid, RenewalStatus.SUCCESS);
+        }
+
+        // redis 에 갱신 정보 저장
+        SummonerRenewalSession newRenewalSession = new SummonerRenewalSession(puuid);
+        summonerRenewalRepository.save(newRenewalSession);
+
+        rabbitMqService.sendMessage(new SummonerMessage(
+                platform, puuid, summoner.getRevisionDate()
+        ));
+
+        return new SummonerRenewalResponse(puuid, RenewalStatus.PROGRESS);
     }
 }

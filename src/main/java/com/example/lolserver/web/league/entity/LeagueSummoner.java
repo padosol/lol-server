@@ -23,9 +23,9 @@ public class LeagueSummoner {
     @EmbeddedId
     private LeagueSummonerId id;
 
-    @MapsId("summonerId")
+    @MapsId("puuid")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "summoner_id")
+    @JoinColumn(name = "puuid")
     private Summoner summoner;
 
     @MapsId("leagueId")

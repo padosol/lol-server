@@ -1,11 +1,13 @@
 package com.example.lolserver.web.summoner.vo;
 
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 
 import java.util.Set;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SummonerVO {
     private String puuid;
     private String gameName;
@@ -17,4 +19,6 @@ public class SummonerVO {
     private long summonerLevel;
 
     private Set<LeagueEntryDTO> leagueEntryDTOS;
+
+    public SummonerVO() {}
 }

@@ -8,7 +8,4 @@ import java.util.Optional;
 
 @Repository
 public interface SummonerJpaRepository extends JpaRepository<Summoner, String> {
-
-    Optional<Summoner> findSummonerByPuuid(String puuid);
-
 }

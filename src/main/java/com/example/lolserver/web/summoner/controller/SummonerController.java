@@ -45,7 +45,7 @@ public class SummonerController {
     @Operation(description = "유저 검색 API", summary = "유저 검색 API")
     @GetMapping("/v1/summoners/search")
     public ResponseEntity<List<SummonerResponse>> searchSummoner(
-            @RequestParam("q") String q,
+            @RequestParam(name = "q", defaultValue = "hideonbush-kr1") String q,
             @RequestParam(name = "region", defaultValue = "kr", required = false) String region
     ) {
         List<SummonerResponse> allSummoner = summonerService.getAllSummoner(q, region);
@@ -89,18 +89,14 @@ public class SummonerController {
      * 유저 정보 갱신 API   
      * @param puuid 유저 ID
      * @return 유저 정보
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws ExecutionException
      */
     @GetMapping("/v1/summoners/renewal")
-    public ResponseEntity<SummonerResponse> renewalSummonerInfo(
+    public ResponseEntity<String> renewalSummonerInfo(
         @RequestParam String puuid
-    ) throws IOException, InterruptedException, ExecutionException {
-
+    ) {
         if(bucket.getAvailableTokens() > 10) {
-            SummonerResponse result = summonerService.renewalSummonerInfo(puuid);
-            return new ResponseEntity<>(result, HttpStatus.OK);
+            summonerService.renewalSummonerInfo("kr", puuid);
+            return new ResponseEntity<>(puuid, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.TOO_MANY_REQUESTS);
         }
