@@ -9,7 +9,7 @@
 - Spring Data JPA
 - PostgreSQL
 - Redis
-- Kafka
+- RabbitMQ
 - QueryDSL
 - Bucket4j
 
@@ -48,7 +48,7 @@
 - Java 17 이상
 - PostgreSQL
 - Redis
-- Kafka
+- RabbitMQ
 
 ### 환경 설정
 
@@ -70,15 +70,7 @@ spring:
       port: 6379
 ```
 
-3. Kafka 설정
-```yaml
-spring:
-  kafka:
-    producer:
-      bootstrap-servers: localhost:9094
-```
-
-4. Riot API 키 설정
+3. Riot API 키 설정
 ```yaml
 riot.api.key: [your-api-key]
 ```
