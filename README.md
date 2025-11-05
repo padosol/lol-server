@@ -21,7 +21,7 @@
 - 리그 정보 및 랭크 조회
 
 ### 2. 실시간 데이터 처리
-- Kafka를 활용한 비동기 데이터 처리
+- RabbitMQ를 활용한 비동기 데이터 처리
 - Redis를 이용한 캐싱 시스템
 - 실시간 전적 업데이트
 
@@ -35,7 +35,9 @@
 ### 데이터베이스
 - PostgreSQL: 주 데이터베이스
 - Redis: 캐싱 및 Rate Limiting
-- Kafka: 비동기 메시지 처리
+- 
+### 메시지 큐
+- RabbitMQ: 비동기 메시지 처리
 
 ### API 통신
 - Riot Games API 연동
@@ -70,7 +72,18 @@ spring:
       port: 6379
 ```
 
-3. Riot API 키 설정
+3. RabbitMQ 설정
+```yaml
+spring:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+```
+
+4. Riot API 키 설정
+
 ```yaml
 riot.api.key: [your-api-key]
 ```

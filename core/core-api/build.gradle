@@ -1,0 +1,35 @@
+bootJar.enabled = true
+jar.enabled = false
+
+dependencies {
+    implementation project(":client:riot")
+    implementation project(":storage:db-core")
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+
+    // actuator
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // feign client
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:4.1.3'
+
+    // webClient
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+
+    // aop
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+    // swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
+
+    // rabbitmq
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+
+
+
+}

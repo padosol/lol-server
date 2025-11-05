@@ -1,120 +1,70 @@
 plugins {
+    id 'java-library'
     id 'java'
     id 'org.springframework.boot' version '3.3.6'
     id 'io.spring.dependency-management' version '1.1.6'
 }
 
-group = 'com.example'
-version = '0.0.1-SNAPSHOT'
+allprojects {
+    group = 'com.example'
+    version = '0.0.1-SNAPSHOT'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+    repositories {
+        mavenCentral()
+    }
+
+    ext {
+        set('springCloudVer', "2023.0.3")
+        set('querydsl.version', "5.1.0")
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'java-library'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    bootJar.enabled = false
+    jar.enabled = true
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter'
+
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+
+        // test
+        testCompileOnly 'org.projectlombok:lombok'
+        testAnnotationProcessor 'org.projectlombok:lombok'
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVer}"
+        }
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+
+    bootRun {
+        String activeProfile = System.properties['spring.profiles.active']
+        systemProperty "spring.profiles.active", activeProfile
     }
 }
 
 
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
-}
-
-repositories {
-    mavenCentral()
-}
-
-ext {
-    set('springCloudVer', "2023.0.3")
-    set('querydsl.version', "5.1.0")
-}
-
-
-dependencies {
-
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-
-    runtimeOnly 'org.postgresql:postgresql'
-
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'io.projectreactor:reactor-test'
-    testImplementation 'com.h2database:h2'
-
-    // actuator
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
-    // feign client
-    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:4.1.3'
-
-    // webClient
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
-
-    // query dsl
-    implementation "com.querydsl:querydsl-jpa:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
-    annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
-    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
-    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
-
-    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
-
-    // aop
-    implementation 'org.springframework.boot:spring-boot-starter-aop'
-
-    // redis
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-
-    implementation 'com.bucket4j:bucket4j_jdk17-redis-common:8.12.1'
-    implementation 'com.bucket4j:bucket4j_jdk17-lettuce:8.12.1'
-
-    // swagger
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
-
-    // rabbitmq
-    implementation 'org.springframework.boot:spring-boot-starter-amqp'
-
-    // test
-    testCompileOnly 'org.projectlombok:lombok'
-    testAnnotationProcessor 'org.projectlombok:lombok'
-
-}
-
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVer}"
-    }
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
-}
-
-// [3] Querydsl 설정부
-def generated = 'src/main/generated'
-
-// [4] querydsl QClass 파일 생성 위치를 지정
-tasks.withType(JavaCompile) {
-    options.getGeneratedSourceOutputDirectory().set(file(generated))
-}
-
-// [5] java source set 에 querydsl QClass 위치 추가
-sourceSets {
-    main.java.srcDirs += [ generated ]
-}
-
-// [6] gradle clean 시에 QClass 디렉토리 삭제
-clean {
-    delete file(generated)
-}
-
-jar {
-    enabled = false
-}
-
-bootRun {
-    String activeProfile = System.properties['spring.profiles.active']
-    systemProperty "spring.profiles.active", activeProfile
-}

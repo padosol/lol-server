@@ -1,1 +1,8 @@
 rootProject.name = 'lol-server'
+
+include(
+        "client:riot",
+        "core:core-api",
+        "support:logging",
+        "storage:db-core"
+)
