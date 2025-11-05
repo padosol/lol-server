@@ -83,6 +83,7 @@ spring:
 ```
 
 4. Riot API 키 설정
+
 ```yaml
 riot.api.key: [your-api-key]
 ```
