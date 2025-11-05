@@ -48,3 +48,7 @@ rabbitmq:
   queue.name: mmrtr.queue
   exchange.name: mmrtr.exchange
   routing.key: mmrtr.key
+
+lol:
+  repository:
+    url: localhost:8111

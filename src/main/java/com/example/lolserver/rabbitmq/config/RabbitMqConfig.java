@@ -1,4 +1,4 @@
-package com.example.lolserver.config.rabbitmq;
+package com.example.lolserver.rabbitmq.config;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
@@ -24,53 +24,6 @@ public class RabbitMqConfig {
 
     @Value("${spring.rabbitmq.password}")
     private String rabbitmqPassword;
-
-    @Value("${rabbitmq.queue.name}")
-    private String queueName;
-
-    @Value("${rabbitmq.exchange.name}")
-    private String exchangeName;
-
-    @Value("${rabbitmq.routing.key}")
-    private String routingKey;
-
-    @Bean
-    public Queue summonerQueue() {
-        return QueueBuilder.durable("mmrtr.summoner")
-                .withArgument("x-dead-letter-exchange", "summoner.dlx.exchange")
-                .withArgument("x-dead-letter-routing-key", "deadLetter")
-                .build();
-    }
-
-    @Bean Queue dlxSummonerQueue() {
-        return new Queue("mmrtr.summoner.dlx", true);
-    }
-
-    @Bean
-    public TopicExchange directExchange() {
-        return new TopicExchange(exchangeName);
-    }
-
-    @Bean
-    public DirectExchange summonerDlxExchange() {
-        return new DirectExchange("summoner.dlx.exchange");
-    }
-
-    @Bean
-    public Binding binding1() {
-        return BindingBuilder
-                .bind(summonerQueue())
-                .to(directExchange())
-                .with(routingKey);
-    }
-
-    @Bean
-    public Binding summonerDlxBinding() {
-        return BindingBuilder
-                .bind(dlxSummonerQueue())
-                .to(summonerDlxExchange())
-                .with("deadLetter");
-    }
 
     /* RabbitMQ 연결 설정 */
     @Bean

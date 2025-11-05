@@ -28,6 +28,6 @@ public class RabbitMqService {
 
     public void sendMessageForMatch(String matchId) {
         log.info("Message Match: {}", matchId);
-        rabbitTemplate.convertAndSend(exchangeName, "mmrtr.routing.match", matchId);
+        rabbitTemplate.convertAndSend("mmrtr.matchId.exchange", "mmrtr.routingkey.matchId", matchId);
     }
 }
