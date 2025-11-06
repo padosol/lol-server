@@ -1,0 +1,18 @@
+package com.example.lolserver.domain.summoner.client;
+
+import com.example.lolserver.domain.summoner.vo.SummonerVO;
+import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
+
+@Component
+@HttpExchange(accept = "*/*", contentType = "application/json")
+public interface SummonerRestClient {
+    @GetExchange(value = "/api/riot/{region}/summoners/{gameName}/{tagLine}")
+    SummonerVO getSummonerByGameNameAndTagLine(
+            @PathVariable("region") String region,
+            @PathVariable("gameName") String gameName,
+            @PathVariable("tagLine") String tagLine
+    );
+}
