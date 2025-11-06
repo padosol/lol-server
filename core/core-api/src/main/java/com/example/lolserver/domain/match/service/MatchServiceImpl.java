@@ -11,9 +11,10 @@ import com.example.lolserver.storage.db.core.repository.match.match.MatchReposit
 import com.example.lolserver.storage.db.core.repository.match.match.dsl.MatchRepositoryCustom;
 import com.example.lolserver.storage.db.core.repository.match.matchsummoner.dsl.MatchSummonerRepositoryCustom;
 import com.example.lolserver.storage.db.core.repository.match.timeline.TimelineRepositoryCustom;
-import com.example.lolserver.domain.exception.WebException;
+import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.domain.match.dto.MSChampionRequest;
 import com.example.lolserver.domain.match.dto.MatchRequest;
+import com.example.lolserver.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -59,8 +60,8 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public GameData getGameData(String matchId) {
-        Match match = matchRepository.findById(matchId).orElseThrow(() -> new WebException(
-                HttpStatus.BAD_REQUEST,
+        Match match = matchRepository.findById(matchId).orElseThrow(() -> new CoreException(
+                ErrorType.NOT_FOUND_MATCH_ID,
                 "존재하지 않는 MatchId 입니다. " + matchId
         ));
 

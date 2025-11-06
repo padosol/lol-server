@@ -1,5 +1,9 @@
 package com.example.lolserver.domain.summoner.service;
 
+import com.example.lolserver.domain.summoner.client.RiotSummonerClient;
+import com.example.lolserver.domain.summoner.dto.response.RenewalStatus;
+import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalResponse;
+import com.example.lolserver.domain.summoner.vo.SummonerVO;
 import com.example.lolserver.rabbitmq.dto.SummonerMessage;
 import com.example.lolserver.rabbitmq.service.RabbitMqService;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
@@ -11,19 +15,14 @@ import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerRes
 import com.example.lolserver.storage.db.core.repository.summoner.entity.Summoner;
 import com.example.lolserver.storage.redis.model.SummonerRenewalSession;
 import com.example.lolserver.storage.redis.repository.SummonerRenewalRepository;
-import com.example.lolserver.domain.exception.WebException;
-import com.example.lolserver.domain.summoner.client.RiotSummonerClient;
-import com.example.lolserver.domain.summoner.dto.response.RenewalStatus;
-import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalResponse;
-import com.example.lolserver.domain.summoner.vo.SummonerVO;
+import com.example.lolserver.support.error.CoreException;
+import com.example.lolserver.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -54,8 +53,8 @@ public class SummonerServiceV1 implements SummonerService{
         }
 
         if (!summoner.isTagLine()) {
-            throw new WebException(
-                    HttpStatus.BAD_REQUEST,
+            throw new CoreException(
+                    ErrorType.NOT_FOUND_USER,
                     "존재하지 않는 유저 입니다. " + q
             );
         }
@@ -99,7 +98,7 @@ public class SummonerServiceV1 implements SummonerService{
 
         List<Summoner> summonerList = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegion(summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
 
-        if(summonerList.size() < 1) {
+        if(summonerList.isEmpty()) {
             if(!summoner.isTagLine()) {
                 return Collections.emptyList();
             }
@@ -134,7 +133,7 @@ public class SummonerServiceV1 implements SummonerService{
             }
         }
 
-        return summonerList.stream().map(Summoner::toResponse).collect(Collectors.toList());
+        return summonerList.stream().map(Summoner::toResponse).toList();
     }
 
     @Override
@@ -154,8 +153,8 @@ public class SummonerServiceV1 implements SummonerService{
             return new SummonerRenewalResponse(puuid, RenewalStatus.PROGRESS);
         }
 
-        Summoner summoner = summonerJpaRepository.findById(puuid).orElseThrow(() -> new WebException(
-                HttpStatus.BAD_REQUEST,
+        Summoner summoner = summonerJpaRepository.findById(puuid).orElseThrow(() -> new CoreException(
+                ErrorType.NOT_FOUND_PUUID,
                 "존재하지 않는 PUUID 입니다. " + puuid
         ));
 
