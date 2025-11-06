@@ -1,5 +1,0 @@
-dependencies {
-    // bucket
-    implementation 'com.bucket4j:bucket4j_jdk17-redis-common:8.12.1'
-    implementation 'com.bucket4j:bucket4j_jdk17-lettuce:8.12.1'
-}
