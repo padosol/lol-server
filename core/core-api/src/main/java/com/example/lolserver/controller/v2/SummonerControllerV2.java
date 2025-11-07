@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.summoner.controller;
+package com.example.lolserver.controller.v2;
 
 import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalResponse;
 import com.example.lolserver.domain.summoner.service.SummonerService;

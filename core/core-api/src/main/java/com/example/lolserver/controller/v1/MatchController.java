@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.match.controller;
+package com.example.lolserver.controller.v1;
 
 import com.example.lolserver.storage.db.core.repository.dto.data.GameData;
 import com.example.lolserver.storage.db.core.repository.dto.data.TimelineData;
