@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.spectator.controller;
+package com.example.lolserver.controller.v1;
 
 
 import com.example.lolserver.riot.dto.spectator.CurrentGameInfo;

@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.summoner.controller;
+package com.example.lolserver.controller.v1;
 
 import java.util.List;
 
