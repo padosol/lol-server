@@ -1,11 +1,11 @@
-package com.example.lolserver.domain.summoner.service;
+package com.example.lolserver.domain.summoner.application;
 
-import com.example.lolserver.domain.summoner.client.RiotSummonerClient;
 import com.example.lolserver.domain.summoner.dto.response.RenewalStatus;
 import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalResponse;
-import com.example.lolserver.domain.summoner.vo.SummonerVO;
 import com.example.lolserver.rabbitmq.dto.SummonerMessage;
 import com.example.lolserver.rabbitmq.service.RabbitMqService;
+import com.example.lolserver.riot.client.summoner.SummonerRestClient;
+import com.example.lolserver.riot.client.summoner.model.SummonerVO;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.example.lolserver.riot.type.Platform;
 import com.example.lolserver.storage.db.core.repository.league.entity.QueueType;
@@ -29,10 +29,10 @@ import java.util.Set;
 public class SummonerServiceV1 implements SummonerService{
 
     private final SummonerRepositoryCustom summonerRepositoryCustom;
-    private final RiotSummonerClient riotSummonerClient;
     private final SummonerJpaRepository summonerJpaRepository;
     private final RabbitMqService rabbitMqService;
     private final SummonerRenewalRepository summonerRenewalRepository;
+    private final SummonerRestClient summonerRestClient;
 
     /**
      * 유저 상세 조회 함수
@@ -59,7 +59,7 @@ public class SummonerServiceV1 implements SummonerService{
             );
         }
 
-        SummonerVO summonerVO = riotSummonerClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
+        SummonerVO summonerVO = summonerRestClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
 
         if (summonerVO != null) {
             int leaguePoint = 0;
@@ -103,7 +103,7 @@ public class SummonerServiceV1 implements SummonerService{
                 return Collections.emptyList();
             }
 
-            SummonerVO summonerVO = riotSummonerClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
+            SummonerVO summonerVO = summonerRestClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
 
             if (summonerVO != null) {
                 int leaguePoint = 0;

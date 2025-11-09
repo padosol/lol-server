@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.summoner.vo;
+package com.example.lolserver.riot.client.summoner.model;
 
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
