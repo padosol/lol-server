@@ -1,5 +1,7 @@
 package com.example.lolserver.domain.match.service;
 
+import com.example.lolserver.domain.match.dto.MSChampionRequest;
+import com.example.lolserver.domain.match.dto.MatchRequest;
 import com.example.lolserver.storage.db.core.repository.dto.data.GameData;
 import com.example.lolserver.storage.db.core.repository.dto.data.TimelineData;
 import com.example.lolserver.storage.db.core.repository.match.dto.MSChampionResponse;
@@ -12,8 +14,6 @@ import com.example.lolserver.storage.db.core.repository.match.match.dsl.MatchRep
 import com.example.lolserver.storage.db.core.repository.match.matchsummoner.dsl.MatchSummonerRepositoryCustom;
 import com.example.lolserver.storage.db.core.repository.match.timeline.TimelineRepositoryCustom;
 import com.example.lolserver.support.error.CoreException;
-import com.example.lolserver.domain.match.dto.MSChampionRequest;
-import com.example.lolserver.domain.match.dto.MatchRequest;
 import com.example.lolserver.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +21,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
 
 @Slf4j
 @Service

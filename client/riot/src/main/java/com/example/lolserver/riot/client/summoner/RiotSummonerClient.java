@@ -1,6 +1,6 @@
-package com.example.lolserver.domain.summoner.client;
+package com.example.lolserver.riot.client.summoner;
 
-import com.example.lolserver.domain.summoner.vo.SummonerVO;
+import com.example.lolserver.riot.client.summoner.model.SummonerVO;
 import feign.Headers;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
