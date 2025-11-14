@@ -46,7 +46,8 @@ public class SummonerServiceV1 implements SummonerService{
         Summoner summoner = new Summoner(q, Platform.getValueOfName(region));
         summoner.splitGameNameTagLine();
 
-        List<Summoner> findSummoner = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegion(summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
+        List<Summoner> findSummoner = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegion(
+                summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
 
         if(findSummoner.size() == 1) {
             return findSummoner.get(0).toResponse();
@@ -60,34 +61,35 @@ public class SummonerServiceV1 implements SummonerService{
         }
 
         SummonerVO summonerVO = summonerRestClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
-
-        if (summonerVO != null) {
-            int leaguePoint = 0;
-            String tier = "";
-            String rank = "";
-            Set<LeagueEntryDTO> leagueEntryDTOS = summonerVO.getLeagueEntryDTOS();
-            for (LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
-                if (leagueEntryDTO.getQueueType().equals(QueueType.RANKED_SOLO_5x5.name())) {
-                    leaguePoint = leagueEntryDTO.getLeaguePoints();
-                    tier = leagueEntryDTO.getTier();
-                    rank = leagueEntryDTO.getRank();
-                }
+        if (summonerVO == null) {
+            throw new CoreException(
+                    ErrorType.NOT_FOUND_USER,
+                    "존재하지 않는 유저 입니다. " + q
+            );
+        }
+        int leaguePoint = 0;
+        String tier = "";
+        String rank = "";
+        Set<LeagueEntryDTO> leagueEntryDTOS = summonerVO.getLeagueEntryDTOS();
+        for (LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
+            if (leagueEntryDTO.getQueueType().equals(QueueType.RANKED_SOLO_5x5.name())) {
+                leaguePoint = leagueEntryDTO.getLeaguePoints();
+                tier = leagueEntryDTO.getTier();
+                rank = leagueEntryDTO.getRank();
             }
-
-            return SummonerResponse.builder()
-                    .profileIconId(summonerVO.getProfileIconId())
-                    .puuid(summonerVO.getPuuid())
-                    .summonerLevel(summonerVO.getSummonerLevel())
-                    .platform(region)
-                    .gameName(summonerVO.getGameName())
-                    .tagLine(summonerVO.getTagLine())
-                    .point(leaguePoint)
-                    .tier(tier)
-                    .rank(rank)
-                    .build();
         }
 
-        throw new RuntimeException("해당 유저가 존재하지 않습니다.");
+        return SummonerResponse.builder()
+                .profileIconId(summonerVO.getProfileIconId())
+                .puuid(summonerVO.getPuuid())
+                .summonerLevel(summonerVO.getSummonerLevel())
+                .platform(region)
+                .gameName(summonerVO.getGameName())
+                .tagLine(summonerVO.getTagLine())
+                .point(leaguePoint)
+                .tier(tier)
+                .rank(rank)
+                .build();
     }
 
     @Override

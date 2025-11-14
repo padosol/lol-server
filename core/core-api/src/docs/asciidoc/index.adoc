@@ -1,0 +1,27 @@
+= API Docs
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+:snippets: build/generated-snippets
+
+== Introduce
+
+This is the Core API documentation.
+
+== Example API
+
+=== Example GET API
+==== Curl Request
+include::{snippets}/search-summoner/curl-request.adoc[]
+// ==== Path Parameters
+// include::{snippets}/search-summoner/path-parameters.adoc[]
+==== Query Parameters
+include::{snippets}/search-summoner/query-parameters.adoc[]
+==== Http Response
+include::{snippets}/search-summoner/http-response.adoc[]
+==== Response Fields
+include::{snippets}/search-summoner/response-fields.adoc[]
+

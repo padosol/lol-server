@@ -20,9 +20,6 @@ public class RenewalController {
     public ResponseEntity<SummonerRenewalStatus> checkSummonerRenewalStatus(
             @PathVariable("puuid") String puuid
     ) {
-
-
-
         return null;
     }
 }
