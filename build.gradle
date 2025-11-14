@@ -3,6 +3,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.6'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'org.asciidoctor.jvm.convert' version '3.3.2'
 }
 
 allprojects {
@@ -38,6 +39,7 @@ subprojects {
         compileOnly {
             extendsFrom annotationProcessor
         }
+        asciidoctorExt
     }
 
     dependencies {
@@ -46,9 +48,13 @@ subprojects {
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
 
+        annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+
         // test
         testCompileOnly 'org.projectlombok:lombok'
         testAnnotationProcessor 'org.projectlombok:lombok'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'io.projectreactor:reactor-test'
     }
 
     dependencyManagement {
@@ -64,6 +70,32 @@ subprojects {
     bootRun {
         String activeProfile = System.properties['spring.profiles.active']
         systemProperty "spring.profiles.active", activeProfile
+    }
+
+    ext { // 전역 변수
+        snippetsDir = file('build/generated-snippets')
+    }
+
+    test {
+        outputs.dir snippetsDir
+    }
+
+    asciidoctor {
+        inputs.dir snippetsDir
+        configurations 'asciidoctorExt'
+
+        sources { // 특정 파일만 html로 만든다.
+            include("**/index.adoc")
+        }
+        baseDirFollowsSourceFile() // 다른 adoc 파일을 include 할 때 경로를 baseDir로 맞춘다.
+        dependsOn test
+    }
+
+    bootJar {
+        dependsOn asciidoctor
+        from("${asciidoctor.outputDir}") {
+            into 'static/docs'
+        }
     }
 }
 

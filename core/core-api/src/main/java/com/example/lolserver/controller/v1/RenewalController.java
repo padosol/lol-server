@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.renewal.controller;
+package com.example.lolserver.controller.v1;
 
 import com.example.lolserver.domain.renewal.dto.response.SummonerRenewalStatus;
 import com.example.lolserver.domain.renewal.service.RenewalService;
@@ -20,9 +20,6 @@ public class RenewalController {
     public ResponseEntity<SummonerRenewalStatus> checkSummonerRenewalStatus(
             @PathVariable("puuid") String puuid
     ) {
-
-
-
         return null;
     }
 }

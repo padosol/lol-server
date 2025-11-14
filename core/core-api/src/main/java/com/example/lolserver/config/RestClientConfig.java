@@ -1,6 +1,6 @@
 package com.example.lolserver.config;
 
-import com.example.lolserver.domain.summoner.client.SummonerRestClient;
+import com.example.lolserver.riot.client.summoner.SummonerRestClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

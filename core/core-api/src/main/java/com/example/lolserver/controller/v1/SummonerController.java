@@ -1,26 +1,17 @@
-package com.example.lolserver.domain.summoner.controller;
+package com.example.lolserver.controller.v1;
+
+import com.example.lolserver.domain.summoner.application.SummonerService;
+import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerResponse;
+import com.example.lolserver.storage.redis.service.RedisService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerResponse;
-import com.example.lolserver.storage.redis.service.RedisService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.example.lolserver.domain.summoner.service.SummonerService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-@Tag(name = "Summoner API")
 @Slf4j
 @RestController
 @RequestMapping("/api")
@@ -38,7 +29,6 @@ public class SummonerController {
      * @param region 지역명
      * @return 유저 리스트
      */
-    @Operation(description = "유저 검색 API", summary = "유저 검색 API")
     @GetMapping("/v1/summoners/search")
     public ResponseEntity<List<SummonerResponse>> searchSummoner(
             @RequestParam(name = "q", defaultValue = "hideonbush-kr1") String q,

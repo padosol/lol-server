@@ -1,11 +1,11 @@
-package com.example.lolserver.domain.summoner.service;
+package com.example.lolserver.domain.summoner.application;
 
-import com.example.lolserver.domain.summoner.client.RiotSummonerClient;
 import com.example.lolserver.domain.summoner.dto.response.RenewalStatus;
 import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalResponse;
-import com.example.lolserver.domain.summoner.vo.SummonerVO;
 import com.example.lolserver.rabbitmq.dto.SummonerMessage;
 import com.example.lolserver.rabbitmq.service.RabbitMqService;
+import com.example.lolserver.riot.client.summoner.SummonerRestClient;
+import com.example.lolserver.riot.client.summoner.model.SummonerVO;
 import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.example.lolserver.riot.type.Platform;
 import com.example.lolserver.storage.db.core.repository.league.entity.QueueType;
@@ -29,10 +29,10 @@ import java.util.Set;
 public class SummonerServiceV1 implements SummonerService{
 
     private final SummonerRepositoryCustom summonerRepositoryCustom;
-    private final RiotSummonerClient riotSummonerClient;
     private final SummonerJpaRepository summonerJpaRepository;
     private final RabbitMqService rabbitMqService;
     private final SummonerRenewalRepository summonerRenewalRepository;
+    private final SummonerRestClient summonerRestClient;
 
     /**
      * 유저 상세 조회 함수
@@ -46,7 +46,8 @@ public class SummonerServiceV1 implements SummonerService{
         Summoner summoner = new Summoner(q, Platform.getValueOfName(region));
         summoner.splitGameNameTagLine();
 
-        List<Summoner> findSummoner = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegion(summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
+        List<Summoner> findSummoner = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegion(
+                summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
 
         if(findSummoner.size() == 1) {
             return findSummoner.get(0).toResponse();
@@ -59,35 +60,36 @@ public class SummonerServiceV1 implements SummonerService{
             );
         }
 
-        SummonerVO summonerVO = riotSummonerClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
-
-        if (summonerVO != null) {
-            int leaguePoint = 0;
-            String tier = "";
-            String rank = "";
-            Set<LeagueEntryDTO> leagueEntryDTOS = summonerVO.getLeagueEntryDTOS();
-            for (LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
-                if (leagueEntryDTO.getQueueType().equals(QueueType.RANKED_SOLO_5x5.name())) {
-                    leaguePoint = leagueEntryDTO.getLeaguePoints();
-                    tier = leagueEntryDTO.getTier();
-                    rank = leagueEntryDTO.getRank();
-                }
+        SummonerVO summonerVO = summonerRestClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
+        if (summonerVO == null) {
+            throw new CoreException(
+                    ErrorType.NOT_FOUND_USER,
+                    "존재하지 않는 유저 입니다. " + q
+            );
+        }
+        int leaguePoint = 0;
+        String tier = "";
+        String rank = "";
+        Set<LeagueEntryDTO> leagueEntryDTOS = summonerVO.getLeagueEntryDTOS();
+        for (LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
+            if (leagueEntryDTO.getQueueType().equals(QueueType.RANKED_SOLO_5x5.name())) {
+                leaguePoint = leagueEntryDTO.getLeaguePoints();
+                tier = leagueEntryDTO.getTier();
+                rank = leagueEntryDTO.getRank();
             }
-
-            return SummonerResponse.builder()
-                    .profileIconId(summonerVO.getProfileIconId())
-                    .puuid(summonerVO.getPuuid())
-                    .summonerLevel(summonerVO.getSummonerLevel())
-                    .platform(region)
-                    .gameName(summonerVO.getGameName())
-                    .tagLine(summonerVO.getTagLine())
-                    .point(leaguePoint)
-                    .tier(tier)
-                    .rank(rank)
-                    .build();
         }
 
-        throw new RuntimeException("해당 유저가 존재하지 않습니다.");
+        return SummonerResponse.builder()
+                .profileIconId(summonerVO.getProfileIconId())
+                .puuid(summonerVO.getPuuid())
+                .summonerLevel(summonerVO.getSummonerLevel())
+                .platform(region)
+                .gameName(summonerVO.getGameName())
+                .tagLine(summonerVO.getTagLine())
+                .point(leaguePoint)
+                .tier(tier)
+                .rank(rank)
+                .build();
     }
 
     @Override
@@ -103,7 +105,7 @@ public class SummonerServiceV1 implements SummonerService{
                 return Collections.emptyList();
             }
 
-            SummonerVO summonerVO = riotSummonerClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
+            SummonerVO summonerVO = summonerRestClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
 
             if (summonerVO != null) {
                 int leaguePoint = 0;

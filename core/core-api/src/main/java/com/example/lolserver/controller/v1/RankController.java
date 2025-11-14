@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.rank.controller;
+package com.example.lolserver.controller.v1;
 
 import com.example.lolserver.domain.rank.dto.RankSearchDto;
 import com.example.lolserver.domain.rank.service.RankService;

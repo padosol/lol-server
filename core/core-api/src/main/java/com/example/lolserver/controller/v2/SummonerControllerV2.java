@@ -1,7 +1,7 @@
-package com.example.lolserver.domain.summoner.controller;
+package com.example.lolserver.controller.v2;
 
 import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalResponse;
-import com.example.lolserver.domain.summoner.service.SummonerService;
+import com.example.lolserver.domain.summoner.application.SummonerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

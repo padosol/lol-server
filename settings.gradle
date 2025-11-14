@@ -4,6 +4,5 @@ include(
         "client:riot",
         "core:core-api",
         "support:logging",
-        "storage:db-core",
-        "tests:api-docs"
+        "storage:db-core"
 )
