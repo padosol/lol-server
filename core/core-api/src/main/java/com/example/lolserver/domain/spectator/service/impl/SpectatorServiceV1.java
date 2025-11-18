@@ -11,8 +11,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class SpectatorServiceV1 implements SpectatorService {
     @Override
-    public CurrentGameInfo getCurrentGameInfo(String puuid, String region) throws IOException, InterruptedException {
-
+    public CurrentGameInfo getCurrentGameInfo(String puuid, String region) {
 
         return null;
     }

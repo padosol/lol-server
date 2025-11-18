@@ -1,4 +1,4 @@
-package com.example.lolserver.rabbitmq.dto;
+package com.example.lolserver.rabbitmq.message;
 
 import lombok.Getter;
 import lombok.ToString;

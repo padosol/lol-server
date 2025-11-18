@@ -1,9 +1,10 @@
-package com.example.lolserver.controller.v1;
+package com.example.lolserver.controller;
 
 import com.example.lolserver.domain.summoner.application.SummonerService;
+import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalResponse;
 import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerResponse;
 import com.example.lolserver.storage.redis.service.RedisService;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.example.lolserver.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -30,13 +31,13 @@ public class SummonerController {
      * @return 유저 리스트
      */
     @GetMapping("/v1/summoners/search")
-    public ResponseEntity<List<SummonerResponse>> searchSummoner(
+    public ResponseEntity<ApiResponse<List<SummonerResponse>>> searchSummoner(
             @RequestParam(name = "q", defaultValue = "hideonbush-kr1") String q,
             @RequestParam(name = "region", defaultValue = "kr", required = false) String region
     ) {
         List<SummonerResponse> allSummoner = summonerService.getAllSummoner(q, region);
 
-        return new ResponseEntity<>(allSummoner, HttpStatus.OK);
+        return ResponseEntity.ok(ApiResponse.success(allSummoner));
     }
 
     /**
@@ -46,13 +47,13 @@ public class SummonerController {
      * @return 유저 상세 정보
      */
     @GetMapping("/v1/summoners/{region}/{gameName}")
-    public ResponseEntity<SummonerResponse> getAllSummoner(
+    public ResponseEntity<ApiResponse<SummonerResponse>> getAllSummoner(
             @PathVariable("region") String region,
             @PathVariable("gameName") String gameName
     ) {
         SummonerResponse summoner = summonerService.getSummoner(gameName, region);
 
-        return new ResponseEntity<>(summoner, HttpStatus.OK);
+        return ResponseEntity.ok(ApiResponse.success(summoner));
     }
 
     /**
@@ -62,45 +63,39 @@ public class SummonerController {
      * @return 유저 리스트
      */
     @GetMapping("/v1/summoners/autocomplete")
-    public ResponseEntity<List<SummonerResponse>> autoComplete(
+    public ResponseEntity<ApiResponse<List<SummonerResponse>>> autoComplete(
             @RequestParam String q,
             @RequestParam(defaultValue = "kr") String region
     ) {
         List<SummonerResponse> allSummonerAutoComplete = summonerService.getAllSummonerAutoComplete(q, region);
 
-        return new ResponseEntity<>(allSummonerAutoComplete, HttpStatus.OK);
+        return ResponseEntity.ok(ApiResponse.success(allSummonerAutoComplete));
     }
 
-    /**
-     * 유저 정보 갱신 API   
-     * @param puuid 유저 ID
-     * @return 유저 정보
-     */
-    @GetMapping("/v1/summoners/renewal")
-    public ResponseEntity<String> renewalSummonerInfo(
-        @RequestParam String puuid
+    @GetMapping("/summoners/renewal/{platform}/{puuid}")
+    public ResponseEntity<ApiResponse<SummonerRenewalResponse>> renewalSummonerInfo(
+            @PathVariable(name = "platform") String platform,
+            @PathVariable("puuid") String puuid
     ) {
-        summonerService.renewalSummonerInfo("kr", puuid);
-        return new ResponseEntity<>(puuid, HttpStatus.OK);
+        SummonerRenewalResponse summonerRenewalResponse = summonerService.renewalSummonerInfo(platform, puuid);
+        return ResponseEntity.ok(ApiResponse.success(summonerRenewalResponse));
     }
 
     /**
      * 유저 정보 갱신 상태 조회 API 
      * @param puuid 유저 ID
      * @return 유저 정보 갱신 상태
-     * @throws JsonProcessingException
      */
     @GetMapping("/v1/summoners/{puuid}/renewal-status")
-    public ResponseEntity<Boolean> summonerRenewalStatus(
+    public ResponseEntity<ApiResponse<Boolean>> summonerRenewalStatus(
             @PathVariable String puuid
-    ) throws JsonProcessingException {
-
+    ) {
         boolean status = redisService.summonerRenewalStatus(puuid);
 
         if(status) {
-            return new ResponseEntity<>(true, HttpStatus.CREATED);
+            return new ResponseEntity<>(ApiResponse.success(true), HttpStatus.CREATED);
         } else {
-            return new ResponseEntity<>(false, HttpStatus.OK);
+            return new ResponseEntity<>(ApiResponse.success(true), HttpStatus.OK);
         }
     }
 

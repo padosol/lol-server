@@ -1,5 +1,0 @@
-GET http://localhost:8100/api/v1/matches?puuid=G4HjnUX5quA2Oopg9qtnEbqJEOBM0ALSxKh3S6jU2G42CSPdqyCvFwTN04-l24k0mKwNrqOhjrfP_g&queueId=420&pageNo=1&platform=kr
-
-Accept: application/json
-
-###

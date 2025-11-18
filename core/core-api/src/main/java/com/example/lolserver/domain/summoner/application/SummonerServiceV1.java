@@ -2,7 +2,7 @@ package com.example.lolserver.domain.summoner.application;
 
 import com.example.lolserver.domain.summoner.dto.response.RenewalStatus;
 import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalResponse;
-import com.example.lolserver.rabbitmq.dto.SummonerMessage;
+import com.example.lolserver.rabbitmq.message.SummonerMessage;
 import com.example.lolserver.rabbitmq.service.RabbitMqService;
 import com.example.lolserver.riot.client.summoner.SummonerRestClient;
 import com.example.lolserver.riot.client.summoner.model.SummonerVO;

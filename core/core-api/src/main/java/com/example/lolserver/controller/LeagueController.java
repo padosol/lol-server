@@ -1,9 +1,10 @@
-package com.example.lolserver.controller.v1;
+package com.example.lolserver.controller;
 
 import java.io.IOException;
 import java.util.List;
 
 import com.example.lolserver.storage.db.core.repository.dto.data.leagueData.LeagueSummonerData;
+import com.example.lolserver.support.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,12 +31,11 @@ public class LeagueController {
      * @throws InterruptedException
      */
     @GetMapping("/v1/leagues/by-puuid/{puuid}")
-    public ResponseEntity<List<LeagueSummonerData>> fetchLeaguesBySummoner(
+    public ResponseEntity<ApiResponse<List<LeagueSummonerData>>> fetchLeaguesBySummoner(
             @PathVariable("puuid") String puuid
     ) {
-
         List<LeagueSummonerData> leagueSummonerData = leagueService.getLeaguesBypuuid(puuid);
 
-        return new ResponseEntity<>(leagueSummonerData, HttpStatus.OK);
+        return new ResponseEntity<>(ApiResponse.success(leagueSummonerData), HttpStatus.OK);
     }
 }

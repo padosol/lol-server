@@ -1,6 +1,6 @@
 package com.example.lolserver.docs;
 
-import com.example.lolserver.controller.v1.SummonerController;
+import com.example.lolserver.controller.SummonerController;
 import com.example.lolserver.domain.summoner.application.SummonerService;
 import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerResponse;
 import com.example.lolserver.storage.redis.service.RedisService;

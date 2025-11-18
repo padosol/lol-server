@@ -1,7 +1,8 @@
-package com.example.lolserver.controller.v1;
+package com.example.lolserver.controller;
 
 import java.io.IOException;
 
+import com.example.lolserver.support.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,18 +18,18 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/champion")
 @RestController
 @RequiredArgsConstructor
-public class ChampionV1Controller {
+public class ChampionController {
 
 
     private final ChampionService championServiceV1;
 
     @GetMapping("/rotation")
-    public ResponseEntity<ChampionInfo> getRotation(
+    public ResponseEntity<ApiResponse<ChampionInfo>> getRotation(
             @RequestParam("region") String region
     ) throws IOException, InterruptedException {
 
         ChampionInfo rotation = championServiceV1.getRotation(region);
 
-        return new ResponseEntity<>(rotation, HttpStatus.OK);
+        return new ResponseEntity<>(ApiResponse.success(rotation), HttpStatus.OK);
     }
 }
