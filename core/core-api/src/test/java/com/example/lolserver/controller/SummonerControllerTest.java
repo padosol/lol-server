@@ -1,0 +1,272 @@
+package com.example.lolserver.controller;
+
+import com.example.lolserver.domain.summoner.application.SummonerService;
+import com.example.lolserver.domain.summoner.dto.response.RenewalStatus;
+import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalResponse;
+import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerResponse;
+import com.example.lolserver.storage.redis.service.RedisService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.restdocs.RestDocumentationExtension;
+import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
+import org.springframework.restdocs.payload.JsonFieldType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(SummonerController.class)
+@ExtendWith(RestDocumentationExtension.class)
+class SummonerControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private SummonerService summonerService;
+
+    @MockBean
+    private RedisService redisService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp(WebApplicationContext webApplicationContext, RestDocumentationContextProvider restDocumentation) {
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(documentationConfiguration(restDocumentation))
+                .build();
+    }
+
+    private final String BASE_URL = "/api/v1/summoners";
+
+    @Test
+    @DisplayName("유저 검색 API")
+    void searchSummoner() throws Exception {
+        // given
+        List<SummonerResponse> responses = Arrays.asList(
+                SummonerResponse.builder().puuid("puuid-1").gameName("testUser1").tagLine("KR1").summonerLevel(100L).build(),
+                SummonerResponse.builder().puuid("puuid-2").gameName("testUser2").tagLine("KR1").summonerLevel(120L).build()
+        );
+        given(summonerService.getAllSummoner(anyString(), anyString())).willReturn(responses);
+
+        // when
+        ResultActions result = mockMvc.perform(get(BASE_URL + "/search")
+                .param("q", "testUser1")
+                .param("region", "kr"));
+
+        // then
+        result.andExpect(status().isOk())
+                .andDo(document("summoner-search",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        queryParameters(
+                                parameterWithName("q").description("검색할 소환사 이름 (gameName) 또는 (gameName#tagLine)"),
+                                parameterWithName("region").description("검색할 지역 (기본값: kr)")
+                        ),
+                        responseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
+                                fieldWithPath("data[].profileIconId").type(JsonFieldType.NUMBER).description("프로필 아이콘 ID").optional(),
+                                fieldWithPath("data[].puuid").type(JsonFieldType.STRING).description("소환사 고유 PUUID"),
+                                fieldWithPath("data[].summonerLevel").type(JsonFieldType.NUMBER).description("소환사 레벨"),
+                                fieldWithPath("data[].gameName").type(JsonFieldType.STRING).description("게임 이름"),
+                                fieldWithPath("data[].tagLine").type(JsonFieldType.STRING).description("태그 라인"),
+                                fieldWithPath("data[].platform").type(JsonFieldType.STRING).description("플랫폼(지역)").optional(),
+                                fieldWithPath("data[].lastRevisionDateTime").type(JsonFieldType.STRING).description("마지막 갱신일").optional(),
+                                fieldWithPath("data[].point").type(JsonFieldType.NUMBER).description("LP").optional(),
+                                fieldWithPath("data[].tier").type(JsonFieldType.STRING).description("티어").optional(),
+                                fieldWithPath("data[].rank").type(JsonFieldType.STRING).description("랭크").optional(),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 정보 (정상 응답 시 null)")
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("유저 상세 정보 API")
+    void getSummoner() throws Exception {
+        // given
+        SummonerResponse response = SummonerResponse.builder()
+                .puuid("test-puuid")
+                .gameName("hide on bush")
+                .tagLine("KR1")
+                .summonerLevel(500L)
+                .tier("CHALLENGER")
+                .rank("I")
+                .point(1000)
+                .build();
+        given(summonerService.getSummoner(anyString(), anyString())).willReturn(response);
+
+        // when
+        ResultActions result = mockMvc.perform(
+                get(BASE_URL + "/{region}/{gameName}", "kr", "hide on bush"));
+
+        // then
+        result.andExpect(status().isOk())
+                .andDo(document("summoner-get-by-name",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("region").description("지역명"),
+                                parameterWithName("gameName").description("게임명")
+                        ),
+                        responseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
+                                fieldWithPath("data.profileIconId").type(JsonFieldType.NUMBER).description("프로필 아이콘 ID").optional(),
+                                fieldWithPath("data.puuid").type(JsonFieldType.STRING).description("소환사 고유 PUUID"),
+                                fieldWithPath("data.summonerLevel").type(JsonFieldType.NUMBER).description("소환사 레벨"),
+                                fieldWithPath("data.gameName").type(JsonFieldType.STRING).description("게임 이름"),
+                                fieldWithPath("data.tagLine").type(JsonFieldType.STRING).description("태그 라인"),
+                                fieldWithPath("data.platform").type(JsonFieldType.STRING).description("플랫폼(지역)").optional(),
+                                fieldWithPath("data.lastRevisionDateTime").type(JsonFieldType.STRING).description("마지막 갱신일").optional(),
+                                fieldWithPath("data.point").type(JsonFieldType.NUMBER).description("LP").optional(),
+                                fieldWithPath("data.tier").type(JsonFieldType.STRING).description("티어").optional(),
+                                fieldWithPath("data.rank").type(JsonFieldType.STRING).description("랭크").optional(),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 정보 (정상 응답 시 null)")
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("유저명 자동완성 API")
+    void autoComplete() throws Exception {
+        // given
+        List<SummonerResponse> responses = Arrays.asList(
+                SummonerResponse.builder().puuid("puuid-1").gameName("testUser1").tagLine("KR1").summonerLevel(100L).build(),
+                SummonerResponse.builder().puuid("puuid-2").gameName("testUser2").tagLine("KR1").summonerLevel(120L).build()
+        );
+        given(summonerService.getAllSummonerAutoComplete(anyString(), anyString())).willReturn(responses);
+
+        // when
+        ResultActions result = mockMvc.perform(get(BASE_URL + "/autocomplete")
+                .param("q", "test")
+                .param("region", "kr"));
+
+        // then
+        result.andExpect(status().isOk())
+                .andDo(document("summoner-autocomplete",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        queryParameters(
+                                parameterWithName("q").description("자동완성 검색어"),
+                                parameterWithName("region").description("검색할 지역 (기본값: kr)")
+                        ),
+                        responseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
+                                fieldWithPath("data[].profileIconId").type(JsonFieldType.NUMBER).description("프로필 아이콘 ID").optional(),
+                                fieldWithPath("data[].puuid").type(JsonFieldType.STRING).description("소환사 고유 PUUID"),
+                                fieldWithPath("data[].summonerLevel").type(JsonFieldType.NUMBER).description("소환사 레벨"),
+                                fieldWithPath("data[].gameName").type(JsonFieldType.STRING).description("게임 이름"),
+                                fieldWithPath("data[].tagLine").type(JsonFieldType.STRING).description("태그 라인"),
+                                fieldWithPath("data[].platform").type(JsonFieldType.STRING).description("플랫폼(지역)").optional(),
+                                fieldWithPath("data[].lastRevisionDateTime").type(JsonFieldType.STRING).description("마지막 갱신일").optional(),
+                                fieldWithPath("data[].point").type(JsonFieldType.NUMBER).description("LP").optional(),
+                                fieldWithPath("data[].tier").type(JsonFieldType.STRING).description("티어").optional(),
+                                fieldWithPath("data[].rank").type(JsonFieldType.STRING).description("랭크").optional(),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 정보 (정상 응답 시 null)")
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("유저 정보 갱신 API")
+    void renewalSummonerInfo() throws Exception {
+        // given
+        String puuid = "test-puuid";
+        String platform = "kr";
+
+        SummonerRenewalResponse response = new SummonerRenewalResponse(puuid, RenewalStatus.SUCCESS);
+        given(summonerService.renewalSummonerInfo(anyString(), anyString())).willReturn(response);
+
+        // when
+        ResultActions result = mockMvc.perform(get("/api/summoners/renewal/{platform}/{puuid}", platform, puuid));
+
+        // then
+        result.andExpect(status().isOk())
+                .andDo(document("summoner-renewal",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("platform").description("플랫폼(지역)"),
+                                parameterWithName("puuid").description("소환사 고유 PUUID")
+                        ),
+                        responseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
+                                fieldWithPath("data.puuid").type(JsonFieldType.STRING).description("갱신 요청한 소환사 PUUID"),
+                                fieldWithPath("data.status").type(JsonFieldType.STRING).description("갱신 요청 상태 (REQUEST, ALREADY_IN_PROGRESS)"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 정보 (정상 응답 시 null)")
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("유저 정보 갱신 상태 조회 API - 갱신 완료")
+    void summonerRenewalStatus_completed() throws Exception {
+        // given
+        String puuid = "test-puuid";
+        given(redisService.summonerRenewalStatus(anyString())).willReturn(true);
+
+        // when
+        ResultActions result = mockMvc.perform(get(BASE_URL + "/{puuid}/renewal-status", puuid));
+
+        // then
+        result.andExpect(status().isCreated())
+                .andDo(document("summoner-renewal-status-completed",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("puuid").description("소환사 고유 PUUID")
+                        ),
+                        responseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
+                                fieldWithPath("data").type(JsonFieldType.BOOLEAN).description("갱신 완료 여부 (true: 완료)"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 정보 (정상 응답 시 null)")
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("유저 정보 갱신 상태 조회 API - 갱신 중")
+    void summonerRenewalStatus_inProgress() throws Exception {
+        // given
+        String puuid = "test-puuid";
+        given(redisService.summonerRenewalStatus(anyString())).willReturn(false);
+
+        // when
+        ResultActions result = mockMvc.perform(get(BASE_URL + "/{puuid}/renewal-status", puuid));
+
+        // then
+        result.andExpect(status().isOk())
+                .andDo(document("summoner-renewal-status-in-progress",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("puuid").description("소환사 고유 PUUID")
+                        ),
+                        responseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
+                                fieldWithPath("data").type(JsonFieldType.BOOLEAN).description("갱신 완료 여부 (false: 갱신 중 또는 갱신 정보 없음)"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 정보 (정상 응답 시 null)")
+                        )
+                ));
+    }
+}

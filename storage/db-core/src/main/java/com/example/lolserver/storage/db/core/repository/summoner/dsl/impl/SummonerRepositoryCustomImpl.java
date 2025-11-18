@@ -19,12 +19,6 @@ public class SummonerRepositoryCustomImpl implements SummonerRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
 
-
-    @Override
-    public Summoner findByGameNameAndTagLine(String gameName, String tagLine) {
-        return null;
-    }
-
     @Override
     public List<Summoner> findAllByGameNameAndTagLineAndRegion(String gameName, String tagLine, String region) {
         return jpaQueryFactory.selectFrom(summoner)

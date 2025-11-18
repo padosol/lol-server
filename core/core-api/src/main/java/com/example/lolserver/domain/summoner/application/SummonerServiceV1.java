@@ -93,6 +93,11 @@ public class SummonerServiceV1 implements SummonerService{
     }
 
     @Override
+    public SummonerResponse getSummoner(String puuid) {
+        return null;
+    }
+
+    @Override
     public List<SummonerResponse> getAllSummoner(String q, String region){
 
         Summoner summoner = Summoner.builder().region(region).gameName(q).build();

@@ -6,7 +6,10 @@ import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalRespons
 import java.util.List;
 
 public interface SummonerService {
+
     SummonerResponse getSummoner(String q, String region);
+
+    SummonerResponse getSummoner(String puuid);
 
     List<SummonerResponse> getAllSummoner(String q, String region);
 
