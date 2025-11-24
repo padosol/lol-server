@@ -1,0 +1,10 @@
+[[summoner-renewal]]
+=== 유저 갱신
+
+==== HTTP Request
+include::{snippets}/summoner-renewal/http-request.adoc[]
+include::{snippets}/summoner-renewal/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/summoner-renewal/http-response.adoc[]
+include::{snippets}/summoner-renewal/response-fields.adoc[]

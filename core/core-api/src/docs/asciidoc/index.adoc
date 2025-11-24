@@ -15,3 +15,20 @@ endif::[]
 include::api/summoner/summoner-auto.adoc[]
 
 include::api/summoner/summoner-detail.adoc[]
+
+include::api/summoner/summoner-renewal.adoc[]
+
+[[Match-API]]
+== Match API
+
+include::api/match/match-get-ids.adoc[]
+
+include::api/match/match-detail.adoc[]
+
+include::api/match/match-chapion.adoc[]
+
+[[League-API]]
+== League API
+
+include::api/league/league-detail.adoc[]
+
