@@ -3,11 +3,11 @@ package com.example.lolserver.controller.summoner;
 import com.example.lolserver.domain.summoner.application.SummonerService;
 import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalResponse;
 import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerResponse;
+import com.example.lolserver.storage.redis.model.SummonerRenewalSession;
 import com.example.lolserver.storage.redis.service.RedisService;
 import com.example.lolserver.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,7 +47,7 @@ public class SummonerController {
      * @return 유저 상세 정보
      */
     @GetMapping("/v1/summoners/{region}/{gameName}")
-    public ResponseEntity<ApiResponse<SummonerResponse>> getAllSummoner(
+    public ResponseEntity<ApiResponse<SummonerResponse>> getSummoner(
             @PathVariable("region") String region,
             @PathVariable("gameName") String gameName
     ) {
@@ -87,16 +87,12 @@ public class SummonerController {
      * @return 유저 정보 갱신 상태
      */
     @GetMapping("/v1/summoners/{puuid}/renewal-status")
-    public ResponseEntity<ApiResponse<Boolean>> summonerRenewalStatus(
+    public ResponseEntity<ApiResponse<SummonerRenewalResponse>> summonerRenewalStatus(
             @PathVariable String puuid
     ) {
-        boolean status = redisService.summonerRenewalStatus(puuid);
+        SummonerRenewalSession summonerRenewalSession = redisService.summonerRenewalStatus(puuid);
 
-        if(status) {
-            return new ResponseEntity<>(ApiResponse.success(true), HttpStatus.CREATED);
-        } else {
-            return new ResponseEntity<>(ApiResponse.success(true), HttpStatus.OK);
-        }
+        return ResponseEntity.ok(ApiResponse.success(SummonerRenewalResponse.of(summonerRenewalSession)));
     }
 
 }

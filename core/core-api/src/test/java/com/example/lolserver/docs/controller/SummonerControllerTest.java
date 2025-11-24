@@ -6,6 +6,7 @@ import com.example.lolserver.domain.summoner.application.SummonerService;
 import com.example.lolserver.domain.summoner.dto.response.RenewalStatus;
 import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalResponse;
 import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerResponse;
+import com.example.lolserver.storage.redis.model.SummonerRenewalSession;
 import com.example.lolserver.storage.redis.service.RedisService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -210,13 +211,17 @@ class SummonerControllerTest extends RestDocsSupport {
     void summonerRenewalStatus_completed() throws Exception {
         // given
         String puuid = "test-puuid";
-        given(redisService.summonerRenewalStatus(anyString())).willReturn(true);
+        SummonerRenewalSession session = new SummonerRenewalSession(
+                puuid,
+                true, true, true
+        );
+        given(redisService.summonerRenewalStatus(anyString())).willReturn(session);
 
         // when
         ResultActions result = mockMvc.perform(get(BASE_URL + "/{puuid}/renewal-status", puuid));
 
         // then
-        result.andExpect(status().isCreated())
+        result.andExpect(status().isOk())
                 .andDo(document("summoner-renewal-status-completed",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
@@ -225,7 +230,8 @@ class SummonerControllerTest extends RestDocsSupport {
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
-                                fieldWithPath("data").type(JsonFieldType.BOOLEAN).description("갱신 완료 여부 (true: 완료)"),
+                                fieldWithPath("data.puuid").type(JsonFieldType.STRING).description("갱신 유저 PUUID"),
+                                fieldWithPath("data.status").type(JsonFieldType.STRING).description("갱신 상태"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 정보 (정상 응답 시 null)")
                         )
                 ));
@@ -236,7 +242,11 @@ class SummonerControllerTest extends RestDocsSupport {
     void summonerRenewalStatus_inProgress() throws Exception {
         // given
         String puuid = "test-puuid";
-        given(redisService.summonerRenewalStatus(anyString())).willReturn(false);
+        SummonerRenewalSession session = new SummonerRenewalSession(
+                puuid,
+                false, true, true
+        );
+        given(redisService.summonerRenewalStatus(anyString())).willReturn(session);
 
         // when
         ResultActions result = mockMvc.perform(get(BASE_URL + "/{puuid}/renewal-status", puuid));
@@ -251,10 +261,12 @@ class SummonerControllerTest extends RestDocsSupport {
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
-                                fieldWithPath("data").type(JsonFieldType.BOOLEAN).description("갱신 완료 여부 (false: 갱신 중 또는 갱신 정보 없음)"),
+                                fieldWithPath("data.puuid").type(JsonFieldType.STRING).description("갱신 유저 PUUID"),
+                                fieldWithPath("data.status").type(JsonFieldType.STRING).description("갱신 상태"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 정보 (정상 응답 시 null)")
                         )
                 ));
+
     }
 
 

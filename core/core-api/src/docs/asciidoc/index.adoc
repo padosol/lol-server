@@ -12,4 +12,6 @@ endif::[]
 [[Summoner-API]]
 == Summoner API
 
-include::api/summoner/summoner.adoc[]
+include::api/summoner/summoner-auto.adoc[]
+
+include::api/summoner/summoner-detail.adoc[]
