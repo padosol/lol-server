@@ -31,6 +31,6 @@ public class LeagueServiceImpl implements LeagueService{
 
         List<LeagueSummoner> leagueSummoners = leagueSummonerRepository.findAllBySummoner(summoner);
 
-        return leagueSummoners.stream().map( LeagueSummoner::toData).collect(Collectors.toList());
+        return leagueSummoners.stream().map( LeagueSummoner::toData).toList();
     }
 }

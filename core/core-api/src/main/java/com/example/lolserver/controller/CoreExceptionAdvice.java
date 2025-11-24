@@ -1,4 +1,4 @@
-package com.example.lolserver.controller.advice;
+package com.example.lolserver.controller;
 
 
 import com.example.lolserver.support.error.CoreException;

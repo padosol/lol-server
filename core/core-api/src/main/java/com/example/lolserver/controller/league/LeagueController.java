@@ -1,4 +1,4 @@
-package com.example.lolserver.controller;
+package com.example.lolserver.controller.league;
 
 import java.io.IOException;
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.example.lolserver.docs.controller;
 
-import com.example.lolserver.controller.RankController;
+import com.example.lolserver.controller.rank.RankController;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.rank.dto.RankSearchDto;
 import com.example.lolserver.domain.rank.service.RankService;

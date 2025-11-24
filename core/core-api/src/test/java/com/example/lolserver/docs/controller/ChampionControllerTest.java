@@ -1,6 +1,6 @@
 package com.example.lolserver.docs.controller;
 
-import com.example.lolserver.controller.ChampionController;
+import com.example.lolserver.controller.champion.ChampionController;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.champion.service.ChampionService;
 import com.example.lolserver.riot.dto.champion.ChampionInfo;

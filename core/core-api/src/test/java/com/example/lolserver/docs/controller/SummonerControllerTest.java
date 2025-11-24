@@ -1,26 +1,20 @@
 package com.example.lolserver.docs.controller;
 
-import com.example.lolserver.controller.SummonerController;
+import com.example.lolserver.controller.summoner.SummonerController;
+import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.summoner.application.SummonerService;
 import com.example.lolserver.domain.summoner.dto.response.RenewalStatus;
 import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalResponse;
 import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerResponse;
 import com.example.lolserver.storage.redis.service.RedisService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.restdocs.RestDocumentationContextProvider;
-import org.springframework.restdocs.RestDocumentationExtension;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.restdocs.payload.JsonFieldType;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,7 +22,6 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
@@ -36,27 +29,21 @@ import static org.springframework.restdocs.payload.PayloadDocumentation.response
 import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(SummonerController.class)
-@ExtendWith(RestDocumentationExtension.class)
-class SummonerControllerTest {
+@ExtendWith(MockitoExtension.class)
+class SummonerControllerTest extends RestDocsSupport {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
+    @Mock
     private SummonerService summonerService;
 
-    @MockBean
+    @Mock
     private RedisService redisService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @InjectMocks
+    private SummonerController summonerController;
 
-    @BeforeEach
-    void setUp(WebApplicationContext webApplicationContext, RestDocumentationContextProvider restDocumentation) {
-        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-                .apply(documentationConfiguration(restDocumentation))
-                .build();
+    @Override
+    protected Object initController() {
+        return summonerController;
     }
 
     private final String BASE_URL = "/api/v1/summoners";
@@ -71,13 +58,11 @@ class SummonerControllerTest {
         );
         given(summonerService.getAllSummoner(anyString(), anyString())).willReturn(responses);
 
-        // when
-        ResultActions result = mockMvc.perform(get(BASE_URL + "/search")
-                .param("q", "testUser1")
-                .param("region", "kr"));
-
-        // then
-        result.andExpect(status().isOk())
+        // when & then
+        mockMvc.perform(get(BASE_URL + "/search")
+                .param("q", "hideonbush-kr1")
+                .param("region", "kr"))
+                .andExpect(status().isOk())
                 .andDo(document("summoner-search",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
@@ -115,27 +100,28 @@ class SummonerControllerTest {
                 .rank("I")
                 .point(1000)
                 .build();
+
         given(summonerService.getSummoner(anyString(), anyString())).willReturn(response);
 
         // when
         ResultActions result = mockMvc.perform(
-                get(BASE_URL + "/{region}/{gameName}", "kr", "hide on bush"));
+                get(BASE_URL + "/{region}/{gameName}", "kr", "hide on bush-KR1"));
 
         // then
         result.andExpect(status().isOk())
-                .andDo(document("summoner-get-by-name",
+                .andDo(document("summoner-detail",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
                                 parameterWithName("region").description("지역명"),
-                                parameterWithName("gameName").description("게임명")
+                                parameterWithName("gameName").description("게임 유저명")
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
                                 fieldWithPath("data.profileIconId").type(JsonFieldType.NUMBER).description("프로필 아이콘 ID").optional(),
                                 fieldWithPath("data.puuid").type(JsonFieldType.STRING).description("소환사 고유 PUUID"),
                                 fieldWithPath("data.summonerLevel").type(JsonFieldType.NUMBER).description("소환사 레벨"),
-                                fieldWithPath("data.gameName").type(JsonFieldType.STRING).description("게임 이름"),
+                                fieldWithPath("data.gameName").type(JsonFieldType.STRING).description("게임 유저명"),
                                 fieldWithPath("data.tagLine").type(JsonFieldType.STRING).description("태그 라인"),
                                 fieldWithPath("data.platform").type(JsonFieldType.STRING).description("플랫폼(지역)").optional(),
                                 fieldWithPath("data.lastRevisionDateTime").type(JsonFieldType.STRING).description("마지막 갱신일").optional(),
@@ -159,7 +145,7 @@ class SummonerControllerTest {
 
         // when
         ResultActions result = mockMvc.perform(get(BASE_URL + "/autocomplete")
-                .param("q", "test")
+                .param("q", "hide on bush")
                 .param("region", "kr"));
 
         // then
@@ -176,7 +162,7 @@ class SummonerControllerTest {
                                 fieldWithPath("data[].profileIconId").type(JsonFieldType.NUMBER).description("프로필 아이콘 ID").optional(),
                                 fieldWithPath("data[].puuid").type(JsonFieldType.STRING).description("소환사 고유 PUUID"),
                                 fieldWithPath("data[].summonerLevel").type(JsonFieldType.NUMBER).description("소환사 레벨"),
-                                fieldWithPath("data[].gameName").type(JsonFieldType.STRING).description("게임 이름"),
+                                fieldWithPath("data[].gameName").type(JsonFieldType.STRING).description("게임 유저명"),
                                 fieldWithPath("data[].tagLine").type(JsonFieldType.STRING).description("태그 라인"),
                                 fieldWithPath("data[].platform").type(JsonFieldType.STRING).description("플랫폼(지역)").optional(),
                                 fieldWithPath("data[].lastRevisionDateTime").type(JsonFieldType.STRING).description("마지막 갱신일").optional(),
@@ -270,4 +256,6 @@ class SummonerControllerTest {
                         )
                 ));
     }
+
+
 }

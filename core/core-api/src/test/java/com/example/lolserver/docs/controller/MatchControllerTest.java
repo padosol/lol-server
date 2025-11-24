@@ -1,12 +1,18 @@
 package com.example.lolserver.docs.controller;
 
-import com.example.lolserver.controller.MatchController;
+import com.example.lolserver.controller.match.MatchController;
 import com.example.lolserver.docs.RestDocsSupport;
+import com.example.lolserver.domain.match.dto.MSChampionRequest;
+import com.example.lolserver.domain.match.dto.MatchRequest;
 import com.example.lolserver.domain.match.service.MatchService;
 import com.example.lolserver.storage.db.core.repository.dto.data.GameData;
+import com.example.lolserver.storage.db.core.repository.dto.data.TimelineData;
 import com.example.lolserver.storage.db.core.repository.dto.data.gameData.GameInfoData;
 import com.example.lolserver.storage.db.core.repository.dto.data.gameData.ParticipantData;
+import com.example.lolserver.storage.db.core.repository.dto.data.gameData.SeqTypeData;
 import com.example.lolserver.storage.db.core.repository.dto.data.gameData.TeamInfoData;
+import com.example.lolserver.storage.db.core.repository.match.dto.MSChampionResponse;
+import com.example.lolserver.storage.db.core.repository.match.dto.MatchResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,18 +22,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.payload.JsonFieldType;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields;
-import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
-import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -52,7 +58,6 @@ class MatchControllerTest extends RestDocsSupport {
         String matchId = "KR_123456789";
 
         GameData gameData = new GameData();
-        // Mock 데이터 설정
         ParticipantData myData = ParticipantData.builder().summonerName("MySummoner").championName("Ahri").kills(10).deaths(2).assists(5).win(true).build();
         GameInfoData gameInfoData = new GameInfoData();
         gameInfoData.setGameMode("CLASSIC");
@@ -68,9 +73,8 @@ class MatchControllerTest extends RestDocsSupport {
 
         gameData.setMyData(myData);
         gameData.setGameInfoData(gameInfoData);
-        gameData.setParticipantData(List.of(myData)); // 간단하게 myData만 포함
+        gameData.setParticipantData(List.of(myData));
         gameData.setTeamInfoData(Map.of(100, team100, 200, team200));
-
 
         given(matchService.getGameData(anyString())).willReturn(gameData);
 
@@ -79,42 +83,188 @@ class MatchControllerTest extends RestDocsSupport {
                         get("/api/v1/matches/{matchId}", matchId)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
-                .andExpect(status().isOk())
                 .andDo(print())
+                .andExpect(status().isOk())
                 .andDo(document("match-get-by-id",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
                                 parameterWithName("matchId").description("조회할 매치 ID")
                         ),
-                        // 응답 필드가 너무 많으므로 relaxedResponseFields 사용
                         relaxedResponseFields(
-                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
-                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 정보 (정상 응답 시 null)"),
-
-                                // GameData.myData
+                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
                                 fieldWithPath("data.myData.summonerName").type(JsonFieldType.STRING).description("내 소환사 이름"),
-                                fieldWithPath("data.myData.championName").type(JsonFieldType.STRING).description("내 챔피언 이름"),
-                                fieldWithPath("data.myData.kills").type(JsonFieldType.NUMBER).description("내 Kills"),
-                                fieldWithPath("data.myData.deaths").type(JsonFieldType.NUMBER).description("내 Deaths"),
-                                fieldWithPath("data.myData.assists").type(JsonFieldType.NUMBER).description("내 Assists"),
-                                fieldWithPath("data.myData.win").type(JsonFieldType.BOOLEAN).description("내 팀 승리 여부"),
+                                fieldWithPath("data.gameInfoData.gameMode").type(JsonFieldType.STRING).description("게임 모드")
+                        ),
+                        pathParameters(
+                                parameterWithName("matchId").description("조회할 매치 ID")
+                        )
+                ));
+    }
 
-                                // GameData.gameInfoData
-                                fieldWithPath("data.gameInfoData.gameMode").type(JsonFieldType.STRING).description("게임 모드"),
-                                fieldWithPath("data.gameInfoData.gameDuration").type(JsonFieldType.NUMBER).description("게임 시간 (초)"),
+    @DisplayName("매치 ID 목록 조회 API")
+    @Test
+    void findAllMatchIds() throws Exception {
+        // given
+        MatchRequest request = MatchRequest.builder().puuid("puuid-1234").queueId(420).pageNo(1).region("kr").build();
+        List<String> matchIds = List.of("KR_123456789", "KR_987654321");
+        given(matchService.findAllMatchIds(any(MatchRequest.class))).willReturn(matchIds);
 
-                                // GameData.participantData[]
-                                fieldWithPath("data.participantData[].summonerName").type(JsonFieldType.STRING).description("참가자 소환사 이름"),
-                                fieldWithPath("data.participantData[].championName").type(JsonFieldType.STRING).description("참가자 챔피언 이름"),
-                                fieldWithPath("data.participantData[].teamId").type(JsonFieldType.NUMBER).description("참가자 팀 ID (100 or 200)"),
-                                fieldWithPath("data.participantData[].win").type(JsonFieldType.BOOLEAN).description("참가자 팀 승리 여부"),
+        // when & then
+        mockMvc.perform(
+                        get("/api/v1/matches/matchIds")
+                                .param("puuid", request.getPuuid())
+                                .param("queueId", String.valueOf(request.getQueueId()))
+                                .param("pageNo", String.valueOf(request.getPageNo()))
+                                .param("region", request.getRegion())
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andDo(document("match-get-ids",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        queryParameters(
+                                parameterWithName("puuid").description("조회할 유저의 PUUID"),
+                                parameterWithName("queueId").description("큐 ID (e.g., 420:솔로랭크, 430:일반, 450:칼바람)").optional(),
+                                parameterWithName("pageNo").description("페이지 번호 (1부터 시작)").optional(),
+                                parameterWithName("region").description("지역")
+                        ),
+                        relaxedResponseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
+                                fieldWithPath("data[]").type(JsonFieldType.ARRAY).description("매치 ID 목록"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)")
+                        )
+                ));
+    }
 
-                                // GameData.teamInfoData
-                                fieldWithPath("data.teamInfoData.100.win").type(JsonFieldType.BOOLEAN).description("블루팀 승리 여부"),
-                                fieldWithPath("data.teamInfoData.100.championKills").type(JsonFieldType.NUMBER).description("블루팀 총 킬 수"),
-                                fieldWithPath("data.teamInfoData.200.win").type(JsonFieldType.BOOLEAN).description("레드팀 승리 여부"),
-                                fieldWithPath("data.teamInfoData.200.championKills").type(JsonFieldType.NUMBER).description("레드팀 총 킬 수")
+    @DisplayName("매치 목록 조회 API")
+    @Test
+    void fetchGameData() throws Exception {
+        // given
+        MatchRequest request = MatchRequest.builder().puuid("puuid-1234").queueId(420).pageNo(1).region("kr").build();
+        GameData gameData = new GameData();
+        ParticipantData myData = ParticipantData.builder().summonerName("MySummoner").championName("Ahri").kills(10).deaths(2).assists(5).win(true).build();
+        gameData.setMyData(myData);
+        MatchResponse matchResponse = new MatchResponse(List.of(gameData), 1L);
+
+        given(matchService.getMatches(any(MatchRequest.class))).willReturn(matchResponse);
+
+        // when & then
+        mockMvc.perform(
+                        get("/api/v1/matches")
+                                .param("puuid", request.getPuuid())
+                                .param("queueId", String.valueOf(request.getQueueId()))
+                                .param("pageNo", String.valueOf(request.getPageNo()))
+                                .param("region", request.getRegion())
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andDo(document("match-get-list",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        queryParameters(
+                                parameterWithName("puuid").description("조회할 유저의 PUUID"),
+                                parameterWithName("queueId").description("큐 ID (e.g., 420:솔로랭크, 430:일반, 450:칼바람)").optional(),
+                                parameterWithName("pageNo").description("페이지 번호 (1부터 시작)").optional(),
+                                parameterWithName("region").description("지역")
+                        ),
+                        relaxedResponseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
+                                fieldWithPath("data.gameData[].myData.summonerName").type(JsonFieldType.STRING).description("내 소환사 이름"),
+                                fieldWithPath("data.totalCount").type(JsonFieldType.NUMBER).description("총 매치 수"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)")
+                        )
+                ));
+    }
+
+    @DisplayName("랭크 챔피언 통계 조회 API")
+    @Test
+    void getRankChampions() throws Exception {
+        // given
+        MSChampionRequest request = new MSChampionRequest();
+        request.setPuuid("puuid-1234");
+        request.setSeason(2024);
+
+        MSChampionResponse championResponse = new MSChampionResponse();
+        championResponse.setChampionId(266);
+        championResponse.setChampionName("Aatrox");
+        championResponse.setWin(10L);
+        championResponse.setPlayCount(15L);
+        championResponse.setKills(7.5);
+        championResponse.setDeaths(3.2);
+        championResponse.setAssists(8.1);
+
+        given(matchService.getRankChampions(any(MSChampionRequest.class))).willReturn(List.of(championResponse));
+
+        // when & then
+        mockMvc.perform(
+                        get("/api/v1/rank/champions")
+                                .param("puuid", request.getPuuid())
+                                .param("season", String.valueOf(request.getSeason()))
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andDo(document("match-get-rank-champions",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        queryParameters(
+                                parameterWithName("puuid").description("조회할 유저의 PUUID"),
+                                parameterWithName("season").description("시즌").optional(),
+                                parameterWithName("queueId").description("큐 ID").optional(),
+                                parameterWithName("platform").description("플랫폼(지역)").optional()
+                        ),
+                        relaxedResponseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
+                                fieldWithPath("data[].championName").type(JsonFieldType.STRING).description("챔피언 이름"),
+                                fieldWithPath("data[].win").type(JsonFieldType.NUMBER).description("승리 횟수"),
+                                fieldWithPath("data[].playCount").type(JsonFieldType.NUMBER).description("플레이 횟수"),
+                                fieldWithPath("data[].kills").type(JsonFieldType.NUMBER).description("평균 Kills"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)")
+                        )
+                ));
+    }
+
+    @DisplayName("매치 타임라인 조회 API")
+    @Test
+    void getTimeline() throws Exception {
+        // given
+        String matchId = "KR_123456789";
+
+        TimelineData timelineData = new TimelineData();
+        Map<Integer, Map<String, List<SeqTypeData>>> data = new HashMap<>();
+        Map<String, List<SeqTypeData>> participantData = new HashMap<>();
+        SeqTypeData itemSeq = new SeqTypeData();
+        itemSeq.setId(1001);
+        itemSeq.setType("ITEM_PURCHASED");
+        itemSeq.setMinute(1L);
+        participantData.put("ITEM_SEQ", List.of(itemSeq));
+        data.put(1, participantData);
+        timelineData.setData(data);
+
+        given(matchService.getTimelineData(anyString())).willReturn(timelineData);
+
+        // when & then
+        mockMvc.perform(
+                        get("/api/v1/match/timeline/{matchId}", matchId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andDo(document("match-get-timeline",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("matchId").description("조회할 매치 ID")
+                        ),
+                        relaxedResponseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
+                                fieldWithPath("data.data.1.ITEM_SEQ[].id").type(JsonFieldType.NUMBER).description("아이템 ID"),
+                                fieldWithPath("data.data.1.ITEM_SEQ[].type").type(JsonFieldType.STRING).description("이벤트 타입"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)")
                         )
                 ));
     }
