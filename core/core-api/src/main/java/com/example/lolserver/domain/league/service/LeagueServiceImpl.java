@@ -24,10 +24,7 @@ public class LeagueServiceImpl implements LeagueService{
     private final LeagueSummonerDetailRepository leagueSummonerDetailRepository;
 
     @Override
-    public List<LeagueSummonerData> getLeaguesBypuuid(String puuid) {
-        List<LeagueSummonerDetail> leagueSummonerDetails = leagueSummonerDetailRepository
-                .findAllByPuuid(puuid);
-
-        return leagueSummonerDetails.stream().map(LeagueSummonerData::of).toList();
+    public List<LeagueSummonerDetail> getLeaguesBypuuid(String puuid) {
+        return leagueSummonerDetailRepository.findAllByPuuid(puuid);
     }
 }

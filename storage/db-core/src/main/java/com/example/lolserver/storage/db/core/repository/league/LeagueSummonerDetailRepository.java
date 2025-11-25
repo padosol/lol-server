@@ -14,7 +14,8 @@ public interface LeagueSummonerDetailRepository extends JpaRepository<LeagueSumm
     @Query("SELECT lsd FROM LeagueSummonerDetail lsd " +
             "JOIN FETCH lsd.leagueSummoner ls " +
             "JOIN FETCH ls.league " +
-            "WHERE ls.puuid = :puuid")
+            "WHERE ls.puuid = :puuid " +
+            "ORDER BY lsd.createAt DESC")
     List<LeagueSummonerDetail> findAllByPuuid(@Param("puuid") String puuid);
 
 

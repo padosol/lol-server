@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.sql.Timestamp;
+
 @Getter
 @Entity
 @Builder
@@ -39,4 +41,6 @@ public class LeagueSummonerDetail {
     private boolean inactive;
     private boolean freshBlood;
     private boolean hotStreak;
+
+    private Timestamp createAt;
 }
