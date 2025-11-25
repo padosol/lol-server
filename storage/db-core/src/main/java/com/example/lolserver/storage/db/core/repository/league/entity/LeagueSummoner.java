@@ -20,58 +20,28 @@ import lombok.NoArgsConstructor;
 @Table(name = "league_summoner")
 public class LeagueSummoner {
 
-    @EmbeddedId
-    private LeagueSummonerId id;
+    @Id
+    @Column(name = "league_summoner_id")
+    private Long id;
 
-    @MapsId("puuid")
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "puuid")
-    private Summoner summoner;
+    @Column(name = "league_id")
+    private String leagueId;
 
-    @MapsId("leagueId")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "league_id")
+    @JoinColumn(
+            name = "league_id",
+            referencedColumnName = "league_id",
+            insertable = false,
+            updatable = false,
+            foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)
+    )
     private League league;
 
-    private int leaguePoints;
-    private String rank;
-    private int wins;
-    private int losses;
-    private boolean veteran;
-    private boolean inactive;
-    private boolean freshBlood;
-    private boolean hotStreak;
-
-    public LeagueSummoner of(LeagueSummonerId id, League league, Summoner summoner, LeagueEntryDTO leagueEntryDTO) {
-       return LeagueSummoner.builder()
-                .id(id)
-                .league(league)
-                .summoner(summoner)
-                .losses(leagueEntryDTO.getLosses())
-                .leaguePoints(leagueEntryDTO.getLeaguePoints())
-                .freshBlood(leagueEntryDTO.isFreshBlood())
-                .hotStreak(leagueEntryDTO.isHotStreak())
-                .inactive(leagueEntryDTO.isInactive())
-                .rank(leagueEntryDTO.getRank())
-                .veteran(leagueEntryDTO.isVeteran())
-                .wins(leagueEntryDTO.getWins())
-                .build();
-    }
+    private String puuid;
 
     public LeagueSummonerData toData() {
         return LeagueSummonerData.builder()
-                .leagueType(league.getQueue().name())
-                .leaguePoints(leaguePoints)
-                .wins(wins)
-                .losses(losses)
-                .oow( String.format("%.2f", (((double) wins / (wins + losses)))*100 ) + "%" )
-                .tier(league.getTier())
-                .rank(this.rank)
                 .build();
-    }
-
-    public void addLeague(League league) {
-        this.league = league;
     }
 
 }

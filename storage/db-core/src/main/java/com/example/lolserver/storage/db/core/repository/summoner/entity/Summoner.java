@@ -46,10 +46,6 @@ public class Summoner {
 
     private LocalDateTime revisionClickDate;
 
-    @OneToMany(mappedBy = "summoner", fetch = FetchType.LAZY)
-    @Builder.Default
-    private Set<LeagueSummoner> leagueSummoners = new HashSet<>();
-
     public Summoner(String summonerName, String region) {
         this.gameName = summonerName;
         this.region = region;
@@ -91,15 +87,15 @@ public class Summoner {
         Integer points = null;
         String rank = null;
 
-        for (LeagueSummoner leagueSummoner : this.leagueSummoners) {
-            QueueType queue = leagueSummoner.getLeague().getQueue();
-
-            if(QueueType.RANKED_SOLO_5x5.equals(queue)) {
-                tier = leagueSummoner.getLeague().getTier();
-                points = leagueSummoner.getLeaguePoints();
-                rank = leagueSummoner.getRank();
-            }
-        }
+//        for (LeagueSummoner leagueSummoner : this.leagueSummoners) {
+//            QueueType queue = leagueSummoner.getLeague().getQueue();
+//
+//            if(QueueType.RANKED_SOLO_5x5.equals(queue)) {
+//                tier = leagueSummoner.getLeague().getTier();
+//                points = leagueSummoner.getLeaguePoints();
+//                rank = leagueSummoner.getRank();
+//            }
+//        }
 
         return SummonerResponse.builder()
                 .summonerLevel(this.summonerLevel)
@@ -137,19 +133,4 @@ public class Summoner {
         return StringUtils.hasText(this.tagLine);
     }
 
-    public void addLeagueSummoner(Set<LeagueSummoner> leagueSummoners) {
-        this.leagueSummoners = leagueSummoners;
-    }
-
-    public void addLeagueSummoner(LeagueSummoner leagueSummoner) {
-        if (this.leagueSummoners == null) {
-            this.leagueSummoners = new HashSet<>();
-        }
-
-        this.leagueSummoners.add(leagueSummoner);
-    }
-
-    public void resetRevisionClickDate() {
-        this.revisionClickDate = LocalDateTime.now();
-    }
 }

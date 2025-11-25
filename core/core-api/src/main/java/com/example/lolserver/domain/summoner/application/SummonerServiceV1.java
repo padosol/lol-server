@@ -60,7 +60,8 @@ public class SummonerServiceV1 implements SummonerService{
             );
         }
 
-        SummonerVO summonerVO = summonerRestClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
+        SummonerVO summonerVO = summonerRestClient.getSummonerByGameNameAndTagLine(
+                region, summoner.getGameName(), summoner.getTagLine());
         if (summonerVO == null) {
             throw new CoreException(
                     ErrorType.NOT_FOUND_USER,
