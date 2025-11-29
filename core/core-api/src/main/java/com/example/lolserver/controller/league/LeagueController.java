@@ -36,8 +36,8 @@ public class LeagueController {
     public ResponseEntity<ApiResponse<LeagueResponse>> fetchLeaguesBySummoner(
             @PathVariable("puuid") String puuid
     ) {
-        List<LeagueSummonerDetail> leaguesBypuuid = leagueService.getLeaguesBypuuid(puuid);
+        LeagueResponse leagueResponse = leagueService.getLeaguesBypuuid(puuid);
 
-        return new ResponseEntity<>(ApiResponse.success(LeagueResponse.of(leaguesBypuuid)), HttpStatus.OK);
+        return new ResponseEntity<>(ApiResponse.success(leagueResponse), HttpStatus.OK);
     }
 }

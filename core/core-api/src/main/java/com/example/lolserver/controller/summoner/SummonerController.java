@@ -72,6 +72,12 @@ public class SummonerController {
         return ResponseEntity.ok(ApiResponse.success(allSummonerAutoComplete));
     }
 
+    /**
+     * 유저 전적 갱신
+     * @param platform
+     * @param puuid
+     * @return
+     */
     @GetMapping("/summoners/renewal/{platform}/{puuid}")
     public ResponseEntity<ApiResponse<SummonerRenewalResponse>> renewalSummonerInfo(
             @PathVariable(name = "platform") String platform,
@@ -90,9 +96,11 @@ public class SummonerController {
     public ResponseEntity<ApiResponse<SummonerRenewalResponse>> summonerRenewalStatus(
             @PathVariable String puuid
     ) {
-        SummonerRenewalSession summonerRenewalSession = redisService.summonerRenewalStatus(puuid);
+        log.info("summonerRenewalStatus");
+        SummonerRenewalResponse summonerRenewalResponse = summonerService.renewalSummonerStatus(puuid);
+        log.info("summonerRenewalResponse {}", summonerRenewalResponse);
 
-        return ResponseEntity.ok(ApiResponse.success(SummonerRenewalResponse.of(summonerRenewalSession)));
+        return ResponseEntity.ok(ApiResponse.success(summonerRenewalResponse));
     }
 
 }

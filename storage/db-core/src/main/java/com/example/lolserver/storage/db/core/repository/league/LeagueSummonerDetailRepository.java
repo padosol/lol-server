@@ -11,11 +11,12 @@ import java.util.List;
 public interface LeagueSummonerDetailRepository extends JpaRepository<LeagueSummonerDetail, Long> {
 
 
-    @Query("SELECT lsd FROM LeagueSummonerDetail lsd " +
-            "JOIN FETCH lsd.leagueSummoner ls " +
-            "JOIN FETCH ls.league " +
-            "WHERE ls.puuid = :puuid " +
-            "ORDER BY lsd.createAt DESC")
+    @Query("""
+            SELECT lsd FROM LeagueSummonerDetail lsd \
+            JOIN FETCH lsd.leagueSummoner ls \
+            JOIN FETCH ls.league \
+            WHERE ls.puuid = :puuid \
+            ORDER BY lsd.createAt DESC""")
     List<LeagueSummonerDetail> findAllByPuuid(@Param("puuid") String puuid);
 
 

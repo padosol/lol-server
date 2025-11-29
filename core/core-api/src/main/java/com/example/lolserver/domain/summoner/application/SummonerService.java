@@ -17,4 +17,6 @@ public interface SummonerService {
 
     SummonerRenewalResponse renewalSummonerInfo(String platform, String puuid);
 
+    SummonerRenewalResponse renewalSummonerStatus(String puuid);
+
 }

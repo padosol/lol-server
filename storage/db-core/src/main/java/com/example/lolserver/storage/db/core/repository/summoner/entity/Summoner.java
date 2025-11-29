@@ -115,7 +115,7 @@ public class Summoner {
     public boolean isRevision() {
         LocalDateTime now = LocalDateTime.now();
 
-        return now.minusMinutes(2).isAfter(this.revisionClickDate);
+        return now.minusMinutes(3).isAfter(this.revisionClickDate);
     }
 
     public void revision(SummonerDTO summonerDTO, AccountDto accountDto) {

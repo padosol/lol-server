@@ -18,6 +18,8 @@ include::api/summoner/summoner-detail.adoc[]
 
 include::api/summoner/summoner-renewal.adoc[]
 
+include::api/summoner/summoner-renewal-status.adoc[]
+
 [[Match-API]]
 == Match API
 

@@ -2,8 +2,6 @@ package com.example.lolserver.storage.redis.model;
 
 import com.example.lolserver.riot.type.Division;
 import com.example.lolserver.riot.type.Tier;
-import com.example.lolserver.storage.db.core.repository.league.entity.League;
-import com.example.lolserver.storage.db.core.repository.league.entity.LeagueSummoner;
 import com.example.lolserver.storage.db.core.repository.league.entity.QueueType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

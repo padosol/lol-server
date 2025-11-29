@@ -211,11 +211,11 @@ class SummonerControllerTest extends RestDocsSupport {
     void summonerRenewalStatus_completed() throws Exception {
         // given
         String puuid = "test-puuid";
-        SummonerRenewalSession session = new SummonerRenewalSession(
+        SummonerRenewalResponse session = new SummonerRenewalResponse(
                 puuid,
-                true, true, true
+                RenewalStatus.SUCCESS
         );
-        given(redisService.summonerRenewalStatus(anyString())).willReturn(session);
+        given(summonerService.renewalSummonerStatus(anyString())).willReturn(session);
 
         // when
         ResultActions result = mockMvc.perform(get(BASE_URL + "/{puuid}/renewal-status", puuid));
@@ -242,11 +242,11 @@ class SummonerControllerTest extends RestDocsSupport {
     void summonerRenewalStatus_inProgress() throws Exception {
         // given
         String puuid = "test-puuid";
-        SummonerRenewalSession session = new SummonerRenewalSession(
+        SummonerRenewalResponse session = new SummonerRenewalResponse(
                 puuid,
-                false, true, true
+                RenewalStatus.PROGRESS
         );
-        given(redisService.summonerRenewalStatus(anyString())).willReturn(session);
+        given(summonerService.renewalSummonerStatus(anyString())).willReturn(session);
 
         // when
         ResultActions result = mockMvc.perform(get(BASE_URL + "/{puuid}/renewal-status", puuid));

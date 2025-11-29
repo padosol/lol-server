@@ -3,6 +3,7 @@ package com.example.lolserver.domain.league.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.example.lolserver.controller.league.response.LeagueResponse;
 import com.example.lolserver.storage.db.core.repository.league.LeagueSummonerDetailRepository;
 import com.example.lolserver.storage.db.core.repository.league.entity.LeagueSummonerDetail;
 import com.example.lolserver.support.error.ErrorType;
@@ -24,7 +25,9 @@ public class LeagueServiceImpl implements LeagueService{
     private final LeagueSummonerDetailRepository leagueSummonerDetailRepository;
 
     @Override
-    public List<LeagueSummonerDetail> getLeaguesBypuuid(String puuid) {
-        return leagueSummonerDetailRepository.findAllByPuuid(puuid);
+    public LeagueResponse getLeaguesBypuuid(String puuid) {
+        List<LeagueSummonerDetail> leagueSummonerDetails = leagueSummonerDetailRepository.findAllByPuuid(puuid);
+
+        return LeagueResponse.of(leagueSummonerDetails);
     }
 }

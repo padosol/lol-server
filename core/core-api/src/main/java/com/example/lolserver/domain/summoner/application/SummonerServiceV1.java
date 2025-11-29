@@ -15,6 +15,8 @@ import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerRes
 import com.example.lolserver.storage.db.core.repository.summoner.entity.Summoner;
 import com.example.lolserver.storage.redis.model.SummonerRenewalSession;
 import com.example.lolserver.storage.redis.repository.SummonerRenewalRepository;
+import com.example.lolserver.storage.redis.service.RedisLockHandler;
+import com.example.lolserver.storage.redis.service.RedisService;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +33,8 @@ public class SummonerServiceV1 implements SummonerService{
     private final SummonerRepositoryCustom summonerRepositoryCustom;
     private final SummonerJpaRepository summonerJpaRepository;
     private final RabbitMqService rabbitMqService;
-    private final SummonerRenewalRepository summonerRenewalRepository;
     private final SummonerRestClient summonerRestClient;
+    private final RedisService redisService;
 
     /**
      * 유저 상세 조회 함수
@@ -156,28 +158,41 @@ public class SummonerServiceV1 implements SummonerService{
 
     @Override
     public SummonerRenewalResponse renewalSummonerInfo(String platform, String puuid) {
-        boolean isRenewal = summonerRenewalRepository.findById(puuid).isPresent();
-        if (isRenewal) {
+
+        // 여기서는 puuid 에 대한 전적 갱신이 진행 되고 있는지만 체크.
+        boolean updating = redisService.isUpdating(puuid);
+        if (!updating) {
+            Summoner summoner = summonerJpaRepository.findById(puuid).orElseThrow(() -> new CoreException(
+                    ErrorType.NOT_FOUND_PUUID,
+                    "존재하지 않는 PUUID 입니다. " + puuid
+            ));
+
+            // 이미 전적 갱신을 했다면 성공을 리턴
+            if (!summoner.isRevision()) {
+                return new SummonerRenewalResponse(puuid, RenewalStatus.SUCCESS);
+            }
+
+
+            // 갱신을 하지 않았다면
+            redisService.createSummonerRenewal(puuid);
+            rabbitMqService.sendMessage(new SummonerMessage(
+                    platform, puuid, summoner.getRevisionDate()
+            ));
+        }
+
+        return new SummonerRenewalResponse(puuid, RenewalStatus.PROGRESS);
+    }
+
+    @Override
+    public SummonerRenewalResponse renewalSummonerStatus(String puuid) {
+        boolean result = redisService.isSummonerRenewal(puuid);
+        // 진행중이다.
+        if (result) {
             return new SummonerRenewalResponse(puuid, RenewalStatus.PROGRESS);
         }
 
-        Summoner summoner = summonerJpaRepository.findById(puuid).orElseThrow(() -> new CoreException(
-                ErrorType.NOT_FOUND_PUUID,
-                "존재하지 않는 PUUID 입니다. " + puuid
-        ));
-
-        if (!summoner.isRevision()) {
-            return new SummonerRenewalResponse(puuid, RenewalStatus.SUCCESS);
-        }
-
-        // redis 에 갱신 정보 저장
-        SummonerRenewalSession newRenewalSession = new SummonerRenewalSession(puuid);
-        summonerRenewalRepository.save(newRenewalSession);
-
-        rabbitMqService.sendMessage(new SummonerMessage(
-                platform, puuid, summoner.getRevisionDate()
-        ));
-
-        return new SummonerRenewalResponse(puuid, RenewalStatus.PROGRESS);
+        return new SummonerRenewalResponse(
+                puuid, RenewalStatus.SUCCESS
+        );
     }
 }
