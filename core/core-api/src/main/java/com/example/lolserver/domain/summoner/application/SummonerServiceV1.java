@@ -20,12 +20,15 @@ import com.example.lolserver.storage.redis.service.RedisService;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SummonerServiceV1 implements SummonerService{
@@ -168,16 +171,20 @@ public class SummonerServiceV1 implements SummonerService{
             ));
 
             // 이미 전적 갱신을 했다면 성공을 리턴
-            if (!summoner.isRevision()) {
+            LocalDateTime clickDateTime = LocalDateTime.now();
+            if (summoner.isRevision(clickDateTime)) {
+                // 갱신이 가능 하다면
+                summoner.clickRenewal();
+                summonerJpaRepository.save(summoner);
+
+                redisService.createSummonerRenewal(puuid);
+                rabbitMqService.sendMessage(new SummonerMessage(
+                        platform, puuid, summoner.getRevisionDate()
+                ));
+            } else {
                 return new SummonerRenewalResponse(puuid, RenewalStatus.SUCCESS);
             }
 
-
-            // 갱신을 하지 않았다면
-            redisService.createSummonerRenewal(puuid);
-            rabbitMqService.sendMessage(new SummonerMessage(
-                    platform, puuid, summoner.getRevisionDate()
-            ));
         }
 
         return new SummonerRenewalResponse(puuid, RenewalStatus.PROGRESS);
