@@ -11,11 +11,9 @@ import com.example.lolserver.riot.type.Platform;
 import com.example.lolserver.storage.db.core.repository.league.entity.QueueType;
 import com.example.lolserver.storage.db.core.repository.summoner.SummonerJpaRepository;
 import com.example.lolserver.storage.db.core.repository.summoner.dsl.SummonerRepositoryCustom;
-import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerResponse;
+import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerAutoDTO;
+import com.example.lolserver.controller.summoner.response.SummonerResponse;
 import com.example.lolserver.storage.db.core.repository.summoner.entity.Summoner;
-import com.example.lolserver.storage.redis.model.SummonerRenewalSession;
-import com.example.lolserver.storage.redis.repository.SummonerRenewalRepository;
-import com.example.lolserver.storage.redis.service.RedisLockHandler;
 import com.example.lolserver.storage.redis.service.RedisService;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
@@ -55,7 +53,14 @@ public class SummonerServiceV1 implements SummonerService{
                 summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
 
         if(findSummoner.size() == 1) {
-            return findSummoner.get(0).toResponse();
+            return SummonerResponse.builder()
+                    .profileIconId(findSummoner.get(0).getProfileIconId())
+                    .puuid(findSummoner.get(0).getPuuid())
+                    .summonerLevel(findSummoner.get(0).getSummonerLevel())
+                    .platform(region)
+                    .gameName(findSummoner.get(0).getGameName())
+                    .tagLine(findSummoner.get(0).getTagLine())
+                    .build();
         }
 
         if (!summoner.isTagLine()) {
@@ -96,11 +101,6 @@ public class SummonerServiceV1 implements SummonerService{
                 .tier(tier)
                 .rank(rank)
                 .build();
-    }
-
-    @Override
-    public SummonerResponse getSummoner(String puuid) {
-        return null;
     }
 
     @Override
@@ -146,17 +146,20 @@ public class SummonerServiceV1 implements SummonerService{
             }
         }
 
-        return summonerList.stream().map(Summoner::toResponse).toList();
+        return summonerList.stream().map(data -> SummonerResponse.builder()
+                .profileIconId(data.getProfileIconId())
+                .puuid(data.getPuuid())
+                .summonerLevel(data.getSummonerLevel())
+                .gameName(data.getGameName())
+                .tagLine(data.getTagLine())
+                .build()).toList();
     }
 
     @Override
-    public List<SummonerResponse> getAllSummonerAutoComplete(String q, String region) {
-        Summoner summoner = Summoner.builder().region(region).gameName(q).build();
-        summoner.splitGameNameTagLine();
-
-        List<Summoner> result = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegionLike(summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
-
-        return result.stream().map(Summoner::toResponse).toList();
+    public List<SummonerAutoDTO> getAllSummonerAutoComplete(String q, String region) {
+        return summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegionLike(
+                q, region
+        );
     }
 
     @Override

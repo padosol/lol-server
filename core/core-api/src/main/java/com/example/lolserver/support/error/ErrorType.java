@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 public enum ErrorType {
     DEFAULT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.E500, "알 수 없는 오류가 발생했습니다.", LogLevel.ERROR),
 
+    EXTERNAL_API_ERROR(HttpStatus.BAD_REQUEST, ErrorCode.E400, "외부 API 호출 에러", LogLevel.INFO),
+
     NOT_FOUND_PUUID(HttpStatus.NOT_FOUND, ErrorCode.E404, "존재하지 않는 PUUID 입니다.", LogLevel.INFO),
     NOT_FOUND_MATCH_ID(HttpStatus.NOT_FOUND, ErrorCode.E404, "존재하지 않는 MatchId 입니다.", LogLevel.INFO),
 

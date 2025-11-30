@@ -1,9 +1,13 @@
 package com.example.lolserver.config;
 
 import com.example.lolserver.riot.client.summoner.SummonerRestClient;
+import com.example.lolserver.support.error.CoreException;
+import com.example.lolserver.support.error.ErrorCode;
+import com.example.lolserver.support.error.ErrorType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.support.RestClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
@@ -17,6 +21,9 @@ public class RestClientConfig {
     public RestClient restClient() {
         return RestClient.builder()
                 .baseUrl(lolRepositoryUrl)
+                .defaultStatusHandler(HttpStatusCode::is4xxClientError, (req, res) -> {
+                    throw new CoreException(ErrorType.EXTERNAL_API_ERROR, "외부 API 요청 에러");
+                })
                 .build();
     }
 

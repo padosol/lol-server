@@ -11,7 +11,7 @@ import com.example.lolserver.storage.db.core.repository.dto.data.gameData.GameIn
 import com.example.lolserver.storage.db.core.repository.dto.data.gameData.ParticipantData;
 import com.example.lolserver.storage.db.core.repository.dto.data.gameData.SeqTypeData;
 import com.example.lolserver.storage.db.core.repository.dto.data.gameData.TeamInfoData;
-import com.example.lolserver.storage.db.core.repository.match.dto.MSChampionResponse;
+import com.example.lolserver.storage.db.core.repository.match.dto.MSChampionDTO;
 import com.example.lolserver.storage.db.core.repository.match.dto.MatchResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -188,14 +188,17 @@ class MatchControllerTest extends RestDocsSupport {
         request.setPuuid("puuid-1234");
         request.setSeason(2024);
 
-        MSChampionResponse championResponse = new MSChampionResponse();
-        championResponse.setChampionId(266);
-        championResponse.setChampionName("Aatrox");
-        championResponse.setWin(10L);
-        championResponse.setPlayCount(15L);
-        championResponse.setKills(7.5);
-        championResponse.setDeaths(3.2);
-        championResponse.setAssists(8.1);
+        MSChampionDTO championResponse = new MSChampionDTO(
+                266,
+                "Aatrox",
+                7.5,
+                3.2,
+                8.1,
+                100.5,
+                30.5,
+                10L,
+                15L
+        );
 
         given(matchService.getRankChampions(any(MSChampionRequest.class))).willReturn(List.of(championResponse));
 

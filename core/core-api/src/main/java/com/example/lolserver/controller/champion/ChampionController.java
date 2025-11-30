@@ -26,7 +26,7 @@ public class ChampionController {
     @GetMapping("/rotation")
     public ResponseEntity<ApiResponse<ChampionInfo>> getRotation(
             @RequestParam("region") String region
-    ) throws IOException, InterruptedException {
+    ) {
 
         ChampionInfo rotation = championServiceV1.getRotation(region);
 

@@ -1,16 +1,17 @@
 package com.example.lolserver.domain.champion.service;
 
 import com.example.lolserver.riot.dto.champion.ChampionInfo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-
 @Service
+@RequiredArgsConstructor
 public class ChampionServiceV1 implements ChampionService{
+
+    private final ChampionRotateReader championRotateReader;
+
     @Override
-    public ChampionInfo getRotation(String region) throws IOException, InterruptedException {
-
-
-        return null;
+    public ChampionInfo getRotation(String region) {
+        return championRotateReader.read(region);
     }
 }

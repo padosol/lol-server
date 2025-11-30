@@ -1,11 +1,12 @@
 package com.example.lolserver.controller.match;
 
+import com.example.lolserver.controller.match.response.ChampionStatsResponse;
 import com.example.lolserver.domain.match.dto.MSChampionRequest;
 import com.example.lolserver.domain.match.dto.MatchRequest;
 import com.example.lolserver.domain.match.service.MatchService;
 import com.example.lolserver.storage.db.core.repository.dto.data.GameData;
 import com.example.lolserver.storage.db.core.repository.dto.data.TimelineData;
-import com.example.lolserver.storage.db.core.repository.match.dto.MSChampionResponse;
+import com.example.lolserver.storage.db.core.repository.match.dto.MSChampionDTO;
 import com.example.lolserver.storage.db.core.repository.match.dto.MatchResponse;
 import com.example.lolserver.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -51,13 +52,15 @@ public class MatchController {
     }
 
     @GetMapping("/rank/champions")
-    public ResponseEntity<ApiResponse<List<MSChampionResponse>>> getRankChampions(
+    public ResponseEntity<ApiResponse<List<MSChampionDTO>>> getRankChampions(
             @ModelAttribute MSChampionRequest request
             ) {
 
-        List<MSChampionResponse> result = matchService.getRankChampions(request);
+        List<MSChampionDTO> result = matchService.getRankChampions(request);
 
-        return ResponseEntity.ok(ApiResponse.success(result));
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        result));
     }
 
     @GetMapping("/match/timeline/{matchId}")
