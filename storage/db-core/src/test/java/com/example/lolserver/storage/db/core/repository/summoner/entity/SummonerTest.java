@@ -22,14 +22,13 @@ class SummonerTest {
 
         Summoner summoner = new Summoner(
             "summoner_puuid",
-                "summoner_id",
-                "account_id",
                 1,
                 revisionDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
                 100,
-                "hideonbush",
+                "hide on bush",
                 "kr1",
                 "KR",
+                "hideonbush#kr1",
                 revisionClickDateTime
         );
 

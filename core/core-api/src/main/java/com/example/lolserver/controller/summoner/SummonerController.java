@@ -1,9 +1,10 @@
 package com.example.lolserver.controller.summoner;
 
+import com.example.lolserver.controller.summoner.response.SummonerAutoResponse;
 import com.example.lolserver.domain.summoner.application.SummonerService;
 import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalResponse;
-import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerResponse;
-import com.example.lolserver.storage.redis.model.SummonerRenewalSession;
+import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerAutoDTO;
+import com.example.lolserver.controller.summoner.response.SummonerResponse;
 import com.example.lolserver.storage.redis.service.RedisService;
 import com.example.lolserver.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SummonerController {
 
-    private final RedisService redisService;
     private final SummonerService summonerService;
 
     /**
@@ -63,13 +63,15 @@ public class SummonerController {
      * @return 유저 리스트
      */
     @GetMapping("/v1/summoners/autocomplete")
-    public ResponseEntity<ApiResponse<List<SummonerResponse>>> autoComplete(
+    public ResponseEntity<ApiResponse<List<SummonerAutoResponse>>> autoComplete(
             @RequestParam String q,
             @RequestParam(defaultValue = "kr") String region
     ) {
-        List<SummonerResponse> allSummonerAutoComplete = summonerService.getAllSummonerAutoComplete(q, region);
+        List<SummonerAutoDTO> result = summonerService.getAllSummonerAutoComplete(q, region);
 
-        return ResponseEntity.ok(ApiResponse.success(allSummonerAutoComplete));
+        return ResponseEntity.ok(ApiResponse.success(
+                result.stream().map(SummonerAutoResponse::of).toList()
+        ));
     }
 
     /**

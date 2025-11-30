@@ -189,15 +189,19 @@ class MatchControllerTest extends RestDocsSupport {
         request.setSeason(2024);
 
         MSChampionDTO championResponse = new MSChampionDTO(
-                266,
-                "Aatrox",
                 7.5,
                 3.2,
                 8.1,
-                100.5,
-                30.5,
-                10L,
-                15L
+                266,
+                "Aatrox",
+                100L,
+                30L,
+                10.5,
+                15.5,
+                15.5,
+                15.5,
+                15.5,
+                20L
         );
 
         given(matchService.getRankChampions(any(MSChampionRequest.class))).willReturn(List.of(championResponse));

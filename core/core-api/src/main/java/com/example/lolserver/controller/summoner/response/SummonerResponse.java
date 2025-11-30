@@ -1,5 +1,6 @@
-package com.example.lolserver.storage.db.core.repository.summoner.dto;
+package com.example.lolserver.controller.summoner.response;
 
+import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerAutoDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

@@ -5,8 +5,8 @@ import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.summoner.application.SummonerService;
 import com.example.lolserver.domain.summoner.dto.response.RenewalStatus;
 import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalResponse;
-import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerResponse;
-import com.example.lolserver.storage.redis.model.SummonerRenewalSession;
+import com.example.lolserver.controller.summoner.response.SummonerResponse;
+import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerAutoDTO;
 import com.example.lolserver.storage.redis.service.RedisService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -138,9 +138,9 @@ class SummonerControllerTest extends RestDocsSupport {
     @DisplayName("유저명 자동완성 API")
     void autoComplete() throws Exception {
         // given
-        List<SummonerResponse> responses = Arrays.asList(
-                SummonerResponse.builder().puuid("puuid-1").gameName("testUser1").tagLine("KR1").summonerLevel(100L).build(),
-                SummonerResponse.builder().puuid("puuid-2").gameName("testUser2").tagLine("KR1").summonerLevel(120L).build()
+        List<SummonerAutoDTO> responses = Arrays.asList(
+                new SummonerAutoDTO("testUser1", "KR1", 123, 100L, "GOLD", "I", 50),
+                new SummonerAutoDTO("testUser2", "KR1", 456, 120L, "SILVER", "II", 25)
         );
         given(summonerService.getAllSummonerAutoComplete(anyString(), anyString())).willReturn(responses);
 
@@ -160,16 +160,13 @@ class SummonerControllerTest extends RestDocsSupport {
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
-                                fieldWithPath("data[].profileIconId").type(JsonFieldType.NUMBER).description("프로필 아이콘 ID").optional(),
-                                fieldWithPath("data[].puuid").type(JsonFieldType.STRING).description("소환사 고유 PUUID"),
-                                fieldWithPath("data[].summonerLevel").type(JsonFieldType.NUMBER).description("소환사 레벨"),
                                 fieldWithPath("data[].gameName").type(JsonFieldType.STRING).description("게임 유저명"),
                                 fieldWithPath("data[].tagLine").type(JsonFieldType.STRING).description("태그 라인"),
-                                fieldWithPath("data[].platform").type(JsonFieldType.STRING).description("플랫폼(지역)").optional(),
-                                fieldWithPath("data[].lastRevisionDateTime").type(JsonFieldType.STRING).description("마지막 갱신일").optional(),
-                                fieldWithPath("data[].point").type(JsonFieldType.NUMBER).description("LP").optional(),
-                                fieldWithPath("data[].tier").type(JsonFieldType.STRING).description("티어").optional(),
-                                fieldWithPath("data[].rank").type(JsonFieldType.STRING).description("랭크").optional(),
+                                fieldWithPath("data[].profileIconId").type(JsonFieldType.NUMBER).description("프로필 아이콘 ID"),
+                                fieldWithPath("data[].summonerLevel").type(JsonFieldType.NUMBER).description("소환사 레벨"),
+                                fieldWithPath("data[].tier").type(JsonFieldType.STRING).description("티어"),
+                                fieldWithPath("data[].rank").type(JsonFieldType.STRING).description("랭크"),
+                                fieldWithPath("data[].leaguePoints").type(JsonFieldType.NUMBER).description("LP"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 정보 (정상 응답 시 null)")
                         )
                 ));

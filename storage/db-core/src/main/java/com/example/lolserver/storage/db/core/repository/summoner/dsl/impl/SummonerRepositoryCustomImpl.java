@@ -1,9 +1,13 @@
 package com.example.lolserver.storage.db.core.repository.summoner.dsl.impl;
 
 import com.example.lolserver.storage.db.core.repository.summoner.dsl.SummonerRepositoryCustom;
+import com.example.lolserver.storage.db.core.repository.summoner.dto.QSummonerAutoDTO;
+import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerAutoDTO;
 import com.example.lolserver.storage.db.core.repository.summoner.entity.Summoner;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -12,6 +16,9 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 
 import static com.example.lolserver.storage.db.core.repository.summoner.entity.QSummoner.summoner;
+import static com.example.lolserver.storage.db.core.repository.league.entity.QLeague.league;
+import static com.example.lolserver.storage.db.core.repository.league.entity.QLeagueSummonerDetail.leagueSummonerDetail;
+import static com.example.lolserver.storage.db.core.repository.league.entity.QLeagueSummoner.leagueSummoner;
 
 @Repository
 @RequiredArgsConstructor
@@ -31,19 +38,49 @@ public class SummonerRepositoryCustomImpl implements SummonerRepositoryCustom {
     }
 
     @Override
-    public List<Summoner> findAllByGameNameAndTagLineAndRegionLike(String gameName, String tagLine, String region) {
+    public List<SummonerAutoDTO> findAllByGameNameAndTagLineAndRegionLike(String q, String region) {
+        QSummonerAutoDTO qSummonerAutoDTO = new QSummonerAutoDTO(
+                summoner.gameName,
+                summoner.tagLine,
+                summoner.profileIconId,
+                summoner.summonerLevel,
+                league.tier,
+                leagueSummonerDetail.rank,
+                leagueSummonerDetail.leaguePoints
+        );
 
-        return jpaQueryFactory.selectFrom(summoner)
-                .where(
-                        gameNameLike(gameName),
-                        tagLineLike(tagLine),
-                        regionEq(region)
+        JPQLQuery<Long> subQuery = JPAExpressions
+                .select(leagueSummonerDetail.id.max())
+                .from(leagueSummonerDetail)
+                .groupBy(leagueSummonerDetail.leagueSummonerId);
+
+        return jpaQueryFactory.select(qSummonerAutoDTO)
+                .from(summoner)
+                .join(leagueSummoner)
+                .on(
+                        summoner.puuid.eq(leagueSummoner.puuid)
                 )
-                .fetch();
+                .join(leagueSummoner.league)
+                .join(leagueSummonerDetail)
+                .on(
+                        leagueSummoner.id.eq(leagueSummonerDetail.leagueSummonerId),
+                        leagueSummonerDetail.id.in(subQuery)
+                )
+                .where(
+                        gameNameLike(q),
+                        regionEq(region)
+                ).fetch();
     }
 
     public BooleanExpression gameNameLike(String gameName) {
-        return StringUtils.hasText(gameName) ? Expressions.stringTemplate("REPLACE({0}, ' ', '')", summoner.gameName.toLowerCase()).contains(gameName.replaceAll(" ", "").toLowerCase()) : null;
+        if (!StringUtils.hasText(gameName)) {
+            return null;
+        }
+
+        // 1. 검색어를 정규화 (공백 제거, 소문자 변환)
+        String normalizedKeyword = gameName.replaceAll(" ", "").toLowerCase();
+
+        return summoner.searchName.startsWith(normalizedKeyword);
     }
 
     public BooleanExpression tagLineLike(String tagLine) {

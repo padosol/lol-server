@@ -3,7 +3,6 @@ package com.example.lolserver.storage.db.core.repository.summoner.entity;
 
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
-import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerResponse;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
@@ -26,8 +25,6 @@ public class Summoner {
 
     @Id
     private String puuid;
-    private String summonerId;
-    private String accountId;
 
     private int profileIconId;
     private long revisionDate;
@@ -38,27 +35,13 @@ public class Summoner {
 
     private String region;
 
+    private String searchName;
+
     private LocalDateTime revisionClickDate;
 
     public Summoner(String summonerName, String region) {
         this.gameName = summonerName;
         this.region = region;
-    }
-
-    public Summoner(AccountDto account, SummonerDTO summoner, String region) {
-        this.summonerId = summoner.getId();
-        this.accountId = summoner.getAccountId();
-        this.profileIconId = summoner.getProfileIconId();
-        this.revisionDate = summoner.getRevisionDate();
-        this.summonerLevel = summoner.getSummonerLevel();
-
-        this.puuid = account.getPuuid();
-        this.gameName = account.getGameName();
-        this.tagLine = account.getTagLine();
-
-        this.region = region;
-
-        this.revisionClickDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(summoner.getRevisionDate()), ZoneId.systemDefault());
     }
 
     public void splitGameNameTagLine() {
@@ -73,36 +56,6 @@ public class Summoner {
             }
 
         }
-    }
-
-    public SummonerResponse toResponse() {
-
-        String tier = null;
-        Integer points = null;
-        String rank = null;
-
-//        for (LeagueSummoner leagueSummoner : this.leagueSummoners) {
-//            QueueType queue = leagueSummoner.getLeague().getQueue();
-//
-//            if(QueueType.RANKED_SOLO_5x5.equals(queue)) {
-//                tier = leagueSummoner.getLeague().getTier();
-//                points = leagueSummoner.getLeaguePoints();
-//                rank = leagueSummoner.getRank();
-//            }
-//        }
-
-        return SummonerResponse.builder()
-                .summonerLevel(this.summonerLevel)
-                .profileIconId(this.profileIconId)
-                .tier(tier)
-                .lastRevisionDateTime(this.revisionClickDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
-                .puuid(this.puuid)
-                .gameName(this.gameName)
-                .tagLine(this.tagLine)
-                .platform(this.region)
-                .point(points)
-                .rank(rank)
-                .build();
     }
 
     public void clickRenewal() {
