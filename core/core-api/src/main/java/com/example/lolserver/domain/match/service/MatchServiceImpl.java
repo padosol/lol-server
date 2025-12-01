@@ -54,14 +54,6 @@ public class MatchServiceImpl implements MatchService {
         );
     }
 
-//    @Override
-//    public List<MSChampionDTO> getRankChampions(MSChampionRequest request) {
-//        return matchSummonerRepositoryCustom.findAllChampionKDAByPuuidAndSeasonAndQueueType(
-//                request.getPuuid(),
-//                request.getSeason()
-//        );
-//    }
-
     @Override
     public GameData getGameData(String matchId) {
         Match match = matchRepository.findById(matchId).orElseThrow(() -> new CoreException(
