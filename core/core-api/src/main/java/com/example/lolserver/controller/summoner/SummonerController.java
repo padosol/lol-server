@@ -23,24 +23,6 @@ public class SummonerController {
     private final SummonerService summonerService;
 
     /**
-     * 유저 검색 API
-     * 유저명에서 태그명을 입력하지 않았을 때 다수의 유저가 검색될 수 있음
-     *
-     * @param q 유저명 (gameName, tagLine) or (gameName)
-     * @param region 지역명
-     * @return 유저 리스트
-     */
-    @GetMapping("/v1/summoners/search")
-    public ResponseEntity<ApiResponse<List<SummonerResponse>>> searchSummoner(
-            @RequestParam(name = "q", defaultValue = "hideonbush-kr1") String q,
-            @RequestParam(name = "region", defaultValue = "kr", required = false) String region
-    ) {
-        List<SummonerResponse> allSummoner = summonerService.getAllSummoner(q, region);
-
-        return ResponseEntity.ok(ApiResponse.success(allSummoner));
-    }
-
-    /**
      * 유저 상세 정보 API
      * @param region 지역명
      * @param gameName 유저 게임명
@@ -54,6 +36,16 @@ public class SummonerController {
         SummonerResponse summoner = summonerService.getSummoner(gameName, region);
 
         return ResponseEntity.ok(ApiResponse.success(summoner));
+    }
+
+    @GetMapping("/v1/{region}/summoners/{puuid}")
+    public ResponseEntity<ApiResponse<SummonerResponse>> getSummonerByPuuid(
+            @PathVariable("region") String region,
+            @PathVariable("puuid") String puuid
+    ) {
+        SummonerResponse summonerResponse = summonerService.getSummonerByPuuid(region, puuid);
+
+        return ResponseEntity.ok(ApiResponse.success(summonerResponse));
     }
 
     /**

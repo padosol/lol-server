@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -97,9 +98,6 @@ public class SummonerServiceV1 implements SummonerService{
                 .platform(region)
                 .gameName(summonerVO.getGameName())
                 .tagLine(summonerVO.getTagLine())
-                .point(leaguePoint)
-                .tier(tier)
-                .rank(rank)
                 .build();
     }
 
@@ -119,27 +117,14 @@ public class SummonerServiceV1 implements SummonerService{
             SummonerVO summonerVO = summonerRestClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
 
             if (summonerVO != null) {
-                int leaguePoint = 0;
-                String tier = "";
-                String rank = "";
-                Set<LeagueEntryDTO> leagueEntryDTOS = summonerVO.getLeagueEntryDTOS();
-                for (LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
-                    if (leagueEntryDTO.getQueueType().equals(QueueType.RANKED_SOLO_5x5.name())) {
-                        leaguePoint = leagueEntryDTO.getLeaguePoints();
-                        tier = leagueEntryDTO.getTier();
-                        rank = leagueEntryDTO.getRank();
-                    }
-                }
-
                 SummonerResponse summonerResponse = SummonerResponse.builder()
                         .profileIconId(summonerVO.getProfileIconId())
                         .puuid(summonerVO.getPuuid())
                         .summonerLevel(summonerVO.getSummonerLevel())
                         .gameName(summonerVO.getGameName())
                         .tagLine(summonerVO.getTagLine())
-                        .point(leaguePoint)
-                        .tier(tier)
-                        .rank(rank)
+                        .lastRevisionDateTime(summonerVO.getRevisionDate())
+                        .lastRevisionClickDateTime(summonerVO.getRevisionDate())
                         .build();
 
                 return List.of(summonerResponse);
@@ -152,6 +137,8 @@ public class SummonerServiceV1 implements SummonerService{
                 .summonerLevel(data.getSummonerLevel())
                 .gameName(data.getGameName())
                 .tagLine(data.getTagLine())
+                .lastRevisionDateTime(data.getRevisionDate())
+                .lastRevisionClickDateTime(data.getRevisionClickDate().atZone(ZoneId.systemDefault()).toEpochSecond())
                 .build()).toList();
     }
 
@@ -204,5 +191,15 @@ public class SummonerServiceV1 implements SummonerService{
         return new SummonerRenewalResponse(
                 puuid, RenewalStatus.SUCCESS
         );
+    }
+
+    @Override
+    public SummonerResponse getSummonerByPuuid(String region, String puuid) {
+        Summoner summoner = summonerJpaRepository.findById(puuid).orElseGet(() -> {
+            SummonerVO summonerVO = summonerRestClient.getSummonerByPuuid(region, puuid);
+            return Summoner.of(summonerVO);
+        });
+
+        return SummonerResponse.of(summoner);
     }
 }

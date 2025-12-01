@@ -1,6 +1,7 @@
 package com.example.lolserver.storage.db.core.repository.summoner.entity;
 
 
+import com.example.lolserver.riot.client.summoner.model.SummonerVO;
 import com.example.lolserver.riot.dto.account.AccountDto;
 import com.example.lolserver.riot.dto.summoner.SummonerDTO;
 import jakarta.persistence.Entity;
@@ -14,7 +15,6 @@ import org.springframework.util.StringUtils;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 
 @Entity
 @Getter
@@ -42,6 +42,22 @@ public class Summoner {
     public Summoner(String summonerName, String region) {
         this.gameName = summonerName;
         this.region = region;
+    }
+
+    public static Summoner of(SummonerVO summonerVO) {
+         return Summoner.builder()
+                .profileIconId(summonerVO.getProfileIconId())
+                .puuid(summonerVO.getPuuid())
+                .summonerLevel(summonerVO.getSummonerLevel())
+                .gameName(summonerVO.getGameName())
+                .tagLine(summonerVO.getTagLine())
+                .revisionDate(summonerVO.getRevisionDate())
+                .revisionClickDate(
+                        LocalDateTime.ofInstant(
+                                Instant.ofEpochMilli(
+                                        summonerVO.getRevisionDate()), ZoneId.systemDefault())
+                )
+                .build();
     }
 
     public void splitGameNameTagLine() {

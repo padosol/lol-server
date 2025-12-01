@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
@@ -53,16 +54,17 @@ class SummonerControllerTest extends RestDocsSupport {
     @DisplayName("유저 검색 API")
     void searchSummoner() throws Exception {
         // given
+        long now = Instant.now().toEpochMilli();
         List<SummonerResponse> responses = Arrays.asList(
-                SummonerResponse.builder().puuid("puuid-1").gameName("testUser1").tagLine("KR1").summonerLevel(100L).build(),
-                SummonerResponse.builder().puuid("puuid-2").gameName("testUser2").tagLine("KR1").summonerLevel(120L).build()
+                SummonerResponse.builder().puuid("puuid-1").gameName("testUser1").tagLine("KR1").summonerLevel(100L).lastRevisionDateTime(now).lastRevisionClickDateTime(now).build(),
+                SummonerResponse.builder().puuid("puuid-2").gameName("testUser2").tagLine("KR1").summonerLevel(120L).lastRevisionDateTime(now).lastRevisionClickDateTime(now).build()
         );
         given(summonerService.getAllSummoner(anyString(), anyString())).willReturn(responses);
 
         // when & then
         mockMvc.perform(get(BASE_URL + "/search")
-                .param("q", "hideonbush-kr1")
-                .param("region", "kr"))
+                        .param("q", "hideonbush-kr1")
+                        .param("region", "kr"))
                 .andExpect(status().isOk())
                 .andDo(document("summoner-search",
                         preprocessRequest(prettyPrint()),
@@ -73,16 +75,14 @@ class SummonerControllerTest extends RestDocsSupport {
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
-                                fieldWithPath("data[].profileIconId").type(JsonFieldType.NUMBER).description("프로필 아이콘 ID").optional(),
+                                fieldWithPath("data[].profileIconId").type(JsonFieldType.NUMBER).description("프로필 아이콘 ID"),
                                 fieldWithPath("data[].puuid").type(JsonFieldType.STRING).description("소환사 고유 PUUID"),
                                 fieldWithPath("data[].summonerLevel").type(JsonFieldType.NUMBER).description("소환사 레벨"),
                                 fieldWithPath("data[].gameName").type(JsonFieldType.STRING).description("게임 이름"),
                                 fieldWithPath("data[].tagLine").type(JsonFieldType.STRING).description("태그 라인"),
                                 fieldWithPath("data[].platform").type(JsonFieldType.STRING).description("플랫폼(지역)").optional(),
-                                fieldWithPath("data[].lastRevisionDateTime").type(JsonFieldType.STRING).description("마지막 갱신일").optional(),
-                                fieldWithPath("data[].point").type(JsonFieldType.NUMBER).description("LP").optional(),
-                                fieldWithPath("data[].tier").type(JsonFieldType.STRING).description("티어").optional(),
-                                fieldWithPath("data[].rank").type(JsonFieldType.STRING).description("랭크").optional(),
+                                fieldWithPath("data[].lastRevisionDateTime").type(JsonFieldType.NUMBER).description("Riot API 마지막 갱신 시간 (epoch)"),
+                                fieldWithPath("data[].lastRevisionClickDateTime").type(JsonFieldType.NUMBER).description("유저가 갱신 버튼 누른 시간 (epoch)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 정보 (정상 응답 시 null)")
                         )
                 ));
@@ -92,14 +92,14 @@ class SummonerControllerTest extends RestDocsSupport {
     @DisplayName("유저 상세 정보 API")
     void getSummoner() throws Exception {
         // given
+        long now = Instant.now().toEpochMilli();
         SummonerResponse response = SummonerResponse.builder()
                 .puuid("test-puuid")
                 .gameName("hide on bush")
                 .tagLine("KR1")
                 .summonerLevel(500L)
-                .tier("CHALLENGER")
-                .rank("I")
-                .point(1000)
+                .lastRevisionDateTime(now)
+                .lastRevisionClickDateTime(now)
                 .build();
 
         given(summonerService.getSummoner(anyString(), anyString())).willReturn(response);
@@ -119,16 +119,14 @@ class SummonerControllerTest extends RestDocsSupport {
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
-                                fieldWithPath("data.profileIconId").type(JsonFieldType.NUMBER).description("프로필 아이콘 ID").optional(),
+                                fieldWithPath("data.profileIconId").type(JsonFieldType.NUMBER).description("프로필 아이콘 ID"),
                                 fieldWithPath("data.puuid").type(JsonFieldType.STRING).description("소환사 고유 PUUID"),
                                 fieldWithPath("data.summonerLevel").type(JsonFieldType.NUMBER).description("소환사 레벨"),
                                 fieldWithPath("data.gameName").type(JsonFieldType.STRING).description("게임 유저명"),
                                 fieldWithPath("data.tagLine").type(JsonFieldType.STRING).description("태그 라인"),
                                 fieldWithPath("data.platform").type(JsonFieldType.STRING).description("플랫폼(지역)").optional(),
-                                fieldWithPath("data.lastRevisionDateTime").type(JsonFieldType.STRING).description("마지막 갱신일").optional(),
-                                fieldWithPath("data.point").type(JsonFieldType.NUMBER).description("LP").optional(),
-                                fieldWithPath("data.tier").type(JsonFieldType.STRING).description("티어").optional(),
-                                fieldWithPath("data.rank").type(JsonFieldType.STRING).description("랭크").optional(),
+                                fieldWithPath("data.lastRevisionDateTime").type(JsonFieldType.NUMBER).description("Riot API 마지막 갱신 시간 (epoch)"),
+                                fieldWithPath("data.lastRevisionClickDateTime").type(JsonFieldType.NUMBER).description("유저가 갱신 버튼 누른 시간 (epoch)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 정보 (정상 응답 시 null)")
                         )
                 ));
@@ -197,7 +195,7 @@ class SummonerControllerTest extends RestDocsSupport {
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
                                 fieldWithPath("data.puuid").type(JsonFieldType.STRING).description("갱신 요청한 소환사 PUUID"),
-                                fieldWithPath("data.status").type(JsonFieldType.STRING).description("갱신 요청 상태 (REQUEST, ALREADY_IN_PROGRESS)"),
+                                fieldWithPath("data.status").type(JsonFieldType.STRING).description("갱신 요청 상태 (SUCCESS, PROGRESS)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 정보 (정상 응답 시 null)")
                         )
                 ));
@@ -265,6 +263,4 @@ class SummonerControllerTest extends RestDocsSupport {
                 ));
 
     }
-
-
 }

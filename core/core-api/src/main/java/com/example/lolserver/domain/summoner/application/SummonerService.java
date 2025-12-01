@@ -18,4 +18,6 @@ public interface SummonerService {
 
     SummonerRenewalResponse renewalSummonerStatus(String puuid);
 
+    SummonerResponse getSummonerByPuuid(String region, String puuid);
+
 }
