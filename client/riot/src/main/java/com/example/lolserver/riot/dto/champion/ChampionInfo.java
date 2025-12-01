@@ -9,10 +9,10 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ChampionInfo extends ErrorDTO {
+public class ChampionInfo {
 
     private int maxNewPlayerLevel;
-    private List<Integer>  freeChampionIdsForNewPlayers;
-    private List<Integer>  freeChampionIds;
+    private List<Integer> freeChampionIdsForNewPlayers;
+    private List<Integer> freeChampionIds;
 
 }

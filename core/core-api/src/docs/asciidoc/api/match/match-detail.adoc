@@ -1,0 +1,10 @@
+[[match-detail]]
+=== 게임 상세
+
+==== HTTP Request
+include::{snippets}/match-get-by-id/http-request.adoc[]
+include::{snippets}/match-get-by-id/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/match-get-by-id/http-response.adoc[]
+include::{snippets}/match-get-by-id/response-fields.adoc[]

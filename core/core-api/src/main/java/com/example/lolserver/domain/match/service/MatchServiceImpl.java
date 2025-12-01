@@ -4,7 +4,7 @@ import com.example.lolserver.domain.match.dto.MSChampionRequest;
 import com.example.lolserver.domain.match.dto.MatchRequest;
 import com.example.lolserver.storage.db.core.repository.dto.data.GameData;
 import com.example.lolserver.storage.db.core.repository.dto.data.TimelineData;
-import com.example.lolserver.storage.db.core.repository.match.dto.MSChampionResponse;
+import com.example.lolserver.storage.db.core.repository.match.dto.MSChampionDTO;
 import com.example.lolserver.storage.db.core.repository.match.dto.MatchResponse;
 import com.example.lolserver.storage.db.core.repository.match.entity.Match;
 import com.example.lolserver.storage.db.core.repository.match.entity.timeline.events.ItemEvents;
@@ -47,13 +47,10 @@ public class MatchServiceImpl implements MatchService {
     }
 
     @Override
-    public List<MSChampionResponse> getRankChampions(MSChampionRequest request) {
-
-        return matchSummonerRepositoryCustom.findAllChampionKDAByPuuidAndSeasonAndQueueType(
+    public List<MSChampionDTO> getRankChampions(MSChampionRequest request) {
+        return matchSummonerRepositoryCustom.findAllMatchSummonerByPuuidAndSeason(
                 request.getPuuid(),
-                request.getSeason(),
-                request.getQueueId(),
-                7L
+                request.getSeason()
         );
     }
 

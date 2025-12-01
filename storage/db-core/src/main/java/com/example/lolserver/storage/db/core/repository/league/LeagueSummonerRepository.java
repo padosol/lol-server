@@ -11,5 +11,5 @@ import java.util.List;
 @Repository
 public interface LeagueSummonerRepository extends JpaRepository<LeagueSummoner, LeagueSummonerId> {
 
-    List<LeagueSummoner> findAllBySummoner(Summoner summoner);
+    List<LeagueSummoner> findAllByPuuid(String puuid);
 }

@@ -1,0 +1,10 @@
+[[match-matchIds]]
+=== 게임 아이디 리스트
+
+==== HTTP Request
+include::{snippets}/match-get-ids/http-request.adoc[]
+include::{snippets}/match-get-ids/query-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/match-get-ids/http-response.adoc[]
+include::{snippets}/match-get-ids/response-fields.adoc[]

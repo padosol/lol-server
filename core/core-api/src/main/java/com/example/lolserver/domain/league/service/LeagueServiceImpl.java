@@ -3,6 +3,9 @@ package com.example.lolserver.domain.league.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.example.lolserver.controller.league.response.LeagueResponse;
+import com.example.lolserver.storage.db.core.repository.league.LeagueSummonerDetailRepository;
+import com.example.lolserver.storage.db.core.repository.league.entity.LeagueSummonerDetail;
 import com.example.lolserver.support.error.ErrorType;
 import com.example.lolserver.storage.db.core.repository.dto.data.leagueData.LeagueSummonerData;
 import com.example.lolserver.storage.db.core.repository.league.LeagueSummonerRepository;
@@ -19,18 +22,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class LeagueServiceImpl implements LeagueService{
 
-    private final SummonerJpaRepository summonerJpaRepository;
-    private final LeagueSummonerRepository leagueSummonerRepository;
+    private final LeagueSummonerDetailRepository leagueSummonerDetailRepository;
 
     @Override
-    public List<LeagueSummonerData> getLeaguesBypuuid(String puuid) {
-        Summoner summoner = summonerJpaRepository.findById(puuid).orElseThrow(() -> new CoreException(
-                ErrorType.NOT_FOUND_PUUID,
-                "존재하지 않는 PUUID 입니다. " + puuid
-        ));
+    public LeagueResponse getLeaguesBypuuid(String puuid) {
+        List<LeagueSummonerDetail> leagueSummonerDetails = leagueSummonerDetailRepository.findAllByPuuid(puuid);
 
-        List<LeagueSummoner> leagueSummoners = leagueSummonerRepository.findAllBySummoner(summoner);
-
-        return leagueSummoners.stream().map( LeagueSummoner::toData).collect(Collectors.toList());
+        return LeagueResponse.of(leagueSummonerDetails);
     }
 }

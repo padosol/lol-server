@@ -51,6 +51,7 @@ public class ParticipantData {
     private int totalMinionsKilled;
     private int neutralMinionsKilled;
     private int totalDamageDealtToChampions;
+    private int totalDamageTaken;
     private int visionWardsBoughtInGame;
     private int wardsKilled;
     private int wardsPlaced;
@@ -188,6 +189,7 @@ public class ParticipantData {
         this.neutralMinionsKilled = matchSummoner.getNeutralMinionsKilled();
         this.win = matchSummoner.isWin();
         this.totalDamageDealtToChampions = matchSummoner.getTotalDamageDealtToChampions();
+        this.totalDamageTaken = matchSummoner.getTotalDamageTaken();
         this.visionWardsBoughtInGame = matchSummoner.getVisionWardsBoughtInGame();
         this.wardsKilled = matchSummoner.getWardsKilled();
         this.wardsPlaced = matchSummoner.getWardsPlaced();

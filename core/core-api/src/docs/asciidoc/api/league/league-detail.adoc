@@ -1,0 +1,10 @@
+[[league-detail]]
+=== 유저 리그 정보
+
+==== HTTP Request
+include::{snippets}/league-get-by-puuid/http-request.adoc[]
+include::{snippets}/league-get-by-puuid/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/league-get-by-puuid/http-response.adoc[]
+include::{snippets}/league-get-by-puuid/response-fields.adoc[]

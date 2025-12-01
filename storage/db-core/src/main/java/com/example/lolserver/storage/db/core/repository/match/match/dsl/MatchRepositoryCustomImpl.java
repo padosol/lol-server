@@ -26,8 +26,6 @@ import static com.example.lolserver.storage.db.core.repository.match.entity.QCha
 public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
 
     private final JPAQueryFactory jpaQueryFactory;
-    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    private final JdbcTemplate jdbcTemplate;
 
     @Override
     public Page<Match> getMatches(String puuid, Integer queueId, Pageable pageable) {

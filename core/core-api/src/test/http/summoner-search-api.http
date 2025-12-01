@@ -1,7 +1,0 @@
-### 유저 조회 API
-GET http://localhost:8100/api/v1/summoners/search?q=hideonbush-kr1&region=KR
-Accept: application/json
-
-### 유저 상세 조회 API
-GET http://localhost:8100/api/v1/summoners/kr/hideonbush-kr1
-Accept: application/json
