@@ -1,0 +1,10 @@
+[[summoner-detail]]
+=== 유저 상세 조회
+
+==== HTTP Request
+include::{snippets}/summoner-detail/http-request.adoc[]
+include::{snippets}/summoner-detail/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/summoner-detail/http-response.adoc[]
+include::{snippets}/summoner-detail/response-fields.adoc[]

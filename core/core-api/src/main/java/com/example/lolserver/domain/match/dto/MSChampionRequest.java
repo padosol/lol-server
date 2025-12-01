@@ -9,7 +9,6 @@ public class MSChampionRequest {
 
     private String puuid;
     private Integer season;
-    private Integer queueId;
     private String platform;
 
 }

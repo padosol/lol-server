@@ -1,0 +1,10 @@
+[[summoner-renewal-status]]
+=== 유저 갱신 상태
+
+==== HTTP Request
+include::{snippets}/summoner-renewal-status-completed/http-request.adoc[]
+include::{snippets}/summoner-renewal-status-completed/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/summoner-renewal-status-completed/http-response.adoc[]
+include::{snippets}/summoner-renewal-status-completed/response-fields.adoc[]

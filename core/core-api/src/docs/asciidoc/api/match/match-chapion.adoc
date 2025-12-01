@@ -1,0 +1,10 @@
+[[match-champion]]
+=== 게임-챔피언 랭킹
+
+==== HTTP Request
+include::{snippets}/match-get-rank-champions/http-request.adoc[]
+include::{snippets}/match-get-rank-champions/query-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/match-get-rank-champions/http-response.adoc[]
+include::{snippets}/match-get-rank-champions/response-fields.adoc[]

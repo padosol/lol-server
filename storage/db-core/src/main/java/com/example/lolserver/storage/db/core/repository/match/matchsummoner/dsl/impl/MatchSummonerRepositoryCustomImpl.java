@@ -1,13 +1,12 @@
 package com.example.lolserver.storage.db.core.repository.match.matchsummoner.dsl.impl;
 
 import com.example.lolserver.storage.db.core.repository.match.dto.LinePosition;
-import com.example.lolserver.storage.db.core.repository.match.dto.MSChampionResponse;
+import com.example.lolserver.storage.db.core.repository.match.dto.MSChampionDTO;
+import com.example.lolserver.storage.db.core.repository.match.dto.QMSChampionDTO;
 import com.example.lolserver.storage.db.core.repository.match.entity.MatchSummoner;
 import com.example.lolserver.storage.db.core.repository.match.matchsummoner.dsl.MatchSummonerRepositoryCustom;
 import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.CaseBuilder;
-import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.*;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +20,7 @@ import java.util.List;
 
 import static com.example.lolserver.storage.db.core.repository.match.entity.QMatch.match;
 import static com.example.lolserver.storage.db.core.repository.match.entity.QMatchSummoner.matchSummoner;
+import static com.example.lolserver.storage.db.core.repository.match.entity.QChallenges.challenges;
 
 @Repository
 @RequiredArgsConstructor
@@ -46,8 +46,7 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                 .from(matchSummoner)
                 .join(matchSummoner.match, match)
                 .where(
-                        puuidEq(puuid),
-                        queueIdEq(queueId)
+                        puuidEq(puuid)
                 );
 
 
@@ -66,11 +65,11 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
     }
 
     @Override
-    public List<MSChampionResponse> findAllChampionKDAByPuuidAndSeasonAndQueueType(
-            String puuid, Integer season, Integer queueType, Long limit) {
+    public List<MSChampionDTO> findAllChampionKDAByPuuidAndSeasonAndQueueType(
+            String puuid, Integer season) {
 
-        JPAQuery<MSChampionResponse> query = jpaQueryFactory.select(
-                        Projections.fields(MSChampionResponse.class,
+        JPAQuery<MSChampionDTO> query = jpaQueryFactory.select(
+                        Projections.fields(MSChampionDTO.class,
                                 matchSummoner.championId,
                                 matchSummoner.championName,
                                 Expressions.template(Double.class, "ROUND({0}, 1)", matchSummoner.kills.avg()).as("kills"),
@@ -87,15 +86,54 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                 .where(
                         matchSummoner.puuid.eq(puuid),
                         match.season.eq(season),
-                        queueIdEqOrAll(queueType),
                         matchSummoner.gameEndedInEarlySurrender.eq(false)
                 )
                 .groupBy(matchSummoner.championId, matchSummoner.championName)
                 .orderBy(Expressions.stringPath("playCount").desc());
 
-        if(limit != null) {
-            query.limit(limit);
-        }
+        return query.fetch();
+    }
+
+    @Override
+    public List<MSChampionDTO> findAllMatchSummonerByPuuidAndSeason(String puuid, Integer season) {
+        // 1. 승리/패배 횟수를 계산할 CASE-SUM Expression 정의
+        NumberExpression<Long> winCountExpr = new CaseBuilder()
+                .when(matchSummoner.win.isTrue())
+                .then(1L)
+                .otherwise(0L)
+                .sum(); // Long 타입으로 합계
+
+        NumberExpression<Long> lossCountExpr = new CaseBuilder()
+                .when(matchSummoner.win.isFalse())
+                .then(1L)
+                .otherwise(0L)
+                .sum(); // Long 타입으로 합계
+
+        QMSChampionDTO qmsChampionDTO = new QMSChampionDTO(
+            matchSummoner.assists.avg(),
+            matchSummoner.deaths.avg(),
+            matchSummoner.kills.avg(),
+            matchSummoner.championId,
+            matchSummoner.championName,
+                winCountExpr,
+                lossCountExpr,
+            challenges.damagePerMinute.avg(),
+            challenges.kda.avg(),
+            challenges.laneMinionsFirst10Minutes.avg(),
+            challenges.damageTakenOnTeamPercentage.avg(),
+            challenges.goldPerMinute.avg(),
+            matchSummoner.championId.count()
+        );
+
+        JPAQuery<MSChampionDTO> query = jpaQueryFactory.select(qmsChampionDTO)
+                .from(matchSummoner)
+                .join(matchSummoner.challenges, challenges)
+                .where(
+                        puuidEq(puuid),
+                        seasonEq(season)
+                )
+                .groupBy(matchSummoner.championId, matchSummoner.championName)
+                .orderBy(matchSummoner.championId.count().desc());
 
         return query.fetch();
     }
@@ -159,4 +197,7 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
         return queueId != null ? match.queueId.eq(queueId) : null;
     }
 
+    private BooleanExpression seasonEq(Integer season) {
+        return matchSummoner.match.season.eq(season);
+    }
 }

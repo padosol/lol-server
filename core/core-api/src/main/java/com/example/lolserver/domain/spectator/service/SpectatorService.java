@@ -6,6 +6,6 @@ import java.io.IOException;
 
 public interface SpectatorService {
 
-    CurrentGameInfo getCurrentGameInfo(String puuid, String region) throws IOException, InterruptedException;
+    CurrentGameInfo getCurrentGameInfo(String puuid, String region);
 
 }

@@ -15,4 +15,10 @@ public interface SummonerRestClient {
             @PathVariable("gameName") String gameName,
             @PathVariable("tagLine") String tagLine
     );
+
+    @GetExchange(value = "/api/riot/{region}/summoners/{puuid}")
+    SummonerVO getSummonerByPuuid(
+            @PathVariable("region") String region,
+            @PathVariable("puuid") String puuid
+    );
 }

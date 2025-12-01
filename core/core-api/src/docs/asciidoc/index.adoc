@@ -1,27 +1,36 @@
-= API Docs
+ifndef::snippets[]
+:snippets: ../../generated-snippets
+endif::[]
+= MMRTR REST API 문서
 :doctype: book
 :icons: font
 :source-highlighter: highlightjs
 :toc: left
-:toclevels: 3
+:toclevels: 2
 :sectlinks:
-:snippets: build/generated-snippets
 
-== Introduce
+[[Summoner-API]]
+== Summoner API
 
-This is the Core API documentation.
+include::api/summoner/summoner-auto.adoc[]
 
-== Example API
+include::api/summoner/summoner-detail.adoc[]
 
-=== Example GET API
-==== Curl Request
-include::{snippets}/search-summoner/curl-request.adoc[]
-// ==== Path Parameters
-// include::{snippets}/search-summoner/path-parameters.adoc[]
-==== Query Parameters
-include::{snippets}/search-summoner/query-parameters.adoc[]
-==== Http Response
-include::{snippets}/search-summoner/http-response.adoc[]
-==== Response Fields
-include::{snippets}/search-summoner/response-fields.adoc[]
+include::api/summoner/summoner-renewal.adoc[]
+
+include::api/summoner/summoner-renewal-status.adoc[]
+
+[[Match-API]]
+== Match API
+
+include::api/match/match-get-ids.adoc[]
+
+include::api/match/match-detail.adoc[]
+
+include::api/match/match-chapion.adoc[]
+
+[[League-API]]
+== League API
+
+include::api/league/league-detail.adoc[]
 

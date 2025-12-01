@@ -1,0 +1,10 @@
+[[summoner-auto-search]]
+=== 유저 검색
+
+==== HTTP Request
+include::{snippets}/summoner-autocomplete/http-request.adoc[]
+include::{snippets}/summoner-autocomplete/query-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/summoner-autocomplete/http-response.adoc[]
+include::{snippets}/summoner-autocomplete/response-fields.adoc[]
