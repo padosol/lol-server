@@ -1,34 +1,27 @@
 package com.example.lolserver.controller.champion;
 
-import java.io.IOException;
-
+import com.example.lolserver.domain.champion.service.ChampionService;
+import com.example.lolserver.riot.dto.champion.ChampionInfo;
 import com.example.lolserver.support.response.ApiResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.example.lolserver.riot.dto.champion.ChampionInfo;
-import com.example.lolserver.domain.champion.service.ChampionService;
-
-import lombok.RequiredArgsConstructor;
-
-@RequestMapping("/api/v1/champion")
+@RequestMapping("/api/v1/{region}/champion")
 @RestController
 @RequiredArgsConstructor
 public class ChampionController {
 
 
-    private final ChampionService championServiceV1;
+    private final ChampionService championService;
 
     @GetMapping("/rotation")
     public ResponseEntity<ApiResponse<ChampionInfo>> getRotation(
-            @RequestParam("region") String region
+            @PathVariable("region") String region
     ) {
 
-        ChampionInfo rotation = championServiceV1.getRotation(region);
+        ChampionInfo rotation = championService.getRotation(region);
 
         return new ResponseEntity<>(ApiResponse.success(rotation), HttpStatus.OK);
     }

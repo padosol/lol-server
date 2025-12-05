@@ -5,8 +5,6 @@ import com.example.lolserver.controller.league.response.LeagueResponse;
 import com.example.lolserver.controller.league.response.LeagueSummonerResponse;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.league.service.LeagueService;
-import com.example.lolserver.storage.db.core.repository.dto.data.leagueData.LeagueSummonerData;
-import com.example.lolserver.storage.db.core.repository.league.entity.LeagueSummonerDetail;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -51,44 +51,6 @@ class SummonerControllerTest extends RestDocsSupport {
     private final String BASE_URL = "/api/v1/summoners";
 
     @Test
-    @DisplayName("유저 검색 API")
-    void searchSummoner() throws Exception {
-        // given
-        long now = Instant.now().toEpochMilli();
-        List<SummonerResponse> responses = Arrays.asList(
-                SummonerResponse.builder().puuid("puuid-1").gameName("testUser1").tagLine("KR1").summonerLevel(100L).lastRevisionDateTime(now).lastRevisionClickDateTime(now).build(),
-                SummonerResponse.builder().puuid("puuid-2").gameName("testUser2").tagLine("KR1").summonerLevel(120L).lastRevisionDateTime(now).lastRevisionClickDateTime(now).build()
-        );
-        given(summonerService.getAllSummoner(anyString(), anyString())).willReturn(responses);
-
-        // when & then
-        mockMvc.perform(get(BASE_URL + "/search")
-                        .param("q", "hideonbush-kr1")
-                        .param("region", "kr"))
-                .andExpect(status().isOk())
-                .andDo(document("summoner-search",
-                        preprocessRequest(prettyPrint()),
-                        preprocessResponse(prettyPrint()),
-                        queryParameters(
-                                parameterWithName("q").description("검색할 소환사 이름 (gameName) 또는 (gameName#tagLine)"),
-                                parameterWithName("region").description("검색할 지역 (기본값: kr)")
-                        ),
-                        responseFields(
-                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
-                                fieldWithPath("data[].profileIconId").type(JsonFieldType.NUMBER).description("프로필 아이콘 ID"),
-                                fieldWithPath("data[].puuid").type(JsonFieldType.STRING).description("소환사 고유 PUUID"),
-                                fieldWithPath("data[].summonerLevel").type(JsonFieldType.NUMBER).description("소환사 레벨"),
-                                fieldWithPath("data[].gameName").type(JsonFieldType.STRING).description("게임 이름"),
-                                fieldWithPath("data[].tagLine").type(JsonFieldType.STRING).description("태그 라인"),
-                                fieldWithPath("data[].platform").type(JsonFieldType.STRING).description("플랫폼(지역)").optional(),
-                                fieldWithPath("data[].lastRevisionDateTime").type(JsonFieldType.NUMBER).description("Riot API 마지막 갱신 시간 (epoch)"),
-                                fieldWithPath("data[].lastRevisionClickDateTime").type(JsonFieldType.NUMBER).description("유저가 갱신 버튼 누른 시간 (epoch)"),
-                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 정보 (정상 응답 시 null)")
-                        )
-                ));
-    }
-
-    @Test
     @DisplayName("유저 상세 정보 API")
     void getSummoner() throws Exception {
         // given

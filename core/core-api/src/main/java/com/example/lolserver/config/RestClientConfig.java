@@ -1,5 +1,6 @@
 package com.example.lolserver.config;
 
+import com.example.lolserver.riot.client.summoner.ChampionRotateRestClient;
 import com.example.lolserver.riot.client.summoner.SummonerRestClient;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorCode;
@@ -38,5 +39,15 @@ public class RestClientConfig {
         return factory.createClient(SummonerRestClient.class);
     }
 
+    @Bean
+    public ChampionRotateRestClient championRotateRestClient() {
+        RestClientAdapter restClientAdapter = RestClientAdapter
+                .create(restClient());
+
+        HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(restClientAdapter)
+                .build();
+
+        return factory.createClient(ChampionRotateRestClient.class);
+    }
 
 }

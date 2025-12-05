@@ -1,0 +1,10 @@
+[[champion-rotate]]
+=== 챔피언 로테이션 정보
+
+==== HTTP Request
+include::{snippets}/champion-rotation/http-request.adoc[]
+include::{snippets}/champion-rotation/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/champion-rotation/http-response.adoc[]
+include::{snippets}/champion-rotation/response-fields.adoc[]

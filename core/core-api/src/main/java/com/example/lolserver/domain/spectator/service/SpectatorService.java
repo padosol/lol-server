@@ -1,11 +1,15 @@
 package com.example.lolserver.domain.spectator.service;
 
 import com.example.lolserver.riot.dto.spectator.CurrentGameInfo;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
-import java.io.IOException;
+@Service
+@RequiredArgsConstructor
+public class SpectatorService {
 
-public interface SpectatorService {
+    public CurrentGameInfo getCurrentGameInfo(String puuid, String region) {
 
-    CurrentGameInfo getCurrentGameInfo(String puuid, String region);
-
+        return null;
+    }
 }

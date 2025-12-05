@@ -1,6 +1,5 @@
 package com.example.lolserver.controller.match;
 
-import com.example.lolserver.controller.match.response.ChampionStatsResponse;
 import com.example.lolserver.domain.match.dto.MSChampionRequest;
 import com.example.lolserver.domain.match.dto.MatchRequest;
 import com.example.lolserver.domain.match.service.MatchService;

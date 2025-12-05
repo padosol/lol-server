@@ -1,11 +1,28 @@
 package com.example.lolserver.domain.league.service;
 
-import com.example.lolserver.controller.league.response.LeagueResponse;
-import com.example.lolserver.storage.db.core.repository.dto.data.leagueData.LeagueSummonerData;
-import com.example.lolserver.storage.db.core.repository.league.entity.LeagueSummonerDetail;
-
 import java.util.List;
 
-public interface LeagueService {
-    LeagueResponse getLeaguesBypuuid(String puuid);
+import com.example.lolserver.controller.league.response.LeagueResponse;
+import com.example.lolserver.storage.db.core.repository.league.entity.LeagueSummoner;
+import com.example.lolserver.storage.db.core.repository.league.entity.LeagueSummonerHistory;
+import org.springframework.stereotype.Service;
+
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class LeagueService{
+
+    private final LeagueSummonerFinder leagueSummonerFinder;
+
+    public LeagueResponse getLeaguesBypuuid(String puuid) {
+        List<LeagueSummoner> leagueSummoners = leagueSummonerFinder.findAllByPuuid(puuid);
+        List<Long> leagueSummonerIds = leagueSummoners.stream().map(LeagueSummoner::getId).toList();
+
+        List<LeagueSummonerHistory> leagueSummonerHistories = leagueSummonerFinder
+                .findAllHistoryByLeagueSummonerIds(leagueSummonerIds);
+
+        return LeagueResponse.of(leagueSummoners, leagueSummonerHistories);
+    }
 }

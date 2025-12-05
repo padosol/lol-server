@@ -1,6 +1,7 @@
 package com.example.lolserver.controller.league.response;
 
-import com.example.lolserver.storage.db.core.repository.league.entity.LeagueSummonerDetail;
+import com.example.lolserver.storage.db.core.repository.league.entity.LeagueSummoner;
+import com.example.lolserver.storage.db.core.repository.league.entity.LeagueSummonerHistory;
 import com.example.lolserver.storage.db.core.repository.league.entity.QueueType;
 
 import java.util.ArrayList;
@@ -14,38 +15,49 @@ public record LeagueResponse(
     List<LeagueSummonerResponse> flexLeagueHistory
 ) {
 
-    public static LeagueResponse of(List<LeagueSummonerDetail> leagueSummonerDetails) {
+    public static LeagueResponse of(List<LeagueSummoner> leagueSummoners, List<LeagueSummonerHistory> leagueSummonerHistories) {
         LeagueSummonerResponse soloLeague = null;
         LeagueSummonerResponse flexLeague = null;
 
         List<LeagueSummonerResponse> solo = new ArrayList<>();
         List<LeagueSummonerResponse> flex = new ArrayList<>();
 
-        for (LeagueSummonerDetail leagueSummonerDetail : leagueSummonerDetails) {
+        for (LeagueSummoner leagueSummoner : leagueSummoners) {
             LeagueSummonerResponse leagueSummonerResponse = new LeagueSummonerResponse(
-                    leagueSummonerDetail.getLeagueSummoner().getLeague().getQueue().name(),
-                    leagueSummonerDetail.getLeaguePoints(),
-                    leagueSummonerDetail.getWins(),
-                    leagueSummonerDetail.getLosses(),
+                    leagueSummoner.getQueue(),
+                    leagueSummoner.getLeaguePoints(),
+                    leagueSummoner.getWins(),
+                    leagueSummoner.getLosses(),
                     ( String.format("%.2f",
-                            (((double) leagueSummonerDetail.getWins() / (leagueSummonerDetail.getWins() + leagueSummonerDetail.getLosses())))*100 ) + "%" ),
-                    leagueSummonerDetail.getLeagueSummoner().getLeague().getTier(),
-                    leagueSummonerDetail.getRank()
+                            (((double) leagueSummoner.getWins() / (leagueSummoner.getWins() + leagueSummoner.getLosses())))*100 ) + "%" ),
+                    leagueSummoner.getTier(),
+                    leagueSummoner.getRank()
             );
 
-            if (leagueSummonerDetail.getLeagueSummoner().getLeague().getQueue().equals(QueueType.RANKED_SOLO_5x5)) {
+            if (leagueSummoner.getQueue().equals(QueueType.RANKED_SOLO_5x5.name())) {
+                soloLeague = leagueSummonerResponse;
+            } else {
+                flexLeague= leagueSummonerResponse;
+            }
+        }
+
+        for (LeagueSummonerHistory leagueSummonerHistory : leagueSummonerHistories) {
+            LeagueSummonerResponse leagueSummonerResponse = new LeagueSummonerResponse(
+                    leagueSummonerHistory.getQueue(),
+                    leagueSummonerHistory.getLeaguePoints(),
+                    leagueSummonerHistory.getWins(),
+                    leagueSummonerHistory.getLosses(),
+                    ( String.format("%.2f",
+                            (((double) leagueSummonerHistory.getWins() / (leagueSummonerHistory.getWins() + leagueSummonerHistory.getLosses())))*100 ) + "%" ),
+                    leagueSummonerHistory.getTier(),
+                    leagueSummonerHistory.getRank()
+            );
+
+            if (leagueSummonerHistory.getQueue().equals(QueueType.RANKED_SOLO_5x5.name())) {
                 solo.add(leagueSummonerResponse);
             } else {
                 flex.add(leagueSummonerResponse);
             }
-        }
-
-        if(!solo.isEmpty()) {
-            soloLeague = solo.get(0);
-        }
-
-        if(!flex.isEmpty()) {
-            flexLeague = flex.get(0);
         }
 
         return new LeagueResponse(

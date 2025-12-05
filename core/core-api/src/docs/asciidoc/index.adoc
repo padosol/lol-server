@@ -34,3 +34,9 @@ include::api/match/match-chapion.adoc[]
 
 include::api/league/league-detail.adoc[]
 
+
+[[Champion-API]]
+== Champion API
+
+include::api/champion/champion-rotate.adoc[]
+

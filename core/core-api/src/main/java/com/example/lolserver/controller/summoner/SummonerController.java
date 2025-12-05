@@ -5,7 +5,6 @@ import com.example.lolserver.domain.summoner.application.SummonerService;
 import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalResponse;
 import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerAutoDTO;
 import com.example.lolserver.controller.summoner.response.SummonerResponse;
-import com.example.lolserver.storage.redis.service.RedisService;
 import com.example.lolserver.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +37,12 @@ public class SummonerController {
         return ResponseEntity.ok(ApiResponse.success(summoner));
     }
 
+    /**
+     * 유저 상세 정보
+     * @param region
+     * @param puuid
+     * @return
+     */
     @GetMapping("/v1/{region}/summoners/{puuid}")
     public ResponseEntity<ApiResponse<SummonerResponse>> getSummonerByPuuid(
             @PathVariable("region") String region,

@@ -6,8 +6,6 @@ import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerAut
 import com.example.lolserver.storage.db.core.repository.summoner.entity.Summoner;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.jpa.JPAExpressions;
-import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -17,7 +15,6 @@ import java.util.List;
 
 import static com.example.lolserver.storage.db.core.repository.summoner.entity.QSummoner.summoner;
 import static com.example.lolserver.storage.db.core.repository.league.entity.QLeague.league;
-import static com.example.lolserver.storage.db.core.repository.league.entity.QLeagueSummonerDetail.leagueSummonerDetail;
 import static com.example.lolserver.storage.db.core.repository.league.entity.QLeagueSummoner.leagueSummoner;
 
 @Repository
@@ -44,27 +41,16 @@ public class SummonerRepositoryCustomImpl implements SummonerRepositoryCustom {
                 summoner.tagLine,
                 summoner.profileIconId,
                 summoner.summonerLevel,
-                league.tier,
-                leagueSummonerDetail.rank,
-                leagueSummonerDetail.leaguePoints
+                leagueSummoner.tier,
+                leagueSummoner.rank,
+                leagueSummoner.leaguePoints
         );
-
-        JPQLQuery<Long> subQuery = JPAExpressions
-                .select(leagueSummonerDetail.id.max())
-                .from(leagueSummonerDetail)
-                .groupBy(leagueSummonerDetail.leagueSummonerId);
 
         return jpaQueryFactory.select(qSummonerAutoDTO)
                 .from(summoner)
                 .join(leagueSummoner)
                 .on(
                         summoner.puuid.eq(leagueSummoner.puuid)
-                )
-                .join(leagueSummoner.league)
-                .join(leagueSummonerDetail)
-                .on(
-                        leagueSummoner.id.eq(leagueSummonerDetail.leagueSummonerId),
-                        leagueSummonerDetail.id.in(subQuery)
                 )
                 .where(
                         gameNameLike(q),

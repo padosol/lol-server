@@ -20,8 +20,5 @@ public class League {
     private String tier;
     private String name;
 
-    @Enumerated(EnumType.STRING)
-    private QueueType queue;
-
-
+    private String queue;
 }

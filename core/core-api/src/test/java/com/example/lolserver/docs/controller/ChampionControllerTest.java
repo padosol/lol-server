@@ -23,7 +23,7 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
-import static org.springframework.restdocs.request.RequestDocumentation.queryParameters;
+import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ChampionControllerTest extends RestDocsSupport {
 
     @Mock
-    private ChampionService championService;
+    private ChampionService championServiceV1;
 
     @InjectMocks
     private ChampionController championController;
@@ -51,12 +51,11 @@ class ChampionControllerTest extends RestDocsSupport {
         championInfo.setFreeChampionIds(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
         championInfo.setFreeChampionIdsForNewPlayers(List.of(101, 102, 103, 104, 105, 106, 107, 108, 109, 110));
 
-        given(championService.getRotation(anyString())).willReturn(championInfo);
+        given(championServiceV1.getRotation(anyString())).willReturn(championInfo);
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/champion/rotation")
-                                .param("region", region)
+                        get("/api/v1/{region}/champion/rotation", region)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
@@ -64,7 +63,7 @@ class ChampionControllerTest extends RestDocsSupport {
                 .andDo(document("champion-rotation",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        queryParameters(
+                        pathParameters(
                                 parameterWithName("region").description("조회할 지역 (e.g., kr)")
                         ),
                         responseFields(
