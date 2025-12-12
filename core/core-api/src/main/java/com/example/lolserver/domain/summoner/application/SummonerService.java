@@ -1,18 +1,16 @@
 package com.example.lolserver.domain.summoner.application;
 
+import com.example.lolserver.controller.summoner.response.SummonerResponse;
 import com.example.lolserver.domain.summoner.dto.response.RenewalStatus;
 import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalResponse;
 import com.example.lolserver.rabbitmq.message.SummonerMessage;
 import com.example.lolserver.rabbitmq.service.RabbitMqService;
 import com.example.lolserver.riot.client.summoner.SummonerRestClient;
 import com.example.lolserver.riot.client.summoner.model.SummonerVO;
-import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.example.lolserver.riot.type.Platform;
-import com.example.lolserver.storage.db.core.repository.league.entity.QueueType;
 import com.example.lolserver.storage.db.core.repository.summoner.SummonerJpaRepository;
 import com.example.lolserver.storage.db.core.repository.summoner.dsl.SummonerRepositoryCustom;
 import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerAutoDTO;
-import com.example.lolserver.controller.summoner.response.SummonerResponse;
 import com.example.lolserver.storage.db.core.repository.summoner.entity.Summoner;
 import com.example.lolserver.storage.redis.service.RedisService;
 import com.example.lolserver.support.error.CoreException;
@@ -22,10 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 @Slf4j
 @Service
@@ -78,17 +73,6 @@ public class SummonerService{
                     "존재하지 않는 유저 입니다. " + q
             );
         }
-        int leaguePoint = 0;
-        String tier = "";
-        String rank = "";
-        Set<LeagueEntryDTO> leagueEntryDTOS = summonerVO.getLeagueEntryDTOS();
-        for (LeagueEntryDTO leagueEntryDTO : leagueEntryDTOS) {
-            if (leagueEntryDTO.getQueueType().equals(QueueType.RANKED_SOLO_5x5.name())) {
-                leaguePoint = leagueEntryDTO.getLeaguePoints();
-                tier = leagueEntryDTO.getTier();
-                rank = leagueEntryDTO.getRank();
-            }
-        }
 
         return SummonerResponse.builder()
                 .profileIconId(summonerVO.getProfileIconId())
@@ -98,46 +82,6 @@ public class SummonerService{
                 .gameName(summonerVO.getGameName())
                 .tagLine(summonerVO.getTagLine())
                 .build();
-    }
-
-    public List<SummonerResponse> getAllSummoner(String q, String region){
-
-        Summoner summoner = Summoner.builder().region(region).gameName(q).build();
-        summoner.splitGameNameTagLine();
-
-        List<Summoner> summonerList = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegion(summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
-
-        if(summonerList.isEmpty()) {
-            if(!summoner.isTagLine()) {
-                return Collections.emptyList();
-            }
-
-            SummonerVO summonerVO = summonerRestClient.getSummonerByGameNameAndTagLine(region, summoner.getGameName(), summoner.getTagLine());
-
-            if (summonerVO != null) {
-                SummonerResponse summonerResponse = SummonerResponse.builder()
-                        .profileIconId(summonerVO.getProfileIconId())
-                        .puuid(summonerVO.getPuuid())
-                        .summonerLevel(summonerVO.getSummonerLevel())
-                        .gameName(summonerVO.getGameName())
-                        .tagLine(summonerVO.getTagLine())
-                        .lastRevisionDateTime(summonerVO.getRevisionDate())
-                        .lastRevisionClickDateTime(summonerVO.getRevisionDate())
-                        .build();
-
-                return List.of(summonerResponse);
-            }
-        }
-
-        return summonerList.stream().map(data -> SummonerResponse.builder()
-                .profileIconId(data.getProfileIconId())
-                .puuid(data.getPuuid())
-                .summonerLevel(data.getSummonerLevel())
-                .gameName(data.getGameName())
-                .tagLine(data.getTagLine())
-                .lastRevisionDateTime(data.getRevisionDate())
-                .lastRevisionClickDateTime(data.getRevisionClickDate().atZone(ZoneId.systemDefault()).toEpochSecond())
-                .build()).toList();
     }
 
     public List<SummonerAutoDTO> getAllSummonerAutoComplete(String q, String region) {

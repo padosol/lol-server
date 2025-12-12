@@ -1,11 +1,11 @@
 package com.example.lolserver.docs.controller;
 
 import com.example.lolserver.controller.summoner.SummonerController;
+import com.example.lolserver.controller.summoner.response.SummonerResponse;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.summoner.application.SummonerService;
 import com.example.lolserver.domain.summoner.dto.response.RenewalStatus;
 import com.example.lolserver.domain.summoner.dto.response.SummonerRenewalResponse;
-import com.example.lolserver.controller.summoner.response.SummonerResponse;
 import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerAutoDTO;
 import com.example.lolserver.storage.redis.service.RedisService;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,6 +28,7 @@ import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuild
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+
 import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -54,14 +55,14 @@ class SummonerControllerTest extends RestDocsSupport {
     @DisplayName("유저 상세 정보 API")
     void getSummoner() throws Exception {
         // given
-        long now = Instant.now().toEpochMilli();
+        LocalDateTime now = LocalDateTime.now();
         SummonerResponse response = SummonerResponse.builder()
                 .puuid("test-puuid")
                 .gameName("hide on bush")
                 .tagLine("KR1")
                 .summonerLevel(500L)
-                .lastRevisionDateTime(now)
-                .lastRevisionClickDateTime(now)
+                .lastRevisionDateTime(now.toString())
+                .lastRevisionClickDateTime(now.toString())
                 .build();
 
         given(summonerService.getSummoner(anyString(), anyString())).willReturn(response);
@@ -87,8 +88,52 @@ class SummonerControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.gameName").type(JsonFieldType.STRING).description("게임 유저명"),
                                 fieldWithPath("data.tagLine").type(JsonFieldType.STRING).description("태그 라인"),
                                 fieldWithPath("data.platform").type(JsonFieldType.STRING).description("플랫폼(지역)").optional(),
-                                fieldWithPath("data.lastRevisionDateTime").type(JsonFieldType.NUMBER).description("Riot API 마지막 갱신 시간 (epoch)"),
-                                fieldWithPath("data.lastRevisionClickDateTime").type(JsonFieldType.NUMBER).description("유저가 갱신 버튼 누른 시간 (epoch)"),
+                                fieldWithPath("data.lastRevisionDateTime").type(JsonFieldType.STRING).description("Riot API 마지막 갱신 시간 (ISO-8601)"),
+                                fieldWithPath("data.lastRevisionClickDateTime").type(JsonFieldType.STRING).description("유저가 갱신 버튼 누른 시간 (ISO-8601)"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 정보 (정상 응답 시 null)")
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("PUUID로 유저 상세 정보 조회 API")
+    void getSummonerByPuuid() throws Exception {
+        // given
+        LocalDateTime now = LocalDateTime.now();
+        SummonerResponse response = SummonerResponse.builder()
+                .puuid("test-puuid")
+                .gameName("hide on bush")
+                .tagLine("KR1")
+                .summonerLevel(500L)
+                .lastRevisionDateTime(now.toString())
+                .lastRevisionClickDateTime(now.toString())
+                .build();
+
+        given(summonerService.getSummonerByPuuid(anyString(), anyString())).willReturn(response);
+
+        // when
+        ResultActions result = mockMvc.perform(
+                get("/api/v1/{region}/summoners/{puuid}", "kr", "test-puuid"));
+
+        // then
+        result.andExpect(status().isOk())
+                .andDo(document("summoner-detail-by-puuid",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("region").description("지역명"),
+                                parameterWithName("puuid").description("소환사 고유 PUUID")
+                        ),
+                        responseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
+                                fieldWithPath("data.profileIconId").type(JsonFieldType.NUMBER).description("프로필 아이콘 ID"),
+                                fieldWithPath("data.puuid").type(JsonFieldType.STRING).description("소환사 고유 PUUID"),
+                                fieldWithPath("data.summonerLevel").type(JsonFieldType.NUMBER).description("소환사 레벨"),
+                                fieldWithPath("data.gameName").type(JsonFieldType.STRING).description("게임 유저명"),
+                                fieldWithPath("data.tagLine").type(JsonFieldType.STRING).description("태그 라인"),
+                                fieldWithPath("data.platform").type(JsonFieldType.STRING).description("플랫폼(지역)").optional(),
+                                fieldWithPath("data.lastRevisionDateTime").type(JsonFieldType.STRING).description("Riot API 마지막 갱신 시간 (ISO-8601)"),
+                                fieldWithPath("data.lastRevisionClickDateTime").type(JsonFieldType.STRING).description("유저가 갱신 버튼 누른 시간 (ISO-8601)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 정보 (정상 응답 시 null)")
                         )
                 ));

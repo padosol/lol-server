@@ -9,16 +9,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 
+import static com.example.lolserver.storage.db.core.repository.match.entity.QChallenges.challenges;
 import static com.example.lolserver.storage.db.core.repository.match.entity.QMatch.match;
 import static com.example.lolserver.storage.db.core.repository.match.entity.QMatchSummoner.matchSummoner;
-import static com.example.lolserver.storage.db.core.repository.match.entity.QChallenges.challenges;
 
 @Slf4j
 @Repository

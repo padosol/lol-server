@@ -6,7 +6,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 
 @Getter
 @Builder
@@ -19,8 +21,8 @@ public class SummonerResponse {
     private String gameName;
     private String tagLine;
     private String platform;
-    private long lastRevisionDateTime;
-    private long lastRevisionClickDateTime;
+    private String lastRevisionDateTime;
+    private String lastRevisionClickDateTime;
 
     public static SummonerResponse of(Summoner summoner) {
         return SummonerResponse.builder()
@@ -29,8 +31,8 @@ public class SummonerResponse {
                 .summonerLevel(summoner.getSummonerLevel())
                 .gameName(summoner.getGameName())
                 .tagLine(summoner.getTagLine())
-                .lastRevisionDateTime(summoner.getRevisionDate())
-                .lastRevisionClickDateTime(summoner.getRevisionClickDate().atZone(ZoneId.systemDefault()).toEpochSecond())
+                .lastRevisionDateTime(summoner.getRevisionDate().toString())
+                .lastRevisionClickDateTime(summoner.getRevisionClickDate().toString())
                 .build();
     }
 }

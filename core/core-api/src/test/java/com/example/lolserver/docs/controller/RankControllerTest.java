@@ -62,7 +62,10 @@ class RankControllerTest extends RestDocsSupport {
         ranker.put("tier", "CHALLENGER I");
         ranker.put("summonerLevel", 500L);
         ranker.put("position", "MID");
-        ranker.put("championNames", List.of("Ahri", "Zed"));
+        ranker.put("champions", List.of(
+                Map.of("championName", "Ahri", "championImgUrl", "https://opgg-static.akamaized.net/champion/Ahri.png"),
+                Map.of("championName", "Zed", "championImgUrl", "https://opgg-static.akamaized.net/champion/Zed.png")
+        ));
 
         response.put("result", List.of(ranker));
         response.put("total", 1L);
@@ -100,8 +103,10 @@ class RankControllerTest extends RestDocsSupport {
                                 fieldWithPath("result[].tier").type(JsonFieldType.STRING).description("티어 및 디비전"),
                                 fieldWithPath("result[].summonerLevel").type(JsonFieldType.NUMBER).description("소환사 레벨"),
                                 fieldWithPath("result[].position").type(JsonFieldType.STRING).description("주 포지션").optional(),
-                                fieldWithPath("result[].championNames[]").type(JsonFieldType.ARRAY).description("주요 챔피언 이름 목록").optional()
+                                fieldWithPath("result[].champions[].championName").type(JsonFieldType.STRING).description("주요 챔피언 이름"),
+                                fieldWithPath("result[].champions[].championImgUrl").type(JsonFieldType.STRING).description("주요 챔피언 이미지 URL")
                         )
                 ));
     }
 }
+

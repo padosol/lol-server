@@ -3,7 +3,6 @@ package com.example.lolserver.config;
 import com.example.lolserver.riot.client.summoner.ChampionRotateRestClient;
 import com.example.lolserver.riot.client.summoner.SummonerRestClient;
 import com.example.lolserver.support.error.CoreException;
-import com.example.lolserver.support.error.ErrorCode;
 import com.example.lolserver.support.error.ErrorType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +14,7 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 @Configuration
 public class RestClientConfig {
+
     @Value("${lol.repository.url}")
     public String lolRepositoryUrl;
 

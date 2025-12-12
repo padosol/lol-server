@@ -24,10 +24,4 @@ public class RabbitMqService {
         log.info("Message Summmoner: {}", summonerMessage);
         rabbitTemplate.convertAndSend(exchangeName, routingKey, summonerMessage);
     }
-
-
-    public void sendMessageForMatch(String matchId) {
-        log.info("Message Match: {}", matchId);
-        rabbitTemplate.convertAndSend("mmrtr.matchId.exchange", "mmrtr.routingkey.matchId", matchId);
-    }
 }

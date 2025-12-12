@@ -27,7 +27,7 @@ public class Summoner {
     private String puuid;
 
     private int profileIconId;
-    private long revisionDate;
+    private LocalDateTime revisionDate;
     private long summonerLevel;
 
     private String gameName;
@@ -52,11 +52,7 @@ public class Summoner {
                 .gameName(summonerVO.getGameName())
                 .tagLine(summonerVO.getTagLine())
                 .revisionDate(summonerVO.getRevisionDate())
-                .revisionClickDate(
-                        LocalDateTime.ofInstant(
-                                Instant.ofEpochMilli(
-                                        summonerVO.getRevisionDate()), ZoneId.systemDefault())
-                )
+                .revisionClickDate(summonerVO.getRevisionDate())
                 .build();
     }
 
@@ -87,12 +83,8 @@ public class Summoner {
         // 갱신이 가능한 조건
         // 1. 갱신 시간이 3분을 넘었을 때
         // 2. 갱신 클릭 시간이 10초를 넘었을 때
-        Instant instant = Instant.ofEpochMilli(this.revisionDate);
-        ZoneId zoneId = ZoneId.systemDefault();
-
-        LocalDateTime revisionDateTime = LocalDateTime.ofInstant(instant, zoneId);
         // 갱신 시간이 3분을 넘지 않았을 때
-        if (revisionDateTime.plusMinutes(3L).isAfter(clickDateTime)) {
+        if (this.revisionDate.plusMinutes(3L).isAfter(clickDateTime)) {
             return false;
         }
 
@@ -107,12 +99,15 @@ public class Summoner {
     public void revision(SummonerDTO summonerDTO, AccountDto accountDto) {
 
         this.profileIconId = summonerDTO.getProfileIconId();
-        this.revisionDate = summonerDTO.getRevisionDate();
+
+        Instant instant = Instant.ofEpochMilli(summonerDTO.getRevisionDate());
+        ZoneId zoneId = ZoneId.systemDefault();
+        this.revisionDate = LocalDateTime.ofInstant(instant, zoneId);
+
         this.summonerLevel = summonerDTO.getSummonerLevel();
         this.gameName = accountDto.getGameName();
         this.tagLine = accountDto.getTagLine();
         this.revisionClickDate = LocalDateTime.now();
-
     }
 
     public boolean isTagLine() {

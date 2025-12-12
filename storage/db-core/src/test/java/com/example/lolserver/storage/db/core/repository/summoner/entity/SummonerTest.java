@@ -23,7 +23,7 @@ class SummonerTest {
         Summoner summoner = new Summoner(
             "summoner_puuid",
                 1,
-                revisionDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                revisionDateTime,
                 100,
                 "hide on bush",
                 "kr1",

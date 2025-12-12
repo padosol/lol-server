@@ -3,6 +3,9 @@ package com.example.lolserver.rabbitmq.message;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 @Getter
 @ToString
 public class SummonerMessage {
@@ -10,12 +13,11 @@ public class SummonerMessage {
     private String puuid;
     private long revisionDate;
 
-    public SummonerMessage(){}
-
-    public SummonerMessage(String platform, String puuid, Long revisionDate) {
+    public SummonerMessage(String platform, String puuid, LocalDateTime revisionDate) {
         this.platform = platform;
         this.puuid = puuid;
-        this.revisionDate = revisionDate;
+
+        this.revisionDate = revisionDate.atZone(ZoneId.systemDefault()).toEpochSecond();
     }
 
 }

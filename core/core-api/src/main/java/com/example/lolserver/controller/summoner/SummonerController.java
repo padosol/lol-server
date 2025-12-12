@@ -32,6 +32,7 @@ public class SummonerController {
             @PathVariable("region") String region,
             @PathVariable("gameName") String gameName
     ) {
+        log.info("getSummoner");
         SummonerResponse summoner = summonerService.getSummoner(gameName, region);
 
         return ResponseEntity.ok(ApiResponse.success(summoner));
@@ -97,9 +98,6 @@ public class SummonerController {
     ) {
         log.info("summonerRenewalStatus");
         SummonerRenewalResponse summonerRenewalResponse = summonerService.renewalSummonerStatus(puuid);
-        log.info("summonerRenewalResponse {}", summonerRenewalResponse);
-
         return ResponseEntity.ok(ApiResponse.success(summonerRenewalResponse));
     }
-
 }

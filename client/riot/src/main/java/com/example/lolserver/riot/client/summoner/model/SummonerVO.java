@@ -4,6 +4,7 @@ import com.example.lolserver.riot.dto.league.LeagueEntryDTO;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Getter
@@ -12,10 +13,8 @@ public class SummonerVO {
     private String puuid;
     private String gameName;
     private String tagLine;
-    private String id;
-    private String accountId;
     private int profileIconId;
-    private long revisionDate;
+    private LocalDateTime revisionDate;
     private long summonerLevel;
 
     private Set<LeagueEntryDTO> leagueEntryDTOS;

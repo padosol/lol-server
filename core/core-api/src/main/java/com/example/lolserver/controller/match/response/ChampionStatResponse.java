@@ -15,7 +15,7 @@ public record ChampionStatResponse(
         long kda,
         long kills,
         long losses,
-        long winate,
+        long winRate,
         long wins
 ) {
 }
