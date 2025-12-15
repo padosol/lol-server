@@ -1,11 +1,12 @@
 rootProject.name = 'lol-server'
 
 include(
-        "app:lol-server-application",
+        "module:app:application",
         "module:core:lol-server-domain",
         "module:core:enum",
-        "module:web",
+//        "module:web",
         "module:infra:client:lol-repository",
+        "module:infra:api",
         "module:infra:message:rabbitmq",
         "module:infra:persistence:postgresql",
         "module:infra:persistence:redis",
