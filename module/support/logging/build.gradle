@@ -1,0 +1,9 @@
+plugins {
+    id 'java-library'
+    id 'java'
+}
+
+dependencies {
+    // Potentially add logging-related dependencies here if specific ones are needed
+    // For now, it will inherit spring-boot-starter-logging from parent/application
+}

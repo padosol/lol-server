@@ -70,11 +70,11 @@ subprojects {
     }
 
     tasks.getByName("bootJar") {
-        enabled = false
+        enabled = project.name == "lol-server-application"
     }
 
     tasks.getByName("jar") {
-        enabled = true
+        enabled = project.name != "lol-server-application"
     }
 
     tasks.named('test') {

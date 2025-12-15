@@ -1,0 +1,4 @@
+dependencies {
+    implementation project(":module:core:enum")
+    implementation project(":module:core:enum")
+}

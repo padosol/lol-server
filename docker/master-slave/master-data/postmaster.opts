@@ -1,0 +1,1 @@
+/usr/lib/postgresql/17/bin/postgres "-c" "max_wal_senders=10" "-c" "hot_standby=on" "-c" "wal_level=replica"
