@@ -1,7 +1,7 @@
 package com.example.lolserver.domain.summoner.domain;
 
 import com.example.lolserver.RenewalStatus;
-import com.example.lolserver.storage.redis.model.SummonerRenewalSession;
+import com.example.lolserver.model.SummonerRenewalSession;
 import lombok.Getter;
 
 @Getter

@@ -1,8 +1,18 @@
 package com.example.lolserver.domain.summoner.application;
 
-import com.example.lolserver.common.message.MessagePublisher;
-import com.example.lolserver.common.message.SummonerMessage;
-import com.example.lolserver.common.response.SummonerResponse;
+import com.example.lolserver.Platform;
+import com.example.lolserver.client.summoner.SummonerRestClient;
+import com.example.lolserver.client.summoner.model.SummonerVO;
+import com.example.lolserver.domain.summoner.SummonerMapper;
+import com.example.lolserver.domain.summoner.dto.SummonerAutoResponse;
+import com.example.lolserver.repository.summoner.SummonerJpaRepository;
+import com.example.lolserver.repository.summoner.dsl.SummonerRepositoryCustom;
+import com.example.lolserver.repository.summoner.dto.SummonerAutoDTO;
+import com.example.lolserver.repository.summoner.entity.SummonerEntity;
+import com.example.lolserver.service.MessagePublisher;
+import com.example.lolserver.service.RedisService;
+import com.example.lolserver.service.SummonerMessage;
+import com.example.lolserver.domain.summoner.dto.SummonerResponse;
 import com.example.lolserver.RenewalStatus;
 import com.example.lolserver.domain.summoner.domain.SummonerRenewal;
 import com.example.lolserver.support.error.CoreException;
@@ -33,10 +43,10 @@ public class SummonerService{
      */
     public SummonerResponse getSummoner(String q, String region) {
 
-        Summoner summoner = new Summoner(q, Platform.getValueOfName(region));
+        SummonerEntity summoner = new SummonerEntity(q, Platform.getValueOfName(region));
         summoner.splitGameNameTagLine();
 
-        List<Summoner> findSummoner = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegion(
+        List<SummonerEntity> findSummoner = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegion(
                 summoner.getGameName(), summoner.getTagLine(), summoner.getRegion());
 
         if(findSummoner.size() == 1) {
@@ -76,10 +86,14 @@ public class SummonerService{
                 .build();
     }
 
-    public List<SummonerAutoDTO> getAllSummonerAutoComplete(String q, String region) {
-        return summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegionLike(
+    public List<SummonerAutoResponse> getAllSummonerAutoComplete(String q, String region) {
+        List<SummonerAutoDTO> summonerAutoDTOS = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegionLike(
                 q, region
         );
+
+        return summonerAutoDTOS.stream().map(
+                SummonerAutoResponse::of
+        ).toList();
     }
 
     public SummonerRenewal renewalSummonerInfo(String platform, String puuid) {
@@ -87,7 +101,7 @@ public class SummonerService{
         // 여기서는 puuid 에 대한 전적 갱신이 진행 되고 있는지만 체크.
         boolean updating = redisService.isUpdating(puuid);
         if (!updating) {
-            Summoner summoner = summonerJpaRepository.findById(puuid).orElseThrow(() -> new CoreException(
+            SummonerEntity summoner = summonerJpaRepository.findById(puuid).orElseThrow(() -> new CoreException(
                     ErrorType.NOT_FOUND_PUUID,
                     "존재하지 않는 PUUID 입니다. " + puuid
             ));
@@ -125,9 +139,9 @@ public class SummonerService{
     }
 
     public SummonerResponse getSummonerByPuuid(String region, String puuid) {
-        Summoner summoner = summonerJpaRepository.findById(puuid).orElseGet(() -> {
+        SummonerEntity summoner = summonerJpaRepository.findById(puuid).orElseGet(() -> {
             SummonerVO summonerVO = summonerRestClient.getSummonerByPuuid(region, puuid);
-            return Summoner.of(summonerVO);
+            return SummonerMapper.voToEntity(summonerVO);
         });
 
         return SummonerResponse.of(summoner);

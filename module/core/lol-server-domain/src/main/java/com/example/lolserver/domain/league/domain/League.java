@@ -1,8 +1,8 @@
 package com.example.lolserver.domain.league.domain;
 
 import com.example.lolserver.domain.league.domain.vo.LeagueHistory;
-import com.example.lolserver.storage.db.core.repository.league.entity.LeagueSummoner;
-import com.example.lolserver.storage.db.core.repository.league.entity.LeagueSummonerHistory;
+import com.example.lolserver.repository.league.entity.LeagueSummonerEntity;
+import com.example.lolserver.repository.league.entity.LeagueSummonerHistoryEntity;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -35,7 +35,7 @@ public class League {
 
     private List<LeagueHistory>  leagueHistory = new ArrayList<>();
 
-    public League(LeagueSummoner leagueSummoner) {
+    public League(LeagueSummonerEntity leagueSummoner) {
         this.id = leagueSummoner.getId();
         this.leagueId = leagueSummoner.getLeagueId();
         this.puuid = leagueSummoner.getPuuid();
@@ -63,7 +63,7 @@ public class League {
         return winGames.divide(totalGames, 2, RoundingMode.HALF_UP);
     }
 
-    public void addAllHistory(List<LeagueSummonerHistory> leagueHistory) {
+    public void addAllHistory(List<LeagueSummonerHistoryEntity> leagueHistory) {
         List<LeagueHistory> leagueHistories = leagueHistory.stream().map(LeagueHistory::new).toList();
         this.leagueHistory.addAll(leagueHistories);
     }

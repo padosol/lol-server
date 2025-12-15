@@ -1,6 +1,6 @@
 package com.example.lolserver.domain.champion.domain;
 
-import com.example.lolserver.riot.dto.champion.ChampionInfo;
+import com.example.lolserver.client.summoner.model.ChampionInfo;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,9 +19,9 @@ public class ChampionRotate {
 
     public static ChampionRotate of(ChampionInfo championInfo) {
         return new ChampionRotate(
-                championInfo.getMaxNewPlayerLevel(),
-                championInfo.getFreeChampionIdsForNewPlayers(),
-                championInfo.getFreeChampionIds()
+                championInfo.maxNewPlayerLevel(),
+                championInfo.freeChampionIdsForNewPlayers(),
+                championInfo.freeChampionIds()
         );
     }
 }

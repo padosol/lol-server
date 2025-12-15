@@ -1,8 +1,8 @@
 package com.example.lolserver.domain.champion.service;
 
-import com.example.lolserver.riot.client.summoner.ChampionRotateRestClient;
-import com.example.lolserver.riot.dto.champion.ChampionInfo;
-import com.example.lolserver.storage.redis.service.RedisService;
+import com.example.lolserver.client.summoner.ChampionRotateRestClient;
+import com.example.lolserver.client.summoner.model.ChampionInfo;
+import com.example.lolserver.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

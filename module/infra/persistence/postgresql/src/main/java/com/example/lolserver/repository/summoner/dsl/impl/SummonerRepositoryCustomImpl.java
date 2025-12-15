@@ -1,6 +1,7 @@
 package com.example.lolserver.repository.summoner.dsl.impl;
 
 import com.example.lolserver.repository.summoner.dsl.SummonerRepositoryCustom;
+import com.example.lolserver.repository.summoner.dto.QSummonerAutoDTO;
 import com.example.lolserver.repository.summoner.dto.SummonerAutoDTO;
 import com.example.lolserver.repository.summoner.entity.SummonerEntity;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -34,8 +35,19 @@ public class SummonerRepositoryCustomImpl implements SummonerRepositoryCustom {
 
     @Override
     public List<SummonerAutoDTO> findAllByGameNameAndTagLineAndRegionLike(String q, String region) {
-        return jpaQueryFactory.selectFrom(summonerEntity)
-                .fetchJoin(leagueSummonerEntity)
+        QSummonerAutoDTO qSummonerAutoDTO = new QSummonerAutoDTO(
+                summonerEntity.gameName,
+                summonerEntity.tagLine,
+                summonerEntity.profileIconId,
+                summonerEntity.summonerLevel,
+                leagueSummonerEntity.tier,
+                leagueSummonerEntity.rank,
+                leagueSummonerEntity.leaguePoints
+        );
+
+        return jpaQueryFactory.select(qSummonerAutoDTO)
+                .from(summonerEntity)
+                .join(leagueSummonerEntity).fetchJoin()
                 .where(
                         gameNameLike(q),
                         regionEq(region)
@@ -58,7 +70,7 @@ public class SummonerRepositoryCustomImpl implements SummonerRepositoryCustom {
     }
 
     public BooleanExpression gameNameEq(String gameName) {
-        return StringUtils.hasText(gameName) ? Expressions.stringTemplate("REPLACE({0}, ' ', '')", summoner.gameName).equalsIgnoreCase(gameName.replace(" ","")) : null;
+        return StringUtils.hasText(gameName) ? Expressions.stringTemplate("REPLACE({0}, ' ', '')", summonerEntity.gameName).equalsIgnoreCase(gameName.replace(" ","")) : null;
     }
 
     public BooleanExpression tagLineEq(String tagLine) {

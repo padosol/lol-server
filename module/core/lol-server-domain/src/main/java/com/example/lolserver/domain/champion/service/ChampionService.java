@@ -1,7 +1,7 @@
 package com.example.lolserver.domain.champion.service;
 
+import com.example.lolserver.client.summoner.model.ChampionInfo;
 import com.example.lolserver.domain.champion.domain.ChampionRotate;
-import com.example.lolserver.riot.dto.champion.ChampionInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;

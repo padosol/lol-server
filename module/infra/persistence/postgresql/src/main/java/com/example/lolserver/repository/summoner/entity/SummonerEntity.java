@@ -39,63 +39,51 @@ public class SummonerEntity {
     )
     private List<LeagueSummonerEntity> leagueSummonerEntities;
 
-//    public SummonerEntity(String summonerName, String region) {
-//        this.gameName = summonerName;
-//        this.region = region;
-//    }
-//
-//    public static SummonerEntity of(SummonerVO summonerVO) {
-//         return SummonerEntity.builder()
-//                .profileIconId(summonerVO.getProfileIconId())
-//                .puuid(summonerVO.getPuuid())
-//                .summonerLevel(summonerVO.getSummonerLevel())
-//                .gameName(summonerVO.getGameName())
-//                .tagLine(summonerVO.getTagLine())
-//                .revisionDate(summonerVO.getRevisionDate())
-//                .revisionClickDate(summonerVO.getRevisionDate())
-//                .build();
-//    }
-//
-//    public void splitGameNameTagLine() {
-//        if(StringUtils.hasText(this.gameName)) {
-//
-//            String[] split = this.gameName.split("-");
-//
-//            this.gameName = split[0];
-//
-//            if(split.length > 1) {
-//                this.tagLine = split[1];
-//            }
-//
-//        }
-//    }
-//
-//    public void clickRenewal() {
-//        this.revisionClickDate = LocalDateTime.now();
-//    }
-//
-//
-//    public boolean isRevision(LocalDateTime clickDateTime) {
-//        // 현재 시간이 마지막 클릭 + 10 초 한것 보다 전 인가요?
-//        // 전이면 갱신 불가능
-//        // 갱신은 10초 마다 가능
-//
-//        // 갱신이 가능한 조건
-//        // 1. 갱신 시간이 3분을 넘었을 때
-//        // 2. 갱신 클릭 시간이 10초를 넘었을 때
-//        // 갱신 시간이 3분을 넘지 않았을 때
-//        if (this.revisionDate.plusMinutes(3L).isAfter(clickDateTime)) {
-//            return false;
-//        }
-//
-//        // 갱신 클릭 시간이 10초를 넘지 않았을 때
-//        if (this.revisionClickDate.plusSeconds(10L).isAfter(clickDateTime)) {
-//            return false;
-//        }
-//
-//        return true;
-//    }
-//
+    public SummonerEntity(String summonerName, String region) {
+        this.gameName = summonerName;
+        this.region = region;
+    }
+
+    public void splitGameNameTagLine() {
+        if(StringUtils.hasText(this.gameName)) {
+
+            String[] split = this.gameName.split("-");
+
+            this.gameName = split[0];
+
+            if(split.length > 1) {
+                this.tagLine = split[1];
+            }
+
+        }
+    }
+
+    public void clickRenewal() {
+        this.revisionClickDate = LocalDateTime.now();
+    }
+
+
+    public boolean isRevision(LocalDateTime clickDateTime) {
+        // 현재 시간이 마지막 클릭 + 10 초 한것 보다 전 인가요?
+        // 전이면 갱신 불가능
+        // 갱신은 10초 마다 가능
+
+        // 갱신이 가능한 조건
+        // 1. 갱신 시간이 3분을 넘었을 때
+        // 2. 갱신 클릭 시간이 10초를 넘었을 때
+        // 갱신 시간이 3분을 넘지 않았을 때
+        if (this.revisionDate.plusMinutes(3L).isAfter(clickDateTime)) {
+            return false;
+        }
+
+        // 갱신 클릭 시간이 10초를 넘지 않았을 때
+        if (this.revisionClickDate.plusSeconds(10L).isAfter(clickDateTime)) {
+            return false;
+        }
+
+        return true;
+    }
+
 //    public void revision(SummonerDTO summonerDTO, AccountDto accountDto) {
 //
 //        this.profileIconId = summonerDTO.getProfileIconId();

@@ -1,6 +1,6 @@
 package com.example.lolserver.domain.league.domain.vo;
 
-import com.example.lolserver.storage.db.core.repository.league.entity.LeagueSummonerHistory;
+import com.example.lolserver.repository.league.entity.LeagueSummonerHistoryEntity;
 
 import java.time.LocalDateTime;
 
@@ -21,7 +21,7 @@ public record LeagueHistory(
     boolean hotStreak,
     LocalDateTime createdAt
 ) {
-    public LeagueHistory(LeagueSummonerHistory leagueSummonerHistory) {
+    public LeagueHistory(LeagueSummonerHistoryEntity leagueSummonerHistory) {
         this(
                 leagueSummonerHistory.getLeagueSummonerId(),
                 leagueSummonerHistory.getPuuid(),

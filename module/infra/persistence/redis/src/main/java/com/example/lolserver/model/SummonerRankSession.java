@@ -1,8 +1,8 @@
 package com.example.lolserver.model;
 
-import com.example.lolserver.type.Division;
-import com.example.lolserver.type.Tier;
-import com.example.lolserver.storage.db.core.repository.league.entity.QueueType;
+import com.example.lolserver.Division;
+import com.example.lolserver.QueueType;
+import com.example.lolserver.Tier;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

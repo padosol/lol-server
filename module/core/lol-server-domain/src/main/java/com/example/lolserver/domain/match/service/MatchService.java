@@ -1,35 +1,38 @@
 package com.example.lolserver.domain.match.service;
 
-import com.example.lolserver.domain.match.dto.MSChampionRequest;
-import com.example.lolserver.domain.match.dto.MatchRequest;
-import com.example.lolserver.common.dto.data.GameData;
-import com.example.lolserver.common.dto.data.gameData.GameInfoData;
-import com.example.lolserver.common.dto.data.gameData.ParticipantData;
-import com.example.lolserver.common.dto.data.gameData.SeqTypeData;
-import com.example.lolserver.common.dto.data.gameData.TeamInfoData;
-import com.example.lolserver.common.dto.data.gameData.seqType.SeqType;
-import com.example.lolserver.common.dto.match.MSChampionDTO;
-import com.example.lolserver.common.dto.match.MatchResponse;
-import com.example.lolserver.storage.db.core.repository.match.entity.MatchSummoner;
-import com.example.lolserver.storage.db.core.repository.match.entity.MatchTeam;
-import com.example.lolserver.storage.db.core.repository.match.entity.timeline.events.ItemEvents;
-import com.example.lolserver.storage.db.core.repository.match.entity.timeline.events.SkillEvents;
-import com.example.lolserver.storage.db.core.repository.match.entity.Match;
-import com.example.lolserver.storage.db.core.repository.match.match.MatchRepository;
-import com.example.lolserver.storage.db.core.repository.match.match.dsl.MatchRepositoryCustom;
-import com.example.lolserver.storage.db.core.repository.match.matchsummoner.dsl.MatchSummonerRepositoryCustom;
-import com.example.lolserver.storage.db.core.repository.match.timeline.TimelineRepositoryCustom;
+import com.example.lolserver.domain.match.domain.MSChampion;
+import com.example.lolserver.domain.match.domain.TimelineData;
+import com.example.lolserver.domain.match.MatchMapper;
+import com.example.lolserver.domain.match.command.MSChampionCommand;
+import com.example.lolserver.domain.match.command.MatchCommand;
+import com.example.lolserver.domain.match.domain.GameData;
+import com.example.lolserver.domain.match.domain.gameData.GameInfoData;
+import com.example.lolserver.domain.match.domain.gameData.ParticipantData;
+import com.example.lolserver.domain.match.domain.gameData.SeqTypeData;
+import com.example.lolserver.domain.match.domain.gameData.TeamInfoData;
+import com.example.lolserver.domain.match.domain.gameData.seqType.SeqType;
+import com.example.lolserver.repository.match.dto.MSChampionDTO;
+import com.example.lolserver.repository.match.entity.MatchEntity;
+import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
+import com.example.lolserver.repository.match.entity.MatchTeamEntity;
+import com.example.lolserver.repository.match.entity.timeline.events.ItemEvents;
+import com.example.lolserver.repository.match.entity.timeline.events.SkillEvents;
+import com.example.lolserver.repository.match.match.MatchRepository;
+import com.example.lolserver.repository.match.match.dsl.MatchRepositoryCustom;
+import com.example.lolserver.repository.match.matchsummoner.dsl.MatchSummonerRepositoryCustom;
+import com.example.lolserver.repository.match.timeline.TimelineRepositoryCustom;
+import com.example.lolserver.support.Page;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -41,27 +44,35 @@ public class MatchService {
     private final TimelineRepositoryCustom timelineRepositoryCustom;
     private final MatchRepository matchRepository;
 
-    public MatchResponse getMatches(MatchRequest matchRequest) {
+    public Page<GameData> getMatches(MatchCommand matchCommand) {
 
-        Pageable pageable = PageRequest.of(matchRequest.getPageNo(), 20, Sort.by(Sort.Direction.DESC, "match"));
-        Page<Match> matches = matchRepositoryCustom.getMatches(
-                matchRequest.getPuuid(), matchRequest.getQueueId(), pageable);
-        List<GameData> gameDataList = matches.getContent().stream().map(match -> convertToGameData(match, matchRequest.getPuuid())).toList();
+        Pageable pageable = PageRequest.of(
+                matchCommand.getPageNo(), 20, Sort.by(Sort.Direction.DESC, "match"));
 
-        return new MatchResponse(gameDataList, matches.getTotalElements());
+        Slice<MatchEntity> matches = matchRepositoryCustom.getMatches(
+                matchCommand.getPuuid(), matchCommand.getQueueId(), pageable);
+
+        List<GameData> gameDataList = matches.getContent().stream()
+                .map(match ->
+                        convertToGameData(match, matchCommand.getPuuid())).toList();
+
+        return new Page<GameData>(gameDataList, matches.hasNext());
     }
 
-
-    public List<MSChampionDTO> getRankChampions(MSChampionRequest request) {
-        return matchSummonerRepositoryCustom.findAllMatchSummonerByPuuidAndSeason(
-                request.getPuuid(),
-                request.getSeason()
+    public List<MSChampion> getRankChampions(MSChampionCommand command) {
+        List<MSChampionDTO> msChampionDTOS = matchSummonerRepositoryCustom.findAllMatchSummonerByPuuidAndSeason(
+                command.getPuuid(),
+                command.getSeason()
         );
+
+        return msChampionDTOS.stream().map(
+                MSChampion::of
+        ).toList();
     }
 
 
     public GameData getGameData(String matchId) {
-        Match match = matchRepository.findById(matchId).orElseThrow(() -> new CoreException(
+        MatchEntity match = matchRepository.findById(matchId).orElseThrow(() -> new CoreException(
                 ErrorType.NOT_FOUND_MATCH_ID,
                 "존재하지 않는 MatchId 입니다. " + matchId
         ));
@@ -79,21 +90,21 @@ public class MatchService {
     }
 
 
-    public List<String> findAllMatchIds(MatchRequest matchRequest) {
+    public List<String> findAllMatchIds(MatchCommand matchCommand) {
         Pageable pageable = PageRequest.of(
-                matchRequest.getPageNo(),
+                matchCommand.getPageNo(),
                 20,
                 Sort.by(Sort.Direction.DESC, "match")
         );
-        Page<String> matchIdsByPuuidWithPage = matchSummonerRepositoryCustom.findAllMatchIdsByPuuidWithPage(
-                matchRequest.getPuuid(), matchRequest.getQueueId(), pageable
+        Slice<String> matchIdsByPuuidWithPage = matchSummonerRepositoryCustom.findAllMatchIdsByPuuidWithPage(
+                matchCommand.getPuuid(), matchCommand.getQueueId(), pageable
         );
 
         return matchIdsByPuuidWithPage.getContent();
     }
 
-    private GameData convertToGameData(Match match, String puuid) {
-        Map<Integer, Map<String, List<SeqTypeData>>> timelineDataMap = match.getTimelineDataMap(); // Assuming getTimelineDataMap is still in Match.java
+    private GameData convertToGameData(MatchEntity match, String puuid) {
+        Map<Integer, Map<String, List<SeqTypeData>>> timelineDataMap = MatchMapper.domainToTimeLineDataMap(match); // Assuming getTimelineDataMap is still in Match.java
 
         GameData gameData = new GameData();
 
@@ -103,7 +114,7 @@ public class MatchService {
 
         // 유저 정보
         List<ParticipantData> participantData = new ArrayList<>();
-        for (MatchSummoner matchSummoner : match.matchSummoners) { // Assuming matchSummoners is public or has getter
+        for (MatchSummonerEntity matchSummoner : match.getMatchSummonerEntities()) { // Assuming matchSummoners is public or has getter
             ParticipantData data = new ParticipantData().of(matchSummoner);
             participantData.add(data);
 
@@ -128,7 +139,7 @@ public class MatchService {
 
         // 팀정보
         Map<Integer, TeamInfoData> teamInfoDataMap = new HashMap<>();
-        for (MatchTeam matchTeam : match.matchTeams) { // Assuming matchTeams is public or has getter
+        for (MatchTeamEntity matchTeam : match.getMatchTeamEntities()) { // Assuming matchTeams is public or has getter
             teamInfoDataMap.put(matchTeam.getTeamId(), new TeamInfoData().of(matchTeam));
         }
         gameData.setTeamInfoData(teamInfoDataMap);

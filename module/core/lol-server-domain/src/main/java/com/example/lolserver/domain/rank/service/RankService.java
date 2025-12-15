@@ -2,7 +2,7 @@ package com.example.lolserver.domain.rank.service;
 
 import com.example.lolserver.domain.rank.dto.RankResponse;
 import com.example.lolserver.domain.rank.dto.RankSearchDto;
-import com.example.lolserver.storage.redis.model.SummonerRankSession;
+import com.example.lolserver.model.SummonerRankSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;

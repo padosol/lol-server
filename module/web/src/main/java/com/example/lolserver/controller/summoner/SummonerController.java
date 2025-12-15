@@ -1,11 +1,10 @@
 package com.example.lolserver.controller.summoner;
 
-import com.example.lolserver.common.response.SummonerAutoResponse;
+import com.example.lolserver.domain.summoner.dto.SummonerAutoResponse;
 import com.example.lolserver.controller.summoner.response.SummonerRenewalResponse;
 import com.example.lolserver.domain.summoner.application.SummonerService;
 import com.example.lolserver.domain.summoner.domain.SummonerRenewal;
-import com.example.lolserver.storage.db.core.repository.summoner.dto.SummonerAutoDTO;
-import com.example.lolserver.common.response.SummonerResponse;
+import com.example.lolserver.domain.summoner.dto.SummonerResponse;
 import com.example.lolserver.controller.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -66,11 +65,9 @@ public class SummonerController {
             @RequestParam String q,
             @RequestParam(defaultValue = "kr") String region
     ) {
-        List<SummonerAutoDTO> result = summonerService.getAllSummonerAutoComplete(q, region);
+        List<SummonerAutoResponse> result = summonerService.getAllSummonerAutoComplete(q, region);
 
-        return ResponseEntity.ok(ApiResponse.success(
-                result.stream().map(SummonerAutoResponse::of).toList()
-        ));
+        return ResponseEntity.ok(ApiResponse.success(result));
     }
 
     /**

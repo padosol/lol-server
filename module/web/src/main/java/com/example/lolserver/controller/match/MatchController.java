@@ -1,13 +1,13 @@
 package com.example.lolserver.controller.match;
 
-import com.example.lolserver.domain.match.dto.MSChampionRequest;
-import com.example.lolserver.domain.match.dto.MatchRequest;
+import com.example.lolserver.domain.match.command.MSChampionCommand;
+import com.example.lolserver.domain.match.command.MatchCommand;
+import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.service.MatchService;
-import com.example.lolserver.common.dto.data.GameData;
-import com.example.lolserver.common.dto.data.TimelineData;
-import com.example.lolserver.common.dto.match.MSChampionDTO;
-import com.example.lolserver.common.dto.match.MatchResponse;
+import com.example.lolserver.domain.match.domain.GameData;
+import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.controller.support.response.ApiResponse;
+import com.example.lolserver.support.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -34,28 +34,28 @@ public class MatchController {
 
     @GetMapping("/matches/matchIds")
     public ResponseEntity<ApiResponse<List<String>>> findAllMatchIds(
-        @ModelAttribute MatchRequest matchRequest
+        @ModelAttribute MatchCommand matchCommand
     ) {
-        List<String> allMatchIds = matchService.findAllMatchIds(matchRequest);
+        List<String> allMatchIds = matchService.findAllMatchIds(matchCommand);
 
         return ResponseEntity.ok(ApiResponse.success(allMatchIds));
     }
 
     @GetMapping("/matches")
-    public ResponseEntity<ApiResponse<MatchResponse>> fetchGameData(
-        @ModelAttribute MatchRequest matchRequest
+    public ResponseEntity<ApiResponse<Page<GameData>>> fetchGameData(
+        @ModelAttribute MatchCommand matchCommand
     ) {
-        MatchResponse response = matchService.getMatches(matchRequest);
+        Page<GameData> matches = matchService.getMatches(matchCommand);
 
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(ApiResponse.success(matches));
     }
 
     @GetMapping("/rank/champions")
-    public ResponseEntity<ApiResponse<List<MSChampionDTO>>> getRankChampions(
-            @ModelAttribute MSChampionRequest request
+    public ResponseEntity<ApiResponse<List<MSChampion>>> getRankChampions(
+            @ModelAttribute MSChampionCommand request
             ) {
 
-        List<MSChampionDTO> result = matchService.getRankChampions(request);
+        List<MSChampion> result = matchService.getRankChampions(request);
 
         return ResponseEntity.ok(
                 ApiResponse.success(

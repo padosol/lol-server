@@ -2,8 +2,8 @@ package com.example.lolserver.docs.controller;
 
 import com.example.lolserver.controller.match.MatchController;
 import com.example.lolserver.docs.RestDocsSupport;
-import com.example.lolserver.domain.match.dto.MSChampionRequest;
-import com.example.lolserver.domain.match.dto.MatchRequest;
+import com.example.lolserver.domain.match.command.MSChampionCommand;
+import com.example.lolserver.domain.match.command.MatchCommand;
 import com.example.lolserver.domain.match.service.MatchService;
 import com.example.lolserver.storage.db.core.repository.dto.data.GameData;
 import com.example.lolserver.storage.db.core.repository.dto.data.TimelineData;
@@ -107,9 +107,9 @@ class MatchControllerTest extends RestDocsSupport {
     @Test
     void findAllMatchIds() throws Exception {
         // given
-        MatchRequest request = MatchRequest.builder().puuid("puuid-1234").queueId(420).pageNo(1).region("kr").build();
+        MatchCommand request = MatchCommand.builder().puuid("puuid-1234").queueId(420).pageNo(1).region("kr").build();
         List<String> matchIds = List.of("KR_123456789", "KR_987654321");
-        given(matchService.findAllMatchIds(any(MatchRequest.class))).willReturn(matchIds);
+        given(matchService.findAllMatchIds(any(MatchCommand.class))).willReturn(matchIds);
 
         // when & then
         mockMvc.perform(
@@ -143,13 +143,13 @@ class MatchControllerTest extends RestDocsSupport {
     @Test
     void fetchGameData() throws Exception {
         // given
-        MatchRequest request = MatchRequest.builder().puuid("puuid-1234").queueId(420).pageNo(1).region("kr").build();
+        MatchCommand request = MatchCommand.builder().puuid("puuid-1234").queueId(420).pageNo(1).region("kr").build();
         GameData gameData = new GameData();
         ParticipantData myData = ParticipantData.builder().summonerName("MySummoner").championName("Ahri").kills(10).deaths(2).assists(5).win(true).build();
         gameData.setMyData(myData);
         MatchResponse matchResponse = new MatchResponse(List.of(gameData), 1L);
 
-        given(matchService.getMatches(any(MatchRequest.class))).willReturn(matchResponse);
+        given(matchService.getMatches(any(MatchCommand.class))).willReturn(matchResponse);
 
         // when & then
         mockMvc.perform(
@@ -184,7 +184,7 @@ class MatchControllerTest extends RestDocsSupport {
     @Test
     void getRankChampions() throws Exception {
         // given
-        MSChampionRequest request = new MSChampionRequest();
+        MSChampionCommand request = new MSChampionCommand();
         request.setPuuid("puuid-1234");
         request.setSeason(2024);
 
@@ -204,7 +204,7 @@ class MatchControllerTest extends RestDocsSupport {
                 20L
         );
 
-        given(matchService.getRankChampions(any(MSChampionRequest.class))).willReturn(List.of(championResponse));
+        given(matchService.getRankChampions(any(MSChampionCommand.class))).willReturn(List.of(championResponse));
 
         // when & then
         mockMvc.perform(

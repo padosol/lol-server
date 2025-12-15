@@ -1,6 +1,5 @@
 package com.example.lolserver.client.summoner.model;
 
-import com.example.lolserver.dto.league.LeagueEntryDTO;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 

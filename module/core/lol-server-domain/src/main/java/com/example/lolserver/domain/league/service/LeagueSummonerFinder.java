@@ -1,9 +1,9 @@
 package com.example.lolserver.domain.league.service;
 
-import com.example.lolserver.storage.db.core.repository.league.LeagueSummonerHistoryRepository;
-import com.example.lolserver.storage.db.core.repository.league.LeagueSummonerRepository;
-import com.example.lolserver.storage.db.core.repository.league.entity.LeagueSummoner;
-import com.example.lolserver.storage.db.core.repository.league.entity.LeagueSummonerHistory;
+import com.example.lolserver.repository.league.LeagueSummonerHistoryRepository;
+import com.example.lolserver.repository.league.LeagueSummonerRepository;
+import com.example.lolserver.repository.league.entity.LeagueSummonerEntity;
+import com.example.lolserver.repository.league.entity.LeagueSummonerHistoryEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -16,11 +16,11 @@ public class LeagueSummonerFinder {
     private final LeagueSummonerRepository leagueSummonerRepository;
     private final LeagueSummonerHistoryRepository leagueSummonerHistoryRepository;
 
-    public List<LeagueSummoner> findAllByPuuid(String puuid) {
+    public List<LeagueSummonerEntity> findAllByPuuid(String puuid) {
         return leagueSummonerRepository.findAllByPuuid(puuid);
     }
 
-    public List<LeagueSummonerHistory> findAllHistoryByLeagueSummonerIds(List<Long> ids) {
+    public List<LeagueSummonerHistoryEntity> findAllHistoryByLeagueSummonerIds(List<Long> ids) {
         return leagueSummonerHistoryRepository.findAllByLeagueSummonerIdInOrderByCreatedAtDesc(ids);
     }
 

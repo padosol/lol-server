@@ -1,6 +1,6 @@
 package com.example.lolserver.domain.rank.dto;
 
-import com.example.lolserver.storage.redis.model.SummonerRankSession;
+import com.example.lolserver.model.SummonerRankSession;
 import lombok.Getter;
 
 import java.util.List;
