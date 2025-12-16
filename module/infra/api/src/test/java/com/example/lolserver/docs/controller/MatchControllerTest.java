@@ -121,7 +121,9 @@ class MatchControllerTest extends RestDocsSupport {
         // given
         MatchCommand request = MatchCommand.builder().puuid("puuid-1234").queueId(420).pageNo(1).region("kr").build();
         List<String> matchIds = List.of("KR_123456789", "KR_987654321");
-        given(matchService.findAllMatchIds(any(MatchCommand.class))).willReturn(matchIds);
+
+        Page<String> stringPage = new Page<>(matchIds, true);
+        given(matchService.findAllMatchIds(any(MatchCommand.class))).willReturn(stringPage);
 
         // when & then
         mockMvc.perform(
@@ -145,7 +147,8 @@ class MatchControllerTest extends RestDocsSupport {
                         ),
                         relaxedResponseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
-                                fieldWithPath("data[]").type(JsonFieldType.ARRAY).description("매치 ID 목록"),
+                                fieldWithPath("data.content[]").type(JsonFieldType.ARRAY).description("매치 ID 목록"),
+                                fieldWithPath("data.hasNext").type(JsonFieldType.BOOLEAN).description("다음 항목 존재 여부"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)")
                         )
                 ));

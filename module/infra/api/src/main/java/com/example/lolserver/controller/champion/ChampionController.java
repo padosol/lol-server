@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class ChampionController {
 
-
     private final ChampionService championService;
 
     @GetMapping("/rotation")

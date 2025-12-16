@@ -1,4 +1,4 @@
-package com.example.lolserver.controller.config;
+package com.example.lolserver.config;
 
 import com.example.lolserver.client.summoner.ChampionRotateRestClient;
 import com.example.lolserver.client.summoner.SummonerRestClient;

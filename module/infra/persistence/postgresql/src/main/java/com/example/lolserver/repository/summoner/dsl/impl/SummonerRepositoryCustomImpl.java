@@ -47,7 +47,10 @@ public class SummonerRepositoryCustomImpl implements SummonerRepositoryCustom {
 
         return jpaQueryFactory.select(qSummonerAutoDTO)
                 .from(summonerEntity)
-                .join(leagueSummonerEntity).fetchJoin()
+                .join(leagueSummonerEntity)
+                .on(
+                        summonerEntity.puuid.eq(leagueSummonerEntity.puuid)
+                )
                 .where(
                         gameNameLike(q),
                         regionEq(region)

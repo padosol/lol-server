@@ -33,7 +33,7 @@ public class League {
     private LocalDateTime createAt;
     private LocalDateTime updateAt;
 
-    private List<LeagueHistory>  leagueHistory = new ArrayList<>();
+    private List<LeagueHistory> leagueHistory;
 
     public League(LeagueSummonerEntity leagueSummoner) {
         this.id = leagueSummoner.getId();
@@ -64,6 +64,9 @@ public class League {
     }
 
     public void addAllHistory(List<LeagueSummonerHistoryEntity> leagueHistory) {
+        if (this.leagueHistory == null) {
+            this.leagueHistory = new ArrayList<>();
+        }
         List<LeagueHistory> leagueHistories = leagueHistory.stream().map(LeagueHistory::new).toList();
         this.leagueHistory.addAll(leagueHistories);
     }
