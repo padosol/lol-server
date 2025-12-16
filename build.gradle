@@ -1,9 +1,9 @@
 plugins {
     id 'java-library'
     id 'java'
-    id 'org.springframework.boot' version '3.3.6'
-    id 'io.spring.dependency-management' version '1.1.6'
-    id 'org.asciidoctor.jvm.convert' version '3.3.2'
+    id 'org.springframework.boot' version '3.3.6' apply(false)
+    id 'io.spring.dependency-management' version '1.1.6' apply(false)
+    id 'org.asciidoctor.jvm.convert' version '3.3.2' apply(false)
 }
 
 allprojects {
@@ -17,6 +17,7 @@ allprojects {
     ext {
         set('springCloudVer', "2023.0.3")
         set('querydsl.version', "5.1.0")
+        set('redissonVersion', "3.27.1")
     }
 }
 
@@ -26,9 +27,6 @@ subprojects {
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
     apply plugin: 'org.asciidoctor.jvm.convert'
-
-    bootJar.enabled = false
-    jar.enabled = true
 
     java {
         toolchain {
@@ -44,7 +42,7 @@ subprojects {
     }
 
     dependencies {
-        implementation 'org.springframework.boot:spring-boot-starter'
+//        implementation 'org.springframework.boot:spring-boot-starter'
 
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
@@ -66,6 +64,17 @@ subprojects {
         imports {
             mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVer}"
         }
+        dependencies {
+            dependency "org.redisson:redisson-spring-boot-starter:${redissonVersion}"
+        }
+    }
+
+    tasks.getByName("bootJar") {
+        enabled = false
+    }
+
+    tasks.getByName("jar") {
+        enabled = true
     }
 
     tasks.named('test') {
@@ -103,5 +112,3 @@ subprojects {
         }
     }
 }
-
-
