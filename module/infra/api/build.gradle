@@ -1,0 +1,6 @@
+dependencies {
+    implementation project(":module:core:lol-server-domain")
+    implementation project(":module:core:enum")
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+}

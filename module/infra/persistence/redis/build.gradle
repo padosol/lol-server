@@ -1,0 +1,9 @@
+dependencies {
+    implementation project(":module:core:enum")
+
+    // redis
+    api 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // redisson
+    implementation 'org.redisson:redisson-spring-boot-starter'
+}
