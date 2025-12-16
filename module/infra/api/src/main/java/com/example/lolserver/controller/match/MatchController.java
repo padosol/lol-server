@@ -33,10 +33,10 @@ public class MatchController {
     }
 
     @GetMapping("/matches/matchIds")
-    public ResponseEntity<ApiResponse<List<String>>> findAllMatchIds(
+    public ResponseEntity<ApiResponse<Page<String>>> findAllMatchIds(
         @ModelAttribute MatchCommand matchCommand
     ) {
-        List<String> allMatchIds = matchService.findAllMatchIds(matchCommand);
+        Page<String> allMatchIds = matchService.findAllMatchIds(matchCommand);
 
         return ResponseEntity.ok(ApiResponse.success(allMatchIds));
     }

@@ -8,7 +8,7 @@ import lombok.Setter;
 @Setter
 public class GameInfoData {
 
-    private String dateVersion;
+    private String dataVersion;
     private	long gameCreation;
     private	long gameDuration;
     private	long gameEndTimestamp;
@@ -25,7 +25,7 @@ public class GameInfoData {
     public GameInfoData(){}
     public GameInfoData(MatchEntity match) {
 
-        this.dateVersion = match.getDateVersion();
+        this.dataVersion = match.getDataVersion();
         this.gameCreation = match.getGameCreation();
         this.gameDuration = match.getGameDuration();
         this.gameEndTimestamp = match.getGameEndTimestamp();
