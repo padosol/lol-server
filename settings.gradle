@@ -1,8 +1,14 @@
 rootProject.name = 'lol-server'
 
 include(
-        "client:riot",
-        "core:core-api",
-        "support:logging",
-        "storage:db-core"
+        "module:app:application",
+        "module:core:lol-server-domain",
+        "module:core:enum",
+//        "module:web",
+        "module:infra:client:lol-repository",
+        "module:infra:api",
+        "module:infra:message:rabbitmq",
+        "module:infra:persistence:postgresql",
+        "module:infra:persistence:redis",
+        "module:support:logging"
 )

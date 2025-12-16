@@ -1,0 +1,42 @@
+ifndef::snippets[]
+:snippets: ../../generated-snippets
+endif::[]
+= MMRTR REST API 문서
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 2
+:sectlinks:
+
+[[Summoner-API]]
+== Summoner API
+
+include::api/summoner/summoner-auto.adoc[]
+
+include::api/summoner/summoner-detail.adoc[]
+
+include::api/summoner/summoner-renewal.adoc[]
+
+include::api/summoner/summoner-renewal-status.adoc[]
+
+[[Match-API]]
+== Match API
+
+include::api/match/match-get-ids.adoc[]
+
+include::api/match/match-detail.adoc[]
+
+include::api/match/match-chapion.adoc[]
+
+[[League-API]]
+== League API
+
+include::api/league/league-detail.adoc[]
+
+
+[[Champion-API]]
+== Champion API
+
+include::api/champion/champion-rotate.adoc[]
+
