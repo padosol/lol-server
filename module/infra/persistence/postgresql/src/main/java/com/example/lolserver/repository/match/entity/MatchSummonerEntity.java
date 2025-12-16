@@ -17,24 +17,21 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@IdClass(MatchSummonerId.class)
 public class MatchSummonerEntity {
 
+    @EmbeddedId
+    private MatchSummonerId matchSummonerId;
 
-    @Id
-    private String puuid;
+    @MapsId("matchId")                  // EmbeddedId 필드명과 일치해야함
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "match_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    private MatchEntity matchEntity;
 
     private String summonerId;
 
-    // match 정보 필요
-    // summoner 정보 필요
-    @Id
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "match_id")
-    private MatchEntity matchEntity;
-
-    @OneToOne(mappedBy = "matchSummoner")
-    private ChallengesEntity challengesEntity;
+//
+//    @OneToOne(mappedBy = "matchSummoner")
+//    private ChallengesEntity challengesEntity;
 
     // 유저 정보
     private String riotIdGameName;

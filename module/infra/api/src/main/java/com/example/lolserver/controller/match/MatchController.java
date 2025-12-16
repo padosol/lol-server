@@ -7,7 +7,7 @@ import com.example.lolserver.domain.match.service.MatchService;
 import com.example.lolserver.domain.match.domain.GameData;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.controller.support.response.ApiResponse;
-import com.example.lolserver.controller.support.Page;
+import com.example.lolserver.support.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

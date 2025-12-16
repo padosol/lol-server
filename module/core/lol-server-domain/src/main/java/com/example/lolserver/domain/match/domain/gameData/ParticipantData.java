@@ -88,10 +88,10 @@ public class ParticipantData {
 
     public ParticipantData of(MatchSummonerEntity matchSummoner) {
 
-        this.kda = Math.round( (matchSummoner.getChallengesEntity().getKda() * 100) ) / 100.0;
-        this.teamDamagePercentage = Math.round(( matchSummoner.getChallengesEntity().getTeamDamagePercentage() * 100 * 100) ) / 100.0;
-        this.goldPerMinute = Math.round(( matchSummoner.getChallengesEntity().getGoldPerMinute() * 100)) / 100.0;
-        this.killParticipation = Math.round( (matchSummoner.getChallengesEntity().getKillParticipation() * 100));
+//        this.kda = Math.round( (matchSummoner.getChallengesEntity().getKda() * 100) ) / 100.0;
+//        this.teamDamagePercentage = Math.round(( matchSummoner.getChallengesEntity().getTeamDamagePercentage() * 100 * 100) ) / 100.0;
+//        this.goldPerMinute = Math.round(( matchSummoner.getChallengesEntity().getGoldPerMinute() * 100)) / 100.0;
+//        this.killParticipation = Math.round( (matchSummoner.getChallengesEntity().getKillParticipation() * 100));
         this.assists = matchSummoner.getAssists();
         this.champExperience = matchSummoner.getChampExperience();
         this.champLevel = matchSummoner.getChampLevel();
@@ -111,7 +111,7 @@ public class ParticipantData {
         this.statValue = matchSummoner.getStatValue();
         this.style = new Style(matchSummoner.getStyleValue());
         this.profileIcon = matchSummoner.getProfileIcon();
-        this.puuid = matchSummoner.getPuuid();
+        this.puuid = matchSummoner.getMatchSummonerId().getPuuid();
         this.quadraKills = matchSummoner.getQuadraKills();
         this.riotIdGameName = matchSummoner.getRiotIdGameName();
         this.riotIdTagline = matchSummoner.getRiotIdTagline();

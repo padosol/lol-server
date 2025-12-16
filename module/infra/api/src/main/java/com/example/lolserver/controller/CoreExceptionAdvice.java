@@ -1,9 +1,9 @@
 package com.example.lolserver.controller;
 
 
-import com.example.lolserver.controller.support.error.CoreException;
-import com.example.lolserver.controller.support.error.ErrorMessage;
-import com.example.lolserver.controller.support.error.ErrorType;
+import com.example.lolserver.support.error.CoreException;
+import com.example.lolserver.support.error.ErrorMessage;
+import com.example.lolserver.support.error.ErrorType;
 import com.example.lolserver.controller.support.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

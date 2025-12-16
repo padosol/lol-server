@@ -28,7 +28,9 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
     @Override
     public Page<MatchEntity> getMatches(String puuid, Integer queueId, Pageable pageable) {
 
-        List<String> matchIds = jpaQueryFactory.select(matchSummonerEntity.matchEntity.matchId).from(matchSummonerEntity)
+        List<String> matchIds = jpaQueryFactory
+                .select(matchSummonerEntity.matchEntity.matchId)
+                .from(matchSummonerEntity)
                 .join(matchSummonerEntity.matchEntity, matchEntity)
                 .where(
                         puuidEq(puuid),
@@ -42,7 +44,7 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
 
         List<MatchEntity> result = jpaQueryFactory.selectFrom(matchEntity)
                 .join(matchEntity.matchSummonerEntities, matchSummonerEntity).fetchJoin()
-                .join(matchSummonerEntity.challengesEntity, challengesEntity).fetchJoin()
+//                .join(matchSummonerEntity.challengesEntity, challengesEntity).fetchJoin()
                 .where(
                         matchEntity.matchId.in(matchIds),
                         queueIdEq(queueId)
@@ -53,7 +55,7 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
 
         JPAQuery<MatchEntity> countQuery = jpaQueryFactory.selectFrom(matchEntity)
                 .join(matchEntity.matchSummonerEntities, matchSummonerEntity)
-                .where(matchSummonerEntity.puuid.eq(puuid));
+                .where(matchSummonerEntity.matchSummonerId.puuid.eq(puuid));
 
         return PageableExecutionUtils.getPage(result, pageable, () ->  countQuery.fetch().size());
     }
@@ -67,6 +69,6 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
     }
 
     private BooleanExpression puuidEq(String puuid) {
-        return StringUtils.hasText(puuid) ? matchSummonerEntity.puuid.eq(puuid) : null;
+        return StringUtils.hasText(puuid) ? matchSummonerEntity.matchSummonerId.puuid.eq(puuid) : null;
     }
 }

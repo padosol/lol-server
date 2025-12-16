@@ -25,7 +25,7 @@ public class TeamInfoData {
     public TeamInfoData of(MatchTeamEntity matchTeam) {
         this.teamId = matchTeam.getTeamId();
         this.win = matchTeam.isWin();
-        this.championKills = matchTeam.getTeamObject().getChampionKills();
+        this.championKills = matchTeam.getChampionKills();
 
         return this;
     }

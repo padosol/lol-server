@@ -5,6 +5,7 @@ import com.example.lolserver.repository.match.dto.MSChampionDTO;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 
 import java.util.List;
 
@@ -20,5 +21,5 @@ public interface MatchSummonerRepositoryCustom {
 
     List<LinePosition> findAllPositionByPuuidAndLimit(String puuid, Long limit);
 
-    Page<String> findAllMatchIdsByPuuidWithPage(String puuid, Integer queueId, Pageable pageable);
+    Slice<String> findAllMatchIdsByPuuidWithPage(String puuid, Integer queueId, Pageable pageable);
 }

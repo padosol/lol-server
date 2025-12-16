@@ -12,6 +12,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
@@ -84,7 +85,7 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                 ).from(matchSummonerEntity)
                 .join(matchSummonerEntity.matchEntity, matchEntity)
                 .where(
-                        matchSummonerEntity.puuid.eq(puuid),
+                        matchSummonerEntity.matchSummonerId.puuid.eq(puuid),
                         matchEntity.season.eq(season),
                         matchSummonerEntity.gameEndedInEarlySurrender.eq(false)
                 )
@@ -127,7 +128,7 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
 
         JPAQuery<MSChampionDTO> query = jpaQueryFactory.select(qmsChampionDTO)
                 .from(matchSummonerEntity)
-                .join(matchSummonerEntity.challengesEntity, challengesEntity)
+//                .join(matchSummonerEntity.challengesEntity, challengesEntity)
                 .where(
                         puuidEq(puuid),
                         seasonEq(season)
@@ -149,7 +150,7 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                         )
                 )
                 .from(matchSummonerEntity)
-                .where(matchSummonerEntity.puuid.eq(puuid))
+                .where(matchSummonerEntity.matchSummonerId.puuid.eq(puuid))
                 .orderBy(Expressions.stringPath("playCount").desc())
                 .groupBy(matchSummonerEntity.individualPosition);
 
@@ -161,7 +162,8 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
     }
 
     @Override
-    public Page<String> findAllMatchIdsByPuuidWithPage(String puuid, Integer queueId, Pageable pageable) {
+    public Slice<String> findAllMatchIdsByPuuidWithPage(String puuid, Integer queueId, Pageable pageable) {
+        int pageSize = pageable.getPageSize();
         List<String> matchIds = jpaQueryFactory.select(matchSummonerEntity.matchEntity.matchId).from(matchSummonerEntity)
                 .join(matchSummonerEntity.matchEntity, matchEntity)
                 .where(
@@ -190,7 +192,7 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
     }
 
     private BooleanExpression puuidEq(String puuid) {
-        return StringUtils.hasText(puuid) ? matchSummonerEntity.puuid.eq(puuid) : null;
+        return StringUtils.hasText(puuid) ? matchSummonerEntity.matchSummonerId.puuid.eq(puuid) : null;
     }
 
     private BooleanExpression queueIdEq(Integer queueId) {

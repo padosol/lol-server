@@ -1,29 +1,22 @@
 package com.example.lolserver.repository.match.entity.id;
 
+import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Objects;
 
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Embeddable
+@EqualsAndHashCode
 public class MatchSummonerId implements Serializable {
 
     private String puuid;
 
-    private String match;
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-        MatchSummonerId matchSummonerId = (MatchSummonerId) obj;
-        return Objects.equals(this.match, matchSummonerId.match) && Objects.equals(this.puuid, matchSummonerId.puuid);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(match, puuid);
-    }
+    private String matchId;
 }

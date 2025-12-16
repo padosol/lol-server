@@ -1,7 +1,7 @@
 package com.example.lolserver.controller.support.response;
 
-import com.example.lolserver.controller.support.error.ErrorMessage;
-import com.example.lolserver.controller.support.error.ErrorType;
+import com.example.lolserver.support.error.ErrorMessage;
+import com.example.lolserver.support.error.ErrorType;
 import lombok.Getter;
 
 @Getter

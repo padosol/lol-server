@@ -23,15 +23,12 @@ public class MatchEntity {
     @Column(name = "match_id")
     private String matchId;
 
-    private String dateVersion;
+    @Column(name = "data_version")
+    private String dataVersion;
 
     @BatchSize(size = 100)
-    @OneToMany(mappedBy = "match", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "matchEntity", fetch = FetchType.LAZY)
     private List<MatchSummonerEntity> matchSummonerEntities;
-
-    @BatchSize(size = 20)
-    @OneToMany(mappedBy = "match", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MatchTeamEntity> matchTeamEntities;
 
     // info
     private String endOfGameResult;

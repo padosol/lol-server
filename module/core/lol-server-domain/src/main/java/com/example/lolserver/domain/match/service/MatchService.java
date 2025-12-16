@@ -21,9 +21,9 @@ import com.example.lolserver.repository.match.match.MatchRepository;
 import com.example.lolserver.repository.match.match.dsl.MatchRepositoryCustom;
 import com.example.lolserver.repository.match.matchsummoner.dsl.MatchSummonerRepositoryCustom;
 import com.example.lolserver.repository.match.timeline.TimelineRepositoryCustom;
-import com.example.lolserver.controller.support.Page;
-import com.example.lolserver.controller.support.error.CoreException;
-import com.example.lolserver.controller.support.error.ErrorType;
+import com.example.lolserver.support.Page;
+import com.example.lolserver.support.error.CoreException;
+import com.example.lolserver.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -90,7 +90,7 @@ public class MatchService {
     }
 
 
-    public List<String> findAllMatchIds(MatchCommand matchCommand) {
+    public Page<String> findAllMatchIds(MatchCommand matchCommand) {
         Pageable pageable = PageRequest.of(
                 matchCommand.getPageNo(),
                 20,
@@ -100,7 +100,7 @@ public class MatchService {
                 matchCommand.getPuuid(), matchCommand.getQueueId(), pageable
         );
 
-        return matchIdsByPuuidWithPage.getContent();
+        return new Page<>(matchIdsByPuuidWithPage.getContent(), matchIdsByPuuidWithPage.hasNext());
     }
 
     private GameData convertToGameData(MatchEntity match, String puuid) {
@@ -139,9 +139,9 @@ public class MatchService {
 
         // 팀정보
         Map<Integer, TeamInfoData> teamInfoDataMap = new HashMap<>();
-        for (MatchTeamEntity matchTeam : match.getMatchTeamEntities()) { // Assuming matchTeams is public or has getter
-            teamInfoDataMap.put(matchTeam.getTeamId(), new TeamInfoData().of(matchTeam));
-        }
+//        for (MatchTeamEntity matchTeam : match.getMatchTeamEntities()) { // Assuming matchTeams is public or has getter
+//            teamInfoDataMap.put(matchTeam.getTeamId(), new TeamInfoData().of(matchTeam));
+//        }
         gameData.setTeamInfoData(teamInfoDataMap);
 
         return gameData;
