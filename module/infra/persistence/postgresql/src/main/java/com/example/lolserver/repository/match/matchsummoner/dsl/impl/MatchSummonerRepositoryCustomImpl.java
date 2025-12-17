@@ -128,6 +128,13 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
 
         JPAQuery<MSChampionDTO> query = jpaQueryFactory.select(qmsChampionDTO)
                 .from(matchSummonerEntity)
+                .join(challengesEntity)
+                .on(
+                        challengesEntity.puuid
+                                .eq(matchSummonerEntity.matchSummonerId.puuid)
+                                .and(challengesEntity.matchId
+                                        .eq(matchSummonerEntity.matchSummonerId.matchId))
+                )
 //                .join(matchSummonerEntity.challengesEntity, challengesEntity)
                 .where(
                         puuidEq(puuid),

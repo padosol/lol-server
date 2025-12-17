@@ -1,11 +1,11 @@
 package com.example.lolserver.domain.match.service;
 
-import com.example.lolserver.domain.match.domain.MSChampion;
-import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.domain.match.MatchMapper;
 import com.example.lolserver.domain.match.command.MSChampionCommand;
 import com.example.lolserver.domain.match.command.MatchCommand;
 import com.example.lolserver.domain.match.domain.GameData;
+import com.example.lolserver.domain.match.domain.MSChampion;
+import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.domain.match.domain.gameData.GameInfoData;
 import com.example.lolserver.domain.match.domain.gameData.ParticipantData;
 import com.example.lolserver.domain.match.domain.gameData.SeqTypeData;
@@ -14,7 +14,6 @@ import com.example.lolserver.domain.match.domain.gameData.seqType.SeqType;
 import com.example.lolserver.repository.match.dto.MSChampionDTO;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
-import com.example.lolserver.repository.match.entity.MatchTeamEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.ItemEvents;
 import com.example.lolserver.repository.match.entity.timeline.events.SkillEvents;
 import com.example.lolserver.repository.match.match.MatchRepository;
