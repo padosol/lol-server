@@ -1,4 +1,4 @@
-package com.example.lolserver.repository.summoner.dsl;
+package com.example.lolserver.repository.summoner.repository.dsl;
 
 import com.example.lolserver.repository.summoner.dto.SummonerAutoDTO;
 import com.example.lolserver.repository.summoner.entity.SummonerEntity;

@@ -4,4 +4,5 @@ dependencies {
 //    implementation project(":module:infra:persistence:postgresql")
 //    implementation project(":module:infra:persistence:redis")
     implementation project(":module:core:enum")
+    implementation 'org.springframework:spring-context'
 }

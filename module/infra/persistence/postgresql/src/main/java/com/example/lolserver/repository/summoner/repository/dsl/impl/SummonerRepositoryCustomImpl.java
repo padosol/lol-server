@@ -1,6 +1,6 @@
-package com.example.lolserver.repository.summoner.dsl.impl;
+package com.example.lolserver.repository.summoner.repository.dsl.impl;
 
-import com.example.lolserver.repository.summoner.dsl.SummonerRepositoryCustom;
+import com.example.lolserver.repository.summoner.repository.dsl.SummonerRepositoryCustom;
 import com.example.lolserver.repository.summoner.dto.QSummonerAutoDTO;
 import com.example.lolserver.repository.summoner.dto.SummonerAutoDTO;
 import com.example.lolserver.repository.summoner.entity.SummonerEntity;

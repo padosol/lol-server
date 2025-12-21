@@ -1,6 +1,5 @@
 package com.example.lolserver.domain.spectator.application;
 
-import com.example.lolserver.domain.spectator.application.port.SpectatorPort;
 import com.example.lolserver.domain.spectator.model.CurrentGameInfoReadModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,9 +11,6 @@ public class SpectatorService {
     private final SpectatorFinder spectatorFinder;
 
     public CurrentGameInfoReadModel getCurrentGameInfo(String puuid, String region) {
-        spectatorFinder.fin
-
-
-        return null;
+        return spectatorFinder.getCurrentGameInfo(puuid, region);
     }
 }

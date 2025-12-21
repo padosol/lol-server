@@ -5,7 +5,12 @@ plugins {
 }
 
 dependencies {
+    implementation project(":module:core:lol-server-domain")
     implementation project(":module:infra:api")
+    implementation project(":module:infra:client:lol-repository")
+    implementation project(":module:infra:message:rabbitmq")
+    implementation project(":module:infra:persistence:postgresql")
+    implementation project(":module:infra:persistence:redis")
 
     implementation 'org.springframework.boot:spring-boot-starter'
 }

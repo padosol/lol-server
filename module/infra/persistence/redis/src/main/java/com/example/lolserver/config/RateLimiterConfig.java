@@ -1,4 +1,4 @@
-package com.example.lolserver.controller.config;
+package com.example.lolserver.config;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;

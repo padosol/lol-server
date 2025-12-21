@@ -1,4 +1,4 @@
-package com.example.lolserver.controller.config;
+package com.example.lolserver.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
