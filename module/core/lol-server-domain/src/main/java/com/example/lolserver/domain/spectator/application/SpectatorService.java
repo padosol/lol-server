@@ -1,6 +1,6 @@
 package com.example.lolserver.domain.spectator.application;
 
-import com.example.lolserver.domain.spectator.model.CurrentGameInfoReadModel;
+import com.example.lolserver.domain.spectator.application.model.CurrentGameInfoReadModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

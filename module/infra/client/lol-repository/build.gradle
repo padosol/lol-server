@@ -2,4 +2,8 @@ dependencies {
     implementation(project(":module:core:lol-server-domain"))
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // MapStruct
+    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
 }

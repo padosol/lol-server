@@ -2,7 +2,7 @@ package com.example.lolserver.controller.spectator;
 
 import com.example.lolserver.controller.spectator.response.QueueInfoResponse;
 import com.example.lolserver.controller.support.response.ApiResponse;
-import com.example.lolserver.domain.queue_type.QueueTypeService;
+import com.example.lolserver.domain.queue_type.application.QueueTypeService;
 import com.example.lolserver.domain.queue_type.domain.QueueInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

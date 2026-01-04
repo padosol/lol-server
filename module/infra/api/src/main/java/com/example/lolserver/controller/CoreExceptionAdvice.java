@@ -17,12 +17,7 @@ public class CoreExceptionAdvice {
 
     @ExceptionHandler
     public ResponseEntity<ApiResponse<ErrorMessage>> coreException(CoreException e) {
-
-        switch (e.getErrorType().getLogLevel()) {
-            case ERROR -> log.error("CoreException : {}", e.getMessage());
-            case INFO -> log.warn("CoreException : {}", e.getMessage());
-            default -> log.info("CoreException : {}", e.getMessage());
-        }
+        log.error("CoreException : {}", e.getMessage());
 
         return ResponseEntity
                 .status(e.getErrorType().getHttpStatus())

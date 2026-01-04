@@ -1,45 +1,55 @@
 package com.example.lolserver.repository.summoner;
 
-import com.example.lolserver.domain.summoner.application.port.SummonerPersistencePort;
-import com.example.lolserver.domain.summoner.dto.SummonerResponse;
+import com.example.lolserver.domain.summoner.application.port.out.SummonerPersistencePort;
+import com.example.lolserver.domain.summoner.domain.Summoner;
 import com.example.lolserver.repository.summoner.entity.SummonerEntity;
+import com.example.lolserver.repository.summoner.repository.SummonerJpaRepository;
 import com.example.lolserver.repository.summoner.repository.dsl.SummonerRepositoryCustom;
-import com.example.lolserver.support.error.CoreException;
-import com.example.lolserver.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class SummonerPersistenceAdapter implements SummonerPersistencePort {
 
     private final SummonerRepositoryCustom summonerRepositoryCustom;
+    private final SummonerJpaRepository summonerJpaRepository;
+    private final SummonerMapper summonerMapper;
+
     @Override
-    public SummonerResponse getSummoner(String gameName, String tagLine, String region) {
+    public Optional<Summoner> getSummoner(String gameName, String tagLine, String region) {
         List<SummonerEntity> findSummoner = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegion(
                 gameName, tagLine, region);
 
-        if(findSummoner.size() == 1) {
-            return SummonerResponse.builder()
-                    .profileIconId(findSummoner.get(0).getProfileIconId())
-                    .puuid(findSummoner.get(0).getPuuid())
-                    .summonerLevel(findSummoner.get(0).getSummonerLevel())
-                    .platform(region)
-                    .gameName(findSummoner.get(0).getGameName())
-                    .tagLine(findSummoner.get(0).getTagLine())
-                    .build();
+        if (findSummoner.size() == 1) {
+            return Optional.of(summonerMapper.toDomain(findSummoner.get(0)));
         }
 
-        if (!StringUtils.hasText(tagLine)) {
-            throw new CoreException(
-                    ErrorType.NOT_FOUND_USER,
-                    "존재하지 않는 유저 입니다. " + gameName
-            );
-        }
+        return Optional.empty();
+    }
 
-        return null;
+    @Override
+    public List<Summoner> getSummonerAuthComplete(String q, String region) {
+        List<SummonerEntity> summonerEntities = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegionLike(
+                q, region
+        );
+
+        return summonerMapper.toDomainList(summonerEntities);
+    }
+
+    @Override
+    public Optional<Summoner> findById(String puuid) {
+        return summonerJpaRepository.findById(puuid)
+                .map(summonerMapper::toDomain);
+    }
+
+    @Override
+    public Summoner save(Summoner summoner) {
+        SummonerEntity summonerEntity = summonerMapper.toEntity(summoner);
+        SummonerEntity savedSummoner = summonerJpaRepository.save(summonerEntity);
+        return summonerMapper.toDomain(savedSummoner);
     }
 }

@@ -3,7 +3,7 @@ package com.example.lolserver.controller.league;
 import com.example.lolserver.controller.league.response.LeagueResponse;
 import com.example.lolserver.controller.league.mapper.LeagueMapper;
 import com.example.lolserver.domain.league.domain.League;
-import com.example.lolserver.domain.league.service.LeagueService;
+import com.example.lolserver.domain.league.application.LeagueService;
 import com.example.lolserver.controller.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

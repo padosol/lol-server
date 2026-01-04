@@ -1,4 +1,6 @@
 dependencies {
+    implementation(project(":module:core:lol-server-domain"))
+
     // rabbitmq
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
 }

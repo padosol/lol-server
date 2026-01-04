@@ -1,13 +1,13 @@
 package com.example.lolserver.docs.controller;
 
 import com.example.lolserver.controller.summoner.SummonerController;
-import com.example.lolserver.domain.summoner.dto.SummonerResponse;
+import com.example.lolserver.domain.summoner.application.dto.SummonerResponse;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.summoner.application.SummonerService;
 import com.example.lolserver.domain.summoner.domain.SummonerRenewal;
 import com.example.lolserver.RenewalStatus;
 
-import com.example.lolserver.domain.summoner.dto.SummonerAutoResponse;
+import com.example.lolserver.domain.summoner.application.dto.SummonerAutoResponse;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

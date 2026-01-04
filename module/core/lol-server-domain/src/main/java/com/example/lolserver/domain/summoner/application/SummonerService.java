@@ -1,15 +1,16 @@
 package com.example.lolserver.domain.summoner.application;
 
 import com.example.lolserver.RenewalStatus;
-import com.example.lolserver.client.summoner.model.SummonerVO;
-import com.example.lolserver.domain.summoner.SummonerMapper;
+import com.example.lolserver.domain.summoner.application.dto.SummonerAutoResponse;
+import com.example.lolserver.domain.summoner.application.dto.SummonerResponse;
+import com.example.lolserver.domain.summoner.application.port.out.SummonerCachePort;
+import com.example.lolserver.domain.summoner.application.port.out.SummonerClientPort;
+import com.example.lolserver.domain.summoner.application.port.out.SummonerMessagePort;
+import com.example.lolserver.domain.summoner.application.port.out.SummonerPersistencePort;
+import com.example.lolserver.domain.summoner.domain.LeagueSummoner;
+import com.example.lolserver.domain.summoner.domain.Summoner;
 import com.example.lolserver.domain.summoner.domain.SummonerRenewal;
 import com.example.lolserver.domain.summoner.domain.vo.GameName;
-import com.example.lolserver.domain.summoner.dto.SummonerAutoResponse;
-import com.example.lolserver.domain.summoner.dto.SummonerResponse;
-import com.example.lolserver.repository.summoner.dto.SummonerAutoDTO;
-import com.example.lolserver.repository.summoner.entity.SummonerEntity;
-import com.example.lolserver.service.SummonerMessage;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -18,82 +19,89 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SummonerService{
+public class SummonerService {
 
-    private final SummonerFinder summonerFinder;
+    private final SummonerPersistencePort summonerPersistencePort;
+    private final SummonerClientPort summonerClientPort;
+    private final SummonerCachePort summonerCachePort;
+    private final SummonerMessagePort summonerMessagePort;
 
-    /**
-     * 유저 상세 조회 함수
-     * @param gameName 유저명 (gameName + tagLine or gameName)
-     * @param region 지역코드
-     * @return 유저 상세 정보
-     */
     public SummonerResponse getSummoner(GameName gameName, String region) {
-        return summonerFinder.findSummonerBy(gameName.summonerName(), gameName.tagLine(), region);
+        Optional<Summoner> summonerOpt = summonerPersistencePort.getSummoner(
+                gameName.summonerName(), gameName.tagLine(), region);
+
+        Summoner summoner = summonerOpt.orElseGet(() -> summonerClientPort.getSummoner(gameName.summonerName(), gameName.tagLine(), region)
+                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_USER, "존재하지 않는 유저 입니다. " + gameName.summonerName())));
+
+        return SummonerResponse.of(summoner);
     }
 
     public List<SummonerAutoResponse> getAllSummonerAutoComplete(String q, String region) {
-        List<SummonerAutoDTO> summonerAutoDTOS = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegionLike(
-                q, region
-        );
+        List<Summoner> summoners = summonerPersistencePort.getSummonerAuthComplete(q, region);
+        return summoners.stream().map(summoner -> {
+            String tier = null;
+            String rank = null;
+            int leaguePoints = 0;
 
-        return summonerAutoDTOS.stream().map(
-                SummonerAutoResponse::of
-        ).toList();
+            if (summoner.getLeagueSummoners() != null && !summoner.getLeagueSummoners().isEmpty()) {
+                LeagueSummoner leagueSummoner = summoner.getLeagueSummoners().get(0);
+                tier = leagueSummoner.getTier();
+                rank = leagueSummoner.getRank();
+                leaguePoints = leagueSummoner.getLeaguePoints();
+            }
+            return new SummonerAutoResponse(
+                    summoner.getGameName(),
+                    summoner.getTagLine(),
+                    summoner.getProfileIconId(),
+                    summoner.getSummonerLevel(),
+                    tier,
+                    rank,
+                    leaguePoints
+            );
+        }).collect(Collectors.toList());
     }
 
     public SummonerRenewal renewalSummonerInfo(String platform, String puuid) {
+        boolean updating = summonerCachePort.isUpdating(puuid);
+        if (updating) {
+            return new SummonerRenewal(puuid, RenewalStatus.PROGRESS);
+        }
 
-        // 여기서는 puuid 에 대한 전적 갱신이 진행 되고 있는지만 체크.
-        boolean updating = redisService.isUpdating(puuid);
-        if (!updating) {
-            SummonerEntity summoner = summonerJpaRepository.findById(puuid).orElseThrow(() -> new CoreException(
-                    ErrorType.NOT_FOUND_PUUID,
-                    "존재하지 않는 PUUID 입니다. " + puuid
-            ));
+        Summoner summoner = summonerPersistencePort.findById(puuid)
+                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_PUUID, "존재하지 않는 PUUID 입니다. " + puuid));
 
-            // 이미 전적 갱신을 했다면 성공을 리턴
-            LocalDateTime clickDateTime = LocalDateTime.now();
-            if (summoner.isRevision(clickDateTime)) {
-                // 갱신이 가능 하다면
-                summoner.clickRenewal();
-                summonerJpaRepository.save(summoner);
+        LocalDateTime clickDateTime = LocalDateTime.now();
+        if (summoner.isRevision(clickDateTime)) {
+            summoner.clickRenewal();
+            summonerPersistencePort.save(summoner);
 
-                redisService.createSummonerRenewal(puuid);
-                messagePublisher.sendMessage(new SummonerMessage(
-                        platform, puuid, summoner.getRevisionDate()
-                ));
-            } else {
-                return new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
-            }
-
+            summonerCachePort.createSummonerRenewal(puuid);
+            summonerMessagePort.sendMessage(platform, puuid, summoner.getRevisionDate());
+        } else {
+            return new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
         }
 
         return new SummonerRenewal(puuid, RenewalStatus.PROGRESS);
     }
 
     public SummonerRenewal renewalSummonerStatus(String puuid) {
-        boolean result = redisService.isSummonerRenewal(puuid);
-        // 진행중이다.
+        boolean result = summonerCachePort.isSummonerRenewal(puuid);
         if (result) {
             return new SummonerRenewal(puuid, RenewalStatus.PROGRESS);
         }
-
-        return new SummonerRenewal(
-                puuid, RenewalStatus.SUCCESS
-        );
+        return new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
     }
 
     public SummonerResponse getSummonerByPuuid(String region, String puuid) {
-        SummonerEntity summoner = summonerJpaRepository.findById(puuid).orElseGet(() -> {
-            SummonerVO summonerVO = summonerRestClient.getSummonerByPuuid(region, puuid);
-            return SummonerMapper.voToEntity(summonerVO);
-        });
-
+        Summoner summoner = summonerPersistencePort.findById(puuid)
+                .orElseGet(() -> summonerClientPort.getSummonerByPuuid(region, puuid)
+                        .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_PUUID, "존재하지 않는 PUUID 입니다. " + puuid)));
         return SummonerResponse.of(summoner);
     }
 }

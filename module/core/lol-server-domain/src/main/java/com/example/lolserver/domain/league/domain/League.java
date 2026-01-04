@@ -1,18 +1,16 @@
 package com.example.lolserver.domain.league.domain;
 
 import com.example.lolserver.domain.league.domain.vo.LeagueHistory;
-import com.example.lolserver.repository.league.entity.LeagueSummonerEntity;
-import com.example.lolserver.repository.league.entity.LeagueSummonerHistoryEntity;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
 
 @Getter
-@Builder(access = AccessLevel.PRIVATE)
+@Builder
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class League {
@@ -33,42 +31,22 @@ public class League {
     private LocalDateTime createAt;
     private LocalDateTime updateAt;
 
-    private List<LeagueHistory> leagueHistory;
-
-    public League(LeagueSummonerEntity leagueSummoner) {
-        this.id = leagueSummoner.getId();
-        this.leagueId = leagueSummoner.getLeagueId();
-        this.puuid = leagueSummoner.getPuuid();
-        this.queue = leagueSummoner.getQueue();
-        this.wins = leagueSummoner.getWins();
-        this.losses = leagueSummoner.getLosses();
-        this.tier = leagueSummoner.getTier();
-        this.rank = leagueSummoner.getRank();
-        this.leaguePoints = leagueSummoner.getLeaguePoints();
-        this.veteran = leagueSummoner.isVeteran();
-        this.inactive = leagueSummoner.isInactive();
-        this.freshBlood = leagueSummoner.isFreshBlood();
-        this.hotStreak = leagueSummoner.isHotStreak();
-        this.createAt = leagueSummoner.getCreateAt();
-        this.updateAt = leagueSummoner.getUpdateAt();
-
-        this.winRate = calculateWinRate(this.wins, this.losses);
-    }
+    @Builder.Default
+    private List<LeagueHistory> leagueHistory = new ArrayList<>();
 
     public BigDecimal calculateWinRate(int wins, int losses) {
         BigDecimal winGames = BigDecimal.valueOf(wins);
         BigDecimal lossesGames = BigDecimal.valueOf(losses);
         BigDecimal totalGames = winGames.add(lossesGames);
 
+        if (totalGames.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+
         return winGames.divide(totalGames, 2, RoundingMode.HALF_UP);
     }
 
-    public void addAllHistory(List<LeagueSummonerHistoryEntity> leagueHistory) {
-        if (this.leagueHistory == null) {
-            this.leagueHistory = new ArrayList<>();
-        }
-        List<LeagueHistory> leagueHistories = leagueHistory.stream().map(LeagueHistory::new).toList();
-        this.leagueHistory.addAll(leagueHistories);
+    public void addAllHistoryDomain(List<LeagueHistory> leagueHistory) {
+        this.leagueHistory.addAll(leagueHistory);
     }
-
 }

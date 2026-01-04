@@ -34,19 +34,8 @@ public class SummonerRepositoryCustomImpl implements SummonerRepositoryCustom {
     }
 
     @Override
-    public List<SummonerAutoDTO> findAllByGameNameAndTagLineAndRegionLike(String q, String region) {
-        QSummonerAutoDTO qSummonerAutoDTO = new QSummonerAutoDTO(
-                summonerEntity.gameName,
-                summonerEntity.tagLine,
-                summonerEntity.profileIconId,
-                summonerEntity.summonerLevel,
-                leagueSummonerEntity.tier,
-                leagueSummonerEntity.rank,
-                leagueSummonerEntity.leaguePoints
-        );
-
-        return jpaQueryFactory.select(qSummonerAutoDTO)
-                .from(summonerEntity)
+    public List<SummonerEntity> findAllByGameNameAndTagLineAndRegionLike(String q, String region) {
+        return jpaQueryFactory.selectFrom(summonerEntity)
                 .join(leagueSummonerEntity)
                 .on(
                         summonerEntity.puuid.eq(leagueSummonerEntity.puuid)

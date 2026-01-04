@@ -2,9 +2,11 @@ package com.example.lolserver.domain.match.domain;
 
 import com.example.lolserver.domain.match.domain.gameData.SeqTypeData;
 import com.example.lolserver.domain.match.domain.gameData.seqType.SeqType;
-import com.example.lolserver.repository.match.entity.timeline.events.ItemEvents;
-import com.example.lolserver.repository.match.entity.timeline.events.SkillEvents;
+import com.example.lolserver.domain.match.domain.gameData.timeline.events.ItemEvents;
+import com.example.lolserver.domain.match.domain.gameData.timeline.events.SkillEvents;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
@@ -14,17 +16,14 @@ import java.util.Map;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class TimelineData {
 
     private Map<Integer, Map<String, List<SeqTypeData>>> data;
 
-    public TimelineData(){};
-
-
     public TimelineData(List<ItemEvents> itemEvents, List<SkillEvents> skillEvents) {
-
         this.data = getTimelineDataMap(itemEvents, skillEvents);
-
     }
 
     public Map<Integer, Map<String, List<SeqTypeData>>> getTimelineDataMap(List<ItemEvents> itemEvents, List<SkillEvents> skillEvents) {
@@ -64,5 +63,4 @@ public class TimelineData {
 
         return timelineMap;
     }
-
 }

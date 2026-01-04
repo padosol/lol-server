@@ -2,14 +2,14 @@ package com.example.lolserver.docs.controller;
 
 import com.example.lolserver.controller.match.MatchController;
 import com.example.lolserver.docs.RestDocsSupport;
-import com.example.lolserver.domain.match.command.MSChampionCommand;
-import com.example.lolserver.domain.match.command.MatchCommand;
+import com.example.lolserver.domain.match.application.command.MSChampionCommand;
+import com.example.lolserver.domain.match.application.command.MatchCommand;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.gameData.GameInfoData;
 import com.example.lolserver.domain.match.domain.gameData.ParticipantData;
 import com.example.lolserver.domain.match.domain.gameData.SeqTypeData;
 import com.example.lolserver.domain.match.domain.gameData.TeamInfoData;
-import com.example.lolserver.domain.match.service.MatchService;
+import com.example.lolserver.domain.match.application.MatchService;
 import com.example.lolserver.domain.match.domain.GameData;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.support.Page;
