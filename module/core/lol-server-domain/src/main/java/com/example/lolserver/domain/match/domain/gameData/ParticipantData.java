@@ -1,5 +1,7 @@
 package com.example.lolserver.domain.match.domain.gameData;
 
+import com.example.lolserver.domain.match.domain.gameData.timeline.ItemSeqData;
+import com.example.lolserver.domain.match.domain.gameData.timeline.SkillSeqData;
 import com.example.lolserver.domain.match.domain.gameData.value.ItemValue;
 import com.example.lolserver.domain.match.domain.gameData.value.StatValue;
 import com.example.lolserver.domain.match.domain.gameData.value.Style;
@@ -81,6 +83,6 @@ public class ParticipantData {
     private int playerAugment3;
     private int playerAugment4;
 
-    private List<SeqTypeData> itemSeq;
-    private List<SeqTypeData> skillSeq;
+    private List<ItemSeqData> itemSeq;
+    private List<SkillSeqData> skillSeq;
 }

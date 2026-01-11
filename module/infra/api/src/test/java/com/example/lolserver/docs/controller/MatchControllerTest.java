@@ -7,8 +7,11 @@ import com.example.lolserver.domain.match.application.command.MatchCommand;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.gameData.GameInfoData;
 import com.example.lolserver.domain.match.domain.gameData.ParticipantData;
-import com.example.lolserver.domain.match.domain.gameData.SeqTypeData;
 import com.example.lolserver.domain.match.domain.gameData.TeamInfoData;
+import com.example.lolserver.domain.match.domain.gameData.timeline.ItemSeqData;
+import com.example.lolserver.domain.match.domain.gameData.timeline.ParticipantTimeline;
+import com.example.lolserver.domain.match.domain.gameData.timeline.SkillSeqData;
+import com.example.lolserver.domain.match.domain.TeamData;
 import com.example.lolserver.domain.match.application.MatchService;
 import com.example.lolserver.domain.match.domain.GameData;
 import com.example.lolserver.domain.match.domain.TimelineData;
@@ -86,7 +89,7 @@ class MatchControllerTest extends RestDocsSupport {
         given(gameData.getMyData()).willReturn(myData);
         given(gameData.getGameInfoData()).willReturn(gameInfoData);
         given(gameData.getParticipantData()).willReturn(List.of(myData));
-        given(gameData.getTeamInfoData()).willReturn(Map.of(100, team100, 200, team200));
+        given(gameData.getTeamInfoData()).willReturn(TeamData.builder().blueTeam(team100).redTeam(team200).build());
 
         given(matchService.getGameData(anyString())).willReturn(gameData);
 
@@ -103,14 +106,13 @@ class MatchControllerTest extends RestDocsSupport {
                         pathParameters(
                                 parameterWithName("matchId").description("조회할 매치 ID")
                         ),
-                        relaxedResponseFields(
+                        responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
-                                fieldWithPath("data.myData.summonerName").type(JsonFieldType.STRING).description("내 소환사 이름"),
-                                fieldWithPath("data.gameInfoData.gameMode").type(JsonFieldType.STRING).description("게임 모드")
-                        ),
-                        pathParameters(
-                                parameterWithName("matchId").description("조회할 매치 ID")
+                                subsectionWithPath("data.myData").type(JsonFieldType.OBJECT).description("내 참가자 정보"),
+                                subsectionWithPath("data.gameInfoData").type(JsonFieldType.OBJECT).description("게임 정보"),
+                                subsectionWithPath("data.participantData[]").type(JsonFieldType.ARRAY).description("전체 참가자 목록"),
+                                subsectionWithPath("data.teamInfoData").type(JsonFieldType.OBJECT).description("팀 정보 (blueTeam, redTeam)")
                         )
                 ));
     }
@@ -145,11 +147,11 @@ class MatchControllerTest extends RestDocsSupport {
                                 parameterWithName("pageNo").description("페이지 번호 (1부터 시작)").optional(),
                                 parameterWithName("region").description("지역")
                         ),
-                        relaxedResponseFields(
+                        responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
                                 fieldWithPath("data.content[]").type(JsonFieldType.ARRAY).description("매치 ID 목록"),
-                                fieldWithPath("data.hasNext").type(JsonFieldType.BOOLEAN).description("다음 항목 존재 여부"),
-                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)")
+                                fieldWithPath("data.hasNext").type(JsonFieldType.BOOLEAN).description("다음 항목 존재 여부")
                         )
                 ));
     }
@@ -198,10 +200,11 @@ class MatchControllerTest extends RestDocsSupport {
                                 parameterWithName("pageNo").description("페이지 번호 (1부터 시작)").optional(),
                                 parameterWithName("region").description("지역")
                         ),
-                        relaxedResponseFields(
+                        responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
-                                fieldWithPath("data.content[].myData.summonerName").type(JsonFieldType.STRING).description("내 소환사 이름"),
-                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)")
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
+                                subsectionWithPath("data.content[]").type(JsonFieldType.ARRAY).description("매치 데이터 목록 (GameData)"),
+                                fieldWithPath("data.hasNext").type(JsonFieldType.BOOLEAN).description("다음 페이지 존재 여부")
                         )
                 ));
     }
@@ -215,19 +218,20 @@ class MatchControllerTest extends RestDocsSupport {
         request.setSeason(2024);
 
         MSChampion champion = mock(MSChampion.class);
-        given(champion.getWinRate()).willReturn(7.5);
-        given(champion.getKda()).willReturn(3.2);
-        given(champion.getDamageTakenOnTeamPercentage()).willReturn(8.1);
         given(champion.getChampionId()).willReturn(266);
         given(champion.getChampionName()).willReturn("Aatrox");
-        given(champion.getWin()).willReturn(100L);
-        given(champion.getPlayCount()).willReturn(30L);
         given(champion.getKills()).willReturn(10.5);
-        given(champion.getDeaths()).willReturn(15.5);
-        given(champion.getAssists()).willReturn(15.5);
-        given(champion.getLaneMinionsFirst10Minutes()).willReturn(15.5);
-        given(champion.getGoldPerMinute()).willReturn(15.5);
-        given(champion.getDamagePerMinute()).willReturn(20.0);
+        given(champion.getDeaths()).willReturn(5.5);
+        given(champion.getAssists()).willReturn(8.5);
+        given(champion.getWin()).willReturn(20L);
+        given(champion.getLosses()).willReturn(10L);
+        given(champion.getWinRate()).willReturn(66.7);
+        given(champion.getDamagePerMinute()).willReturn(850.0);
+        given(champion.getKda()).willReturn(3.45);
+        given(champion.getLaneMinionsFirst10Minutes()).willReturn(72.5);
+        given(champion.getDamageTakenOnTeamPercentage()).willReturn(22.5);
+        given(champion.getGoldPerMinute()).willReturn(420.0);
+        given(champion.getPlayCount()).willReturn(30L);
 
         given(matchService.getRankChampions(any(MSChampionCommand.class))).willReturn(List.of(champion));
 
@@ -249,13 +253,23 @@ class MatchControllerTest extends RestDocsSupport {
                                 parameterWithName("queueId").description("큐 ID").optional(),
                                 parameterWithName("platform").description("플랫폼(지역)").optional()
                         ),
-                        relaxedResponseFields(
+                        responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
+                                fieldWithPath("data[].championId").type(JsonFieldType.NUMBER).description("챔피언 ID"),
                                 fieldWithPath("data[].championName").type(JsonFieldType.STRING).description("챔피언 이름"),
+                                fieldWithPath("data[].kills").type(JsonFieldType.NUMBER).description("평균 킬"),
+                                fieldWithPath("data[].deaths").type(JsonFieldType.NUMBER).description("평균 데스"),
+                                fieldWithPath("data[].assists").type(JsonFieldType.NUMBER).description("평균 어시스트"),
                                 fieldWithPath("data[].win").type(JsonFieldType.NUMBER).description("승리 횟수"),
-                                fieldWithPath("data[].playCount").type(JsonFieldType.NUMBER).description("플레이 횟수"),
-                                fieldWithPath("data[].kills").type(JsonFieldType.NUMBER).description("평균 Kills"),
-                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)")
+                                fieldWithPath("data[].losses").type(JsonFieldType.NUMBER).description("패배 횟수"),
+                                fieldWithPath("data[].winRate").type(JsonFieldType.NUMBER).description("승률 (%)"),
+                                fieldWithPath("data[].damagePerMinute").type(JsonFieldType.NUMBER).description("분당 피해량"),
+                                fieldWithPath("data[].kda").type(JsonFieldType.NUMBER).description("KDA"),
+                                fieldWithPath("data[].laneMinionsFirst10Minutes").type(JsonFieldType.NUMBER).description("10분 CS"),
+                                fieldWithPath("data[].damageTakenOnTeamPercentage").type(JsonFieldType.NUMBER).description("팀 피해 분담률 (%)"),
+                                fieldWithPath("data[].goldPerMinute").type(JsonFieldType.NUMBER).description("분당 골드"),
+                                fieldWithPath("data[].playCount").type(JsonFieldType.NUMBER).description("플레이 횟수")
                         )
                 ));
     }
@@ -266,19 +280,25 @@ class MatchControllerTest extends RestDocsSupport {
         // given
         String matchId = "KR_123456789";
 
-        SeqTypeData itemSeq = mock(SeqTypeData.class);
-        given(itemSeq.getId()).willReturn(1001);
+        ItemSeqData itemSeq = mock(ItemSeqData.class);
+        given(itemSeq.getItemId()).willReturn(1001);
         given(itemSeq.getType()).willReturn("ITEM_PURCHASED");
         given(itemSeq.getMinute()).willReturn(1L);
 
-        Map<String, List<SeqTypeData>> participantData = new HashMap<>();
-        participantData.put("ITEM_SEQ", List.of(itemSeq));
-        
-        Map<Integer, Map<String, List<SeqTypeData>>> data = new HashMap<>();
-        data.put(1, participantData);
+        SkillSeqData skillSeq = mock(SkillSeqData.class);
+        given(skillSeq.getSkillSlot()).willReturn(1);
+        given(skillSeq.getType()).willReturn("SKILL_LEVEL_UP");
+        given(skillSeq.getMinute()).willReturn(0L);
+
+        ParticipantTimeline participantTimeline = mock(ParticipantTimeline.class);
+        given(participantTimeline.getItemSeq()).willReturn(List.of(itemSeq));
+        given(participantTimeline.getSkillSeq()).willReturn(List.of(skillSeq));
+
+        Map<Integer, ParticipantTimeline> participants = new HashMap<>();
+        participants.put(1, participantTimeline);
 
         TimelineData timelineData = mock(TimelineData.class);
-        given(timelineData.getData()).willReturn(data);
+        given(timelineData.getParticipants()).willReturn(participants);
 
         given(matchService.getTimelineData(anyString())).willReturn(timelineData);
 
@@ -295,11 +315,10 @@ class MatchControllerTest extends RestDocsSupport {
                         pathParameters(
                                 parameterWithName("matchId").description("조회할 매치 ID")
                         ),
-                        relaxedResponseFields(
+                        responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
-                                fieldWithPath("data.data.1.ITEM_SEQ[].id").type(JsonFieldType.NUMBER).description("아이템 ID"),
-                                fieldWithPath("data.data.1.ITEM_SEQ[].type").type(JsonFieldType.STRING).description("이벤트 타입"),
-                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)")
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
+                                subsectionWithPath("data.participants").type(JsonFieldType.OBJECT).description("참가자별 타임라인 데이터 (key: participantId, value: {itemSeq, skillSeq})")
                         )
                 ));
     }

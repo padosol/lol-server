@@ -8,6 +8,7 @@ import com.example.lolserver.domain.summoner.domain.SummonerRenewal;
 import com.example.lolserver.RenewalStatus;
 
 import com.example.lolserver.domain.summoner.application.dto.SummonerAutoResponse;
+import com.example.lolserver.domain.summoner.domain.vo.GameName;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
@@ -66,7 +68,7 @@ class SummonerControllerTest extends RestDocsSupport {
                 .lastRevisionClickDateTime(now.toString())
                 .build();
 
-        given(summonerService.getSummoner(anyString(), anyString())).willReturn(response);
+        given(summonerService.getSummoner(any(GameName.class), anyString())).willReturn(response);
 
         // when
         ResultActions result = mockMvc.perform(
