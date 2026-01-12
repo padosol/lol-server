@@ -16,12 +16,15 @@ public class RateLimiterConfig {
     @Value("${spring.data.redis.port}")
     private int port;
 
+    @Value("${spring.data.redis.ssl:false}")
+    private boolean ssl;
+
     @Bean
     public RedisClient redisClient() {
         return RedisClient.create(RedisURI.builder()
                 .withHost(host)
                 .withPort(port)
-                .withSsl(false)
+                .withSsl(ssl)
                 .build());
     }
 
