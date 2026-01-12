@@ -1,7 +1,7 @@
 package com.example.lolserver.controller.champion;
 
 import com.example.lolserver.controller.champion.response.ChampionRotateResponse;
-import com.example.lolserver.domain.champion.service.ChampionService;
+import com.example.lolserver.domain.champion.application.ChampionService;
 import com.example.lolserver.controller.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class ChampionController {
 
-
     private final ChampionService championService;
 
     @GetMapping("/rotation")
@@ -22,7 +21,7 @@ public class ChampionController {
     ) {
         return new ResponseEntity<>(
                 ApiResponse.success(
-                        ChampionRotateResponse.of(championService.getRotation(region))
+                        ChampionRotateResponse.of(championService.getChampionRotate(region))
                 ),
                 HttpStatus.OK);
     }

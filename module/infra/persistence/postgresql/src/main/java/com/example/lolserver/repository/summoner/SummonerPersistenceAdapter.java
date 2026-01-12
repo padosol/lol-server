@@ -1,0 +1,55 @@
+package com.example.lolserver.repository.summoner;
+
+import com.example.lolserver.domain.summoner.application.port.out.SummonerPersistencePort;
+import com.example.lolserver.domain.summoner.domain.Summoner;
+import com.example.lolserver.repository.summoner.entity.SummonerEntity;
+import com.example.lolserver.repository.summoner.repository.SummonerJpaRepository;
+import com.example.lolserver.repository.summoner.repository.dsl.SummonerRepositoryCustom;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+
+@Component
+@RequiredArgsConstructor
+public class SummonerPersistenceAdapter implements SummonerPersistencePort {
+
+    private final SummonerRepositoryCustom summonerRepositoryCustom;
+    private final SummonerJpaRepository summonerJpaRepository;
+    private final SummonerMapper summonerMapper;
+
+    @Override
+    public Optional<Summoner> getSummoner(String gameName, String tagLine, String region) {
+        List<SummonerEntity> findSummoner = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegion(
+                gameName, tagLine, region);
+
+        if (findSummoner.size() == 1) {
+            return Optional.of(summonerMapper.toDomain(findSummoner.get(0)));
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public List<Summoner> getSummonerAuthComplete(String q, String region) {
+        List<SummonerEntity> summonerEntities = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegionLike(
+                q, region
+        );
+
+        return summonerMapper.toDomainList(summonerEntities);
+    }
+
+    @Override
+    public Optional<Summoner> findById(String puuid) {
+        return summonerJpaRepository.findById(puuid)
+                .map(summonerMapper::toDomain);
+    }
+
+    @Override
+    public Summoner save(Summoner summoner) {
+        SummonerEntity summonerEntity = summonerMapper.toEntity(summoner);
+        SummonerEntity savedSummoner = summonerJpaRepository.save(summonerEntity);
+        return summonerMapper.toDomain(savedSummoner);
+    }
+}

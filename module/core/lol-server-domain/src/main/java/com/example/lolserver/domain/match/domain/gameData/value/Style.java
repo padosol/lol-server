@@ -1,13 +1,14 @@
 package com.example.lolserver.domain.match.domain.gameData.value;
 
-import com.example.lolserver.repository.match.entity.value.matchsummoner.StyleValue;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.Arrays;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Style {
 
     private int primaryRuneId;
@@ -16,14 +17,4 @@ public class Style {
     private int secondaryRuneId;
     private int[] secondaryRuneIds;
 
-    public Style(){}
-
-    public Style(StyleValue styleValue) {
-        this.primaryRuneId = styleValue.getPrimaryRuneId();
-        this.primaryRuneIds = Arrays.stream(styleValue.getPrimaryRuneIds().split(",")).mapToInt(Integer::valueOf).toArray();
-
-        this.secondaryRuneId = styleValue.getSecondaryRuneId();
-        this.secondaryRuneIds = Arrays.stream(styleValue.getSecondaryRuneIds().split(",")).mapToInt(Integer::valueOf).toArray();
-
-    }
 }

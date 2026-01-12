@@ -15,7 +15,6 @@ allprojects {
     }
 
     ext {
-        set('springCloudVer', "2023.0.3")
         set('querydsl.version', "5.1.0")
         set('redissonVersion', "3.27.1")
     }
@@ -27,6 +26,18 @@ subprojects {
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
     apply plugin: 'org.asciidoctor.jvm.convert'
+    apply plugin: 'jacoco'
+
+    jacoco {
+        toolVersion = "0.8.11"
+    }
+
+    jacocoTestReport {
+        reports {
+            xml.required = true
+            html.required = true
+        }
+    }
 
     java {
         toolchain {
@@ -56,14 +67,10 @@ subprojects {
         testImplementation 'io.projectreactor:reactor-test'
 
         // RestDocs
-        asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
         testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
     }
 
     dependencyManagement {
-        imports {
-            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVer}"
-        }
         dependencies {
             dependency "org.redisson:redisson-spring-boot-starter:${redissonVersion}"
         }
@@ -86,29 +93,5 @@ subprojects {
         systemProperty "spring.profiles.active", activeProfile
     }
 
-    ext { // 전역 변수
-        snippetsDir = file('build/generated-snippets')
-    }
 
-    test {
-        outputs.dir snippetsDir
-    }
-
-    asciidoctor {
-        inputs.dir snippetsDir
-        configurations 'asciidoctorExt'
-
-        sources { // 특정 파일만 html로 만든다.
-            include("**/index.adoc")
-        }
-        baseDirFollowsSourceFile() // 다른 adoc 파일을 include 할 때 경로를 baseDir로 맞춘다.
-        dependsOn test
-    }
-
-    bootJar {
-        dependsOn asciidoctor
-        from("${asciidoctor.outputDir}") {
-            into 'static/docs'
-        }
-    }
 }

@@ -1,8 +1,13 @@
 dependencies {
-    implementation project(":module:infra:client:lol-repository")
-    implementation project(":module:infra:message:rabbitmq")
-    implementation project(":module:infra:persistence:postgresql")
-    implementation project(":module:infra:persistence:redis")
+//    implementation project(":module:infra:client:lol-repository")
+//    implementation project(":module:infra:message:rabbitmq")
+//    implementation project(":module:infra:persistence:postgresql")
+//    implementation project(":module:infra:persistence:redis")
     implementation project(":module:core:enum")
-
+    implementation 'org.springframework:spring-context'
+    // TEMPORARY: Adding dependencies to allow compilation of existing code.
+    // These indicate violations of core:lol-server-domain's independence.
+    // A full refactoring of other domains is required to remove these.
+    implementation 'org.slf4j:slf4j-api:1.7.32' // For @Slf4j
+    implementation 'org.springframework.data:spring-data-commons:2.5.5' // For Pageable, Slice, etc.
 }

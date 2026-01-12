@@ -54,7 +54,6 @@ public class SummonerEntity {
             if(split.length > 1) {
                 this.tagLine = split[1];
             }
-
         }
     }
 

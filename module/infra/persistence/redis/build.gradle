@@ -1,5 +1,6 @@
 dependencies {
     implementation project(":module:core:enum")
+    implementation project(":module:core:lol-server-domain")
 
     // redis
     api 'org.springframework.boot:spring-boot-starter-data-redis'
