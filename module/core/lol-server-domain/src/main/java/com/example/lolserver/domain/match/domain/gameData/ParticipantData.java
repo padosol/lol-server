@@ -1,20 +1,22 @@
 package com.example.lolserver.domain.match.domain.gameData;
 
+import com.example.lolserver.domain.match.domain.gameData.timeline.ItemSeqData;
+import com.example.lolserver.domain.match.domain.gameData.timeline.SkillSeqData;
+import com.example.lolserver.domain.match.domain.gameData.value.ItemValue;
+import com.example.lolserver.domain.match.domain.gameData.value.StatValue;
 import com.example.lolserver.domain.match.domain.gameData.value.Style;
-import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
-import com.example.lolserver.repository.match.entity.value.matchsummoner.ItemValue;
-import com.example.lolserver.repository.match.entity.value.matchsummoner.StatValue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor
 public class ParticipantData {
 
@@ -81,73 +83,6 @@ public class ParticipantData {
     private int playerAugment3;
     private int playerAugment4;
 
-    private List<SeqTypeData> itemSeq;
-    private List<SeqTypeData> skillSeq;
-
-    public ParticipantData(){};
-
-    public ParticipantData of(MatchSummonerEntity matchSummoner) {
-
-//        this.kda = Math.round( (matchSummoner.getChallengesEntity().getKda() * 100) ) / 100.0;
-//        this.teamDamagePercentage = Math.round(( matchSummoner.getChallengesEntity().getTeamDamagePercentage() * 100 * 100) ) / 100.0;
-//        this.goldPerMinute = Math.round(( matchSummoner.getChallengesEntity().getGoldPerMinute() * 100)) / 100.0;
-//        this.killParticipation = Math.round( (matchSummoner.getChallengesEntity().getKillParticipation() * 100));
-        this.assists = matchSummoner.getAssists();
-        this.champExperience = matchSummoner.getChampExperience();
-        this.champLevel = matchSummoner.getChampLevel();
-        this.championId = matchSummoner.getChampionId();
-        this.championName = matchSummoner.getChampionName();
-        this.consumablesPurchased = matchSummoner.getConsumablesPurchased();
-        this.deaths = matchSummoner.getDeaths();
-        this.doubleKills = matchSummoner.getDoubleKills();
-        this.goldEarned = matchSummoner.getGoldEarned();
-        this.individualPosition = matchSummoner.getIndividualPosition();
-        this.item = matchSummoner.getItem();
-        this.itemsPurchased = matchSummoner.getItemsPurchased();
-        this.kills = matchSummoner.getKills();
-        this.lane = matchSummoner.getLane();
-        this.participantId = matchSummoner.getParticipantId();
-        this.pentaKills = matchSummoner.getPentaKills();
-        this.statValue = matchSummoner.getStatValue();
-        this.style = new Style(matchSummoner.getStyleValue());
-        this.profileIcon = matchSummoner.getProfileIcon();
-        this.puuid = matchSummoner.getMatchSummonerId().getPuuid();
-        this.quadraKills = matchSummoner.getQuadraKills();
-        this.riotIdGameName = matchSummoner.getRiotIdGameName();
-        this.riotIdTagline = matchSummoner.getRiotIdTagline();
-        this.role = matchSummoner.getRole();
-        this.summoner1Id = matchSummoner.getSummoner1Id();
-        this.summoner2Id = matchSummoner.getSummoner2Id();
-        this.summonerId = matchSummoner.getSummonerId();
-        this.summonerLevel = matchSummoner.getSummonerLevel();
-        this.summonerName = matchSummoner.getSummonerName();
-        this.teamId = matchSummoner.getTeamId();
-        this.teamPosition = matchSummoner.getTeamPosition();
-        this.timeCCingOthers = matchSummoner.getTimeCCingOthers();
-        this.timePlayed = matchSummoner.getTimePlayed();
-        this.tripleKills = matchSummoner.getTripleKills();
-        this.visionScore = matchSummoner.getVisionScore();
-        this.totalMinionsKilled = matchSummoner.getTotalMinionsKilled();
-        this.neutralMinionsKilled = matchSummoner.getNeutralMinionsKilled();
-        this.win = matchSummoner.isWin();
-        this.totalDamageDealtToChampions = matchSummoner.getTotalDamageDealtToChampions();
-        this.totalDamageTaken = matchSummoner.getTotalDamageTaken();
-        this.visionWardsBoughtInGame = matchSummoner.getVisionWardsBoughtInGame();
-        this.wardsKilled = matchSummoner.getWardsKilled();
-        this.wardsPlaced = matchSummoner.getWardsPlaced();
-        this.placement = matchSummoner.getPlacement();
-        this.playerAugment1 = matchSummoner.getPlayerAugment1();
-        this.playerAugment2 = matchSummoner.getPlayerAugment2();
-        this.playerAugment3 = matchSummoner.getPlayerAugment3();
-        this.playerAugment4 = matchSummoner.getPlayerAugment4();
-
-        List<SeqTypeData> itemSeq = new ArrayList<>();
-        List<SeqTypeData> skillSeq = new ArrayList<>();
-
-        this.itemSeq = itemSeq;
-        this.skillSeq = skillSeq;
-
-        return this;
-    }
-
+    private List<ItemSeqData> itemSeq;
+    private List<SkillSeqData> skillSeq;
 }

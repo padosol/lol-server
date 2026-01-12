@@ -1,9 +1,9 @@
 package com.example.lolserver.controller.match;
 
-import com.example.lolserver.domain.match.command.MSChampionCommand;
-import com.example.lolserver.domain.match.command.MatchCommand;
+import com.example.lolserver.domain.match.application.command.MSChampionCommand;
+import com.example.lolserver.domain.match.application.command.MatchCommand;
 import com.example.lolserver.domain.match.domain.MSChampion;
-import com.example.lolserver.domain.match.service.MatchService;
+import com.example.lolserver.domain.match.application.MatchService;
 import com.example.lolserver.domain.match.domain.GameData;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.controller.support.response.ApiResponse;
@@ -33,10 +33,10 @@ public class MatchController {
     }
 
     @GetMapping("/matches/matchIds")
-    public ResponseEntity<ApiResponse<List<String>>> findAllMatchIds(
+    public ResponseEntity<ApiResponse<Page<String>>> findAllMatchIds(
         @ModelAttribute MatchCommand matchCommand
     ) {
-        List<String> allMatchIds = matchService.findAllMatchIds(matchCommand);
+        Page<String> allMatchIds = matchService.findAllMatchIds(matchCommand);
 
         return ResponseEntity.ok(ApiResponse.success(allMatchIds));
     }

@@ -27,7 +27,8 @@ public class GameData {
     private List<ParticipantData> participantData = new ArrayList<>();
     
     // 게임 팀 정보
-    private Map<Integer, TeamInfoData> teamInfoData = new HashMap<>();
+    private TeamData teamInfoData;
+//    private Map<Integer, TeamInfoData> teamInfoData = new HashMap<>();
 
 
 }

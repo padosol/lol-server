@@ -1,0 +1,11 @@
+package com.example.lolserver.repository.summoner.repository.dsl;
+
+import com.example.lolserver.repository.summoner.entity.SummonerEntity;
+
+import java.util.List;
+
+public interface SummonerRepositoryCustom {
+
+    List<SummonerEntity> findAllByGameNameAndTagLineAndRegion(String gameName, String tagLine, String region);
+    List<SummonerEntity> findAllByGameNameAndTagLineAndRegionLike(String q, String region);
+}

@@ -1,10 +1,10 @@
 package com.example.lolserver.controller.summoner;
 
-import com.example.lolserver.domain.summoner.dto.SummonerAutoResponse;
+import com.example.lolserver.domain.summoner.application.dto.SummonerAutoResponse;
 import com.example.lolserver.controller.summoner.response.SummonerRenewalResponse;
 import com.example.lolserver.domain.summoner.application.SummonerService;
 import com.example.lolserver.domain.summoner.domain.SummonerRenewal;
-import com.example.lolserver.domain.summoner.dto.SummonerResponse;
+import com.example.lolserver.domain.summoner.application.dto.SummonerResponse;
 import com.example.lolserver.controller.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import com.example.lolserver.domain.summoner.domain.vo.GameName;
 
 @Slf4j
 @RestController
@@ -33,7 +34,7 @@ public class SummonerController {
             @PathVariable("gameName") String gameName
     ) {
         log.info("getSummoner");
-        SummonerResponse summoner = summonerService.getSummoner(gameName, region);
+        SummonerResponse summoner = summonerService.getSummoner(GameName.create(gameName), region);
 
         return ResponseEntity.ok(ApiResponse.success(summoner));
     }

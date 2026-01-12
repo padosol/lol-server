@@ -2,7 +2,7 @@ package com.example.lolserver.docs.controller;
 
 import com.example.lolserver.controller.champion.ChampionController;
 import com.example.lolserver.docs.RestDocsSupport;
-import com.example.lolserver.domain.champion.service.ChampionService;
+import com.example.lolserver.domain.champion.application.ChampionService;
 import com.example.lolserver.domain.champion.domain.ChampionRotate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -52,7 +52,7 @@ class ChampionControllerTest extends RestDocsSupport {
         given(championRotate.getFreeChampionIds()).willReturn(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
         given(championRotate.getFreeChampionIdsForNewPlayers()).willReturn(List.of(101, 102, 103, 104, 105, 106, 107, 108, 109, 110));
 
-        given(championService.getRotation(anyString())).willReturn(championRotate);
+        given(championService.getChampionRotate(anyString())).willReturn(championRotate);
 
         // when & then
         mockMvc.perform(

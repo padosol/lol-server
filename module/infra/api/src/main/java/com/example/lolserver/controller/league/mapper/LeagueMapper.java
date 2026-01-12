@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LeagueMapper {
+    private static final BigDecimal ONE_HUNDRED = new BigDecimal(100);
 
     public static LeagueResponse domainToResponse(List<League> leagues) {
         LeagueSummonerResponse soloLeague = null;
@@ -25,7 +26,7 @@ public class LeagueMapper {
                     league.getLeaguePoints(),
                     league.getWins(),
                     league.getLosses(),
-                    league.getWinRate().toString(),
+                    league.getWinRate().multiply(ONE_HUNDRED).toString(),
                     league.getTier(),
                     league.getRank()
             );

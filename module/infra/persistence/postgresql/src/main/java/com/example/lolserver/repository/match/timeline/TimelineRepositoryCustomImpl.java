@@ -1,17 +1,19 @@
 package com.example.lolserver.repository.match.timeline;
 
-import com.example.lolserver.repository.match.entity.timeline.TimeLineEvent;
-import com.example.lolserver.repository.match.entity.timeline.events.ItemEvents;
-import com.example.lolserver.repository.match.entity.timeline.events.SkillEvents;
+import com.example.lolserver.repository.match.entity.timeline.QTimeLineEventEntity;
+import com.example.lolserver.repository.match.entity.timeline.TimeLineEventEntity;
+import com.example.lolserver.repository.match.entity.timeline.events.ItemEventsEntity;
+import com.example.lolserver.repository.match.entity.timeline.events.SkillEventsEntity;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-import static com.example.lolserver.repository.match.entity.timeline.QTimeLineEvent.timeLineEvent;
-import static com.example.lolserver.repository.match.entity.timeline.events.QItemEvents.itemEvents;
-import static com.example.lolserver.repository.match.entity.timeline.events.QSkillEvents.skillEvents;
+
+import static com.example.lolserver.repository.match.entity.timeline.QTimeLineEventEntity.timeLineEventEntity;
+import static com.example.lolserver.repository.match.entity.timeline.events.QItemEventsEntity.itemEventsEntity;
+import static com.example.lolserver.repository.match.entity.timeline.events.QSkillEventsEntity.skillEventsEntity;
 
 @Repository
 @RequiredArgsConstructor
@@ -20,26 +22,26 @@ public class TimelineRepositoryCustomImpl implements TimelineRepositoryCustom{
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public List<TimeLineEvent> selectAllTimelineInfo(String matchId) {
+    public List<TimeLineEventEntity> selectAllTimelineInfo(String matchId) {
 
-        return jpaQueryFactory.selectFrom(timeLineEvent)
-                .leftJoin(timeLineEvent.itemEvents, itemEvents)
-                .leftJoin(timeLineEvent.skillEvents, skillEvents)
-                .where(timeLineEvent.matchEntity.matchId.eq(matchId))
+        return jpaQueryFactory.selectFrom(timeLineEventEntity)
+                .leftJoin(timeLineEventEntity.itemEvents, itemEventsEntity)
+                .leftJoin(timeLineEventEntity.skillEvents, skillEventsEntity)
+                .where(timeLineEventEntity.matchEntity.matchId.eq(matchId))
                 .fetch();
     }
 
     @Override
-    public List<ItemEvents> selectAllItemEventsByMatch(String matchId) {
-        return jpaQueryFactory.selectFrom(itemEvents)
-                .where(itemEvents.timeLineEvent.matchEntity.matchId.eq(matchId))
+    public List<ItemEventsEntity> selectAllItemEventsByMatch(String matchId) {
+        return jpaQueryFactory.selectFrom(itemEventsEntity)
+                .where(itemEventsEntity.timeLineEvent.matchEntity.matchId.eq(matchId))
                 .fetch();
     }
 
     @Override
-    public List<SkillEvents> selectAllSkillEventsByMatch(String matchId) {
-        return jpaQueryFactory.selectFrom(skillEvents)
-                .where(skillEvents.timeLineEvent.matchEntity.matchId.eq(matchId))
+    public List<SkillEventsEntity> selectAllSkillEventsByMatch(String matchId) {
+        return jpaQueryFactory.selectFrom(skillEventsEntity)
+                .where(skillEventsEntity.timeLineEvent.matchEntity.matchId.eq(matchId))
                 .fetch();
     }
 }
