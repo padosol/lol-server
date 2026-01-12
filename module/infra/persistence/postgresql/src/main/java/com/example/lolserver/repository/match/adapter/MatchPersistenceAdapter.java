@@ -92,9 +92,9 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         gameData.setGameInfoData(gameInfoData);
 
         // ParticipantsData
-        List<ParticipantData> participantDataList = matchEntity.getMatchSummonerEntities().stream()
+        List<ParticipantData> participantDataList = new ArrayList<>(matchEntity.getMatchSummonerEntities().stream()
                 .map(matchMapper::toDomain)
-                .toList();
+                .toList());
         gameData.setParticipantData(participantDataList);
 
         // MyData (if puuid provided)
