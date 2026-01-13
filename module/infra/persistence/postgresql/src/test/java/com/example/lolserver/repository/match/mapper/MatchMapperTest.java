@@ -283,4 +283,158 @@ class MatchMapperTest {
         assertThat(result.getPrimaryRuneIds()).containsExactly(8005, 9111, 9104, 8299);
         assertThat(result.getSecondaryRuneIds()).containsExactly(8139, 8135);
     }
+
+    @DisplayName("ItemValue 엔티티를 도메인으로 변환한다")
+    @Test
+    void toDomain_itemValue_returnsDomainItemValue() {
+        // given
+        com.example.lolserver.repository.match.entity.value.matchsummoner.ItemValue entityItemValue =
+                com.example.lolserver.repository.match.entity.value.matchsummoner.ItemValue.builder()
+                        .item0(3006)
+                        .item1(3009)
+                        .item2(3047)
+                        .item3(3071)
+                        .item4(3153)
+                        .item5(3508)
+                        .item6(3340)
+                        .build();
+
+        // when
+        ItemValue result = matchMapper.toDomain(entityItemValue);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getItem0()).isEqualTo(3006);
+        assertThat(result.getItem1()).isEqualTo(3009);
+        assertThat(result.getItem6()).isEqualTo(3340);
+    }
+
+    @DisplayName("ItemValue 도메인을 영속성 객체로 변환한다")
+    @Test
+    void toPersistence_itemValue_returnsEntityItemValue() {
+        // given
+        ItemValue domainItemValue = ItemValue.builder()
+                .item0(3006)
+                .item1(3009)
+                .item2(3047)
+                .item3(3071)
+                .item4(3153)
+                .item5(3508)
+                .item6(3340)
+                .build();
+
+        // when
+        com.example.lolserver.repository.match.entity.value.matchsummoner.ItemValue result =
+                matchMapper.toPersistence(domainItemValue);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getItem0()).isEqualTo(3006);
+        assertThat(result.getItem1()).isEqualTo(3009);
+        assertThat(result.getItem6()).isEqualTo(3340);
+    }
+
+    @DisplayName("StatValue 엔티티를 도메인으로 변환한다")
+    @Test
+    void toDomain_statValue_returnsDomainStatValue() {
+        // given
+        com.example.lolserver.repository.match.entity.value.matchsummoner.StatValue entityStatValue =
+                com.example.lolserver.repository.match.entity.value.matchsummoner.StatValue.builder()
+                        .defense(5002)
+                        .flex(5008)
+                        .offense(5005)
+                        .build();
+
+        // when
+        StatValue result = matchMapper.toDomain(entityStatValue);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getDefense()).isEqualTo(5002);
+        assertThat(result.getFlex()).isEqualTo(5008);
+        assertThat(result.getOffense()).isEqualTo(5005);
+    }
+
+    @DisplayName("StatValue 도메인을 영속성 객체로 변환한다")
+    @Test
+    void toPersistence_statValue_returnsEntityStatValue() {
+        // given
+        StatValue domainStatValue = StatValue.builder()
+                .defense(5002)
+                .flex(5008)
+                .offense(5005)
+                .build();
+
+        // when
+        com.example.lolserver.repository.match.entity.value.matchsummoner.StatValue result =
+                matchMapper.toPersistence(domainStatValue);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getDefense()).isEqualTo(5002);
+        assertThat(result.getFlex()).isEqualTo(5008);
+        assertThat(result.getOffense()).isEqualTo(5005);
+    }
+
+    @DisplayName("MatchEntity를 Match 도메인으로 변환한다")
+    @Test
+    void toDomain_matchEntity_returnsMatch() {
+        // given
+        MatchEntity matchEntity = MatchEntity.builder()
+                .matchId("KR_12345")
+                .queueId(420)
+                .gameDuration(1800L)
+                .gameMode("CLASSIC")
+                .gameType("MATCHED_GAME")
+                .gameVersion("14.1.1")
+                .season(14)
+                .build();
+
+        // when
+        var result = matchMapper.toDomain(matchEntity);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getMatchId()).isEqualTo("KR_12345");
+        assertThat(result.getQueueId()).isEqualTo(420);
+    }
+
+    @DisplayName("Match 도메인을 MatchEntity로 변환한다")
+    @Test
+    void toEntity_match_returnsMatchEntity() {
+        // given
+        var match = com.example.lolserver.domain.match.domain.Match.builder()
+                .matchId("KR_12345")
+                .queueId(420)
+                .gameDuration(1800L)
+                .gameMode("CLASSIC")
+                .build();
+
+        // when
+        MatchEntity result = matchMapper.toEntity(match);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getMatchId()).isEqualTo("KR_12345");
+        assertThat(result.getQueueId()).isEqualTo(420);
+    }
+
+    @DisplayName("StyleValue의 runeIds가 null인 경우 빈 배열을 반환한다")
+    @Test
+    void toDomain_styleValueWithNullRuneIds_returnsEmptyArrays() {
+        // given
+        StyleValue styleValue = new StyleValue();
+        styleValue.setPrimaryRuneId(8000);
+        styleValue.setSecondaryRuneId(8100);
+        styleValue.setPrimaryRuneIds(null);
+        styleValue.setSecondaryRuneIds(null);
+
+        // when
+        Style result = matchMapper.toDomain(styleValue);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getPrimaryRuneIds()).isEmpty();
+        assertThat(result.getSecondaryRuneIds()).isEmpty();
+    }
 }
