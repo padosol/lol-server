@@ -37,6 +37,19 @@ subprojects {
             xml.required = true
             html.required = true
         }
+        afterEvaluate {
+            classDirectories.setFrom(files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                    '**/entity/**',
+                    '**/dto/**',
+                    '**/model/**',
+                    '**/config/**',
+                    '**/Q*Entity*',
+                    '**/Q*Value*',
+                    '**/Q*Id*'
+                ])
+            }))
+        }
     }
 
     java {
