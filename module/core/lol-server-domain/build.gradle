@@ -1,10 +1,7 @@
 dependencies {
-//    implementation project(":module:infra:client:lol-repository")
-//    implementation project(":module:infra:message:rabbitmq")
-//    implementation project(":module:infra:persistence:postgresql")
-//    implementation project(":module:infra:persistence:redis")
     implementation project(":module:core:enum")
     implementation 'org.springframework:spring-context'
+    implementation 'org.springframework:spring-tx'
     // TEMPORARY: Adding dependencies to allow compilation of existing code.
     // These indicate violations of core:lol-server-domain's independence.
     // A full refactoring of other domains is required to remove these.
