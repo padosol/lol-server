@@ -5,7 +5,7 @@ package com.example.lolserver.domain.spectator.application.model;
  */
 public record ParticipantReadModel(
     String summonerName, // 소환사 이름
-    String summonerId, // 소환사 ID
+    String puuid, // 소환사 ID
     long championId, // 챔피언 ID
     long teamId, // 팀 ID (100: 블루팀, 200: 레드팀)
     long spell1Id, // 소환사 주문 1 ID

@@ -1,9 +1,9 @@
 package com.example.lolserver.domain.spectator.application;
 
-import com.example.lolserver.domain.spectator.application.port.SpectatorPort;
 import com.example.lolserver.domain.spectator.application.model.CurrentGameInfoReadModel;
+import com.example.lolserver.domain.spectator.application.port.out.SpectatorCachePort;
+import com.example.lolserver.domain.spectator.application.port.out.SpectatorClientPort;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -12,15 +12,12 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class SpectatorFinder {
 
-    @Qualifier("spectatorRedisAdapter")
-    private final SpectatorPort spectatorRedisAdapter;
-
-    @Qualifier("spectatorClientAdapter")
-    private final SpectatorPort spectatorClientAdapter;
+    private final SpectatorCachePort spectatorCachePort;
+    private final SpectatorClientPort spectatorClientPort;
 
     public CurrentGameInfoReadModel getCurrentGameInfo(String puuid, String region) {
-        return Optional.ofNullable(spectatorRedisAdapter.findAllCurrentGameInfo(puuid, region))
-                .orElseGet(() -> spectatorClientAdapter.findAllCurrentGameInfo(puuid, region));
+        return Optional.ofNullable(spectatorCachePort.findByPuuid(region, puuid))
+                .orElseGet(() -> spectatorClientPort.getCurrentGameInfo(region, puuid));
     }
 
 }
