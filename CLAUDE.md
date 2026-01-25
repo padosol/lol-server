@@ -25,7 +25,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 cd docker && docker-compose up -d
 # 서비스: PostgreSQL:5432, Redis:6379, RabbitMQ:5672 (관리UI:15672)
 ```
-
+s
 ## 기술 스택
 
 - Java 17, Spring Boot 3.3.6, Gradle 8.5
@@ -67,9 +67,65 @@ module/
 ### 도메인 컨텍스트
 
 각 도메인 (champion, league, match, queue_type, rank, spectator, summoner)은 다음 구조를 따릅니다:
-- `domain/` - 순수 도메인 객체
+- `domain/` - 순수 도메인 객체 (Write Model)
 - `application/` - 애플리케이션 서비스
 - `application/port/` - 포트 인터페이스 (in/out)
+- `application/dto/` - Response DTO (Read Model)
+- `application/model/` - 명시적 ReadModel 클래스
+
+### Read Model 패턴
+
+이 프로젝트는 **Write Model과 Read Model을 명확히 분리**합니다.
+
+#### Write Model (도메인 엔티티)
+- 위치: `domain/{도메인}/domain/`
+- 비즈니스 로직 포함
+- 상태 변경 가능
+
+#### Read Model (DTO/Response)
+- 위치: `domain/{도메인}/application/dto/` 또는 `application/model/`
+- 표현 전용, 비즈니스 로직 없음
+- 불변 (Java Record 권장)
+
+#### 계층별 Read Model
+
+| 계층 | 패키지 | 명명 규칙 | 용도 |
+|------|--------|----------|------|
+| 도메인 | `application/dto/` | `*Response` | 서비스 반환값 |
+| 도메인 | `application/model/` | `*ReadModel` | 외부 API 조회 결과 |
+| API | `controller/*/response/` | `*Response` | API 응답 전용 |
+| 영속성 | `repository/*/dto/` | `*DTO` | QueryDSL 조회 결과 |
+
+#### Read Model 생성 방식
+
+**1. 팩토리 메서드** (권장)
+```java
+public class SummonerResponse {
+    public static SummonerResponse of(Summoner summoner) {
+        return SummonerResponse.builder()
+            .puuid(summoner.getPuuid())
+            .gameName(summoner.getGameName())
+            .build();
+    }
+}
+```
+
+**2. Java Record** (외부 API 결과)
+```java
+public record CurrentGameInfoReadModel(
+    long gameId,
+    String gameType,
+    List<ParticipantReadModel> participants
+) {}
+```
+
+**3. QueryDSL Projection** (복잡한 조회)
+```java
+@QueryProjection
+public MSChampionDTO(Double kills, Double deaths, ...) {
+    this.winRate = calculateWinRate();  // 계산 필드
+}
+```
 
 ### 패키지 명명 규칙
 
@@ -77,6 +133,9 @@ module/
 - 도메인 포트: `com.example.lolserver.domain.{domainName}.application.port`
 - 인프라 어댑터: `com.example.lolserver.repository.{domainName}.adapter`
 - 인프라 매퍼: `com.example.lolserver.repository.{domainName}.mapper`
+- 컨트롤러: `com.example.lolserver.controller.{domainName}`
+- 컨트롤러 응답: `com.example.lolserver.controller.{domainName}.response`
+- 컨트롤러 매퍼: `com.example.lolserver.controller.{domainName}.mapper`
 
 ## 설정
 
@@ -86,56 +145,10 @@ module/
 
 Riot API 키 설정: `riot.api.key` 속성
 
-## 테스트
+### 참조 문서
 
-### 컨트롤러 테스트
-- Spring RestDocs 사용 (`module/infra/api/src/test/java/` 참조)
-- RestDocs 스니펫: `build/generated-snippets`
-- API 문서는 AsciiDoc으로 생성
-
-### 도메인 서비스 테스트 (BDD 스타일)
-
-**위치**: `module/core/lol-server-domain/src/test/java/com/example/lolserver/domain/{도메인}/application/{Service}Test.java`
-
-**기본 템플릿**:
-```java
-@ExtendWith(MockitoExtension.class)
-class {Service}Test {
-
-    @Mock
-    private {Port} {port};
-
-    @InjectMocks
-    private {Service} {service};
-
-    @DisplayName("한글로 테스트 설명 작성")
-    @Test
-    void methodName_조건_결과() {
-        // given
-        given({port}.method(any())).willReturn(expected);
-
-        // when
-        var result = {service}.method(input);
-
-        // then
-        assertThat(result).isEqualTo(expected);
-        then({port}).should().method(any());
-    }
-}
-```
-
-**테스트 작성 규칙**:
-1. `// given`, `// when`, `// then` 주석으로 섹션 구분
-2. Mock 설정: `BDDMockito.given()` 사용
-3. 상호작용 검증: `BDDMockito.then().should()` 사용
-4. 상태 검증: `AssertJ.assertThat()` 사용
-5. 메서드명: 영어 (`methodName_조건_결과` 형식)
-6. 테스트 설명: `@DisplayName`으로 한글 작성
-
-**필수 import**:
-```java
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-```
+TDD 진행 시 다음 문서를 참조하여 패턴 준수:
+- `.claude/agents/test-analyzer.md` - 테스트 대상 분석
+- `.claude/agents/port-analyzer.md` - 포트 인터페이스 분석
+- `.claude/agents/test-generator.md` - 테스트 생성 패턴
+- `.claude/agents/restdocs-generator.md` - RestDocs 패턴
