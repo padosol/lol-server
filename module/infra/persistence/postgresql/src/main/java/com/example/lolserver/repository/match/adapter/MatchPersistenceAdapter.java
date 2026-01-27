@@ -16,6 +16,7 @@ import com.example.lolserver.repository.match.entity.timeline.events.SkillEvents
 import com.example.lolserver.repository.match.mapper.MatchMapper;
 import com.example.lolserver.repository.match.match.MatchRepository;
 import com.example.lolserver.repository.match.match.dsl.MatchRepositoryCustom;
+import com.example.lolserver.repository.match.matchsummoner.MatchSummonerRepository;
 import com.example.lolserver.repository.match.matchsummoner.dsl.MatchSummonerRepositoryCustom;
 import com.example.lolserver.repository.match.timeline.TimelineRepositoryCustom;
 import com.example.lolserver.support.Page;
@@ -36,6 +37,7 @@ import java.util.Optional;
 public class MatchPersistenceAdapter implements MatchPersistencePort {
 
     private final MatchSummonerRepositoryCustom matchSummonerRepositoryCustom;
+    private final MatchSummonerRepository matchSummonerRepository;
     private final MatchRepositoryCustom matchRepositoryCustom;
     private final TimelineRepositoryCustom timelineRepositoryCustom;
     private final MatchRepository matchRepository;
@@ -92,7 +94,7 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         gameData.setGameInfoData(gameInfoData);
 
         // ParticipantsData
-        List<ParticipantData> participantDataList = new ArrayList<>(matchEntity.getMatchSummonerEntities().stream()
+        List<ParticipantData> participantDataList = new ArrayList<>(matchSummonerRepository.findByMatchId(matchEntity.getMatchId()).stream()
                 .map(matchMapper::toDomain)
                 .toList());
         gameData.setParticipantData(participantDataList);

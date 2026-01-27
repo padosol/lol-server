@@ -5,10 +5,12 @@ import com.example.lolserver.domain.champion.application.port.out.ChampionClient
 import com.example.lolserver.domain.champion.application.port.out.ChampionPersistencePort;
 import com.example.lolserver.domain.champion.domain.ChampionRotate;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChampionService implements ChampionRotateUseCase {

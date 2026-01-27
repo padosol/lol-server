@@ -26,10 +26,6 @@ public class MatchEntity {
     @Column(name = "data_version")
     private String dataVersion;
 
-    @BatchSize(size = 100)
-    @OneToMany(mappedBy = "matchEntity", fetch = FetchType.LAZY)
-    private List<MatchSummonerEntity> matchSummonerEntities;
-
     // info
     private String endOfGameResult;
     private	long gameCreation;

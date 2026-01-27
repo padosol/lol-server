@@ -13,7 +13,6 @@ import com.example.lolserver.repository.match.dto.MSChampionDTO;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
 import com.example.lolserver.repository.match.entity.MatchTeamEntity;
-import com.example.lolserver.repository.match.entity.id.MatchSummonerId;
 import com.example.lolserver.repository.match.entity.timeline.events.ItemEventsEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.SkillEventsEntity;
 import com.example.lolserver.repository.match.entity.value.matchsummoner.StyleValue;
@@ -57,7 +56,8 @@ class MatchMapperTest {
     void toDomain_matchSummonerEntity_returnsParticipantData() {
         // given
         MatchSummonerEntity entity = MatchSummonerEntity.builder()
-                .matchSummonerId(new MatchSummonerId("test-puuid", "KR_12345"))
+                .puuid("test-puuid")
+                .matchId("KR_12345")
                 .participantId(1)
                 .championId(157)
                 .championName("Yasuo")
