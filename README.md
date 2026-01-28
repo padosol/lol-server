@@ -1,133 +1,83 @@
-# LoL Match History Service
+# LoL Server
 
-리그 오브 레전드 게임의 전적 검색 서비스를 제공하는 Spring Boot 기반의 백엔드 애플리케이션입니다.
+리그 오브 레전드 전적 검색 서비스 백엔드 애플리케이션. Riot Games API를 통해 소환사 프로필, 매치 기록, 랭크 정보 등을 제공합니다.
 
 ## 기술 스택
 
-- Java
-- Spring Boot
-- Spring Data JPA
-- PostgreSQL
-- Redis
-- RabbitMQ
-- QueryDSL
-- Bucket4j
+- Java 17, Spring Boot 3.3.6, Gradle
+- PostgreSQL (영속성), Redis/Redisson (캐싱), RabbitMQ (메시징)
+- QueryDSL 5.1.0, MapStruct (객체 매핑), Bucket4j (Rate Limiting)
+- Spring RestDocs (API 문서화), JaCoCo (코드 커버리지)
 
-## 주요 기능
+## 시작하기
 
-### 1. 소환사 정보 조회
-- 소환사 기본 정보 검색
-- 게임 전적 기록 조회
-- 리그 정보 및 랭크 조회
+### 요구사항
 
-### 2. 실시간 데이터 처리
-- RabbitMQ를 활용한 비동기 데이터 처리
-- Redis를 이용한 캐싱 시스템
-- 실시간 전적 업데이트
+- Java 17+
+- Docker & Docker Compose
+- Riot Games API Key
 
-### 3. Rate Limiting
-- Bucket4j를 활용한 API 요청 제한
-- Redis 기반의 분산 Rate Limiting
-- Riot API 호출 최적화
+### 인프라 서비스 실행
 
-## 시스템 아키텍처
+```bash
+cd docker && docker-compose up -d
+```
 
-### 데이터베이스
-- PostgreSQL: 주 데이터베이스
-- Redis: 캐싱 및 Rate Limiting
-- 
-### 메시지 큐
-- RabbitMQ: 비동기 메시지 처리
+서비스 포트:
+- PostgreSQL: 5432
+- Redis: 6379
+- RabbitMQ: 5672 (관리 UI: 15672)
 
-### API 통신
-- Riot Games API 연동
-- WebClient를 활용한 비동기 HTTP 통신
-- 커스텀 예외 처리
+### 빌드 및 실행
 
-## 설치 및 실행
+```bash
+# 프로젝트 빌드
+./gradlew build
 
-### 필수 요구사항
-- Java 17 이상
-- PostgreSQL
-- Redis
-- RabbitMQ
+# 로컬 실행
+./gradlew bootRun -Dspring.profiles.active=local
+
+# 테스트 실행
+./gradlew test
+
+# 클린 빌드
+./gradlew clean build
+```
 
 ### 환경 설정
 
-1. 데이터베이스 설정
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: [username]
-    password: [password]
+Riot API 키는 `riot.api.key` 속성으로 설정합니다. 프로파일: `local`, `prod`, `test`
+
+## 프로젝트 구조
+
+헥사고날 아키텍처 (Ports & Adapters) 기반의 멀티 모듈 구조입니다.
+
+```
+module/
+├── app/application/              # 진입점 (모든 모듈 의존)
+├── core/
+│   ├── lol-server-domain/        # 도메인 계층 + 애플리케이션 서비스 + 포트
+│   └── enum/                     # 공유 enum 타입
+├── infra/
+│   ├── api/                      # REST 컨트롤러
+│   ├── client/lol-repository/    # Riot API 클라이언트
+│   ├── message/rabbitmq/         # 메시지 생산자/소비자
+│   └── persistence/
+│       ├── postgresql/           # JPA 엔티티, 리포지토리
+│       └── redis/                # 캐싱 설정
+└── support/logging/              # 로깅 유틸리티
 ```
 
-2. Redis 설정
-```yaml
-spring:
-  data:
-    redis:
-      host: localhost
-      port: 6379
-```
+### 도메인 컨텍스트
 
-3. RabbitMQ 설정
-```yaml
-spring:
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-```
+- champion: 챔피언 정보
+- summoner: 소환사 프로필
+- match: 매치 기록
+- league: 리그 정보
+- rank: 랭크 정보
+- spectator: 실시간 게임 정보
+- queue_type: 큐 타입
 
-4. Riot API 키 설정
+## 라이선스
 
-```yaml
-riot.api.key: [your-api-key]
-```
-
-### 실행 방법
-
-1. 저장소 클론
-```bash
-git clone [repository-url]
-```
-
-2. 프로젝트 빌드
-```bash
-./gradlew build
-```
-
-3. 애플리케이션 실행
-```bash
-java -jar build/libs/lol-server-[version].jar
-```
-
-## API 엔드포인트
-
-### 소환사 정보
-- GET /api/summoners/{summonerName} - 소환사 정보 조회
-- GET /api/summoners/{summonerId}/leagues - 소환사의 리그 정보 조회
-- GET /api/summoners/{summonerId}/matches - 소환사의 매치 히스토리 조회
-
-## 성능 최적화
-
-1. 데이터베이스
-- JPA 배치 처리 최적화
-- QueryDSL을 활용한 동적 쿼리 최적화
-
-2. 캐싱 전략
-- Redis를 활용한 데이터 캐싱
-- 실시간 데이터 동기화
-
-3. API 요청 관리
-- Bucket4j를 통한 Rate Limiting
-- 분산 환경에서의 요청 제어
-
-## 모니터링 및 로깅
-
-- Spring Actuator를 통한 헬스 체크
-- 상세한 로깅 설정
-- 에러 추적 및 모니터링
+이 프로젝트는 비공개 저장소입니다.
