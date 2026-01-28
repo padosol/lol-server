@@ -86,7 +86,7 @@ public class SummonerService {
         LocalDateTime clickDateTime = LocalDateTime.now();
         if (summoner.isRevision(clickDateTime)) {
             summoner.clickRenewal();
-//            summonerPersistencePort.save(summoner);
+            summonerPersistencePort.save(summoner);
 
             summonerCachePort.createSummonerRenewal(puuid);
             summonerMessagePort.sendMessage(platform, puuid, summoner.getRevisionDate());
