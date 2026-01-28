@@ -94,12 +94,13 @@ class MatchServiceTest {
         MSChampionCommand command = new MSChampionCommand();
         command.setPuuid("test-puuid");
         command.setSeason(14);
+        command.setQueueId(420);
 
         List<MSChampion> champions = List.of(
                 new MSChampion(5.0, 3.0, 10.0, 1, "Annie", 20L, 10L, 66.7, 500.0, 5.0, 80.0, 25.0, 300.0, 30L),
                 new MSChampion(6.0, 2.0, 8.0, 2, "Olaf", 15L, 5L, 75.0, 450.0, 7.0, 75.0, 30.0, 280.0, 20L)
         );
-        given(matchPersistencePort.getRankChampions("test-puuid", 14)).willReturn(champions);
+        given(matchPersistencePort.getRankChampions("test-puuid", 14, 420)).willReturn(champions);
 
         // when
         List<MSChampion> result = matchService.getRankChampions(command);
@@ -108,7 +109,7 @@ class MatchServiceTest {
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getChampionName()).isEqualTo("Annie");
         assertThat(result.get(1).getChampionName()).isEqualTo("Olaf");
-        then(matchPersistencePort).should().getRankChampions("test-puuid", 14);
+        then(matchPersistencePort).should().getRankChampions("test-puuid", 14, 420);
     }
 
     @DisplayName("챔피언 통계 결과가 없으면 빈 리스트를 반환한다")
@@ -118,15 +119,16 @@ class MatchServiceTest {
         MSChampionCommand command = new MSChampionCommand();
         command.setPuuid("test-puuid");
         command.setSeason(14);
+        command.setQueueId(420);
 
-        given(matchPersistencePort.getRankChampions("test-puuid", 14)).willReturn(Collections.emptyList());
+        given(matchPersistencePort.getRankChampions("test-puuid", 14, 420)).willReturn(Collections.emptyList());
 
         // when
         List<MSChampion> result = matchService.getRankChampions(command);
 
         // then
         assertThat(result).isEmpty();
-        then(matchPersistencePort).should().getRankChampions("test-puuid", 14);
+        then(matchPersistencePort).should().getRankChampions("test-puuid", 14, 420);
     }
 
     @DisplayName("존재하는 매치 ID로 조회 시 게임 데이터를 반환한다")

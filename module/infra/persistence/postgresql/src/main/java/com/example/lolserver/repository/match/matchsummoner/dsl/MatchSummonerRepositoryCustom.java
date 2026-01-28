@@ -17,7 +17,7 @@ public interface MatchSummonerRepositoryCustom {
 
     List<MSChampionDTO> findAllChampionKDAByPuuidAndSeasonAndQueueType(String puuid, Integer season);
 
-    List<MSChampionDTO> findAllMatchSummonerByPuuidAndSeason(String puuid, Integer season);
+    List<MSChampionDTO> findAllMatchSummonerByPuuidAndSeason(String puuid, Integer season, Integer queueId);
 
     List<LinePosition> findAllPositionByPuuidAndLimit(String puuid, Long limit);
 

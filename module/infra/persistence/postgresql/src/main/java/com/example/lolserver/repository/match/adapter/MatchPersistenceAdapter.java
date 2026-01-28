@@ -55,8 +55,8 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     }
 
     @Override
-    public List<MSChampion> getRankChampions(String puuid, Integer season) {
-        return matchSummonerRepositoryCustom.findAllMatchSummonerByPuuidAndSeason(puuid, season)
+    public List<MSChampion> getRankChampions(String puuid, Integer season, Integer queueId) {
+        return matchSummonerRepositoryCustom.findAllMatchSummonerByPuuidAndSeason(puuid, season, queueId)
                 .stream()
                 .map(matchMapper::toDomain)
                 .toList();

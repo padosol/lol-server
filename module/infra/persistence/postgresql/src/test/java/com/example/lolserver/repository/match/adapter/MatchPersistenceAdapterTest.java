@@ -112,29 +112,30 @@ class MatchPersistenceAdapterTest {
         then(matchRepositoryCustom).should().getMatches(puuid, queueId, pageable);
     }
 
-    @DisplayName("PUUID와 시즌으로 랭크 챔피언 통계를 조회한다")
+    @DisplayName("PUUID와 시즌, queueId로 랭크 챔피언 통계를 조회한다")
     @Test
     void getRankChampions_validParams_returnsMSChampionList() {
         // given
         String puuid = "test-puuid-123";
         Integer season = 14;
+        Integer queueId = 420;
 
         MSChampionDTO dto = createMSChampionDTO(157, "Yasuo", 10L, 7L);
         MSChampion expected = createMSChampion(157, "Yasuo", 10L, 7L);
 
-        given(matchSummonerRepositoryCustom.findAllMatchSummonerByPuuidAndSeason(puuid, season))
+        given(matchSummonerRepositoryCustom.findAllMatchSummonerByPuuidAndSeason(puuid, season, queueId))
                 .willReturn(List.of(dto));
         given(matchMapper.toDomain(any(MSChampionDTO.class))).willReturn(expected);
 
         // when
-        List<MSChampion> result = adapter.getRankChampions(puuid, season);
+        List<MSChampion> result = adapter.getRankChampions(puuid, season, queueId);
 
         // then
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getChampionId()).isEqualTo(157);
         assertThat(result.get(0).getPlayCount()).isEqualTo(10L);
         assertThat(result.get(0).getWin()).isEqualTo(7L);
-        then(matchSummonerRepositoryCustom).should().findAllMatchSummonerByPuuidAndSeason(puuid, season);
+        then(matchSummonerRepositoryCustom).should().findAllMatchSummonerByPuuidAndSeason(puuid, season, queueId);
     }
 
     @DisplayName("매치 ID로 게임 데이터를 조회하면 Optional<GameData>를 반환한다")
