@@ -12,26 +12,32 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "match_summoner")
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(
+        name = "match_summoner",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "unique_index_match_id_and_puuid",
+                        columnNames = {"puuid", "match_id"}
+                )
+        }
+)
 public class MatchSummonerEntity {
 
-    @EmbeddedId
-    private MatchSummonerId matchSummonerId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "match_sumoner_id")
+    private Long id;
 
-    @MapsId("matchId")                  // EmbeddedId 필드명과 일치해야함
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "match_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    private MatchEntity matchEntity;
+    private String puuid;
+
+    @Column(name = "match_id")
+    private String matchId;
 
     private String summonerId;
-
-//
-//    @OneToOne(mappedBy = "matchSummoner")
-//    private ChallengesEntity challengesEntity;
 
     // 유저 정보
     private String riotIdGameName;
@@ -194,153 +200,4 @@ public class MatchSummonerEntity {
     @Embedded
     private StyleValue styleValue;
 
-
-//    public void addChallenges(ChallengesEntity challengesEntity) {
-//        this.challengesEntity = challengesEntity;
-//    }
-//
-//    public boolean isBot() {
-//        return this.puuid.equalsIgnoreCase("BOT");
-//    }
-//
-//    public MatchSummonerEntity of(Match match, ParticipantDto participantDto) {
-//        return MatchSummonerEntity.builder()
-//                .match(match)
-//                .summonerId(participantDto.getSummonerId())
-//                .riotIdGameName(participantDto.getRiotIdGameName())
-//                .riotIdTagline(participantDto.getRiotIdTagline())
-//                .puuid(participantDto.getPuuid())
-//                .profileIcon(participantDto.getProfileIcon())
-//                .summonerName(participantDto.getSummonerName())
-//                .participantId(participantDto.getParticipantId())
-//                .champLevel(participantDto.getChampLevel())
-//                .championId(participantDto.getChampionId())
-//                .championName(participantDto.getChampionName())
-//                .lane(participantDto.getLane())
-//                .champExperience(participantDto.getChampExperience())
-//                .role(participantDto.getRole())
-//                .spell1Casts(participantDto.getSpell1Casts())
-//                .spell2Casts(participantDto.getSpell2Casts())
-//                .spell3Casts(participantDto.getSpell3Casts())
-//                .spell4Casts(participantDto.getSpell4Casts())
-//                .summoner1Casts(participantDto.getSummoner1Casts())
-//                .summoner1Id(participantDto.getSummoner1Id())
-//                .summoner2Casts(participantDto.getSummoner2Casts())
-//                .summoner2Id(participantDto.getSummoner2Id())
-//                .summonerLevel(participantDto.getSummonerLevel())
-//                .bountyLevel(participantDto.getBountyLevel())
-//                .kills(participantDto.getKills())
-//                .assists(participantDto.getAssists())
-//                .deaths(participantDto.getDeaths())
-//                .doubleKills(participantDto.getDoubleKills())
-//                .tripleKills(participantDto.getTripleKills())
-//                .quadraKills(participantDto.getQuadraKills())
-//                .pentaKills(participantDto.getPentaKills())
-//                .unrealKills(participantDto.getUnrealKills())
-//                .championTransform(participantDto.getChampionTransform())
-//                .goldEarned(participantDto.getGoldEarned())
-//                .goldSpent(participantDto.getGoldSpent())
-//                .itemsPurchased(participantDto.getItemsPurchased())
-//                .consumablesPurchased(participantDto.getConsumablesPurchased())
-//                .neutralMinionsKilled(participantDto.getNeutralMinionsKilled())
-//                .totalMinionsKilled(participantDto.getTotalMinionsKilled())
-//                .objectivesStolen(participantDto.getObjectivesStolen())
-//                .objectivesStolenAssists(participantDto.getObjectivesStolenAssists())
-//                .detectorWardsPlaced(participantDto.getDetectorWardsPlaced())
-//                .sightWardsBoughtInGame(participantDto.getSightWardsBoughtInGame())
-//                .visionScore(participantDto.getVisionScore())
-//                .visionWardsBoughtInGame(participantDto.getVisionWardsBoughtInGame())
-//                .wardsKilled(participantDto.getWardsKilled())
-//                .wardsPlaced(participantDto.getWardsPlaced())
-//                .baronKills(participantDto.getBaronKills())
-//                .dragonKills(participantDto.getDragonKills())
-//                .firstBloodAssist(participantDto.isFirstBloodAssist())
-//                .firstBloodKill(participantDto.isFirstBloodKill())
-//                .firstTowerAssist(participantDto.isFirstTowerAssist())
-//                .firstTowerKill(participantDto.isFirstTowerKill())
-//                .inhibitorKills(participantDto.getInhibitorKills())
-//                .inhibitorTakedowns(participantDto.getInhibitorTakedowns())
-//                .inhibitorsLost(participantDto.getInhibitorsLost())
-//                .nexusKills(participantDto.getNexusKills())
-//                .nexusTakedowns(participantDto.getNexusTakedowns())
-//                .nexusLost(participantDto.getNexusLost())
-//                .turretKills(participantDto.getTurretKills())
-//                .turretTakedowns(participantDto.getTurretTakedowns())
-//                .turretsLost(participantDto.getTurretsLost())
-//                .gameEndedInEarlySurrender(participantDto.isGameEndedInEarlySurrender())
-//                .gameEndedInSurrender(participantDto.isGameEndedInSurrender())
-//                .teamEarlySurrendered(participantDto.isTeamEarlySurrendered())
-//                .teamPosition(participantDto.getTeamPosition())
-//                .teamId(participantDto.getTeamId())
-//                .win(participantDto.isWin())
-//                .timePlayed(participantDto.getTimePlayed())
-//                .individualPosition(participantDto.getIndividualPosition())
-//                .magicDamageDealt(participantDto.getMagicDamageDealt())
-//                .magicDamageDealtToChampions(participantDto.getMagicDamageDealtToChampions())
-//                .magicDamageTaken(participantDto.getMagicDamageTaken())
-//                .physicalDamageDealt(participantDto.getPhysicalDamageDealt())
-//                .physicalDamageDealtToChampions(participantDto.getPhysicalDamageDealtToChampions())
-//                .physicalDamageTaken(participantDto.getPhysicalDamageTaken())
-//                .damageDealtToBuildings(participantDto.getDamageDealtToBuildings())
-//                .damageDealtToObjectives(participantDto.getDamageDealtToObjectives())
-//                .damageDealtToTurrets(participantDto.getDamageDealtToTurrets())
-//                .damageSelfMitigated(participantDto.getDamageSelfMitigated())
-//                .totalDamageDealt(participantDto.getTotalDamageDealt())
-//                .totalDamageDealtToChampions(participantDto.getTotalDamageDealtToChampions())
-//                .totalDamageShieldedOnTeammates(participantDto.getTotalDamageShieldedOnTeammates())
-//                .totalDamageTaken(participantDto.getTotalDamageTaken())
-//                .trueDamageDealt(participantDto.getTrueDamageDealt())
-//                .trueDamageDealtToChampions(participantDto.getTrueDamageDealtToChampions())
-//                .trueDamageTaken(participantDto.getTrueDamageTaken())
-//                .totalHeal(participantDto.getTotalHeal())
-//                .totalHealsOnTeammates(participantDto.getTotalHealsOnTeammates())
-//                .totalTimeCCDealt(participantDto.getTotalTimeCCDealt())
-//                .totalTimeSpentDead(participantDto.getTotalTimeSpentDead())
-//                .totalUnitsHealed(participantDto.getTotalUnitsHealed())
-//                .timeCCingOthers(participantDto.getTimeCCingOthers())
-//                .killingSprees(participantDto.getKillingSprees())
-//                .largestCriticalStrike(participantDto.getLargestCriticalStrike())
-//                .largestKillingSpree(participantDto.getLargestKillingSpree())
-//                .largestMultiKill(participantDto.getLargestMultiKill())
-//                .longestTimeSpentLiving(participantDto.getLongestTimeSpentLiving())
-//                .item(new ItemValue(participantDto))
-//                .statValue(new StatValue(participantDto))
-//                .styleValue(new StyleValue(participantDto))
-//                .allInPings(participantDto.getAllInPings())
-//                .assistMePings(participantDto.getAssistMePings())
-//                .commandPings(participantDto.getCommandPings())
-//                .eligibleForProgression(participantDto.isEligibleForProgression())
-//                .enemyMissingPings(participantDto.getEnemyMissingPings())
-//                .enemyVisionPings(participantDto.getEnemyVisionPings())
-//                .holdPings(participantDto.getHoldPings())
-//                .getBackPings(participantDto.getGetBackPings())
-//                .needVisionPings(participantDto.getNeedVisionPings())
-//                .onMyWayPings(participantDto.getOnMyWayPings())
-//                .playerScore0(participantDto.getPlayerScore0())
-//                .playerScore1(participantDto.getPlayerScore1())
-//                .playerScore2(participantDto.getPlayerScore2())
-//                .playerScore3(participantDto.getPlayerScore3())
-//                .playerScore4(participantDto.getPlayerScore4())
-//                .playerScore5(participantDto.getPlayerScore5())
-//                .playerScore6(participantDto.getPlayerScore6())
-//                .playerScore7(participantDto.getPlayerScore7())
-//                .playerScore8(participantDto.getPlayerScore8())
-//                .playerScore9(participantDto.getPlayerScore9())
-//                .playerScore10(participantDto.getPlayerScore10())
-//                .playerScore11(participantDto.getPlayerScore11())
-//                .placement(participantDto.getPlacement())
-//                .playerAugment1(participantDto.getPlayerAugment1())
-//                .playerAugment2(participantDto.getPlayerAugment2())
-//                .playerAugment3(participantDto.getPlayerAugment3())
-//                .playerAugment4(participantDto.getPlayerAugment4())
-//                .playerSubteamId(participantDto.getPlayerSubteamId())
-//                .pushPings(participantDto.getPushPings())
-//                .riotIdName(participantDto.getRiotIdName())
-//                .subteamPlacement(participantDto.getSubteamPlacement())
-//                .totalAllyJungleMinionsKilled(participantDto.getTotalAllyJungleMinionsKilled())
-//                .totalEnemyJungleMinionsKilled(participantDto.getTotalEnemyJungleMinionsKilled())
-//                .visionClearedPings(participantDto.getVisionClearedPings())
-//
-//                .build();
-//    }
 }

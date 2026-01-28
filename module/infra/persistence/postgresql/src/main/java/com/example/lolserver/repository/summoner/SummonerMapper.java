@@ -22,6 +22,5 @@ public interface SummonerMapper {
 
     LeagueSummoner toDomain(LeagueSummonerEntity leagueSummonerEntity);
 
-    @Mapping(source = "leagueSummoners", target = "leagueSummonerEntities")
     SummonerEntity toEntity(Summoner summoner);
 }

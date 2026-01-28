@@ -6,7 +6,6 @@ import com.example.lolserver.repository.match.dto.MSChampionDTO;
 import com.example.lolserver.repository.match.entity.ChallengesEntity;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
-import com.example.lolserver.repository.match.entity.id.MatchSummonerId;
 import com.example.lolserver.repository.match.match.MatchRepository;
 import com.example.lolserver.repository.match.matchsummoner.MatchSummonerRepository;
 import com.example.lolserver.repository.match.matchsummoner.dsl.MatchSummonerRepositoryCustom;
@@ -57,8 +56,8 @@ class MatchSummonerRepositoryCustomImplTest extends RepositoryTestBase {
         matchRepository.save(matchEntity);
 
         MatchSummonerEntity summonerEntity = MatchSummonerEntity.builder()
-                .matchSummonerId(new MatchSummonerId(TEST_PUUID, TEST_MATCH_ID))
-                .matchEntity(matchEntity)
+                .puuid(TEST_PUUID)
+                .matchId(TEST_MATCH_ID)
                 .participantId(1)
                 .championId(157)
                 .championName("Yasuo")

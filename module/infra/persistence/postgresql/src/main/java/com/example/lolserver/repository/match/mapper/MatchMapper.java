@@ -29,14 +29,12 @@ public interface MatchMapper {
 
     MatchMapper INSTANCE = Mappers.getMapper(MatchMapper.class);
 
-    @Mapping(source = "matchSummonerEntities", target = "participantData")
     Match toDomain(MatchEntity matchEntity);
 
     // This mapping from Match to MatchEntity is not strictly necessary for persistence
     // as we usually convert Entity to Domain and not vice-versa in read operations,
     // and for save operations, the service might create the entity directly or use another mapper.
     // However, including it for completeness if a `toEntity` is ever needed.
-    @Mapping(target = "matchSummonerEntities", ignore = true)
     MatchEntity toEntity(Match match);
 
 

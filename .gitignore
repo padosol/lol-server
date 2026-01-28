@@ -42,3 +42,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Performance Tests ###
+performance-tests/results/*.json
+!performance-tests/results/.gitkeep

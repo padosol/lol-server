@@ -29,33 +29,30 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
     public Page<MatchEntity> getMatches(String puuid, Integer queueId, Pageable pageable) {
 
         List<String> matchIds = jpaQueryFactory
-                .select(matchSummonerEntity.matchEntity.matchId)
+                .select(matchSummonerEntity.matchId)
                 .from(matchSummonerEntity)
-                .join(matchSummonerEntity.matchEntity, matchEntity)
+                .join(matchEntity).on(matchSummonerEntity.matchId.eq(matchEntity.matchId))
                 .where(
                         puuidEq(puuid),
                         queueIdEq(queueId),
                         matchEntity.gameMode.equalsIgnoreCase("CLASSIC").or(matchEntity.gameMode.equalsIgnoreCase("CHERRY"))
                 )
-                .orderBy(matchSummonerEntity.matchEntity.matchId.desc())
+                .orderBy(matchSummonerEntity.matchId.desc())
                 .offset((long) pageable.getPageNumber() * pageable.getPageSize())
                 .limit(pageable.getPageSize())
                 .fetch();
 
         List<MatchEntity> result = jpaQueryFactory.selectFrom(matchEntity)
-                .join(matchEntity.matchSummonerEntities, matchSummonerEntity).fetchJoin()
-//                .join(matchSummonerEntity.challengesEntity, challengesEntity).fetchJoin()
                 .where(
                         matchEntity.matchId.in(matchIds),
                         queueIdEq(queueId)
-//                        match.gameMode.equalsIgnoreCase("CLASSIC").or(match.gameMode.equalsIgnoreCase("CHERRY"))
                 )
                 .orderBy(matchEntity.gameEndTimestamp.desc())
                 .fetch();
 
         JPAQuery<MatchEntity> countQuery = jpaQueryFactory.selectFrom(matchEntity)
-                .join(matchEntity.matchSummonerEntities, matchSummonerEntity)
-                .where(matchSummonerEntity.matchSummonerId.puuid.eq(puuid));
+                .join(matchSummonerEntity).on(matchSummonerEntity.matchId.eq(matchEntity.matchId))
+                .where(matchSummonerEntity.puuid.eq(puuid));
 
         return PageableExecutionUtils.getPage(result, pageable, () ->  countQuery.fetch().size());
     }
@@ -69,6 +66,6 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
     }
 
     private BooleanExpression puuidEq(String puuid) {
-        return StringUtils.hasText(puuid) ? matchSummonerEntity.matchSummonerId.puuid.eq(puuid) : null;
+        return StringUtils.hasText(puuid) ? matchSummonerEntity.puuid.eq(puuid) : null;
     }
 }

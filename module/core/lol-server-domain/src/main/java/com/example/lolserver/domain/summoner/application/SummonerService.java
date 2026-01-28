@@ -37,8 +37,13 @@ public class SummonerService {
         Optional<Summoner> summonerOpt = summonerPersistencePort.getSummoner(
                 gameName.summonerName(), gameName.tagLine(), region);
 
-        Summoner summoner = summonerOpt.orElseGet(() -> summonerClientPort.getSummoner(gameName.summonerName(), gameName.tagLine(), region)
-                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_USER, "존재하지 않는 유저 입니다. " + gameName.summonerName())));
+        Summoner summoner = summonerOpt.orElseGet(() ->
+                summonerClientPort.getSummoner(
+                        gameName.summonerName(), gameName.tagLine(), region)
+                .orElseThrow(() ->
+                        new CoreException(
+                                ErrorType.NOT_FOUND_USER,
+                                "존재하지 않는 유저 입니다. " + gameName.summonerName())));
 
         return SummonerResponse.of(summoner);
     }

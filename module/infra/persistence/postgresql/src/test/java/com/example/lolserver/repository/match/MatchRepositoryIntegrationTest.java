@@ -4,7 +4,6 @@ import com.example.lolserver.repository.config.RepositoryTestBase;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
 import com.example.lolserver.repository.match.entity.MatchTeamEntity;
-import com.example.lolserver.repository.match.entity.id.MatchSummonerId;
 import com.example.lolserver.repository.match.entity.value.matchsummoner.ItemValue;
 import com.example.lolserver.repository.match.entity.value.matchsummoner.StatValue;
 import com.example.lolserver.repository.match.entity.value.matchsummoner.StyleValue;
@@ -91,8 +90,8 @@ class MatchRepositoryIntegrationTest extends RepositoryTestBase {
         matchRepository.save(match);
 
         MatchSummonerEntity summoner = MatchSummonerEntity.builder()
-                .matchSummonerId(new MatchSummonerId("test-puuid-1", "KR_SUMMONER_TEST"))
-                .matchEntity(match)
+                .puuid("test-puuid-1")
+                .matchId("KR_SUMMONER_TEST")
                 .participantId(1)
                 .championId(157)
                 .championName("Yasuo")
@@ -121,15 +120,17 @@ class MatchRepositoryIntegrationTest extends RepositoryTestBase {
         entityManager.flush();
         entityManager.clear();
 
-        Optional<MatchSummonerEntity> found = matchSummonerRepository.findById(
-                new MatchSummonerId("test-puuid-1", "KR_SUMMONER_TEST")
-        );
+        List<MatchSummonerEntity> foundList = matchSummonerRepository.findByMatchId("KR_SUMMONER_TEST");
 
         // then
-        assertThat(found).isPresent();
-        assertThat(found.get().getChampionName()).isEqualTo("Yasuo");
-        assertThat(found.get().getKills()).isEqualTo(10);
-        assertThat(found.get().isWin()).isTrue();
+        assertThat(foundList).isNotEmpty();
+        MatchSummonerEntity found = foundList.stream()
+                .filter(e -> e.getPuuid().equals("test-puuid-1"))
+                .findFirst()
+                .orElseThrow();
+        assertThat(found.getChampionName()).isEqualTo("Yasuo");
+        assertThat(found.getKills()).isEqualTo(10);
+        assertThat(found.isWin()).isTrue();
     }
 
     @DisplayName("MatchSummonerEntity에 Value Objects를 저장할 수 있다")
@@ -168,8 +169,8 @@ class MatchRepositoryIntegrationTest extends RepositoryTestBase {
                 .build();
 
         MatchSummonerEntity summoner = MatchSummonerEntity.builder()
-                .matchSummonerId(new MatchSummonerId("test-puuid-value", "KR_VALUE_TEST"))
-                .matchEntity(match)
+                .puuid("test-puuid-value")
+                .matchId("KR_VALUE_TEST")
                 .participantId(1)
                 .championId(157)
                 .championName("Yasuo")
@@ -188,15 +189,17 @@ class MatchRepositoryIntegrationTest extends RepositoryTestBase {
         entityManager.flush();
         entityManager.clear();
 
-        Optional<MatchSummonerEntity> found = matchSummonerRepository.findById(
-                new MatchSummonerId("test-puuid-value", "KR_VALUE_TEST")
-        );
+        List<MatchSummonerEntity> foundList = matchSummonerRepository.findByMatchId("KR_VALUE_TEST");
 
         // then
-        assertThat(found).isPresent();
-        assertThat(found.get().getItem().getItem0()).isEqualTo(3006);
-        assertThat(found.get().getStatValue().getDefense()).isEqualTo(50);
-        assertThat(found.get().getStyleValue().getPrimaryRuneId()).isEqualTo(8000);
+        assertThat(foundList).isNotEmpty();
+        MatchSummonerEntity found = foundList.stream()
+                .filter(e -> e.getPuuid().equals("test-puuid-value"))
+                .findFirst()
+                .orElseThrow();
+        assertThat(found.getItem().getItem0()).isEqualTo(3006);
+        assertThat(found.getStatValue().getDefense()).isEqualTo(50);
+        assertThat(found.getStyleValue().getPrimaryRuneId()).isEqualTo(8000);
     }
 
     @DisplayName("MatchTeamEntity를 저장하고 조회할 수 있다")
@@ -235,8 +238,8 @@ class MatchRepositoryIntegrationTest extends RepositoryTestBase {
         matchRepository.save(match);
 
         MatchSummonerEntity summoner = MatchSummonerEntity.builder()
-                .matchSummonerId(new MatchSummonerId("test-puuid-all", "KR_ALL_FIELDS"))
-                .matchEntity(match)
+                .puuid("test-puuid-all")
+                .matchId("KR_ALL_FIELDS")
                 .summonerId("summ-id-123")
                 .riotIdGameName("TestPlayer")
                 .riotIdTagline("KR1")
@@ -341,13 +344,14 @@ class MatchRepositoryIntegrationTest extends RepositoryTestBase {
         entityManager.flush();
         entityManager.clear();
 
-        Optional<MatchSummonerEntity> found = matchSummonerRepository.findById(
-                new MatchSummonerId("test-puuid-all", "KR_ALL_FIELDS")
-        );
+        List<MatchSummonerEntity> foundList = matchSummonerRepository.findByMatchId("KR_ALL_FIELDS");
 
         // then
-        assertThat(found).isPresent();
-        MatchSummonerEntity entity = found.get();
+        assertThat(foundList).isNotEmpty();
+        MatchSummonerEntity entity = foundList.stream()
+                .filter(e -> e.getPuuid().equals("test-puuid-all"))
+                .findFirst()
+                .orElseThrow();
         assertThat(entity.getSummonerId()).isEqualTo("summ-id-123");
         assertThat(entity.getRiotIdGameName()).isEqualTo("TestPlayer");
         assertThat(entity.getKills()).isEqualTo(15);

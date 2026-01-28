@@ -33,19 +33,19 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
     @Override
     public Page<MatchSummonerEntity> findAllByPuuidAndQueueId(String puuid, Integer queueId, Pageable pageable) {
         List<MatchSummonerEntity> content = jpaQueryFactory.selectFrom(matchSummonerEntity)
-                .join(matchSummonerEntity.matchEntity, matchEntity)
+                .join(matchEntity).on(matchEntity.matchId.eq(matchSummonerEntity.matchId))
                 .where(
                         puuidEq(puuid),
                         queueIdEq(queueId)
                 )
-                .orderBy(matchSummonerEntity.matchEntity.matchId.desc())
+                .orderBy(matchSummonerEntity.matchId.desc())
                 .offset((long) pageable.getPageNumber() * pageable.getPageSize())
                 .limit(pageable.getPageSize())
                 .fetch();
 
         JPAQuery<Long> count = jpaQueryFactory.select(matchSummonerEntity.count())
                 .from(matchSummonerEntity)
-                .join(matchSummonerEntity.matchEntity, matchEntity)
+                .join(matchEntity).on(matchEntity.matchId.eq(matchSummonerEntity.matchId))
                 .where(
                         puuidEq(puuid)
                 );
@@ -83,9 +83,9 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                                 matchSummonerEntity.count().as("playCount")
                         )
                 ).from(matchSummonerEntity)
-                .join(matchSummonerEntity.matchEntity, matchEntity)
+                .join(matchEntity).on(matchEntity.matchId.eq(matchSummonerEntity.matchId))
                 .where(
-                        matchSummonerEntity.matchSummonerId.puuid.eq(puuid),
+                        matchSummonerEntity.puuid.eq(puuid),
                         matchEntity.season.eq(season),
                         matchSummonerEntity.gameEndedInEarlySurrender.eq(false)
                 )
@@ -129,13 +129,13 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
         JPAQuery<MSChampionDTO> query = jpaQueryFactory.select(qmsChampionDTO)
                 .from(matchSummonerEntity)
                 .join(matchEntity)
-                .on(matchEntity.matchId.eq(matchSummonerEntity.matchSummonerId.matchId))
+                .on(matchEntity.matchId.eq(matchSummonerEntity.matchId))
                 .join(challengesEntity)
                 .on(
                         challengesEntity.puuid
-                                .eq(matchSummonerEntity.matchSummonerId.puuid)
+                                .eq(matchSummonerEntity.puuid)
                                 .and(challengesEntity.matchId
-                                        .eq(matchSummonerEntity.matchSummonerId.matchId))
+                                        .eq(matchSummonerEntity.matchId))
                 )
                 .where(
                         puuidEq(puuid),
@@ -160,7 +160,7 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                         )
                 )
                 .from(matchSummonerEntity)
-                .where(matchSummonerEntity.matchSummonerId.puuid.eq(puuid))
+                .where(matchSummonerEntity.puuid.eq(puuid))
                 .orderBy(Expressions.stringPath("playCount").desc())
                 .groupBy(matchSummonerEntity.individualPosition);
 
@@ -173,21 +173,20 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
 
     @Override
     public Slice<String> findAllMatchIdsByPuuidWithPage(String puuid, Integer queueId, Pageable pageable) {
-        int pageSize = pageable.getPageSize();
-        List<String> matchIds = jpaQueryFactory.select(matchSummonerEntity.matchEntity.matchId).from(matchSummonerEntity)
-                .join(matchSummonerEntity.matchEntity, matchEntity)
+        List<String> matchIds = jpaQueryFactory.select(matchSummonerEntity.matchId).from(matchSummonerEntity)
+                .join(matchEntity).on(matchEntity.matchId.eq(matchSummonerEntity.matchId))
                 .where(
                         puuidEq(puuid),
                         queueIdEq(queueId)
                 )
-                .orderBy(matchSummonerEntity.matchEntity.matchId.desc())
+                .orderBy(matchSummonerEntity.matchId.desc())
                 .offset((long) pageable.getPageNumber() * pageable.getPageSize())
                 .limit(pageable.getPageSize())
                 .fetch();
 
         JPAQuery<Long> count = jpaQueryFactory.select(matchSummonerEntity.count())
                 .from(matchSummonerEntity)
-                .join(matchSummonerEntity.matchEntity, matchEntity)
+                .join(matchEntity).on(matchEntity.matchId.eq(matchSummonerEntity.matchId))
                 .where(
                         puuidEq(puuid),
                         queueIdEq(queueId)
@@ -202,7 +201,7 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
     }
 
     private BooleanExpression puuidEq(String puuid) {
-        return StringUtils.hasText(puuid) ? matchSummonerEntity.matchSummonerId.puuid.eq(puuid) : null;
+        return StringUtils.hasText(puuid) ? matchSummonerEntity.puuid.eq(puuid) : null;
     }
 
     private BooleanExpression queueIdEq(Integer queueId) {
@@ -210,6 +209,6 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
     }
 
     private BooleanExpression seasonEq(Integer season) {
-        return matchSummonerEntity.matchEntity.season.eq(season);
+        return matchEntity.season.eq(season);
     }
 }

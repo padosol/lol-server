@@ -6,10 +6,12 @@ import com.example.lolserver.domain.champion.application.port.out.ChampionClient
 import com.example.lolserver.domain.champion.domain.ChampionRotate;
 import com.example.lolserver.mapper.champion.ChampionClientMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "champion.client.fake.enabled", havingValue = "false", matchIfMissing = true)
 public class ChampionClientAdapter implements ChampionClientPort {
 
     private final ChampionRotateRestClient championRotateRestClient;

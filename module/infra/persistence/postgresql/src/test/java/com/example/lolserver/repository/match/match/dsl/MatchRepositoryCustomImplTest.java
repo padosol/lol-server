@@ -3,7 +3,6 @@ package com.example.lolserver.repository.match.match.dsl;
 import com.example.lolserver.repository.config.RepositoryTestBase;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
-import com.example.lolserver.repository.match.entity.id.MatchSummonerId;
 import com.example.lolserver.repository.match.match.MatchRepository;
 import com.example.lolserver.repository.match.matchsummoner.MatchSummonerRepository;
 import jakarta.persistence.EntityManager;
@@ -49,8 +48,8 @@ class MatchRepositoryCustomImplTest extends RepositoryTestBase {
         matchRepository.save(matchEntity1);
 
         MatchSummonerEntity summoner1 = MatchSummonerEntity.builder()
-                .matchSummonerId(new MatchSummonerId(TEST_PUUID, TEST_MATCH_ID_1))
-                .matchEntity(matchEntity1)
+                .puuid(TEST_PUUID)
+                .matchId(TEST_MATCH_ID_1)
                 .participantId(1)
                 .championId(157)
                 .championName("Yasuo")
@@ -74,8 +73,8 @@ class MatchRepositoryCustomImplTest extends RepositoryTestBase {
         matchRepository.save(matchEntity2);
 
         MatchSummonerEntity summoner2 = MatchSummonerEntity.builder()
-                .matchSummonerId(new MatchSummonerId(TEST_PUUID, TEST_MATCH_ID_2))
-                .matchEntity(matchEntity2)
+                .puuid(TEST_PUUID)
+                .matchId(TEST_MATCH_ID_2)
                 .participantId(1)
                 .championId(238)
                 .championName("Zed")

@@ -31,10 +31,6 @@ public class Summoner {
     }
 
     public boolean isRevision(LocalDateTime clickDateTime) {
-        // 현재 시간이 마지막 클릭 + 10 초 한것 보다 전 인가요?
-        // 전이면 갱신 불가능
-        // 갱신은 10초 마다 가능
-
         // 갱신이 가능한 조건
         // 1. 갱신 시간이 3분을 넘었을 때
         // 2. 갱신 클릭 시간이 10초를 넘었을 때

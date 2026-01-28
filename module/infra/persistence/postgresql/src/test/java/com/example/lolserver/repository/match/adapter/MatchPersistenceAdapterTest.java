@@ -10,12 +10,12 @@ import com.example.lolserver.domain.match.domain.gameData.timeline.events.SkillE
 import com.example.lolserver.repository.match.dto.MSChampionDTO;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
-import com.example.lolserver.repository.match.entity.id.MatchSummonerId;
 import com.example.lolserver.repository.match.entity.timeline.events.ItemEventsEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.SkillEventsEntity;
 import com.example.lolserver.repository.match.mapper.MatchMapper;
 import com.example.lolserver.repository.match.match.MatchRepository;
 import com.example.lolserver.repository.match.match.dsl.MatchRepositoryCustom;
+import com.example.lolserver.repository.match.matchsummoner.MatchSummonerRepository;
 import com.example.lolserver.repository.match.matchsummoner.dsl.MatchSummonerRepositoryCustom;
 import com.example.lolserver.repository.match.timeline.TimelineRepositoryCustom;
 import com.example.lolserver.support.Page;
@@ -47,6 +47,9 @@ class MatchPersistenceAdapterTest {
     private MatchSummonerRepositoryCustom matchSummonerRepositoryCustom;
 
     @Mock
+    private MatchSummonerRepository matchSummonerRepository;
+
+    @Mock
     private MatchRepositoryCustom matchRepositoryCustom;
 
     @Mock
@@ -64,6 +67,7 @@ class MatchPersistenceAdapterTest {
     void setUp() {
         adapter = new MatchPersistenceAdapter(
                 matchSummonerRepositoryCustom,
+                matchSummonerRepository,
                 matchRepositoryCustom,
                 timelineRepositoryCustom,
                 matchRepository,
@@ -85,12 +89,12 @@ class MatchPersistenceAdapterTest {
                 .queueId(queueId)
                 .gameDuration(1800L)
                 .gameMode("CLASSIC")
-                .matchSummonerEntities(new ArrayList<>(List.of(summonerEntity)))
                 .build();
 
         SliceImpl<MatchEntity> slice = new SliceImpl<>(List.of(matchEntity), pageable, true);
 
         given(matchRepositoryCustom.getMatches(puuid, queueId, pageable)).willReturn(slice);
+        given(matchSummonerRepository.findByMatchId("KR_12345")).willReturn(List.of(summonerEntity));
         given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(queueId));
         given(matchMapper.toDomain(any(MatchSummonerEntity.class))).willReturn(createParticipantData(puuid));
         given(timelineRepositoryCustom.selectAllItemEventsByMatch(anyString())).willReturn(Collections.emptyList());
@@ -145,10 +149,10 @@ class MatchPersistenceAdapterTest {
                 .queueId(420)
                 .gameDuration(1800L)
                 .gameMode("CLASSIC")
-                .matchSummonerEntities(new ArrayList<>(List.of(summonerEntity)))
                 .build();
 
         given(matchRepository.findById(matchId)).willReturn(Optional.of(matchEntity));
+        given(matchSummonerRepository.findByMatchId(matchId)).willReturn(List.of(summonerEntity));
         given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(420));
         given(matchMapper.toDomain(any(MatchSummonerEntity.class))).willReturn(createParticipantData("test-puuid"));
         given(timelineRepositoryCustom.selectAllItemEventsByMatch(matchId)).willReturn(Collections.emptyList());
@@ -255,12 +259,12 @@ class MatchPersistenceAdapterTest {
                 .queueId(queueId)
                 .gameDuration(1200L)
                 .gameMode("CHERRY")
-                .matchSummonerEntities(new ArrayList<>(List.of(summoner1, summoner2)))
                 .build();
 
         SliceImpl<MatchEntity> slice = new SliceImpl<>(List.of(matchEntity), pageable, false);
 
         given(matchRepositoryCustom.getMatches(puuid, queueId, pageable)).willReturn(slice);
+        given(matchSummonerRepository.findByMatchId("KR_12345")).willReturn(List.of(summoner1, summoner2));
         given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(queueId));
 
         ParticipantData participant1 = createParticipantDataWithPlacement(puuid, 3);
@@ -285,7 +289,8 @@ class MatchPersistenceAdapterTest {
 
     private MatchSummonerEntity createMatchSummonerEntity(String puuid, String matchId) {
         return MatchSummonerEntity.builder()
-                .matchSummonerId(new MatchSummonerId(puuid, matchId))
+                .puuid(puuid)
+                .matchId(matchId)
                 .participantId(1)
                 .championId(157)
                 .championName("Yasuo")
@@ -299,7 +304,8 @@ class MatchPersistenceAdapterTest {
 
     private MatchSummonerEntity createMatchSummonerEntityWithPlacement(String puuid, String matchId, int placement) {
         return MatchSummonerEntity.builder()
-                .matchSummonerId(new MatchSummonerId(puuid, matchId))
+                .puuid(puuid)
+                .matchId(matchId)
                 .participantId(1)
                 .championId(157)
                 .championName("Yasuo")
