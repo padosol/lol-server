@@ -133,7 +133,7 @@ class RankServiceTest {
         assertThat(response.getTier()).isEqualTo("GOLD IV");
         assertThat(response.getLeaguePoints()).isEqualTo(100);
         assertThat(response.getChampions()).hasSize(2);
-        assertThat(response.getChampions().get(0).get("championName")).isEqualTo("Jinx");
+        assertThat(response.getChampions().get(0)).isEqualTo("Jinx");
         then(rankPersistencePort).should().getRanks(searchDto);
     }
 }

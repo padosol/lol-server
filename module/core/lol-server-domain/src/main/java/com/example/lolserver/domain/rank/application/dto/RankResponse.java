@@ -5,8 +5,6 @@ import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Getter
 public class RankResponse {
@@ -21,7 +19,7 @@ public class RankResponse {
     private BigDecimal winRate;
     private String tier;
     private int leaguePoints;
-    private List<Map<String, String>> champions;
+    private List<String> champions;
 
     public RankResponse(Rank rank) {
         this.puuid = rank.getPuuid();
@@ -34,11 +32,6 @@ public class RankResponse {
         this.winRate = rank.getWinRate();
         this.tier = rank.getTier();
         this.leaguePoints = rank.getLeaguePoints();
-        this.champions = rank.getChampions().stream().map(
-                championName -> Map.of(
-                        "championName", championName,
-                        "championImgUrl", "https://opgg-static.akamaized.net/champion/" + championName + ".png"
-                )
-        ).collect(Collectors.toList());
+        this.champions = rank.getChampions();
     }
 }

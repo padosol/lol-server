@@ -105,8 +105,7 @@ class RankControllerTest extends RestDocsSupport {
                                 fieldWithPath("data[].winRate").type(JsonFieldType.NUMBER).description("승률 (%)"),
                                 fieldWithPath("data[].tier").type(JsonFieldType.STRING).description("티어"),
                                 fieldWithPath("data[].leaguePoints").type(JsonFieldType.NUMBER).description("리그 포인트(LP)"),
-                                fieldWithPath("data[].champions[].championName").type(JsonFieldType.STRING).description("주요 챔피언 이름"),
-                                fieldWithPath("data[].champions[].championImgUrl").type(JsonFieldType.STRING).description("주요 챔피언 이미지 URL")
+                                fieldWithPath("data[].champions").type(JsonFieldType.ARRAY).description("주요 챔피언 이름 목록")
                         )
                 ));
     }
