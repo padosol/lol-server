@@ -40,3 +40,7 @@ include::api/league/league-detail.adoc[]
 
 include::api/champion/champion-rotate.adoc[]
 
+[[Rank-API]]
+== Rank API
+
+include::api/rank/rank-get.adoc[]

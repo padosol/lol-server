@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.payload.JsonFieldType;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -24,8 +25,7 @@ import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuild
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
-import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
-import static org.springframework.restdocs.request.RequestDocumentation.queryParameters;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -47,22 +47,26 @@ class RankControllerTest extends RestDocsSupport {
     @Test
     void getSummonerRank() throws Exception {
         // given
+        String region = "kr";
+
         RankSearchDto searchDto = new RankSearchDto();
-        searchDto.setPlatform("kr");
-        searchDto.setType(RankSearchDto.GameType.SOLO);
+        searchDto.setRegion(region);
+        searchDto.setRankType(RankSearchDto.GameType.SOLO);
         searchDto.setPage(1);
 
-        Rank rank = new Rank(
-                "hide on bush",
-                "KR1",
-                100,
-                50,
-                1234,
-                "CHALLENGER I",
-                500L,
-                "MID",
-                List.of("Ahri", "Zed")
-        );
+        Rank rank = Rank.builder()
+                .puuid("puuid-faker")
+                .currentRank(1)
+                .rankChange(0)
+                .gameName("hide on bush")
+                .tagLine("KR1")
+                .wins(100)
+                .losses(50)
+                .winRate(new BigDecimal("66.67"))
+                .tier("CHALLENGER")
+                .leaguePoints(1234)
+                .champions(List.of("Ahri", "Zed"))
+                .build();
 
         List<RankResponse> response = List.of(new RankResponse(rank));
 
@@ -70,9 +74,8 @@ class RankControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/rank")
-                                .param("platform", searchDto.getPlatform())
-                                .param("type", searchDto.getType().name())
+                        get("/api/v1/{region}/rank", region)
+                                .param("rankType", searchDto.getRankType().name())
                                 .param("page", String.valueOf(searchDto.getPage()))
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
@@ -81,23 +84,27 @@ class RankControllerTest extends RestDocsSupport {
                 .andDo(document("rank-get",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("region").description("조회할 지역 (e.g., kr)")
+                        ),
                         queryParameters(
-                                parameterWithName("platform").description("플랫폼(지역)"),
-                                parameterWithName("type").description("게임 타입 (SOLO, FLEX)").optional(),
+                                parameterWithName("rankType").description("게임 타입 (SOLO, FLEX)").optional(),
                                 parameterWithName("page").description("페이지 번호 (1부터 시작)").optional(),
                                 parameterWithName("tier").description("조회할 티어 (e.g., CHALLENGER, GOLD)").optional()
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
-                                fieldWithPath("data[].summonerName").type(JsonFieldType.STRING).description("소환사 명"),
+                                fieldWithPath("data[].puuid").type(JsonFieldType.STRING).description("소환사 PUUID"),
+                                fieldWithPath("data[].currentRank").type(JsonFieldType.NUMBER).description("현재 순위"),
+                                fieldWithPath("data[].rankChange").type(JsonFieldType.NUMBER).description("순위 변동 (양수: 상승, 음수: 하락)"),
+                                fieldWithPath("data[].gameName").type(JsonFieldType.STRING).description("소환사 게임 이름"),
                                 fieldWithPath("data[].tagLine").type(JsonFieldType.STRING).description("태그 라인"),
-                                fieldWithPath("data[].win").type(JsonFieldType.NUMBER).description("승리 수"),
+                                fieldWithPath("data[].wins").type(JsonFieldType.NUMBER).description("승리 수"),
                                 fieldWithPath("data[].losses").type(JsonFieldType.NUMBER).description("패배 수"),
-                                fieldWithPath("data[].point").type(JsonFieldType.NUMBER).description("리그 포인트(LP)"),
-                                fieldWithPath("data[].tier").type(JsonFieldType.STRING).description("티어 및 디비전"),
-                                fieldWithPath("data[].summonerLevel").type(JsonFieldType.NUMBER).description("소환사 레벨"),
-                                fieldWithPath("data[].position").type(JsonFieldType.STRING).description("주 포지션").optional(),
+                                fieldWithPath("data[].winRate").type(JsonFieldType.NUMBER).description("승률 (%)"),
+                                fieldWithPath("data[].tier").type(JsonFieldType.STRING).description("티어"),
+                                fieldWithPath("data[].leaguePoints").type(JsonFieldType.NUMBER).description("리그 포인트(LP)"),
                                 fieldWithPath("data[].champions[].championName").type(JsonFieldType.STRING).description("주요 챔피언 이름"),
                                 fieldWithPath("data[].champions[].championImgUrl").type(JsonFieldType.STRING).description("주요 챔피언 이미지 URL")
                         )
