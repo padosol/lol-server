@@ -59,11 +59,11 @@ export default function () {
         try {
             const body = JSON.parse(response.body);
             check(response, {
-                'API success': () => body.success === true,
+                'API success': () => body.result === 'SUCCESS',
             });
 
-            if (!body.success) {
-                console.warn(`API returned success=false for puuid: ${puuid}`);
+            if (body.result !== 'SUCCESS') {
+                console.warn(`API returned result=${body.result} for puuid: ${puuid}`);
             }
         } catch (e) {
             console.error(`Failed to parse response for puuid: ${puuid}`);
