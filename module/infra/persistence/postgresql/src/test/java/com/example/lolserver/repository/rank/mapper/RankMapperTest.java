@@ -48,7 +48,8 @@ class RankMapperTest {
         assertThat(result.getWins()).isEqualTo(100);
         assertThat(result.getLosses()).isEqualTo(50);
         assertThat(result.getWinRate()).isEqualTo(new BigDecimal("66.67"));
-        assertThat(result.getTier()).isEqualTo("DIAMOND I");
+        assertThat(result.getTier()).isEqualTo("DIAMOND");
+        assertThat(result.getRank()).isEqualTo("I");
         assertThat(result.getLeaguePoints()).isEqualTo(75);
         assertThat(result.getChampions()).containsExactly("Garen", "Darius", "Fiora");
     }
@@ -107,7 +108,7 @@ class RankMapperTest {
         assertThat(result.getChampions()).containsExactly("Yasuo", "Zed");
     }
 
-    @DisplayName("MASTER 티어는 rank 없이 티어만 반환한다")
+    @DisplayName("MASTER 티어는 tier만 반환하고 rank는 null이다")
     @Test
     void entityToDomain_masterTier_returnsMasterOnly() {
         // given
@@ -130,9 +131,10 @@ class RankMapperTest {
 
         // then
         assertThat(result.getTier()).isEqualTo("MASTER");
+        assertThat(result.getRank()).isNull();
     }
 
-    @DisplayName("GRANDMASTER 티어는 rank 없이 티어만 반환한다")
+    @DisplayName("GRANDMASTER 티어는 tier만 반환하고 rank는 null이다")
     @Test
     void entityToDomain_grandmasterTier_returnsGrandmasterOnly() {
         // given
@@ -155,9 +157,10 @@ class RankMapperTest {
 
         // then
         assertThat(result.getTier()).isEqualTo("GRANDMASTER");
+        assertThat(result.getRank()).isNull();
     }
 
-    @DisplayName("CHALLENGER 티어는 rank 없이 티어만 반환한다")
+    @DisplayName("CHALLENGER 티어는 tier만 반환하고 rank는 null이다")
     @Test
     void entityToDomain_challengerTier_returnsChallengerOnly() {
         // given
@@ -180,5 +183,6 @@ class RankMapperTest {
 
         // then
         assertThat(result.getTier()).isEqualTo("CHALLENGER");
+        assertThat(result.getRank()).isNull();
     }
 }

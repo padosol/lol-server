@@ -20,6 +20,7 @@ public class Rank {
     private int losses;
     private BigDecimal winRate;
     private String tier;
+    private String rank;
     private int leaguePoints;
     private List<String> champions;
 }

@@ -15,19 +15,10 @@ public interface RankMapper {
 
     RankMapper INSTANCE = Mappers.getMapper(RankMapper.class);
 
-    @Mapping(target = "tier", expression = "java(formatTier(entity.getTier(), entity.getRank()))")
+    @Mapping(source = "tier", target = "tier")
+    @Mapping(source = "rank", target = "rank")
     @Mapping(target = "champions", expression = "java(mapChampions(entity))")
     Rank entityToDomain(SummonerRankingEntity entity);
-
-    default String formatTier(String tier, String rank) {
-        if (tier == null) {
-            return null;
-        }
-        if (rank == null || rank.isEmpty()) {
-            return tier;
-        }
-        return tier + " " + rank;
-    }
 
     default List<String> mapChampions(SummonerRankingEntity entity) {
         List<String> champions = new ArrayList<>();

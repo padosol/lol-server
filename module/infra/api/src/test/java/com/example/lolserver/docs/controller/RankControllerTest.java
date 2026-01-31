@@ -1,6 +1,7 @@
 package com.example.lolserver.docs.controller;
 
 import com.example.lolserver.controller.rank.RankController;
+import com.example.lolserver.controller.support.response.PageResponse;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.rank.application.RankService;
 import com.example.lolserver.domain.rank.application.dto.RankResponse;
@@ -12,6 +13,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.payload.JsonFieldType;
 
@@ -64,11 +68,13 @@ class RankControllerTest extends RestDocsSupport {
                 .losses(50)
                 .winRate(new BigDecimal("66.67"))
                 .tier("CHALLENGER")
+                .rank(null)
                 .leaguePoints(1234)
                 .champions(List.of("Ahri", "Zed"))
                 .build();
 
-        List<RankResponse> response = List.of(new RankResponse(rank));
+        List<RankResponse> rankResponses = List.of(new RankResponse(rank));
+        Page<RankResponse> response = new PageImpl<>(rankResponses, PageRequest.of(0, 50), 1);
 
         given(rankService.getRanks(any(RankSearchDto.class))).willReturn(response);
 
@@ -89,23 +95,30 @@ class RankControllerTest extends RestDocsSupport {
                         ),
                         queryParameters(
                                 parameterWithName("rankType").description("게임 타입 (SOLO, FLEX)").optional(),
-                                parameterWithName("page").description("페이지 번호 (1부터 시작)").optional(),
+                                parameterWithName("page").description("페이지 번호 (1부터 시작, 페이지당 50개)").optional(),
                                 parameterWithName("tier").description("조회할 티어 (e.g., CHALLENGER, GOLD)").optional()
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
-                                fieldWithPath("data[].puuid").type(JsonFieldType.STRING).description("소환사 PUUID"),
-                                fieldWithPath("data[].currentRank").type(JsonFieldType.NUMBER).description("현재 순위"),
-                                fieldWithPath("data[].rankChange").type(JsonFieldType.NUMBER).description("순위 변동 (양수: 상승, 음수: 하락)"),
-                                fieldWithPath("data[].gameName").type(JsonFieldType.STRING).description("소환사 게임 이름"),
-                                fieldWithPath("data[].tagLine").type(JsonFieldType.STRING).description("태그 라인"),
-                                fieldWithPath("data[].wins").type(JsonFieldType.NUMBER).description("승리 수"),
-                                fieldWithPath("data[].losses").type(JsonFieldType.NUMBER).description("패배 수"),
-                                fieldWithPath("data[].winRate").type(JsonFieldType.NUMBER).description("승률 (%)"),
-                                fieldWithPath("data[].tier").type(JsonFieldType.STRING).description("티어"),
-                                fieldWithPath("data[].leaguePoints").type(JsonFieldType.NUMBER).description("리그 포인트(LP)"),
-                                fieldWithPath("data[].champions").type(JsonFieldType.ARRAY).description("주요 챔피언 이름 목록")
+                                fieldWithPath("data.content[].puuid").type(JsonFieldType.STRING).description("소환사 PUUID"),
+                                fieldWithPath("data.content[].currentRank").type(JsonFieldType.NUMBER).description("현재 순위"),
+                                fieldWithPath("data.content[].rankChange").type(JsonFieldType.NUMBER).description("순위 변동 (양수: 상승, 음수: 하락)"),
+                                fieldWithPath("data.content[].gameName").type(JsonFieldType.STRING).description("소환사 게임 이름"),
+                                fieldWithPath("data.content[].tagLine").type(JsonFieldType.STRING).description("태그 라인"),
+                                fieldWithPath("data.content[].wins").type(JsonFieldType.NUMBER).description("승리 수"),
+                                fieldWithPath("data.content[].losses").type(JsonFieldType.NUMBER).description("패배 수"),
+                                fieldWithPath("data.content[].winRate").type(JsonFieldType.NUMBER).description("승률 (%)"),
+                                fieldWithPath("data.content[].tier").type(JsonFieldType.STRING).description("티어 (CHALLENGER, GRANDMASTER, MASTER, DIAMOND 등)"),
+                                fieldWithPath("data.content[].rank").type(JsonFieldType.NULL).description("랭크 (I, II, III, IV 또는 null)").optional(),
+                                fieldWithPath("data.content[].leaguePoints").type(JsonFieldType.NUMBER).description("리그 포인트(LP)"),
+                                fieldWithPath("data.content[].champions").type(JsonFieldType.ARRAY).description("주요 챔피언 이름 목록"),
+                                fieldWithPath("data.page").type(JsonFieldType.NUMBER).description("현재 페이지 번호 (1부터 시작)"),
+                                fieldWithPath("data.size").type(JsonFieldType.NUMBER).description("페이지당 항목 수"),
+                                fieldWithPath("data.totalElements").type(JsonFieldType.NUMBER).description("전체 항목 수"),
+                                fieldWithPath("data.totalPages").type(JsonFieldType.NUMBER).description("전체 페이지 수"),
+                                fieldWithPath("data.isFirst").type(JsonFieldType.BOOLEAN).description("첫 페이지 여부"),
+                                fieldWithPath("data.isLast").type(JsonFieldType.BOOLEAN).description("마지막 페이지 여부")
                         )
                 ));
     }

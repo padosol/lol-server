@@ -18,6 +18,7 @@ public class RankResponse {
     private int losses;
     private BigDecimal winRate;
     private String tier;
+    private String rank;
     private int leaguePoints;
     private List<String> champions;
 
@@ -31,6 +32,7 @@ public class RankResponse {
         this.losses = rank.getLosses();
         this.winRate = rank.getWinRate();
         this.tier = rank.getTier();
+        this.rank = rank.getRank();
         this.leaguePoints = rank.getLeaguePoints();
         this.champions = rank.getChampions();
     }

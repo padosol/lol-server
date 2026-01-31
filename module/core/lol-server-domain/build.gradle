@@ -6,5 +6,5 @@ dependencies {
     // These indicate violations of core:lol-server-domain's independence.
     // A full refactoring of other domains is required to remove these.
     implementation 'org.slf4j:slf4j-api:1.7.32' // For @Slf4j
-    implementation 'org.springframework.data:spring-data-commons:2.5.5' // For Pageable, Slice, etc.
+    implementation 'org.springframework.data:spring-data-commons' // For Pageable, Slice, etc.
 }
