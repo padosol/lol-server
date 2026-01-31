@@ -1,0 +1,11 @@
+[[rank-get]]
+=== 랭킹 조회
+
+==== HTTP Request
+include::{snippets}/rank-get/http-request.adoc[]
+include::{snippets}/rank-get/path-parameters.adoc[]
+include::{snippets}/rank-get/query-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/rank-get/http-response.adoc[]
+include::{snippets}/rank-get/response-fields.adoc[]

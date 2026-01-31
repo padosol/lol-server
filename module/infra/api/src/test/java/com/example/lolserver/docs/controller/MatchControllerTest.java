@@ -250,8 +250,7 @@ class MatchControllerTest extends RestDocsSupport {
                         queryParameters(
                                 parameterWithName("puuid").description("조회할 유저의 PUUID"),
                                 parameterWithName("season").description("시즌").optional(),
-                                parameterWithName("queueId").description("큐 ID").optional(),
-                                parameterWithName("platform").description("플랫폼(지역)").optional()
+                                parameterWithName("queueId").description("큐 ID (e.g., 420:솔로랭크, 440:자유랭크)").optional()
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),

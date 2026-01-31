@@ -33,7 +33,7 @@ public class MatchService {
     }
 
     public List<MSChampion> getRankChampions(MSChampionCommand command) {
-        return matchPersistencePort.getRankChampions(command.getPuuid(), command.getSeason());
+        return matchPersistencePort.getRankChampions(command.getPuuid(), command.getSeason(), command.getQueueId());
     }
 
     public GameData getGameData(String matchId) {

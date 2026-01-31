@@ -1,12 +1,14 @@
 package com.example.lolserver.domain.match.domain;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class MSChampion {
     private Double assists;
     private Double deaths;

@@ -96,7 +96,7 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
     }
 
     @Override
-    public List<MSChampionDTO> findAllMatchSummonerByPuuidAndSeason(String puuid, Integer season) {
+    public List<MSChampionDTO> findAllMatchSummonerByPuuidAndSeason(String puuid, Integer season, Integer queueId) {
         // 1. 승리/패배 횟수를 계산할 CASE-SUM Expression 정의
         NumberExpression<Long> winCountExpr = new CaseBuilder()
                 .when(matchSummonerEntity.win.isTrue())
@@ -140,8 +140,7 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                 .where(
                         puuidEq(puuid),
                         seasonEq(season),
-                        matchEntity.queueId.eq(420)
-                                .or(matchEntity.queueId.eq(440))
+                        queueIdEq(queueId)
                 )
                 .groupBy(matchSummonerEntity.championId, matchSummonerEntity.championName)
                 .orderBy(matchSummonerEntity.championId.count().desc());

@@ -5,9 +5,8 @@ import com.example.lolserver.domain.rank.application.port.out.RankPersistencePor
 import com.example.lolserver.domain.rank.application.dto.RankResponse;
 import com.example.lolserver.domain.rank.application.dto.RankSearchDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -16,9 +15,8 @@ public class RankService implements RankUseCase {
     private final RankPersistencePort rankPersistencePort;
 
     @Override
-    public List<RankResponse> getRanks(RankSearchDto rankSearchDto) {
-        return rankPersistencePort.getRanks(rankSearchDto).stream()
-                .map(RankResponse::new)
-                .toList();
+    public Page<RankResponse> getRanks(RankSearchDto rankSearchDto) {
+        return rankPersistencePort.getRanks(rankSearchDto)
+                .map(RankResponse::new);
     }
 }

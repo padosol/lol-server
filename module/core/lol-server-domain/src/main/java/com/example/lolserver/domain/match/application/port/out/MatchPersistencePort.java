@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface MatchPersistencePort {
     Page<GameData> getMatches(String puuid, Integer queueId, Pageable pageable);
 
-    List<MSChampion> getRankChampions(String puuid, Integer season);
+    List<MSChampion> getRankChampions(String puuid, Integer season, Integer queueId);
 
     Optional<GameData> getGameData(String matchId);
 

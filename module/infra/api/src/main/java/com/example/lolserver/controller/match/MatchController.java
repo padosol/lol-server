@@ -7,6 +7,7 @@ import com.example.lolserver.domain.match.application.MatchService;
 import com.example.lolserver.domain.match.domain.GameData;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.controller.support.response.ApiResponse;
+import com.example.lolserver.controller.support.response.SliceResponse;
 import com.example.lolserver.support.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,21 +34,21 @@ public class MatchController {
     }
 
     @GetMapping("/matches/matchIds")
-    public ResponseEntity<ApiResponse<Page<String>>> findAllMatchIds(
+    public ResponseEntity<ApiResponse<SliceResponse<String>>> findAllMatchIds(
         @ModelAttribute MatchCommand matchCommand
     ) {
         Page<String> allMatchIds = matchService.findAllMatchIds(matchCommand);
 
-        return ResponseEntity.ok(ApiResponse.success(allMatchIds));
+        return ResponseEntity.ok(ApiResponse.success(SliceResponse.of(allMatchIds)));
     }
 
     @GetMapping("/matches")
-    public ResponseEntity<ApiResponse<Page<GameData>>> fetchGameData(
+    public ResponseEntity<ApiResponse<SliceResponse<GameData>>> fetchGameData(
         @ModelAttribute MatchCommand matchCommand
     ) {
         Page<GameData> matches = matchService.getMatches(matchCommand);
 
-        return ResponseEntity.ok(ApiResponse.success(matches));
+        return ResponseEntity.ok(ApiResponse.success(SliceResponse.of(matches)));
     }
 
     @GetMapping("/rank/champions")

@@ -1,5 +1,5 @@
 ---
-name: commit-push-pr
+name: commit:commit-push-pr
 allowed-tools: 
   - Bash(git *)
   - Bash(gh pr create:*)

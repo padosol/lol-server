@@ -10,7 +10,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 
@@ -27,45 +30,73 @@ class RankServiceTest {
     @InjectMocks
     private RankService rankService;
 
-    @DisplayName("랭크 조회 시 검색 조건에 맞는 랭크 응답 리스트를 반환한다")
+    @DisplayName("랭크 조회 시 검색 조건에 맞는 랭크 응답 페이지를 반환한다")
     @Test
-    void getRanks_유효한검색조건_랭크응답리스트반환() {
+    void getRanks_유효한검색조건_랭크응답페이지반환() {
         // given
         RankSearchDto searchDto = new RankSearchDto();
-        searchDto.setPlatform("kr");
+        searchDto.setRegion("kr");
         searchDto.setTier("DIAMOND");
 
         List<Rank> ranks = List.of(
-                new Rank("Player1", "KR1", 100, 50, 75, "DIAMOND", 300L, "TOP", List.of("Garen", "Darius")),
-                new Rank("Player2", "KR2", 80, 40, 60, "DIAMOND", 250L, "MID", List.of("Ahri", "Zed"))
+                Rank.builder()
+                        .puuid("puuid-1")
+                        .currentRank(1)
+                        .rankChange(0)
+                        .gameName("Player1")
+                        .tagLine("KR1")
+                        .wins(100)
+                        .losses(50)
+                        .winRate(new BigDecimal("66.67"))
+                        .tier("DIAMOND")
+                        .rank("I")
+                        .leaguePoints(75)
+                        .champions(List.of("Garen", "Darius"))
+                        .build(),
+                Rank.builder()
+                        .puuid("puuid-2")
+                        .currentRank(2)
+                        .rankChange(1)
+                        .gameName("Player2")
+                        .tagLine("KR2")
+                        .wins(80)
+                        .losses(40)
+                        .winRate(new BigDecimal("66.67"))
+                        .tier("DIAMOND")
+                        .rank("II")
+                        .leaguePoints(60)
+                        .champions(List.of("Ahri", "Zed"))
+                        .build()
         );
-        given(rankPersistencePort.getRanks(searchDto)).willReturn(ranks);
+        Page<Rank> rankPage = new PageImpl<>(ranks);
+        given(rankPersistencePort.getRanks(searchDto)).willReturn(rankPage);
 
         // when
-        List<RankResponse> result = rankService.getRanks(searchDto);
+        Page<RankResponse> result = rankService.getRanks(searchDto);
 
         // then
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).getSummonerName()).isEqualTo("Player1");
-        assertThat(result.get(1).getSummonerName()).isEqualTo("Player2");
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getContent().get(0).getGameName()).isEqualTo("Player1");
+        assertThat(result.getContent().get(1).getGameName()).isEqualTo("Player2");
         then(rankPersistencePort).should().getRanks(searchDto);
     }
 
-    @DisplayName("랭크 조회 결과가 없는 경우 빈 리스트를 반환한다")
+    @DisplayName("랭크 조회 결과가 없는 경우 빈 페이지를 반환한다")
     @Test
-    void getRanks_결과없음_빈리스트반환() {
+    void getRanks_결과없음_빈페이지반환() {
         // given
         RankSearchDto searchDto = new RankSearchDto();
-        searchDto.setPlatform("kr");
+        searchDto.setRegion("kr");
         searchDto.setTier("CHALLENGER");
 
-        given(rankPersistencePort.getRanks(searchDto)).willReturn(Collections.emptyList());
+        Page<Rank> emptyPage = new PageImpl<>(Collections.emptyList());
+        given(rankPersistencePort.getRanks(searchDto)).willReturn(emptyPage);
 
         // when
-        List<RankResponse> result = rankService.getRanks(searchDto);
+        Page<RankResponse> result = rankService.getRanks(searchDto);
 
         // then
-        assertThat(result).isEmpty();
+        assertThat(result.getContent()).isEmpty();
         then(rankPersistencePort).should().getRanks(searchDto);
     }
 
@@ -74,27 +105,44 @@ class RankServiceTest {
     void getRanks_도메인객체_DTO변환확인() {
         // given
         RankSearchDto searchDto = new RankSearchDto();
-        searchDto.setPlatform("kr");
+        searchDto.setRegion("kr");
 
-        Rank rank = new Rank("TestPlayer", "TAG1", 50, 30, 100, "GOLD", 150L, "ADC", List.of("Jinx", "Caitlyn"));
-        given(rankPersistencePort.getRanks(searchDto)).willReturn(List.of(rank));
+        Rank rank = Rank.builder()
+                .puuid("puuid-test")
+                .currentRank(1)
+                .rankChange(2)
+                .gameName("TestPlayer")
+                .tagLine("TAG1")
+                .wins(50)
+                .losses(30)
+                .winRate(new BigDecimal("62.50"))
+                .tier("GOLD")
+                .rank("IV")
+                .leaguePoints(100)
+                .champions(List.of("Jinx", "Caitlyn"))
+                .build();
+        Page<Rank> rankPage = new PageImpl<>(List.of(rank));
+        given(rankPersistencePort.getRanks(searchDto)).willReturn(rankPage);
 
         // when
-        List<RankResponse> result = rankService.getRanks(searchDto);
+        Page<RankResponse> result = rankService.getRanks(searchDto);
 
         // then
-        assertThat(result).hasSize(1);
-        RankResponse response = result.get(0);
-        assertThat(response.getSummonerName()).isEqualTo("TestPlayer");
+        assertThat(result.getContent()).hasSize(1);
+        RankResponse response = result.getContent().get(0);
+        assertThat(response.getPuuid()).isEqualTo("puuid-test");
+        assertThat(response.getCurrentRank()).isEqualTo(1);
+        assertThat(response.getRankChange()).isEqualTo(2);
+        assertThat(response.getGameName()).isEqualTo("TestPlayer");
         assertThat(response.getTagLine()).isEqualTo("TAG1");
-        assertThat(response.getWin()).isEqualTo(50);
+        assertThat(response.getWins()).isEqualTo(50);
         assertThat(response.getLosses()).isEqualTo(30);
-        assertThat(response.getPoint()).isEqualTo(100);
+        assertThat(response.getWinRate()).isEqualTo(new BigDecimal("62.50"));
         assertThat(response.getTier()).isEqualTo("GOLD");
-        assertThat(response.getSummonerLevel()).isEqualTo(150L);
-        assertThat(response.getPosition()).isEqualTo("ADC");
+        assertThat(response.getRank()).isEqualTo("IV");
+        assertThat(response.getLeaguePoints()).isEqualTo(100);
         assertThat(response.getChampions()).hasSize(2);
-        assertThat(response.getChampions().get(0).get("championName")).isEqualTo("Jinx");
+        assertThat(response.getChampions().get(0)).isEqualTo("Jinx");
         then(rankPersistencePort).should().getRanks(searchDto);
     }
 }
