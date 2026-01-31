@@ -17,17 +17,25 @@ const masterPuuids = new SharedArray('master_puuids', function () {
     return data.entries.map(entry => entry.puuid);
 });
 
-// k6 옵션 - 가장 가벼운 버전
+// k6 옵션 - 50 VU가 초당 1번씩 30초 동안 호출
 export const options = {
-    vus: 1,           // 단일 VU
-    iterations: 10,   // 10회 반복
-    thresholds: {
-        'puuid_search_response_time': ['p(95)<3000'], // 95% 요청이 3초 이내
-        'puuid_search_success_rate': ['rate>0.9'],    // 90% 이상 성공
-        'http_req_failed': ['rate<0.1'],              // 실패율 10% 미만
+    scenarios: {
+        puuid_search: {
+            executor: 'constant-arrival-rate',
+            rate: 10,              // 초당 50 요청 (50 VU × 1 req/sec)
+            timeUnit: '1s',
+            duration: '30s',
+            preAllocatedVUs: 10,
+            maxVUs: 10,
+        },
     },
+    thresholds: {
+        'http_req_duration': ['p(95)<3000'],  // 95% 요청이 3초 이내
+        'http_req_failed': ['rate<0.1'],      // 실패율 10% 미만
+    },
+    summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(95)', 'p(99)'],
     tags: {
-        testType: 'smoke',
+        testType: 'load',
         scenario: 'puuid-search-test',
     },
 };
