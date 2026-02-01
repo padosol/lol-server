@@ -5,5 +5,5 @@ import com.example.lolserver.domain.rank.application.dto.RankSearchDto;
 import org.springframework.data.domain.Page;
 
 public interface RankUseCase {
-    Page<RankResponse> getRanks(RankSearchDto rankSearchDto);
+    Page<RankResponse> getRanks(RankSearchDto rankSearchDto, String region);
 }

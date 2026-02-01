@@ -7,7 +7,6 @@ import lombok.Setter;
 @Setter
 public class RankSearchDto {
 
-    private String region;
     private GameType rankType = GameType.SOLO;
     private int page = 1;
 
