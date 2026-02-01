@@ -7,10 +7,12 @@ import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.domain.match.domain.gameData.GameInfoData;
 import com.example.lolserver.domain.match.domain.gameData.ParticipantData;
 import com.example.lolserver.domain.match.domain.gameData.TeamInfoData;
+import com.example.lolserver.domain.match.domain.TeamData;
 import com.example.lolserver.domain.match.domain.gameData.timeline.ParticipantTimeline;
 import com.example.lolserver.domain.match.domain.gameData.timeline.events.ItemEvents;
 import com.example.lolserver.domain.match.domain.gameData.timeline.events.SkillEvents;
 import com.example.lolserver.repository.match.entity.MatchEntity;
+import com.example.lolserver.repository.match.entity.MatchTeamEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.ItemEventsEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.SkillEventsEntity;
 import com.example.lolserver.repository.match.mapper.MatchMapper;
@@ -18,6 +20,7 @@ import com.example.lolserver.repository.match.match.MatchRepository;
 import com.example.lolserver.repository.match.match.dsl.MatchRepositoryCustom;
 import com.example.lolserver.repository.match.matchsummoner.MatchSummonerRepository;
 import com.example.lolserver.repository.match.matchsummoner.dsl.MatchSummonerRepositoryCustom;
+import com.example.lolserver.repository.match.matchteam.MatchTeamRepository;
 import com.example.lolserver.repository.match.timeline.TimelineRepositoryCustom;
 import com.example.lolserver.support.Page;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +44,7 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     private final MatchRepositoryCustom matchRepositoryCustom;
     private final TimelineRepositoryCustom timelineRepositoryCustom;
     private final MatchRepository matchRepository;
+    private final MatchTeamRepository matchTeamRepository;
     private final MatchMapper matchMapper;
 
     @Override
@@ -135,14 +139,25 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
 
 
         // TeamInfoData
-//        Map<Integer, TeamInfoData> teamInfoDataMap = new HashMap<>();
-        // Assuming MatchEntity does not directly expose MatchTeamEntities, or it's not used in this conversion path.
-        // If MatchEntity has a getMatchTeamEntities(), uncomment and map them.
-//        matchEntity.getMatchTeamEntities().stream()
-//                .map(matchMapper::toDomain)
-//                .forEach(teamInfo -> teamInfoDataMap.put(teamInfo.getTeamId(), teamInfo));
-//        gameData.setTeamInfoData(teamInfoDataMap);
+        List<MatchTeamEntity> teamEntities = matchTeamRepository.findByMatchId(matchEntity.getMatchId());
+        if (!teamEntities.isEmpty()) {
+            TeamInfoData blueTeam = null;
+            TeamInfoData redTeam = null;
 
+            for (MatchTeamEntity teamEntity : teamEntities) {
+                TeamInfoData teamInfo = matchMapper.toDomain(teamEntity);
+                if (teamEntity.getTeamId() == 100) {
+                    blueTeam = teamInfo;
+                } else if (teamEntity.getTeamId() == 200) {
+                    redTeam = teamInfo;
+                }
+            }
+
+            gameData.setTeamInfoData(TeamData.builder()
+                    .blueTeam(blueTeam)
+                    .redTeam(redTeam)
+                    .build());
+        }
 
         return gameData;
     }
