@@ -44,3 +44,10 @@ include::api/champion/champion-rotate.adoc[]
 == Rank API
 
 include::api/rank/rank-get.adoc[]
+
+[[PatchNote-API]]
+== PatchNote API
+
+include::api/patchnote/patchnote-list.adoc[]
+
+include::api/patchnote/patchnote-detail.adoc[]
