@@ -90,8 +90,8 @@ class SpectatorControllerTest extends RestDocsSupport {
         PerksReadModel perks = new PerksReadModel(8100L, 8300L, List.of(8112L, 8126L, 8138L, 8135L, 8233L, 8237L));
 
         List<ParticipantReadModel> participants = List.of(
-                new ParticipantReadModel("Player1", "puuid1", 1L, 100L, 4L, 14L, false, perks),
-                new ParticipantReadModel("Player2", "puuid2", 2L, 200L, 7L, 11L, false, perks)
+                new ParticipantReadModel("Player1#KR1", "puuid1", 1L, 100L, 4L, 14L, 1L, false, perks),
+                new ParticipantReadModel("Player2#KR1", "puuid2", 2L, 200L, 7L, 11L, 2L, false, perks)
         );
 
         List<BannedChampionReadModel> bannedChampions = List.of(
@@ -104,6 +104,7 @@ class SpectatorControllerTest extends RestDocsSupport {
                 "MATCHED_GAME",
                 "CLASSIC",
                 11L,
+                420L,
                 1706400000000L,
                 600L,
                 "KR",
@@ -141,6 +142,8 @@ class SpectatorControllerTest extends RestDocsSupport {
                                         .description("게임 모드 (e.g., CLASSIC)"),
                                 fieldWithPath("data.mapId").type(JsonFieldType.NUMBER)
                                         .description("맵 ID"),
+                                fieldWithPath("data.gameQueueConfigId").type(JsonFieldType.NUMBER)
+                                        .description("게임 큐 설정 ID (e.g., 420: 솔로 랭크, 430: 일반)"),
                                 fieldWithPath("data.gameStartTime").type(JsonFieldType.NUMBER)
                                         .description("게임 시작 시간 (Unix Timestamp)"),
                                 fieldWithPath("data.gameLength").type(JsonFieldType.NUMBER)
@@ -151,8 +154,8 @@ class SpectatorControllerTest extends RestDocsSupport {
                                         .description("관전 암호화 키"),
                                 fieldWithPath("data.participants[]").type(JsonFieldType.ARRAY)
                                         .description("참여자 목록"),
-                                fieldWithPath("data.participants[].summonerName").type(JsonFieldType.STRING)
-                                        .description("소환사 이름"),
+                                fieldWithPath("data.participants[].riotId").type(JsonFieldType.STRING)
+                                        .description("Riot ID (gameName#tagLine)"),
                                 fieldWithPath("data.participants[].puuid").type(JsonFieldType.STRING)
                                         .description("소환사 PUUID"),
                                 fieldWithPath("data.participants[].championId").type(JsonFieldType.NUMBER)
@@ -163,6 +166,8 @@ class SpectatorControllerTest extends RestDocsSupport {
                                         .description("소환사 주문 1 ID"),
                                 fieldWithPath("data.participants[].spell2Id").type(JsonFieldType.NUMBER)
                                         .description("소환사 주문 2 ID"),
+                                fieldWithPath("data.participants[].profileIconId").type(JsonFieldType.NUMBER)
+                                        .description("프로필 아이콘 ID"),
                                 fieldWithPath("data.participants[].isBot").type(JsonFieldType.BOOLEAN)
                                         .description("봇 여부"),
                                 fieldWithPath("data.participants[].perks").type(JsonFieldType.OBJECT)

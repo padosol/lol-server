@@ -17,6 +17,7 @@ public interface SpectatorClientMapper {
 
     SpectatorClientMapper INSTANCE = Mappers.getMapper(SpectatorClientMapper.class);
 
+    @Mapping(target = "encryptionKey", source = "observers.encryptionKey")
     CurrentGameInfoReadModel toReadModel(CurrentGameInfoVO vo);
 
     @Mapping(target = "isBot", source = "bot")

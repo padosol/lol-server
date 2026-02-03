@@ -6,9 +6,12 @@ import com.example.lolserver.domain.spectator.application.port.out.SpectatorClie
 import com.example.lolserver.mapper.spectator.SpectatorClientMapper;
 import com.example.lolserver.restclient.spectator.SpectatorRestClient;
 import com.example.lolserver.restclient.spectator.model.CurrentGameInfoVO;
+import com.example.lolserver.domain.spectator.application.model.ParticipantReadModel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Slf4j
 @Component
@@ -24,6 +27,8 @@ public class SpectatorClientAdapter implements SpectatorClientPort {
         try {
             CurrentGameInfoVO vo = spectatorRestClient.getCurrentGameInfoByPuuid(region, puuid);
             if (vo == null) {
+                // Negative Caching: 게임 중이 아님을 캐싱
+                spectatorCachePort.saveNoGame(region, puuid);
                 return null;
             }
 
@@ -31,6 +36,12 @@ public class SpectatorClientAdapter implements SpectatorClientPort {
 
             // 조회 후 모든 참여자 puuid를 키로 캐시에 저장
             spectatorCachePort.saveCurrentGame(region, readModel);
+
+            // 게임 메타데이터 캐싱 (삭제용)
+            List<String> puuids = readModel.participants().stream()
+                    .map(ParticipantReadModel::puuid)
+                    .toList();
+            spectatorCachePort.saveGameMeta(region, readModel.gameId(), readModel.gameStartTime(), puuids);
 
             return readModel;
         } catch (Exception e) {
