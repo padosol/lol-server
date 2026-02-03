@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -32,7 +33,10 @@ class SpectatorRedisAdapterTest {
     private SpectatorRedisAdapter adapter;
 
     private static final String CACHE_KEY_PREFIX = "spectator:active_game:";
+    private static final String NO_GAME_KEY_PREFIX = "spectator:no_game:";
+    private static final String GAME_META_KEY_PREFIX = "spectator:game_meta:";
     private static final Duration CACHE_TTL = Duration.ofMinutes(30);
+    private static final Duration NO_GAME_TTL = Duration.ofSeconds(30);
 
     @BeforeEach
     void setUp() {
@@ -137,9 +141,9 @@ class SpectatorRedisAdapterTest {
         then(redisTemplate).shouldHaveNoInteractions();
     }
 
-    @DisplayName("deleteByPuuid는 아직 구현되지 않았다")
+    @DisplayName("deleteByPuuid는 해당 키를 삭제한다")
     @Test
-    void deleteByPuuid_anyInput_noOperation() {
+    void deleteByPuuid_validInput_deletesKey() {
         // given
         String region = "kr";
         String puuid = "test-puuid";
@@ -148,7 +152,131 @@ class SpectatorRedisAdapterTest {
         adapter.deleteByPuuid(region, puuid);
 
         // then
-        then(redisTemplate).shouldHaveNoInteractions();
+        then(redisTemplate).should().delete(CACHE_KEY_PREFIX + region + ":" + puuid);
+    }
+
+    // === Negative Cache 테스트 ===
+
+    @DisplayName("saveNoGame은 Negative Cache를 30초 TTL로 저장한다")
+    @Test
+    void saveNoGame_validInput_savesWithTTL() {
+        // given
+        String region = "kr";
+        String puuid = "test-puuid";
+
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+
+        // when
+        adapter.saveNoGame(region, puuid);
+
+        // then
+        then(valueOperations).should().set(
+                eq(NO_GAME_KEY_PREFIX + region + ":" + puuid),
+                eq("NO_GAME"),
+                eq(NO_GAME_TTL)
+        );
+    }
+
+    @DisplayName("isNoGameCached는 Negative Cache 존재 여부를 반환한다 - 존재함")
+    @Test
+    void isNoGameCached_exists_returnsTrue() {
+        // given
+        String region = "kr";
+        String puuid = "test-puuid";
+
+        given(redisTemplate.hasKey(NO_GAME_KEY_PREFIX + region + ":" + puuid)).willReturn(true);
+
+        // when
+        boolean result = adapter.isNoGameCached(region, puuid);
+
+        // then
+        assertThat(result).isTrue();
+        then(redisTemplate).should().hasKey(NO_GAME_KEY_PREFIX + region + ":" + puuid);
+    }
+
+    @DisplayName("isNoGameCached는 Negative Cache 존재 여부를 반환한다 - 존재하지 않음")
+    @Test
+    void isNoGameCached_notExists_returnsFalse() {
+        // given
+        String region = "kr";
+        String puuid = "test-puuid";
+
+        given(redisTemplate.hasKey(NO_GAME_KEY_PREFIX + region + ":" + puuid)).willReturn(false);
+
+        // when
+        boolean result = adapter.isNoGameCached(region, puuid);
+
+        // then
+        assertThat(result).isFalse();
+    }
+
+    // === 게임 메타데이터 테스트 ===
+
+    @DisplayName("saveGameMeta는 게임 메타데이터를 저장한다")
+    @Test
+    void saveGameMeta_validInput_savesMetaData() {
+        // given
+        String region = "kr";
+        long gameId = 12345L;
+        long gameStartTime = System.currentTimeMillis();
+        List<String> puuids = List.of("puuid-1", "puuid-2");
+
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+
+        // when
+        adapter.saveGameMeta(region, gameId, gameStartTime, puuids);
+
+        // then
+        Map<String, Object> expectedMeta = Map.of(
+                "gameStartTime", gameStartTime,
+                "participantPuuids", puuids
+        );
+        then(valueOperations).should().set(
+                eq(GAME_META_KEY_PREFIX + region + ":" + gameId),
+                eq(expectedMeta),
+                eq(CACHE_TTL)
+        );
+    }
+
+    @DisplayName("deleteGameWithAllParticipants는 모든 참여자 캐시와 메타데이터를 삭제한다")
+    @Test
+    void deleteGameWithAllParticipants_validData_deletesAllCaches() {
+        // given
+        String region = "kr";
+        long gameId = 12345L;
+        List<String> puuids = List.of("puuid-1", "puuid-2");
+        Map<String, Object> metaData = Map.of(
+                "gameStartTime", System.currentTimeMillis(),
+                "participantPuuids", puuids
+        );
+
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.get(GAME_META_KEY_PREFIX + region + ":" + gameId)).willReturn(metaData);
+
+        // when
+        adapter.deleteGameWithAllParticipants(region, gameId);
+
+        // then
+        then(redisTemplate).should().delete(CACHE_KEY_PREFIX + region + ":puuid-1");
+        then(redisTemplate).should().delete(CACHE_KEY_PREFIX + region + ":puuid-2");
+        then(redisTemplate).should().delete(GAME_META_KEY_PREFIX + region + ":" + gameId);
+    }
+
+    @DisplayName("deleteGameWithAllParticipants는 메타데이터가 없으면 메타 키만 삭제한다")
+    @Test
+    void deleteGameWithAllParticipants_noMeta_deletesOnlyMetaKey() {
+        // given
+        String region = "kr";
+        long gameId = 12345L;
+
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.get(GAME_META_KEY_PREFIX + region + ":" + gameId)).willReturn(null);
+
+        // when
+        adapter.deleteGameWithAllParticipants(region, gameId);
+
+        // then
+        then(redisTemplate).should().delete(GAME_META_KEY_PREFIX + region + ":" + gameId);
     }
 
     private CurrentGameInfoReadModel createGameInfo(long gameId) {

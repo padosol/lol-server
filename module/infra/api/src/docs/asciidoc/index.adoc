@@ -51,3 +51,10 @@ include::api/rank/rank-get.adoc[]
 include::api/patchnote/patchnote-list.adoc[]
 
 include::api/patchnote/patchnote-detail.adoc[]
+
+[[Spectator-API]]
+== Spectator API
+
+include::api/spectator/spectator-queue-tab.adoc[]
+
+include::api/spectator/spectator-active-game.adoc[]

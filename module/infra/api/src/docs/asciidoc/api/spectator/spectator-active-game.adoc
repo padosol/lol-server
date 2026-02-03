@@ -1,0 +1,10 @@
+[[spectator-active-game]]
+=== 현재 게임 정보 조회
+
+==== HTTP Request
+include::{snippets}/spectator-active-game/http-request.adoc[]
+include::{snippets}/spectator-active-game/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/spectator-active-game/http-response.adoc[]
+include::{snippets}/spectator-active-game/response-fields.adoc[]
