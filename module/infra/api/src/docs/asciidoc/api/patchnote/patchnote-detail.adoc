@@ -1,0 +1,10 @@
+[[patch-note-detail]]
+=== 패치노트 상세 조회
+
+==== HTTP Request
+include::{snippets}/patch-note-detail/http-request.adoc[]
+include::{snippets}/patch-note-detail/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/patch-note-detail/http-response.adoc[]
+include::{snippets}/patch-note-detail/response-fields.adoc[]

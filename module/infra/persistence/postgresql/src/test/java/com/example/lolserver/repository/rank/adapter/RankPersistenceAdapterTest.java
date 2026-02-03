@@ -40,12 +40,13 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         SummonerRankingEntity flexRank = createRankingEntity("Player2", "RANKED_FLEX_SR", "PLATINUM", "II", 1);
         summonerRankingRepository.saveAll(List.of(soloRank, flexRank));
 
+        String region = "kr";
         RankSearchDto searchDto = new RankSearchDto();
         searchDto.setRankType(RankSearchDto.GameType.SOLO);
         searchDto.setPage(1);
 
         // when
-        Page<Rank> result = adapter.getRanks(searchDto);
+        Page<Rank> result = adapter.getRanks(searchDto, region);
 
         // then
         assertThat(result.getContent()).hasSize(1);
@@ -62,12 +63,13 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         SummonerRankingEntity flexRank = createRankingEntity("FlexPlayer", "RANKED_FLEX_SR", "GOLD", "III", 1);
         summonerRankingRepository.saveAll(List.of(soloRank, flexRank));
 
+        String region = "kr";
         RankSearchDto searchDto = new RankSearchDto();
         searchDto.setRankType(RankSearchDto.GameType.FLEX);
         searchDto.setPage(1);
 
         // when
-        Page<Rank> result = adapter.getRanks(searchDto);
+        Page<Rank> result = adapter.getRanks(searchDto, region);
 
         // then
         assertThat(result.getContent()).hasSize(1);
@@ -84,13 +86,14 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         SummonerRankingEntity goldPlayer = createRankingEntity("GoldPlayer", "RANKED_SOLO_5x5", "GOLD", "II", 2);
         summonerRankingRepository.saveAll(List.of(diamondPlayer, goldPlayer));
 
+        String region = "kr";
         RankSearchDto searchDto = new RankSearchDto();
         searchDto.setRankType(RankSearchDto.GameType.SOLO);
         searchDto.setTier("DIAMOND");
         searchDto.setPage(1);
 
         // when
-        Page<Rank> result = adapter.getRanks(searchDto);
+        Page<Rank> result = adapter.getRanks(searchDto, region);
 
         // then
         assertThat(result.getContent()).hasSize(1);
@@ -106,12 +109,13 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         SummonerRankingEntity rank3 = createRankingEntity("Player3", "RANKED_SOLO_5x5", "DIAMOND", "I", 3);
         summonerRankingRepository.saveAll(List.of(rank2, rank1, rank3));
 
+        String region = "kr";
         RankSearchDto searchDto = new RankSearchDto();
         searchDto.setRankType(RankSearchDto.GameType.SOLO);
         searchDto.setPage(1);
 
         // when
-        Page<Rank> result = adapter.getRanks(searchDto);
+        Page<Rank> result = adapter.getRanks(searchDto, region);
 
         // then
         assertThat(result.getContent()).hasSize(3);

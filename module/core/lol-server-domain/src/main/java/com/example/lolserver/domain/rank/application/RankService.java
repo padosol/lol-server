@@ -15,8 +15,8 @@ public class RankService implements RankUseCase {
     private final RankPersistencePort rankPersistencePort;
 
     @Override
-    public Page<RankResponse> getRanks(RankSearchDto rankSearchDto) {
-        return rankPersistencePort.getRanks(rankSearchDto)
+    public Page<RankResponse> getRanks(RankSearchDto rankSearchDto, String region) {
+        return rankPersistencePort.getRanks(rankSearchDto, region)
                 .map(RankResponse::new);
     }
 }

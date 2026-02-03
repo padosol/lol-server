@@ -1,0 +1,9 @@
+[[patch-note-list]]
+=== 패치노트 목록 조회
+
+==== HTTP Request
+include::{snippets}/patch-note-list/http-request.adoc[]
+
+==== HTTP Response
+include::{snippets}/patch-note-list/http-response.adoc[]
+include::{snippets}/patch-note-list/response-fields.adoc[]

@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
@@ -54,7 +55,6 @@ class RankControllerTest extends RestDocsSupport {
         String region = "kr";
 
         RankSearchDto searchDto = new RankSearchDto();
-        searchDto.setRegion(region);
         searchDto.setRankType(RankSearchDto.GameType.SOLO);
         searchDto.setPage(1);
 
@@ -76,7 +76,7 @@ class RankControllerTest extends RestDocsSupport {
         List<RankResponse> rankResponses = List.of(new RankResponse(rank));
         Page<RankResponse> response = new PageImpl<>(rankResponses, PageRequest.of(0, 50), 1);
 
-        given(rankService.getRanks(any(RankSearchDto.class))).willReturn(response);
+        given(rankService.getRanks(any(RankSearchDto.class), eq(region))).willReturn(response);
 
         // when & then
         mockMvc.perform(

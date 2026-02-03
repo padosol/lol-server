@@ -23,7 +23,7 @@ public class RankPersistenceAdapter implements RankPersistencePort {
     private final RankMapper rankMapper;
 
     @Override
-    public Page<Rank> getRanks(RankSearchDto rankSearchDto) {
+    public Page<Rank> getRanks(RankSearchDto rankSearchDto, String region) {
         String queue = toQueueString(rankSearchDto.getRankType());
         Pageable pageable = PageRequest.of(
                 rankSearchDto.getPage() - 1,

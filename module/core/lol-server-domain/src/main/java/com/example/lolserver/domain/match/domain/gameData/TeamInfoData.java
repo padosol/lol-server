@@ -19,6 +19,11 @@ public class TeamInfoData {
 
     private int championKills;
 
+    private int baronKills;
+    private int dragonKills;
+    private int towerKills;
+    private int inhibitorKills;
+
     private	List<Integer> championId = new ArrayList<>();
     private	List<Integer> pickTurn = new ArrayList<>();
 }

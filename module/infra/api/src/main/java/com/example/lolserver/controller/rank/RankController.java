@@ -26,8 +26,7 @@ public class RankController {
         @PathVariable("region") String region,
         RankSearchDto rankSearchDto
     ) {
-        rankSearchDto.setRegion(region);
-        Page<RankResponse> ranks = rankService.getRanks(rankSearchDto);
+        Page<RankResponse> ranks = rankService.getRanks(rankSearchDto, region);
 
         return new ResponseEntity<>(ApiResponse.success(PageResponse.of(ranks)), HttpStatus.OK);
     }

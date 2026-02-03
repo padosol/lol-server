@@ -21,6 +21,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -40,7 +41,29 @@ public interface MatchMapper {
 
     ParticipantData toDomain(MatchSummonerEntity matchSummonerEntity);
 
+    @Mapping(target = "championId", expression = "java(mapChampionIds(matchTeamEntity))")
+    @Mapping(target = "pickTurn", expression = "java(mapPickTurns(matchTeamEntity))")
     TeamInfoData toDomain(MatchTeamEntity matchTeamEntity);
+
+    default List<Integer> mapChampionIds(MatchTeamEntity entity) {
+        List<Integer> ids = new ArrayList<>();
+        if (entity.getChampion1Id() > 0) ids.add(entity.getChampion1Id());
+        if (entity.getChampion2Id() > 0) ids.add(entity.getChampion2Id());
+        if (entity.getChampion3Id() > 0) ids.add(entity.getChampion3Id());
+        if (entity.getChampion4Id() > 0) ids.add(entity.getChampion4Id());
+        if (entity.getChampion5Id() > 0) ids.add(entity.getChampion5Id());
+        return ids;
+    }
+
+    default List<Integer> mapPickTurns(MatchTeamEntity entity) {
+        List<Integer> turns = new ArrayList<>();
+        if (entity.getPick1Turn() > 0) turns.add(entity.getPick1Turn());
+        if (entity.getPick2Turn() > 0) turns.add(entity.getPick2Turn());
+        if (entity.getPick3Turn() > 0) turns.add(entity.getPick3Turn());
+        if (entity.getPick4Turn() > 0) turns.add(entity.getPick4Turn());
+        if (entity.getPick5Turn() > 0) turns.add(entity.getPick5Turn());
+        return turns;
+    }
 
     MSChampion toDomain(MSChampionDTO msChampionDTO);
 
