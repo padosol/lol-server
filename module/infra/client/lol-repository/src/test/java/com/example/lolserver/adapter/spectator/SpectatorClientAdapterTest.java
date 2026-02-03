@@ -6,6 +6,7 @@ import com.example.lolserver.domain.spectator.application.port.out.SpectatorCach
 import com.example.lolserver.mapper.spectator.SpectatorClientMapper;
 import com.example.lolserver.restclient.spectator.SpectatorRestClient;
 import com.example.lolserver.restclient.spectator.model.CurrentGameInfoVO;
+import com.example.lolserver.restclient.spectator.model.ObserversVO;
 import com.example.lolserver.restclient.spectator.model.ParticipantVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -107,18 +108,18 @@ class SpectatorClientAdapterTest {
 
     private CurrentGameInfoVO createVO(long gameId, long gameStartTime) {
         return new CurrentGameInfoVO(
-                gameId, "MATCHED_GAME", "CLASSIC", 11L,
-                gameStartTime, 600L, "KR", "key",
-                List.of(new ParticipantVO("Player1", "puuid-1", 1L, 100L, 4L, 7L, false, null)),
+                gameId, "MATCHED_GAME", "CLASSIC", 11L, 420L,
+                gameStartTime, 600L, "KR", new ObserversVO("key"),
+                List.of(new ParticipantVO("Player1#KR1", "puuid-1", 1L, 100L, 4L, 7L, 1L, false, Collections.emptyList(), null)),
                 Collections.emptyList()
         );
     }
 
     private CurrentGameInfoReadModel createReadModel(long gameId, long gameStartTime) {
         return new CurrentGameInfoReadModel(
-                gameId, "MATCHED_GAME", "CLASSIC", 11L,
+                gameId, "MATCHED_GAME", "CLASSIC", 11L, 420L,
                 gameStartTime, 600L, "KR", "key",
-                List.of(new ParticipantReadModel("Player1", "puuid-1", 1L, 100L, 4L, 7L, false, null)),
+                List.of(new ParticipantReadModel("Player1#KR1", "puuid-1", 1L, 100L, 4L, 7L, 1L, false, null)),
                 Collections.emptyList()
         );
     }

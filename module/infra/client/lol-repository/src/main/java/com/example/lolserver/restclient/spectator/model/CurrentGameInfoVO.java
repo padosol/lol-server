@@ -10,10 +10,11 @@ public record CurrentGameInfoVO(
     String gameType,
     String gameMode,
     long mapId,
+    long gameQueueConfigId,
     long gameStartTime,
     long gameLength,
     String platformId,
-    String encryptionKey,
+    ObserversVO observers,
     List<ParticipantVO> participants,
     List<BannedChampionVO> bannedChampions
 ) {}

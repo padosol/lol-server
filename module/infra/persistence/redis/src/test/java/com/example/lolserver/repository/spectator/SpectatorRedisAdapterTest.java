@@ -129,7 +129,7 @@ class SpectatorRedisAdapterTest {
         // given
         String region = "kr";
         CurrentGameInfoReadModel gameInfo = new CurrentGameInfoReadModel(
-                12345L, "MATCHED_GAME", "CLASSIC", 11L,
+                12345L, "MATCHED_GAME", "CLASSIC", 11L, 420L,
                 System.currentTimeMillis(), 600L, "KR", "key",
                 null, Collections.emptyList()
         );
@@ -281,7 +281,7 @@ class SpectatorRedisAdapterTest {
 
     private CurrentGameInfoReadModel createGameInfo(long gameId) {
         return new CurrentGameInfoReadModel(
-                gameId, "MATCHED_GAME", "CLASSIC", 11L,
+                gameId, "MATCHED_GAME", "CLASSIC", 11L, 420L,
                 System.currentTimeMillis(), 600L, "KR", "encryption-key",
                 Collections.emptyList(), Collections.emptyList()
         );
@@ -289,7 +289,7 @@ class SpectatorRedisAdapterTest {
 
     private CurrentGameInfoReadModel createGameInfoWithParticipants(long gameId, List<ParticipantReadModel> participants) {
         return new CurrentGameInfoReadModel(
-                gameId, "MATCHED_GAME", "CLASSIC", 11L,
+                gameId, "MATCHED_GAME", "CLASSIC", 11L, 420L,
                 System.currentTimeMillis(), 600L, "KR", "encryption-key",
                 participants, Collections.emptyList()
         );
@@ -297,7 +297,7 @@ class SpectatorRedisAdapterTest {
 
     private ParticipantReadModel createParticipant(String puuid) {
         return new ParticipantReadModel(
-                "TestSummoner", puuid, 1L, 100L, 4L, 7L, false, null
+                "TestSummoner#KR1", puuid, 1L, 100L, 4L, 7L, 1L, false, null
         );
     }
 }

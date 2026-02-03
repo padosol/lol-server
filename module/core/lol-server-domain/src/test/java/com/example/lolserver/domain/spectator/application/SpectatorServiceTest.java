@@ -35,6 +35,7 @@ class SpectatorServiceTest {
                 "MATCHED_GAME",
                 "CLASSIC",
                 11L,
+                420L,
                 System.currentTimeMillis(),
                 600L,
                 "KR",

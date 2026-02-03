@@ -215,6 +215,7 @@ class SpectatorFinderTest {
                 "MATCHED_GAME",
                 "CLASSIC",
                 11L,
+                420L,
                 gameStartTime,
                 600L,
                 "KR",
