@@ -20,6 +20,8 @@ public class TierCutoffMapper {
                 entity.getTier(),
                 entity.getRegion(),
                 entity.getMinLeaguePoints(),
+                entity.getLpChange(),
+                entity.getUserCount(),
                 formatDateTime(entity.getUpdatedAt())
         );
     }

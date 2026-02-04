@@ -27,11 +27,13 @@ public class TierCutoffController {
     @GetMapping("/v1/{region}/tier-cutoffs")
     public ResponseEntity<ApiResponse<List<TierCutoffReadModel>>> getTierCutoffs(
             @PathVariable String region,
-            @RequestParam String queue
+            @RequestParam(required = false) String queue
     ) {
         log.info("getTierCutoffs - region: {}, queue: {}", region, queue);
 
-        List<TierCutoffReadModel> tierCutoffs = tierCutoffService.getTierCutoffsByRegionAndQueue(region, queue);
+        List<TierCutoffReadModel> tierCutoffs = queue != null
+                ? tierCutoffService.getTierCutoffsByRegionAndQueue(region, queue)
+                : tierCutoffService.getTierCutoffsByRegion(region);
 
         return ResponseEntity.ok(ApiResponse.success(tierCutoffs));
     }

@@ -6,5 +6,7 @@ public record TierCutoffReadModel(
     String tier,
     String region,
     int minLeaguePoints,
+    int lpChange,
+    int userCount,
     String updatedAt
 ) {}

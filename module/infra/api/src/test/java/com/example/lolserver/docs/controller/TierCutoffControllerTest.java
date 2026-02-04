@@ -41,10 +41,10 @@ class TierCutoffControllerTest extends RestDocsSupport {
         // given
         String region = "kr";
         List<TierCutoffReadModel> tierCutoffs = List.of(
-                new TierCutoffReadModel(1L, "RANKED_SOLO_5x5", "CHALLENGER", "KR", 1500, "2026-01-15T12:00:00"),
-                new TierCutoffReadModel(2L, "RANKED_SOLO_5x5", "GRANDMASTER", "KR", 800, "2026-01-15T12:00:00"),
-                new TierCutoffReadModel(3L, "RANKED_FLEX_SR", "CHALLENGER", "KR", 1200, "2026-01-15T12:00:00"),
-                new TierCutoffReadModel(4L, "RANKED_FLEX_SR", "GRANDMASTER", "KR", 600, "2026-01-15T12:00:00")
+                new TierCutoffReadModel(1L, "RANKED_SOLO_5x5", "CHALLENGER", "KR", 1500, 10, 300, "2026-01-15T12:00:00"),
+                new TierCutoffReadModel(2L, "RANKED_SOLO_5x5", "GRANDMASTER", "KR", 800, 5, 700, "2026-01-15T12:00:00"),
+                new TierCutoffReadModel(3L, "RANKED_FLEX_SR", "CHALLENGER", "KR", 1200, -3, 200, "2026-01-15T12:00:00"),
+                new TierCutoffReadModel(4L, "RANKED_FLEX_SR", "GRANDMASTER", "KR", 600, 2, 500, "2026-01-15T12:00:00")
         );
 
         given(tierCutoffService.getTierCutoffsByRegion(region)).willReturn(tierCutoffs);
@@ -79,6 +79,10 @@ class TierCutoffControllerTest extends RestDocsSupport {
                                         .description("서버 지역"),
                                 fieldWithPath("data[].minLeaguePoints").type(JsonFieldType.NUMBER)
                                         .description("해당 티어 진입에 필요한 최소 리그 포인트"),
+                                fieldWithPath("data[].lpChange").type(JsonFieldType.NUMBER)
+                                        .description("이전 갱신 대비 LP 변동량"),
+                                fieldWithPath("data[].userCount").type(JsonFieldType.NUMBER)
+                                        .description("해당 티어 유저 수"),
                                 fieldWithPath("data[].updatedAt").type(JsonFieldType.STRING)
                                         .description("데이터 갱신 일시")
                         )
@@ -92,8 +96,8 @@ class TierCutoffControllerTest extends RestDocsSupport {
         String region = "kr";
         String queue = "RANKED_SOLO_5x5";
         List<TierCutoffReadModel> tierCutoffs = List.of(
-                new TierCutoffReadModel(1L, "RANKED_SOLO_5x5", "CHALLENGER", "KR", 1500, "2026-01-15T12:00:00"),
-                new TierCutoffReadModel(2L, "RANKED_SOLO_5x5", "GRANDMASTER", "KR", 800, "2026-01-15T12:00:00")
+                new TierCutoffReadModel(1L, "RANKED_SOLO_5x5", "CHALLENGER", "KR", 1500, 10, 300, "2026-01-15T12:00:00"),
+                new TierCutoffReadModel(2L, "RANKED_SOLO_5x5", "GRANDMASTER", "KR", 800, 5, 700, "2026-01-15T12:00:00")
         );
 
         given(tierCutoffService.getTierCutoffsByRegionAndQueue(region, queue)).willReturn(tierCutoffs);
@@ -132,6 +136,10 @@ class TierCutoffControllerTest extends RestDocsSupport {
                                         .description("서버 지역"),
                                 fieldWithPath("data[].minLeaguePoints").type(JsonFieldType.NUMBER)
                                         .description("해당 티어 진입에 필요한 최소 리그 포인트"),
+                                fieldWithPath("data[].lpChange").type(JsonFieldType.NUMBER)
+                                        .description("이전 갱신 대비 LP 변동량"),
+                                fieldWithPath("data[].userCount").type(JsonFieldType.NUMBER)
+                                        .description("해당 티어 유저 수"),
                                 fieldWithPath("data[].updatedAt").type(JsonFieldType.STRING)
                                         .description("데이터 갱신 일시")
                         )
@@ -146,7 +154,7 @@ class TierCutoffControllerTest extends RestDocsSupport {
         String queue = "RANKED_SOLO_5x5";
         String tier = "CHALLENGER";
         TierCutoffReadModel tierCutoff = new TierCutoffReadModel(
-                1L, "RANKED_SOLO_5x5", "CHALLENGER", "KR", 1500, "2026-01-15T12:00:00"
+                1L, "RANKED_SOLO_5x5", "CHALLENGER", "KR", 1500, 10, 300, "2026-01-15T12:00:00"
         );
 
         given(tierCutoffService.getTierCutoff(region, queue, tier)).willReturn(tierCutoff);
@@ -181,6 +189,10 @@ class TierCutoffControllerTest extends RestDocsSupport {
                                         .description("서버 지역"),
                                 fieldWithPath("data.minLeaguePoints").type(JsonFieldType.NUMBER)
                                         .description("해당 티어 진입에 필요한 최소 리그 포인트"),
+                                fieldWithPath("data.lpChange").type(JsonFieldType.NUMBER)
+                                        .description("이전 갱신 대비 LP 변동량"),
+                                fieldWithPath("data.userCount").type(JsonFieldType.NUMBER)
+                                        .description("해당 티어 유저 수"),
                                 fieldWithPath("data.updatedAt").type(JsonFieldType.STRING)
                                         .description("데이터 갱신 일시")
                         )
