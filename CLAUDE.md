@@ -25,7 +25,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 cd docker && docker-compose up -d
 # 서비스: PostgreSQL:5432, Redis:6379, RabbitMQ:5672 (관리UI:15672)
 ```
-s
+
 ## 기술 스택
 
 - Java 17, Spring Boot 3.3.6, Gradle 8.5
@@ -66,7 +66,7 @@ module/
 
 ### 도메인 컨텍스트
 
-각 도메인 (champion, league, match, queue_type, rank, spectator, summoner)은 다음 구조를 따릅니다:
+각 도메인 (champion, league, match, patchnote, queue_type, rank, spectator, summoner, tiercutoff, version)은 다음 구조를 따릅니다:
 - `domain/` - 순수 도메인 객체 (Write Model)
 - `application/` - 애플리케이션 서비스
 - `application/port/` - 포트 인터페이스 (in/out)
