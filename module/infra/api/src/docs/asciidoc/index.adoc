@@ -58,3 +58,12 @@ include::api/patchnote/patchnote-detail.adoc[]
 include::api/spectator/spectator-queue-tab.adoc[]
 
 include::api/spectator/spectator-active-game.adoc[]
+
+[[TierCutoff-API]]
+== TierCutoff API
+
+include::api/tiercutoff/tiercutoff-list.adoc[]
+
+include::api/tiercutoff/tiercutoff-list-by-queue.adoc[]
+
+include::api/tiercutoff/tiercutoff-detail.adoc[]

@@ -44,6 +44,7 @@ public class SummonerService {
         String lockKey = gameName.summonerName() + ":" + gameName.tagLine() + ":" + region;
         boolean locked = summonerCachePort.tryLock(lockKey);
         if (!locked) {
+            log.warn("해당 유저는 이미 조회중 입니다. {}", lockKey);
             throw new CoreException(ErrorType.LOCK_ACQUISITION_FAILED, "잠시 후 다시 시도해주세요.");
         }
 

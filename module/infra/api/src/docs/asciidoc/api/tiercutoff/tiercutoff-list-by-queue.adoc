@@ -1,0 +1,11 @@
+[[tier-cutoff-list-by-queue]]
+=== 티어 컷오프 목록 조회 (큐 필터)
+
+==== HTTP Request
+include::{snippets}/tier-cutoff-list-by-queue/http-request.adoc[]
+include::{snippets}/tier-cutoff-list-by-queue/path-parameters.adoc[]
+include::{snippets}/tier-cutoff-list-by-queue/query-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/tier-cutoff-list-by-queue/http-response.adoc[]
+include::{snippets}/tier-cutoff-list-by-queue/response-fields.adoc[]

@@ -22,11 +22,11 @@ export const options = {
     scenarios: {
         puuid_search: {
             executor: 'constant-arrival-rate',
-            rate: 10,              // 초당 50 요청 (50 VU × 1 req/sec)
-            timeUnit: '1s',
-            duration: '30s',
-            preAllocatedVUs: 10,
-            maxVUs: 10,
+            rate: 30,              // 비율
+            timeUnit: '1s',        // 시간 == > 비율 / 시간
+            duration: '30s',       // 지속 시간
+            preAllocatedVUs: 30,   // 시작시
+            maxVUs: 30,            // 가상 유저수
         },
     },
     thresholds: {
