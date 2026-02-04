@@ -79,10 +79,12 @@ class SummonerServiceTest {
         // given
         GameName gameName = new GameName("NewPlayer", "KR1");
         String region = "kr";
+        String lockKey = "NewPlayer:KR1:kr";
 
         Summoner summoner = createSummoner("puuid-456", "NewPlayer", "KR1");
         given(summonerPersistencePort.getSummoner("NewPlayer", "KR1", region))
                 .willReturn(Optional.empty());
+        given(summonerCachePort.tryLock(lockKey)).willReturn(true);
         given(summonerClientPort.getSummoner("NewPlayer", "KR1", region))
                 .willReturn(Optional.of(summoner));
 
@@ -91,8 +93,9 @@ class SummonerServiceTest {
 
         // then
         assertThat(result.getGameName()).isEqualTo("NewPlayer");
-        then(summonerPersistencePort).should().getSummoner("NewPlayer", "KR1", region);
+        then(summonerCachePort).should().tryLock(lockKey);
         then(summonerClientPort).should().getSummoner("NewPlayer", "KR1", region);
+        then(summonerCachePort).should().unlock(lockKey);
     }
 
     @DisplayName("DB와 클라이언트 모두에 소환사가 없으면 예외가 발생한다")
@@ -101,9 +104,11 @@ class SummonerServiceTest {
         // given
         GameName gameName = new GameName("UnknownPlayer", "KR1");
         String region = "kr";
+        String lockKey = "UnknownPlayer:KR1:kr";
 
         given(summonerPersistencePort.getSummoner("UnknownPlayer", "KR1", region))
                 .willReturn(Optional.empty());
+        given(summonerCachePort.tryLock(lockKey)).willReturn(true);
         given(summonerClientPort.getSummoner("UnknownPlayer", "KR1", region))
                 .willReturn(Optional.empty());
 
@@ -341,9 +346,12 @@ class SummonerServiceTest {
         // given
         String region = "kr";
         String puuid = "puuid-new";
+        String lockKey = "puuid:" + puuid;
 
         Summoner summoner = createSummoner(puuid, "NewPlayer", "KR1");
-        given(summonerPersistencePort.findById(puuid)).willReturn(Optional.empty());
+        given(summonerPersistencePort.findById(puuid))
+                .willReturn(Optional.empty());
+        given(summonerCachePort.tryLock(lockKey)).willReturn(true);
         given(summonerClientPort.getSummonerByPuuid(region, puuid)).willReturn(Optional.of(summoner));
 
         // when
@@ -351,8 +359,9 @@ class SummonerServiceTest {
 
         // then
         assertThat(result.getPuuid()).isEqualTo(puuid);
-        then(summonerPersistencePort).should().findById(puuid);
+        then(summonerCachePort).should().tryLock(lockKey);
         then(summonerClientPort).should().getSummonerByPuuid(region, puuid);
+        then(summonerCachePort).should().unlock(lockKey);
     }
 
     @DisplayName("DB와 클라이언트 모두에 puuid가 없으면 예외가 발생한다")
@@ -361,8 +370,10 @@ class SummonerServiceTest {
         // given
         String region = "kr";
         String puuid = "invalid-puuid";
+        String lockKey = "puuid:" + puuid;
 
         given(summonerPersistencePort.findById(puuid)).willReturn(Optional.empty());
+        given(summonerCachePort.tryLock(lockKey)).willReturn(true);
         given(summonerClientPort.getSummonerByPuuid(region, puuid)).willReturn(Optional.empty());
 
         // when & then
