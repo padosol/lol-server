@@ -1,0 +1,18 @@
+spring:
+  jackson:
+    time-zone: Asia/Seoul
+
+riot:
+  api:
+    key: ${RIOT_API_KEY}
+
+logging:
+  level:
+    com.example.lolserver.riot: WARN
+    com.example.lolserver.aspect: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

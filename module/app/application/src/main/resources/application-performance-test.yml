@@ -1,0 +1,8 @@
+champion:
+  client:
+    fake:
+      enabled: true
+      delay-ms: 200
+      rate-limit-requests: 500
+      rate-limit-seconds: 10
+      rate-limit-strategy: THROW_EXCEPTION

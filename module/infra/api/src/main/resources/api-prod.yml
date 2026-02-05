@@ -1,0 +1,7 @@
+server:
+  port: 8085
+  tomcat:
+    basedir: .
+    accesslog:
+      enabled: true
+      pattern: "%{yyyy-MM-dd HH:mm:ss}t %s [%r] [Remote: %a] [Size: %b]"

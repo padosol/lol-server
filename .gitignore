@@ -8,6 +8,8 @@ logs/
 *.yml
 *.yaml
 !.github/workflows/*.yml
+!**/src/main/resources/*.yml
+!**/src/test/resources/*.yml
 docker/
 
 ### STS ###

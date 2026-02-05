@@ -1,0 +1,22 @@
+spring:
+  config:
+    import:
+      - core.yml
+      - api.yml
+      - client-repository.yml
+      - rabbitmq.yml
+      - postgresql.yml
+      - redis.yml
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+    import:
+      - core-prod.yml
+      - api-prod.yml
+      - client-repository-prod.yml
+      - rabbitmq-prod.yml
+      - postgresql-prod.yml
+      - redis-prod.yml
