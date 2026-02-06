@@ -1,0 +1,19 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        use_sql_comments: false
+        jdbc:
+          batch_size: 1000
+          order_inserts: true
+          order_updates: true
+    show-sql: false
+  datasource:
+    url: jdbc:postgresql://lol-postgres:5432/postgres
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: 1234

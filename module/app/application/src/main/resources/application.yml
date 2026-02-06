@@ -12,6 +12,19 @@ spring:
 spring:
   config:
     activate:
+      on-profile: dev
+    import:
+      - core-dev.yml
+      - api-dev.yml
+      - client-repository-dev.yml
+      - rabbitmq-dev.yml
+      - postgresql-dev.yml
+      - redis-dev.yml
+
+---
+spring:
+  config:
+    activate:
       on-profile: prod
     import:
       - core-prod.yml

@@ -27,7 +27,7 @@ public class TierCutoffService {
 
     public List<TierCutoffReadModel> getTierCutoffsByRegionAndQueue(String platform, String queue) {
         String region = resolveRegion(platform);
-        return tierCutoffPersistencePort.findByRegionAndQueue(region, queue.toUpperCase());
+        return tierCutoffPersistencePort.findByRegionAndQueue(region, queue);
     }
 
     public TierCutoffReadModel getTierCutoff(String platform, String queue, String tier) {

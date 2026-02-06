@@ -13,7 +13,7 @@ import { BASE_URL, ENDPOINTS, HEADERS, DEFAULT_REGION } from '../lib/config.js';
 
 // 테스트 데이터 로드 (master_summoners.json에서 puuid 추출)
 const masterPuuids = new SharedArray('master_puuids', function () {
-    const data = JSON.parse(open('../../data/master_summoners.json'));
+    const data = JSON.parse(open('../../data/challenger_summoner.json'));
     return data.entries.map(entry => entry.puuid);
 });
 
@@ -22,11 +22,11 @@ export const options = {
     scenarios: {
         puuid_search: {
             executor: 'constant-arrival-rate',
-            rate: 30,              // 비율
+            rate: 50,              // 비율
             timeUnit: '1s',        // 시간 == > 비율 / 시간
             duration: '30s',       // 지속 시간
-            preAllocatedVUs: 30,   // 시작시
-            maxVUs: 30,            // 가상 유저수
+            preAllocatedVUs: 20,   // 시작시
+            maxVUs: 40,            // 가상 유저수
         },
     },
     thresholds: {

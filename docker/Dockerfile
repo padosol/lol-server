@@ -19,7 +19,7 @@ FROM eclipse-temurin:17-jre
 WORKDIR /app
 
 # 환경변수 선언
-ENV SPRING_PROFILES_ACTIVE=default
+ENV SPRING_PROFILES_ACTIVE=dev
 
 # JAR 복사
 COPY --from=build /app/module/app/application/build/libs/*.jar app.jar
