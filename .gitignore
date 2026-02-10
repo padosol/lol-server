@@ -45,6 +45,9 @@ out/
 ### VS Code ###
 .vscode/
 
+### Claude Code ###
+.claude/settings.local.json
+
 ### Performance Tests ###
 performance-tests/results/*.json
 !performance-tests/results/.gitkeep
