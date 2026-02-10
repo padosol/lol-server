@@ -6,10 +6,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
+import java.util.concurrent.TimeUnit;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -20,13 +26,19 @@ class SummonerCacheAdapterTest {
     private StringRedisTemplate stringRedisTemplate;
 
     @Mock
+    private RedissonClient redissonClient;
+
+    @Mock
+    private RLock rLock;
+
+    @Mock
     private ValueOperations<String, String> valueOperations;
 
     private SummonerCacheAdapter adapter;
 
     @BeforeEach
     void setUp() {
-        adapter = new SummonerCacheAdapter(stringRedisTemplate);
+        adapter = new SummonerCacheAdapter(stringRedisTemplate, redissonClient);
     }
 
     @DisplayName("puuid가 캐시에 존재하면 isUpdating은 true를 반환한다")
@@ -135,5 +147,83 @@ class SummonerCacheAdapterTest {
 
         // then
         assertThat(result).isFalse();
+    }
+
+    @DisplayName("tryLock이 락 획득에 성공하면 true를 반환한다")
+    @Test
+    void tryLock_successfulLock_returnsTrue() throws InterruptedException {
+        // given
+        String key = "test-key";
+        given(redissonClient.getLock("summoner:lock:" + key)).willReturn(rLock);
+        given(rLock.tryLock(5L, 10L, TimeUnit.SECONDS)).willReturn(true);
+
+        // when
+        boolean result = adapter.tryLock(key);
+
+        // then
+        assertThat(result).isTrue();
+        then(redissonClient).should().getLock("summoner:lock:" + key);
+        then(rLock).should().tryLock(5L, 10L, TimeUnit.SECONDS);
+    }
+
+    @DisplayName("tryLock이 락 획득에 실패하면 false를 반환한다")
+    @Test
+    void tryLock_failedLock_returnsFalse() throws InterruptedException {
+        // given
+        String key = "test-key";
+        given(redissonClient.getLock("summoner:lock:" + key)).willReturn(rLock);
+        given(rLock.tryLock(5L, 10L, TimeUnit.SECONDS)).willReturn(false);
+
+        // when
+        boolean result = adapter.tryLock(key);
+
+        // then
+        assertThat(result).isFalse();
+    }
+
+    @DisplayName("tryLock에서 InterruptedException 발생 시 false를 반환한다")
+    @Test
+    void tryLock_interrupted_returnsFalse() throws InterruptedException {
+        // given
+        String key = "test-key";
+        given(redissonClient.getLock("summoner:lock:" + key)).willReturn(rLock);
+        given(rLock.tryLock(5L, 10L, TimeUnit.SECONDS)).willThrow(new InterruptedException());
+
+        // when
+        boolean result = adapter.tryLock(key);
+
+        // then
+        assertThat(result).isFalse();
+    }
+
+    @DisplayName("unlock이 현재 스레드가 락을 보유하고 있으면 락을 해제한다")
+    @Test
+    void unlock_heldByCurrentThread_releasesLock() {
+        // given
+        String key = "test-key";
+        given(redissonClient.getLock("summoner:lock:" + key)).willReturn(rLock);
+        given(rLock.isHeldByCurrentThread()).willReturn(true);
+
+        // when
+        adapter.unlock(key);
+
+        // then
+        then(rLock).should().unlock();
+    }
+
+    @DisplayName("unlock이 현재 스레드가 락을 보유하지 않으면 아무 동작도 하지 않는다")
+    @Test
+    void unlock_notHeldByCurrentThread_doesNothing() {
+        // given
+        String key = "test-key";
+        given(redissonClient.getLock("summoner:lock:" + key)).willReturn(rLock);
+        given(rLock.isHeldByCurrentThread()).willReturn(false);
+
+        // when
+        adapter.unlock(key);
+
+        // then
+        then(rLock).should().isHeldByCurrentThread();
+        then(rLock).shouldHaveNoMoreInteractions();
     }
 }

@@ -37,15 +37,28 @@ public class SummonerService {
         Optional<Summoner> summonerOpt = summonerPersistencePort.getSummoner(
                 gameName.summonerName(), gameName.tagLine(), region);
 
-        Summoner summoner = summonerOpt.orElseGet(() ->
-                summonerClientPort.getSummoner(
-                        gameName.summonerName(), gameName.tagLine(), region)
-                .orElseThrow(() ->
-                        new CoreException(
-                                ErrorType.NOT_FOUND_USER,
-                                "존재하지 않는 유저 입니다. " + gameName.summonerName())));
+        if (summonerOpt.isPresent()) {
+            return SummonerResponse.of(summonerOpt.get());
+        }
 
-        return SummonerResponse.of(summoner);
+        String lockKey = gameName.summonerName() + ":" + gameName.tagLine() + ":" + region;
+        boolean locked = summonerCachePort.tryLock(lockKey);
+        if (!locked) {
+            log.warn("해당 유저는 이미 조회중 입니다. {}", lockKey);
+            throw new CoreException(ErrorType.LOCK_ACQUISITION_FAILED, "잠시 후 다시 시도해주세요.");
+        }
+
+        try {
+            Summoner summoner = summonerClientPort.getSummoner(
+                    gameName.summonerName(), gameName.tagLine(), region)
+                    .orElseThrow(() -> new CoreException(
+                            ErrorType.NOT_FOUND_USER,
+                            "존재하지 않는 유저 입니다. " + gameName.summonerName()));
+
+            return SummonerResponse.of(summoner);
+        } finally {
+            summonerCachePort.unlock(lockKey);
+        }
     }
 
     public List<SummonerAutoResponse> getAllSummonerAutoComplete(String q, String region) {
@@ -106,9 +119,27 @@ public class SummonerService {
     }
 
     public SummonerResponse getSummonerByPuuid(String region, String puuid) {
-        Summoner summoner = summonerPersistencePort.findById(puuid)
-                .orElseGet(() -> summonerClientPort.getSummonerByPuuid(region, puuid)
-                        .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_PUUID, "존재하지 않는 PUUID 입니다. " + puuid)));
-        return SummonerResponse.of(summoner);
+        Optional<Summoner> summonerOpt = summonerPersistencePort.findById(puuid);
+
+        if (summonerOpt.isPresent()) {
+            return SummonerResponse.of(summonerOpt.get());
+        }
+
+        String lockKey = "puuid:" + puuid;
+        boolean locked = summonerCachePort.tryLock(lockKey);
+        if (!locked) {
+            throw new CoreException(ErrorType.LOCK_ACQUISITION_FAILED, "잠시 후 다시 시도해주세요.");
+        }
+
+        try {
+            Summoner summoner = summonerClientPort.getSummonerByPuuid(region, puuid)
+                    .orElseThrow(() -> new CoreException(
+                            ErrorType.NOT_FOUND_PUUID,
+                            "존재하지 않는 PUUID 입니다. " + puuid));
+
+            return SummonerResponse.of(summoner);
+        } finally {
+            summonerCachePort.unlock(lockKey);
+        }
     }
 }

@@ -1,0 +1,10 @@
+[[tier-cutoff-detail]]
+=== 티어 컷오프 상세 조회
+
+==== HTTP Request
+include::{snippets}/tier-cutoff-detail/http-request.adoc[]
+include::{snippets}/tier-cutoff-detail/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/tier-cutoff-detail/http-response.adoc[]
+include::{snippets}/tier-cutoff-detail/response-fields.adoc[]

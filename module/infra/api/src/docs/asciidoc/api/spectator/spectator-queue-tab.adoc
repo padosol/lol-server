@@ -1,0 +1,9 @@
+[[spectator-queue-tab]]
+=== 큐 탭 정보 조회
+
+==== HTTP Request
+include::{snippets}/spectator-queue-tab/http-request.adoc[]
+
+==== HTTP Response
+include::{snippets}/spectator-queue-tab/http-response.adoc[]
+include::{snippets}/spectator-queue-tab/response-fields.adoc[]

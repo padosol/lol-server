@@ -1,0 +1,13 @@
+spring:
+  jackson:
+    time-zone: Asia/Seoul
+
+riot:
+  api:
+    key: ${RIOT_API_KEY}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

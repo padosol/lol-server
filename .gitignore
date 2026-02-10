@@ -8,6 +8,8 @@ logs/
 *.yml
 *.yaml
 !.github/workflows/*.yml
+!**/src/main/resources/*.yml
+!**/src/test/resources/*.yml
 docker/
 
 ### STS ###
@@ -42,6 +44,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Claude Code ###
+.claude/settings.local.json
 
 ### Performance Tests ###
 performance-tests/results/*.json

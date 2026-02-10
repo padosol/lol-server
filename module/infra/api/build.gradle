@@ -6,6 +6,8 @@ dependencies {
     implementation 'org.springframework.data:spring-data-commons'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
     asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+
+
 }
 
 ext { // 전역 변수
