@@ -13,7 +13,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                         "http://localhost:3000",
                         "http://localhost:8080",
-                        "http://lol-ui:3000"
+                        "http://lol-ui:3000",
+                        "https://metapick.me"
                 ) // 허용할 Origin 목록
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // 허용할 HTTP Method
                 .allowedHeaders("Content-Type", "Authorization", "X-Requested-With") // 명시적으로 허용할 헤더만 지정

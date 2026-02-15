@@ -82,6 +82,7 @@ public class SummonerController {
             @PathVariable(name = "platform") String platform,
             @PathVariable("puuid") String puuid
     ) {
+        log.info("API 호출 ");
         SummonerRenewal summonerRenewal = summonerService.renewalSummonerInfo(platform, puuid);
         return ResponseEntity.ok(ApiResponse.success(
                 new SummonerRenewalResponse(
