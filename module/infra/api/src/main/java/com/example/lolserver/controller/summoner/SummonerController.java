@@ -72,16 +72,21 @@ public class SummonerController {
     }
 
     /**
-     * 유저 전적 갱신
-     * @param platform
-     * @param puuid
-     * @return
+     * 소환사 전적 갱신 API
+     *
+     * <p>갱신 요청 후 즉시 응답하며, 실제 데이터 갱신은 비동기로 처리된다.
+     * 클라이언트는 {@code /v1/summoners/{puuid}/renewal-status}를 폴링하여 완료를 확인한다.
+     *
+     * @param platform 플랫폼 코드 (예: "kr")
+     * @param puuid    소환사 PUUID
+     * @return 갱신 상태 (puuid, status)
      */
     @GetMapping("/summoners/renewal/{platform}/{puuid}")
     public ResponseEntity<ApiResponse<SummonerRenewalResponse>> renewalSummonerInfo(
             @PathVariable(name = "platform") String platform,
             @PathVariable("puuid") String puuid
     ) {
+        log.info("API 호출 ");
         SummonerRenewal summonerRenewal = summonerService.renewalSummonerInfo(platform, puuid);
         return ResponseEntity.ok(ApiResponse.success(
                 new SummonerRenewalResponse(

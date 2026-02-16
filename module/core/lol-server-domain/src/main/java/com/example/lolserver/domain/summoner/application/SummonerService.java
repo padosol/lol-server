@@ -86,23 +86,48 @@ public class SummonerService {
         }).collect(Collectors.toList());
     }
 
+    /**
+     * 소환사 정보 갱신을 요청한다.
+     *
+     * <p>갱신 흐름:
+     * <ol>
+     *   <li>Redis에서 이미 갱신 중인지 확인 (중복 요청 방지)</li>
+     *   <li>클릭 쿨다운(10초) 확인 (연타 방지)</li>
+     *   <li>DB에서 소환사 조회</li>
+     *   <li>마지막 갱신으로부터 3분 경과 여부 확인</li>
+     *   <li>조건 충족 시 쿨다운 설정, 갱신 세션 생성, RabbitMQ 메시지 발행</li>
+     * </ol>
+     *
+     * <p>실제 갱신은 RabbitMQ 컨슈머에서 비동기로 처리되며,
+     * 클라이언트는 {@link #renewalSummonerStatus(String)}를 폴링하여 완료 여부를 확인한다.
+     *
+     * @param platform 플랫폼 코드 (예: "kr")
+     * @param puuid    소환사 고유 식별자
+     * @return 갱신 상태 (PROGRESS: 갱신 시작/진행 중, SUCCESS: 갱신 불필요 또는 쿨다운 중)
+     */
     @Transactional
     public SummonerRenewal renewalSummonerInfo(String platform, String puuid) {
+        // 이미 갱신이 진행 중이면 중복 요청을 방지한다
         boolean updating = summonerCachePort.isUpdating(puuid);
         if (updating) {
             return new SummonerRenewal(puuid, RenewalStatus.PROGRESS);
         }
 
+        // 10초 클릭 쿨다운 내 재요청이면 즉시 반환한다
+        if (summonerCachePort.isClickCooldown(puuid)) {
+            return new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
+        }
+
+        // DB에서 소환사 정보를 조회한다
         Summoner summoner = summonerPersistencePort.findById(puuid)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_PUUID, "존재하지 않는 PUUID 입니다. " + puuid));
 
+        // 마지막 갱신으로부터 3분이 경과했는지 확인한다
         LocalDateTime clickDateTime = LocalDateTime.now();
         if (summoner.isRevision(clickDateTime)) {
-            summoner.clickRenewal();
-            summonerPersistencePort.save(summoner);
-
-            summonerCachePort.createSummonerRenewal(puuid);
-            summonerMessagePort.sendMessage(platform, puuid, summoner.getRevisionDate());
+            summonerCachePort.setClickCooldown(puuid);           // 10초 클릭 쿨다운을 설정한다
+            summonerCachePort.createSummonerRenewal(puuid);      // Redis에 갱신 세션 마커를 생성한다 (진행 상태 추적용)
+            summonerMessagePort.sendMessage(platform, puuid, summoner.getRevisionDate()); // RabbitMQ로 갱신 메시지를 발행하여 비동기 처리를 시작한다
         } else {
             return new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
         }

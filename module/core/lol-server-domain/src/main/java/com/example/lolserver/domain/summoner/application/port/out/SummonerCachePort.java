@@ -17,4 +17,7 @@ public interface SummonerCachePort {
      * @param key 락 키
      */
     void unlock(String key);
+
+    boolean isClickCooldown(String puuid);
+    void setClickCooldown(String puuid);
 }

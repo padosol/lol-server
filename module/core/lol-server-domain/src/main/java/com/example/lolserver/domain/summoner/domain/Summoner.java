@@ -33,14 +33,8 @@ public class Summoner {
     public boolean isRevision(LocalDateTime clickDateTime) {
         // 갱신이 가능한 조건
         // 1. 갱신 시간이 3분을 넘었을 때
-        // 2. 갱신 클릭 시간이 10초를 넘었을 때
         // 갱신 시간이 3분을 넘지 않았을 때
         if (this.revisionDate.plusMinutes(3L).isAfter(clickDateTime)) {
-            return false;
-        }
-
-        // 갱신 클릭 시간이 10초를 넘지 않았을 때
-        if (this.revisionClickDate.plusSeconds(10L).isAfter(clickDateTime)) {
             return false;
         }
 

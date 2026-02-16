@@ -20,6 +20,7 @@ public class SummonerCacheAdapter implements SummonerCachePort {
     private final RedissonClient redissonClient;
 
     private static final String LOCK_PREFIX = "summoner:lock:";
+    private static final String CLICK_COOLDOWN_PREFIX = "summoner:click-cooldown:";
     private static final long LOCK_WAIT_TIME = 5L;
     private static final long LOCK_LEASE_TIME = 10L;
 
@@ -58,5 +59,16 @@ public class SummonerCacheAdapter implements SummonerCachePort {
         if (lock.isHeldByCurrentThread()) {
             lock.unlock();
         }
+    }
+
+    @Override
+    public boolean isClickCooldown(String puuid) {
+        String value = stringRedisTemplate.opsForValue().get(CLICK_COOLDOWN_PREFIX + puuid);
+        return StringUtils.hasText(value);
+    }
+
+    @Override
+    public void setClickCooldown(String puuid) {
+        stringRedisTemplate.opsForValue().set(CLICK_COOLDOWN_PREFIX + puuid, puuid, 10, TimeUnit.SECONDS);
     }
 }
