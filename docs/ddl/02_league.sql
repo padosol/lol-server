@@ -86,9 +86,9 @@ CREATE TABLE summoner_ranking (
     rank_change         INTEGER,
     game_name           VARCHAR(50),
     tag_line            VARCHAR(10),
-    most_champion_1     VARCHAR(50),
-    most_champion_2     VARCHAR(50),
-    most_champion_3     VARCHAR(50),
+    most_champion1      VARCHAR(50),
+    most_champion2      VARCHAR(50),
+    most_champion3      VARCHAR(50),
     wins                INTEGER         NOT NULL,
     losses              INTEGER         NOT NULL,
     win_rate            DECIMAL(5,2)    NOT NULL,
@@ -113,9 +113,9 @@ COMMENT ON COLUMN summoner_ranking.current_rank IS '현재 순위';
 COMMENT ON COLUMN summoner_ranking.rank_change IS '순위 변동';
 COMMENT ON COLUMN summoner_ranking.game_name IS '게임 내 이름';
 COMMENT ON COLUMN summoner_ranking.tag_line IS '태그라인';
-COMMENT ON COLUMN summoner_ranking.most_champion_1 IS '모스트 챔피언 1';
-COMMENT ON COLUMN summoner_ranking.most_champion_2 IS '모스트 챔피언 2';
-COMMENT ON COLUMN summoner_ranking.most_champion_3 IS '모스트 챔피언 3';
+COMMENT ON COLUMN summoner_ranking.most_champion1 IS '모스트 챔피언 1';
+COMMENT ON COLUMN summoner_ranking.most_champion2 IS '모스트 챔피언 2';
+COMMENT ON COLUMN summoner_ranking.most_champion3 IS '모스트 챔피언 3';
 COMMENT ON COLUMN summoner_ranking.wins IS '승리 횟수';
 COMMENT ON COLUMN summoner_ranking.losses IS '패배 횟수';
 COMMENT ON COLUMN summoner_ranking.win_rate IS '승률 (%)';

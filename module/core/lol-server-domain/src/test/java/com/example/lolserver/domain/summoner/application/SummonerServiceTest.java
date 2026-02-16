@@ -227,15 +227,15 @@ class SummonerServiceTest {
         );
 
         given(summonerCachePort.isUpdating(puuid)).willReturn(false);
+        given(summonerCachePort.isClickCooldown(puuid)).willReturn(false);
         given(summonerPersistencePort.findById(puuid)).willReturn(Optional.of(summoner));
-        given(summonerPersistencePort.save(any(Summoner.class))).willReturn(summoner);
-
         // when
         SummonerRenewal result = summonerService.renewalSummonerInfo(platform, puuid);
 
         // then
         assertThat(result.getStatus()).isEqualTo(RenewalStatus.PROGRESS);
-        then(summonerPersistencePort).should().save(any(Summoner.class));
+        then(summonerPersistencePort).should(never()).save(any());
+        then(summonerCachePort).should().setClickCooldown(puuid);
         then(summonerCachePort).should().createSummonerRenewal(puuid);
         then(summonerMessagePort).should().sendMessage(any(), any(), any());
     }
@@ -256,6 +256,7 @@ class SummonerServiceTest {
         );
 
         given(summonerCachePort.isUpdating(puuid)).willReturn(false);
+        given(summonerCachePort.isClickCooldown(puuid)).willReturn(false);
         given(summonerPersistencePort.findById(puuid)).willReturn(Optional.of(summoner));
 
         // when
@@ -275,6 +276,7 @@ class SummonerServiceTest {
         String puuid = "invalid-puuid";
 
         given(summonerCachePort.isUpdating(puuid)).willReturn(false);
+        given(summonerCachePort.isClickCooldown(puuid)).willReturn(false);
         given(summonerPersistencePort.findById(puuid)).willReturn(Optional.empty());
 
         // when & then
@@ -282,6 +284,26 @@ class SummonerServiceTest {
                 .isInstanceOf(CoreException.class)
                 .extracting("errorType")
                 .isEqualTo(ErrorType.NOT_FOUND_PUUID);
+    }
+
+    @DisplayName("클릭 쿨다운 중이면 DB 조회 없이 SUCCESS 상태를 반환한다")
+    @Test
+    void renewalSummonerInfo_클릭쿨다운_SUCCESS반환() {
+        // given
+        String platform = "kr";
+        String puuid = "puuid-cooldown";
+
+        given(summonerCachePort.isUpdating(puuid)).willReturn(false);
+        given(summonerCachePort.isClickCooldown(puuid)).willReturn(true);
+
+        // when
+        SummonerRenewal result = summonerService.renewalSummonerInfo(platform, puuid);
+
+        // then
+        assertThat(result.getStatus()).isEqualTo(RenewalStatus.SUCCESS);
+        assertThat(result.getPuuid()).isEqualTo(puuid);
+        then(summonerPersistencePort).should(never()).findById(any());
+        then(summonerPersistencePort).should(never()).save(any());
     }
 
     // ========== renewalSummonerStatus 테스트 ==========

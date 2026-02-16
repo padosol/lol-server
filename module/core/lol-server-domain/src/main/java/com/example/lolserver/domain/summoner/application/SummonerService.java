@@ -93,14 +93,16 @@ public class SummonerService {
             return new SummonerRenewal(puuid, RenewalStatus.PROGRESS);
         }
 
+        if (summonerCachePort.isClickCooldown(puuid)) {
+            return new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
+        }
+
         Summoner summoner = summonerPersistencePort.findById(puuid)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_PUUID, "존재하지 않는 PUUID 입니다. " + puuid));
 
         LocalDateTime clickDateTime = LocalDateTime.now();
         if (summoner.isRevision(clickDateTime)) {
-            summoner.clickRenewal();
-            summonerPersistencePort.save(summoner);
-
+            summonerCachePort.setClickCooldown(puuid);
             summonerCachePort.createSummonerRenewal(puuid);
             summonerMessagePort.sendMessage(platform, puuid, summoner.getRevisionDate());
         } else {

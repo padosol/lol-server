@@ -1,3 +1,11 @@
+sourceSets {
+    main {
+        java {
+            srcDirs += 'build/generated/sources/annotationProcessor/java/main'
+        }
+    }
+}
+
 dependencies {
     implementation(project(":module:core:lol-server-domain"))
 

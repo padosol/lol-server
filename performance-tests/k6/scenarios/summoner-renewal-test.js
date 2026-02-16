@@ -17,7 +17,7 @@ import { randomItem } from '../lib/helpers.js';
 
 // 테스트 데이터 로드
 const puuids = new SharedArray('challenger_puuids', function () {
-    const data = JSON.parse(open('../../data/challenger_summoner.json'));
+    const data = JSON.parse(open('../../data/grand_master_summoner.json'));
     return data.entries.map(entry => entry.puuid);
 });
 
