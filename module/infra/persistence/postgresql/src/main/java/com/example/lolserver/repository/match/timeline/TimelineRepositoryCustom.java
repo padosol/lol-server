@@ -16,4 +16,8 @@ public interface TimelineRepositoryCustom {
 
     List<SkillEventsEntity> selectAllSkillEventsByMatch(String matchId);
 
+    List<ItemEventsEntity> selectAllItemEventsByMatchIds(List<String> matchIds);
+
+    List<SkillEventsEntity> selectAllSkillEventsByMatchIds(List<String> matchIds);
+
 }

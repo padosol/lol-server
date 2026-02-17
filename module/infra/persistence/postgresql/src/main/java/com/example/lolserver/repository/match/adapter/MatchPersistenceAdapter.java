@@ -29,11 +29,12 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -89,6 +90,112 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         return new Page<>(matchIdsSlice.getContent(), matchIdsSlice.hasNext());
     }
 
+
+    @Override
+    public Page<GameData> getMatchesBatch(String puuid, Integer queueId, Pageable pageable) {
+        Slice<MatchEntity> matchesSlice = matchRepositoryCustom.getMatches(puuid, queueId, pageable);
+        List<MatchEntity> matchEntities = matchesSlice.getContent();
+
+        if (matchEntities.isEmpty()) {
+            return new Page<>(Collections.emptyList(), false);
+        }
+
+        List<String> matchIds = matchEntities.stream()
+                .map(MatchEntity::getMatchId)
+                .toList();
+
+        // 배치 쿼리: 4개 쿼리로 모든 데이터 로딩
+        Map<String, List<com.example.lolserver.repository.match.entity.MatchSummonerEntity>> participantsByMatch =
+                matchSummonerRepository.findByMatchIdIn(matchIds).stream()
+                        .collect(Collectors.groupingBy(com.example.lolserver.repository.match.entity.MatchSummonerEntity::getMatchId));
+
+        Map<String, List<MatchTeamEntity>> teamsByMatch =
+                matchTeamRepository.findByMatchIdIn(matchIds).stream()
+                        .collect(Collectors.groupingBy(MatchTeamEntity::getMatchId));
+
+        Map<String, List<ItemEventsEntity>> itemEventsByMatch =
+                timelineRepositoryCustom.selectAllItemEventsByMatchIds(matchIds).stream()
+                        .collect(Collectors.groupingBy(e -> e.getTimeLineEvent().getMatchEntity().getMatchId()));
+
+        Map<String, List<SkillEventsEntity>> skillEventsByMatch =
+                timelineRepositoryCustom.selectAllSkillEventsByMatchIds(matchIds).stream()
+                        .collect(Collectors.groupingBy(e -> e.getTimeLineEvent().getMatchEntity().getMatchId()));
+
+        // 매치별 GameData 조립 (DB 호출 없이 메모리에서)
+        List<GameData> gameDataList = matchEntities.stream()
+                .map(matchEntity -> assembleGameData(
+                        matchEntity, puuid,
+                        participantsByMatch.getOrDefault(matchEntity.getMatchId(), Collections.emptyList()),
+                        teamsByMatch.getOrDefault(matchEntity.getMatchId(), Collections.emptyList()),
+                        itemEventsByMatch.getOrDefault(matchEntity.getMatchId(), Collections.emptyList()),
+                        skillEventsByMatch.getOrDefault(matchEntity.getMatchId(), Collections.emptyList())
+                ))
+                .toList();
+
+        return new Page<>(gameDataList, matchesSlice.hasNext());
+    }
+
+    private GameData assembleGameData(
+            MatchEntity matchEntity,
+            String puuid,
+            List<com.example.lolserver.repository.match.entity.MatchSummonerEntity> summonerEntities,
+            List<MatchTeamEntity> teamEntities,
+            List<ItemEventsEntity> itemEvents,
+            List<SkillEventsEntity> skillEvents
+    ) {
+        GameData gameData = new GameData();
+
+        GameInfoData gameInfoData = matchMapper.toGameInfoData(matchEntity);
+        gameData.setGameInfoData(gameInfoData);
+
+        List<ParticipantData> participantDataList = new ArrayList<>(summonerEntities.stream()
+                .map(matchMapper::toDomain)
+                .toList());
+        gameData.setParticipantData(participantDataList);
+
+        if (puuid != null) {
+            participantDataList.stream()
+                    .filter(participant -> participant.getPuuid().equals(puuid))
+                    .findFirst()
+                    .ifPresent(gameData::setMyData);
+        }
+
+        if (gameData.getGameInfoData().getQueueId() == 1700 || gameData.getGameInfoData().getQueueId() == 1710) {
+            participantDataList.sort(Comparator.comparingInt(ParticipantData::getPlacement));
+        }
+
+        List<ItemEvents> domainItemEvents = matchMapper.toDomainItemEventsList(itemEvents);
+        List<SkillEvents> domainSkillEvents = matchMapper.toDomainSkillEventsList(skillEvents);
+        TimelineData timelineData = new TimelineData(domainItemEvents, domainSkillEvents);
+
+        for (ParticipantData participant : participantDataList) {
+            int participantId = participant.getParticipantId();
+            ParticipantTimeline participantTimeline = timelineData.getParticipantTimeline(participantId);
+            if (participantTimeline != null) {
+                participant.setItemSeq(participantTimeline.getItemSeq());
+                participant.setSkillSeq(participantTimeline.getSkillSeq());
+            }
+        }
+
+        if (!teamEntities.isEmpty()) {
+            TeamInfoData blueTeam = null;
+            TeamInfoData redTeam = null;
+            for (MatchTeamEntity teamEntity : teamEntities) {
+                TeamInfoData teamInfo = matchMapper.toDomain(teamEntity);
+                if (teamEntity.getTeamId() == 100) {
+                    blueTeam = teamInfo;
+                } else if (teamEntity.getTeamId() == 200) {
+                    redTeam = teamInfo;
+                }
+            }
+            gameData.setTeamInfoData(TeamData.builder()
+                    .blueTeam(blueTeam)
+                    .redTeam(redTeam)
+                    .build());
+        }
+
+        return gameData;
+    }
 
     private GameData convertToGameData(MatchEntity matchEntity, String puuid) {
         GameData gameData = new GameData();

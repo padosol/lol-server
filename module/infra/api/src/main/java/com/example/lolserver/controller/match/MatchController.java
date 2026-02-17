@@ -63,6 +63,23 @@ public class MatchController {
                         result));
     }
 
+    @GetMapping("/summoners/{puuid}/matches")
+    public ResponseEntity<ApiResponse<SliceResponse<GameData>>> fetchMatchesBySummoner(
+            @PathVariable("puuid") String puuid,
+            @RequestParam(required = false) Integer queueId,
+            @RequestParam(required = false) Integer pageNo,
+            @RequestParam(required = false) String region
+    ) {
+        MatchCommand matchCommand = MatchCommand.builder()
+                .puuid(puuid)
+                .queueId(queueId)
+                .pageNo(pageNo != null ? pageNo : 1)
+                .region(region)
+                .build();
+        Page<GameData> matches = matchService.getMatchesBatch(matchCommand);
+        return ResponseEntity.ok(ApiResponse.success(SliceResponse.of(matches)));
+    }
+
     @GetMapping("/match/timeline/{matchId}")
     public ResponseEntity<ApiResponse<TimelineData>> getTimeline(@PathVariable("matchId") String matchId) {
 

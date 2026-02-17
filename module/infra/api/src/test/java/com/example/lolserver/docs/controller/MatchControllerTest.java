@@ -209,6 +209,57 @@ class MatchControllerTest extends RestDocsSupport {
                 ));
     }
 
+    @DisplayName("소환사별 매치 목록 배치 조회 API")
+    @Test
+    void fetchMatchesBySummoner() throws Exception {
+        // given
+        String puuid = "puuid-1234";
+
+        ParticipantData myData = mock(ParticipantData.class);
+        given(myData.getSummonerName()).willReturn("MySummoner");
+        given(myData.getChampionName()).willReturn("Ahri");
+        given(myData.getKills()).willReturn(10);
+        given(myData.getDeaths()).willReturn(2);
+        given(myData.getAssists()).willReturn(5);
+        given(myData.isWin()).willReturn(true);
+
+        GameData gameData = mock(GameData.class);
+        given(gameData.getMyData()).willReturn(myData);
+
+        Page<GameData> pageOfGameData = new Page<>(List.of(gameData), false);
+
+        given(matchService.getMatchesBatch(any(MatchCommand.class))).willReturn(pageOfGameData);
+
+        // when & then
+        mockMvc.perform(
+                        get("/api/v1/summoners/{puuid}/matches", puuid)
+                                .param("queueId", "420")
+                                .param("pageNo", "1")
+                                .param("region", "kr")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andDo(document("match-summoner-get-list",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("puuid").description("조회할 소환사의 PUUID")
+                        ),
+                        queryParameters(
+                                parameterWithName("queueId").description("큐 ID (e.g., 420:솔로랭크, 430:일반, 450:칼바람)").optional(),
+                                parameterWithName("pageNo").description("페이지 번호 (1부터 시작)").optional(),
+                                parameterWithName("region").description("지역").optional()
+                        ),
+                        responseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
+                                subsectionWithPath("data.content[]").type(JsonFieldType.ARRAY).description("매치 데이터 목록 (GameData)"),
+                                fieldWithPath("data.hasNext").type(JsonFieldType.BOOLEAN).description("다음 페이지 존재 여부")
+                        )
+                ));
+    }
+
     @DisplayName("랭크 챔피언 통계 조회 API")
     @Test
     void getRankChampions() throws Exception {

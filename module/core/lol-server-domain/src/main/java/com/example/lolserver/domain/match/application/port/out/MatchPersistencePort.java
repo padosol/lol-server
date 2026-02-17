@@ -21,4 +21,6 @@ public interface MatchPersistencePort {
     TimelineData getTimelineData(String matchId);
 
     Page<String> findAllMatchIds(String puuid, Integer queueId, Pageable pageable);
+
+    Page<GameData> getMatchesBatch(String puuid, Integer queueId, Pageable pageable);
 }

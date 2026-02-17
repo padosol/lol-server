@@ -45,6 +45,13 @@ public class MatchService {
         return matchPersistencePort.getTimelineData(matchId);
     }
 
+    public Page<GameData> getMatchesBatch(MatchCommand matchCommand) {
+        Pageable pageable = PageRequest.of(
+                matchCommand.getPageNo(), 20, Sort.by(Sort.Direction.DESC, "match"));
+
+        return matchPersistencePort.getMatchesBatch(matchCommand.getPuuid(), matchCommand.getQueueId(), pageable);
+    }
+
     public Page<String> findAllMatchIds(MatchCommand matchCommand) {
         Pageable pageable = PageRequest.of(
                 matchCommand.getPageNo(),

@@ -9,4 +9,6 @@ public interface MatchSummonerRepository extends JpaRepository<MatchSummonerEnti
 
     List<MatchSummonerEntity> findByMatchId(String matchId);
 
+    List<MatchSummonerEntity> findByMatchIdIn(List<String> matchIds);
+
 }

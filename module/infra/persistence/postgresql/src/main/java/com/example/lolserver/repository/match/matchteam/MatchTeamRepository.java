@@ -12,4 +12,6 @@ import java.util.List;
 public interface MatchTeamRepository extends JpaRepository<MatchTeamEntity, MatchTeamId> {
 
     List<MatchTeamEntity> findByMatchId(String matchId);
+
+    List<MatchTeamEntity> findByMatchIdIn(List<String> matchIds);
 }
