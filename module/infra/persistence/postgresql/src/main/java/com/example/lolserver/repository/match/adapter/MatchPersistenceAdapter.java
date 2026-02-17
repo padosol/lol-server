@@ -1,7 +1,7 @@
 package com.example.lolserver.repository.match.adapter;
 
 import com.example.lolserver.domain.match.application.port.out.MatchPersistencePort;
-import com.example.lolserver.domain.match.domain.GameData;
+import com.example.lolserver.domain.match.application.dto.GameResponse;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.domain.match.domain.gameData.GameInfoData;
@@ -49,10 +49,10 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     private final MatchMapper matchMapper;
 
     @Override
-    public Page<GameData> getMatches(String puuid, Integer queueId, Pageable pageable) {
+    public Page<GameResponse> getMatches(String puuid, Integer queueId, Pageable pageable) {
         Slice<com.example.lolserver.repository.match.entity.MatchEntity> matchesSlice = matchRepositoryCustom.getMatches(puuid, queueId, pageable);
 
-        List<GameData> gameDataList = matchesSlice.getContent().stream()
+        List<GameResponse> gameDataList = matchesSlice.getContent().stream()
                 .map(matchEntity -> convertToGameData(matchEntity, puuid))
                 .toList();
 
@@ -68,7 +68,7 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     }
 
     @Override
-    public Optional<GameData> getGameData(String matchId) {
+    public Optional<GameResponse> getGameData(String matchId) {
         return matchRepository.findById(matchId)
                 .map(matchEntity -> convertToGameData(matchEntity, null)); // puuid is null if not specific user
     }
@@ -92,7 +92,7 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
 
 
     @Override
-    public Page<GameData> getMatchesBatch(String puuid, Integer queueId, Pageable pageable) {
+    public Page<GameResponse> getMatchesBatch(String puuid, Integer queueId, Pageable pageable) {
         Slice<MatchEntity> matchesSlice = matchRepositoryCustom.getMatches(puuid, queueId, pageable);
         List<MatchEntity> matchEntities = matchesSlice.getContent();
 
@@ -121,8 +121,8 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                 timelineRepositoryCustom.selectAllSkillEventsByMatchIds(matchIds).stream()
                         .collect(Collectors.groupingBy(e -> e.getTimeLineEvent().getMatchEntity().getMatchId()));
 
-        // 매치별 GameData 조립 (DB 호출 없이 메모리에서)
-        List<GameData> gameDataList = matchEntities.stream()
+        // 매치별 GameResponse 조립 (DB 호출 없이 메모리에서)
+        List<GameResponse> gameDataList = matchEntities.stream()
                 .map(matchEntity -> assembleGameData(
                         matchEntity, puuid,
                         participantsByMatch.getOrDefault(matchEntity.getMatchId(), Collections.emptyList()),
@@ -135,7 +135,7 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         return new Page<>(gameDataList, matchesSlice.hasNext());
     }
 
-    private GameData assembleGameData(
+    private GameResponse assembleGameData(
             MatchEntity matchEntity,
             String puuid,
             List<com.example.lolserver.repository.match.entity.MatchSummonerEntity> summonerEntities,
@@ -143,7 +143,7 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
             List<ItemEventsEntity> itemEvents,
             List<SkillEventsEntity> skillEvents
     ) {
-        GameData gameData = new GameData();
+        GameResponse gameData = new GameResponse();
 
         GameInfoData gameInfoData = matchMapper.toGameInfoData(matchEntity);
         gameData.setGameInfoData(gameInfoData);
@@ -152,13 +152,6 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                 .map(matchMapper::toDomain)
                 .toList());
         gameData.setParticipantData(participantDataList);
-
-        if (puuid != null) {
-            participantDataList.stream()
-                    .filter(participant -> participant.getPuuid().equals(puuid))
-                    .findFirst()
-                    .ifPresent(gameData::setMyData);
-        }
 
         if (gameData.getGameInfoData().getQueueId() == 1700 || gameData.getGameInfoData().getQueueId() == 1710) {
             participantDataList.sort(Comparator.comparingInt(ParticipantData::getPlacement));
@@ -197,8 +190,8 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         return gameData;
     }
 
-    private GameData convertToGameData(MatchEntity matchEntity, String puuid) {
-        GameData gameData = new GameData();
+    private GameResponse convertToGameData(MatchEntity matchEntity, String puuid) {
+        GameResponse gameData = new GameResponse();
 
         // GameInfoData
         GameInfoData gameInfoData = matchMapper.toGameInfoData(matchEntity);
@@ -210,14 +203,6 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                 .toList());
         gameData.setParticipantData(participantDataList);
 
-        // MyData (if puuid provided)
-        if (puuid != null) {
-            participantDataList.stream()
-                    .filter(participant -> participant.getPuuid().equals(puuid))
-                    .findFirst()
-                    .ifPresent(gameData::setMyData);
-        }
-        
         // Sorting for specific queue types
         if(gameData.getGameInfoData().getQueueId() == 1700 || gameData.getGameInfoData().getQueueId() == 1710) {
             participantDataList.sort(Comparator.comparingInt(ParticipantData::getPlacement));

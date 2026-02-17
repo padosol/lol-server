@@ -13,7 +13,7 @@ import com.example.lolserver.domain.match.domain.gameData.timeline.ParticipantTi
 import com.example.lolserver.domain.match.domain.gameData.timeline.SkillSeqData;
 import com.example.lolserver.domain.match.domain.TeamData;
 import com.example.lolserver.domain.match.application.MatchService;
-import com.example.lolserver.domain.match.domain.GameData;
+import com.example.lolserver.domain.match.application.dto.GameResponse;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.support.Page;
 
@@ -64,13 +64,26 @@ class MatchControllerTest extends RestDocsSupport {
         // given
         String matchId = "KR_123456789";
 
-        ParticipantData myData = mock(ParticipantData.class);
-        given(myData.getSummonerName()).willReturn("MySummoner");
-        given(myData.getChampionName()).willReturn("Ahri");
-        given(myData.getKills()).willReturn(10);
-        given(myData.getDeaths()).willReturn(2);
-        given(myData.getAssists()).willReturn(5);
-        given(myData.isWin()).willReturn(true);
+        ParticipantData participant = mock(ParticipantData.class);
+        given(participant.getSummonerName()).willReturn("MySummoner");
+        given(participant.getChampionName()).willReturn("Ahri");
+        given(participant.getKills()).willReturn(10);
+        given(participant.getDeaths()).willReturn(2);
+        given(participant.getAssists()).willReturn(5);
+        given(participant.isWin()).willReturn(true);
+
+        ItemSeqData itemSeqData = mock(ItemSeqData.class);
+        given(itemSeqData.getItemId()).willReturn(3157);
+        given(itemSeqData.getType()).willReturn("ITEM_PURCHASED");
+        given(itemSeqData.getMinute()).willReturn(12L);
+
+        SkillSeqData skillSeqData = mock(SkillSeqData.class);
+        given(skillSeqData.getSkillSlot()).willReturn(1);
+        given(skillSeqData.getType()).willReturn("SKILL_LEVEL_UP");
+        given(skillSeqData.getMinute()).willReturn(1L);
+
+        given(participant.getItemSeq()).willReturn(List.of(itemSeqData));
+        given(participant.getSkillSeq()).willReturn(List.of(skillSeqData));
 
         GameInfoData gameInfoData = mock(GameInfoData.class);
         given(gameInfoData.getGameMode()).willReturn("CLASSIC");
@@ -85,10 +98,9 @@ class MatchControllerTest extends RestDocsSupport {
         given(team200.isWin()).willReturn(false);
         given(team200.getChampionKills()).willReturn(15);
 
-        GameData gameData = mock(GameData.class);
-        given(gameData.getMyData()).willReturn(myData);
+        GameResponse gameData = mock(GameResponse.class);
         given(gameData.getGameInfoData()).willReturn(gameInfoData);
-        given(gameData.getParticipantData()).willReturn(List.of(myData));
+        given(gameData.getParticipantData()).willReturn(List.of(participant));
         given(gameData.getTeamInfoData()).willReturn(TeamData.builder().blueTeam(team100).redTeam(team200).build());
 
         given(matchService.getGameData(anyString())).willReturn(gameData);
@@ -109,7 +121,6 @@ class MatchControllerTest extends RestDocsSupport {
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
-                                subsectionWithPath("data.myData").type(JsonFieldType.OBJECT).description("내 참가자 정보"),
                                 subsectionWithPath("data.gameInfoData").type(JsonFieldType.OBJECT).description("게임 정보"),
                                 subsectionWithPath("data.participantData[]").type(JsonFieldType.ARRAY).description("전체 참가자 목록"),
                                 subsectionWithPath("data.teamInfoData").type(JsonFieldType.OBJECT).description("팀 정보 (blueTeam, redTeam)")
@@ -162,21 +173,9 @@ class MatchControllerTest extends RestDocsSupport {
         // given
         MatchCommand request = MatchCommand.builder().puuid("puuid-1234").queueId(420).pageNo(1).region("kr").build();
         
-        // Mock GameData for the Page object
-        ParticipantData myData = mock(ParticipantData.class);
-        given(myData.getSummonerName()).willReturn("MySummoner");
-        given(myData.getChampionName()).willReturn("Ahri");
-        given(myData.getKills()).willReturn(10);
-        given(myData.getDeaths()).willReturn(2);
-        given(myData.getAssists()).willReturn(5);
-        given(myData.isWin()).willReturn(true);
+        GameResponse gameData = mock(GameResponse.class);
 
-        GameData gameData = mock(GameData.class);
-        given(gameData.getMyData()).willReturn(myData);
-        // Assuming other fields of gameData are not critical for this test or will be mocked as needed
-
-        // Construct a real Page object
-        Page<GameData> pageOfGameData = new Page<>(List.of(gameData), false); // Assuming hasNext is false for a single page
+        Page<GameResponse> pageOfGameData = new Page<>(List.of(gameData), false);
 
         given(matchService.getMatches(any(MatchCommand.class))).willReturn(pageOfGameData);
 
@@ -203,7 +202,7 @@ class MatchControllerTest extends RestDocsSupport {
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
-                                subsectionWithPath("data.content[]").type(JsonFieldType.ARRAY).description("매치 데이터 목록 (GameData)"),
+                                subsectionWithPath("data.content[]").type(JsonFieldType.ARRAY).description("매치 데이터 목록 (GameResponse)"),
                                 fieldWithPath("data.hasNext").type(JsonFieldType.BOOLEAN).description("다음 페이지 존재 여부")
                         )
                 ));
@@ -215,18 +214,9 @@ class MatchControllerTest extends RestDocsSupport {
         // given
         String puuid = "puuid-1234";
 
-        ParticipantData myData = mock(ParticipantData.class);
-        given(myData.getSummonerName()).willReturn("MySummoner");
-        given(myData.getChampionName()).willReturn("Ahri");
-        given(myData.getKills()).willReturn(10);
-        given(myData.getDeaths()).willReturn(2);
-        given(myData.getAssists()).willReturn(5);
-        given(myData.isWin()).willReturn(true);
+        GameResponse gameData = mock(GameResponse.class);
 
-        GameData gameData = mock(GameData.class);
-        given(gameData.getMyData()).willReturn(myData);
-
-        Page<GameData> pageOfGameData = new Page<>(List.of(gameData), false);
+        Page<GameResponse> pageOfGameData = new Page<>(List.of(gameData), false);
 
         given(matchService.getMatchesBatch(any(MatchCommand.class))).willReturn(pageOfGameData);
 
@@ -254,7 +244,7 @@ class MatchControllerTest extends RestDocsSupport {
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
-                                subsectionWithPath("data.content[]").type(JsonFieldType.ARRAY).description("매치 데이터 목록 (GameData)"),
+                                subsectionWithPath("data.content[]").type(JsonFieldType.ARRAY).description("매치 데이터 목록 (GameResponse)"),
                                 fieldWithPath("data.hasNext").type(JsonFieldType.BOOLEAN).description("다음 페이지 존재 여부")
                         )
                 ));
@@ -368,7 +358,15 @@ class MatchControllerTest extends RestDocsSupport {
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
-                                subsectionWithPath("data.participants").type(JsonFieldType.OBJECT).description("참가자별 타임라인 데이터 (key: participantId, value: {itemSeq, skillSeq})")
+                                fieldWithPath("data.participants").type(JsonFieldType.OBJECT).description("참가자별 타임라인 데이터 (key: participantId)"),
+                                fieldWithPath("data.participants.*.itemSeq[]").type(JsonFieldType.ARRAY).description("아이템 구매 순서"),
+                                fieldWithPath("data.participants.*.itemSeq[].itemId").type(JsonFieldType.NUMBER).description("아이템 ID"),
+                                fieldWithPath("data.participants.*.itemSeq[].minute").type(JsonFieldType.NUMBER).description("구매 시간 (분)"),
+                                fieldWithPath("data.participants.*.itemSeq[].type").type(JsonFieldType.STRING).description("이벤트 타입"),
+                                fieldWithPath("data.participants.*.skillSeq[]").type(JsonFieldType.ARRAY).description("스킬 레벨업 순서"),
+                                fieldWithPath("data.participants.*.skillSeq[].skillSlot").type(JsonFieldType.NUMBER).description("스킬 슬롯 (1-4)"),
+                                fieldWithPath("data.participants.*.skillSeq[].minute").type(JsonFieldType.NUMBER).description("레벨업 시간 (분)"),
+                                fieldWithPath("data.participants.*.skillSeq[].type").type(JsonFieldType.STRING).description("이벤트 타입")
                         )
                 ));
     }

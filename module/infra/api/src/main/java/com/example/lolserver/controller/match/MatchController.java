@@ -4,7 +4,7 @@ import com.example.lolserver.domain.match.application.command.MSChampionCommand;
 import com.example.lolserver.domain.match.application.command.MatchCommand;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.application.MatchService;
-import com.example.lolserver.domain.match.domain.GameData;
+import com.example.lolserver.domain.match.application.dto.GameResponse;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.controller.support.response.ApiResponse;
 import com.example.lolserver.controller.support.response.SliceResponse;
@@ -25,10 +25,10 @@ public class MatchController {
     private final MatchService matchService;
 
     @GetMapping("/matches/{matchId}")
-    public ResponseEntity<ApiResponse<GameData>> fetchMatchResponse(
+    public ResponseEntity<ApiResponse<GameResponse>> fetchMatchResponse(
             @PathVariable("matchId") String matchId
     ) {
-        GameData gameData = matchService.getGameData(matchId);
+        GameResponse gameData = matchService.getGameData(matchId);
 
         return ResponseEntity.ok(ApiResponse.success(gameData));
     }
@@ -43,10 +43,10 @@ public class MatchController {
     }
 
     @GetMapping("/matches")
-    public ResponseEntity<ApiResponse<SliceResponse<GameData>>> fetchGameData(
+    public ResponseEntity<ApiResponse<SliceResponse<GameResponse>>> fetchGameResponse(
         @ModelAttribute MatchCommand matchCommand
     ) {
-        Page<GameData> matches = matchService.getMatches(matchCommand);
+        Page<GameResponse> matches = matchService.getMatches(matchCommand);
 
         return ResponseEntity.ok(ApiResponse.success(SliceResponse.of(matches)));
     }
@@ -64,7 +64,7 @@ public class MatchController {
     }
 
     @GetMapping("/summoners/{puuid}/matches")
-    public ResponseEntity<ApiResponse<SliceResponse<GameData>>> fetchMatchesBySummoner(
+    public ResponseEntity<ApiResponse<SliceResponse<GameResponse>>> fetchMatchesBySummoner(
             @PathVariable("puuid") String puuid,
             @RequestParam(required = false) Integer queueId,
             @RequestParam(required = false) Integer pageNo,
@@ -76,7 +76,7 @@ public class MatchController {
                 .pageNo(pageNo != null ? pageNo : 1)
                 .region(region)
                 .build();
-        Page<GameData> matches = matchService.getMatchesBatch(matchCommand);
+        Page<GameResponse> matches = matchService.getMatchesBatch(matchCommand);
         return ResponseEntity.ok(ApiResponse.success(SliceResponse.of(matches)));
     }
 
