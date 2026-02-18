@@ -25,6 +25,9 @@ public class SkillEventsEntity {
     @JoinColumn(name = "timeline_timestamp", referencedColumnName = "timestamp", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private TimeLineEventEntity timeLineEvent;
 
+    @Column(name = "match_id", insertable = false, updatable = false)
+    private String matchId;
+
     private int skillSlot;
     private int participantId;
     private String levelUpType;

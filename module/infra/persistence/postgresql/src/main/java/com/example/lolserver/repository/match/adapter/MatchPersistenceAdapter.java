@@ -115,11 +115,11 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
 
         Map<String, List<ItemEventsEntity>> itemEventsByMatch =
                 timelineRepositoryCustom.selectAllItemEventsByMatchIds(matchIds).stream()
-                        .collect(Collectors.groupingBy(e -> e.getTimeLineEvent().getMatchEntity().getMatchId()));
+                        .collect(Collectors.groupingBy(ItemEventsEntity::getMatchId));
 
         Map<String, List<SkillEventsEntity>> skillEventsByMatch =
                 timelineRepositoryCustom.selectAllSkillEventsByMatchIds(matchIds).stream()
-                        .collect(Collectors.groupingBy(e -> e.getTimeLineEvent().getMatchEntity().getMatchId()));
+                        .collect(Collectors.groupingBy(SkillEventsEntity::getMatchId));
 
         // 매치별 GameResponse 조립 (DB 호출 없이 메모리에서)
         List<GameResponse> gameDataList = matchEntities.stream()
