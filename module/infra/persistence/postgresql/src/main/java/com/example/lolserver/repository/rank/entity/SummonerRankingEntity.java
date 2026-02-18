@@ -20,8 +20,8 @@ import java.time.LocalDateTime;
         name = "summoner_ranking",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "unique_puuid_queue",
-                        columnNames = {"puuid", "queue"}
+                        name = "unique_puuid_queue_region",
+                        columnNames = {"puuid", "queue", "region"}
                 )
         }
 )
@@ -39,6 +39,9 @@ public class SummonerRankingEntity {
     @Column(name = "queue", nullable = false, length = 50)
     private String queue;
 
+    @Column(name = "region", nullable = false, length = 10)
+    private String region;
+
     @Column(name = "current_rank", nullable = false)
     private int currentRank;
 
@@ -51,13 +54,13 @@ public class SummonerRankingEntity {
     @Column(name = "tag_line", length = 10)
     private String tagLine;
 
-    @Column(name = "most_champion1")
+    @Column(name = "most_champion_1")
     private String mostChampion1;
 
-    @Column(name = "most_champion2")
+    @Column(name = "most_champion_2")
     private String mostChampion2;
 
-    @Column(name = "most_champion3")
+    @Column(name = "most_champion_3")
     private String mostChampion3;
 
     @Column(name = "wins", nullable = false)

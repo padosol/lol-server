@@ -21,13 +21,15 @@ import java.util.List;
 public class ParticipantData {
 
     // 유저 정보
-    private String summonerName;
     private int profileIcon;
     private String riotIdGameName;
     private String riotIdTagline;
     private String puuid;
     private int summonerLevel;
     private String summonerId;
+    private String tier;
+    private String tierRank;
+    private Integer absolutePoints;
 
     // 게임 정보
     private String individualPosition;

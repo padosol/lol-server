@@ -128,6 +128,7 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         return SummonerRankingEntity.builder()
                 .puuid("puuid-" + gameName)
                 .queue(queue)
+                .region("KR")
                 .currentRank(currentRank)
                 .rankChange(0)
                 .gameName(gameName)
