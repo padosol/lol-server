@@ -24,5 +24,6 @@ public class GameInfoData {
     private	int queueId;
     private	String tournamentCode;
     private String matchId;
+    private Integer averageTier;
 
 }

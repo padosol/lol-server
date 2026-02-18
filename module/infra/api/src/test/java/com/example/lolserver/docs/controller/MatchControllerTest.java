@@ -219,7 +219,7 @@ class MatchControllerTest extends RestDocsSupport {
         GameInfoData gameInfoData = new GameInfoData(
                 "2", 1700000000000L, 1800L, 1700001800000L,
                 "CLASSIC", 1700000000000L, "MATCHED_GAME",
-                "14.1.1", 11, "KR", 420, "", "KR_7123456789"
+                "14.1.1", 11, "KR", 420, "", "KR_7123456789", 1600
         );
 
         ItemValue itemValue = ItemValue.builder()
@@ -333,6 +333,7 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].gameInfoData.queueId").type(JsonFieldType.NUMBER).description("큐 ID (420: 솔로랭크, 430: 일반 등)"),
                                 fieldWithPath("data.content[].gameInfoData.tournamentCode").type(JsonFieldType.STRING).description("토너먼트 코드"),
                                 fieldWithPath("data.content[].gameInfoData.matchId").type(JsonFieldType.STRING).description("매치 ID"),
+                                fieldWithPath("data.content[].gameInfoData.averageTier").type(JsonFieldType.NUMBER).description("평균 티어 (숫자)"),
 
                                 // ParticipantData - 유저 정보
                                 fieldWithPath("data.content[].participantData[].profileIcon").type(JsonFieldType.NUMBER).description("프로필 아이콘 ID"),
