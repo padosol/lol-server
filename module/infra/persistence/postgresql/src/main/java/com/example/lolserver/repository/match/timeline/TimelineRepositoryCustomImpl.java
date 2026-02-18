@@ -44,4 +44,18 @@ public class TimelineRepositoryCustomImpl implements TimelineRepositoryCustom{
                 .where(skillEventsEntity.timeLineEvent.matchEntity.matchId.eq(matchId))
                 .fetch();
     }
+
+    @Override
+    public List<ItemEventsEntity> selectAllItemEventsByMatchIds(List<String> matchIds) {
+        return jpaQueryFactory.selectFrom(itemEventsEntity)
+                .where(itemEventsEntity.matchId.in(matchIds))
+                .fetch();
+    }
+
+    @Override
+    public List<SkillEventsEntity> selectAllSkillEventsByMatchIds(List<String> matchIds) {
+        return jpaQueryFactory.selectFrom(skillEventsEntity)
+                .where(skillEventsEntity.matchId.in(matchIds))
+                .fetch();
+    }
 }

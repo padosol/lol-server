@@ -137,6 +137,17 @@ public MSChampionDTO(Double kills, Double deaths, ...) {
 - 컨트롤러 응답: `com.example.lolserver.controller.{domainName}.response`
 - 컨트롤러 매퍼: `com.example.lolserver.controller.{domainName}.mapper`
 
+### 클래스 작성요령
+
+| 계층 | 접미사 | 예시 | 위치 |
+|------|--------|------|------|
+| 도메인 응답 DTO | `*Response` | `GameResponse` | `application/dto/` |
+| 도메인 ReadModel | `*ReadModel` | `CurrentGameInfoReadModel` | `application/model/` |
+| 컨트롤러 응답 | `*Response` | `SliceResponse` | `controller/*/response/` |
+| 영속성 DTO | `*DTO` | `MSChampionDTO` | `repository/*/dto/` |
+| 엔티티 | `*Entity` | `MatchEntity` | `repository/*/entity/` |
+| 커맨드 | `*Command` | `MatchCommand` | `application/command/` |
+
 ## 설정
 
 애플리케이션 설정은 모듈별 YAML 파일에서 가져옵니다:

@@ -1,6 +1,6 @@
 package com.example.lolserver.repository.match.adapter;
 
-import com.example.lolserver.domain.match.domain.GameData;
+import com.example.lolserver.domain.match.application.dto.GameResponse;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.domain.match.domain.gameData.GameInfoData;
@@ -82,7 +82,7 @@ class MatchPersistenceAdapterTest {
         );
     }
 
-    @DisplayName("PUUID와 queueId로 매치 목록을 조회하면 GameData 페이지를 반환한다")
+    @DisplayName("PUUID와 queueId로 매치 목록을 조회하면 GameResponse 페이지를 반환한다")
     @Test
     void getMatches_validParams_returnsGameDataPage() {
         // given
@@ -111,7 +111,7 @@ class MatchPersistenceAdapterTest {
         given(matchTeamRepository.findByMatchId(anyString())).willReturn(Collections.emptyList());
 
         // when
-        Page<GameData> result = adapter.getMatches(puuid, queueId, pageable);
+        Page<GameResponse> result = adapter.getMatches(puuid, queueId, pageable);
 
         // then
         assertThat(result).isNotNull();
@@ -146,7 +146,7 @@ class MatchPersistenceAdapterTest {
         then(matchSummonerRepositoryCustom).should().findAllMatchSummonerByPuuidAndSeason(puuid, season, queueId);
     }
 
-    @DisplayName("매치 ID로 게임 데이터를 조회하면 Optional<GameData>를 반환한다")
+    @DisplayName("매치 ID로 게임 데이터를 조회하면 Optional<GameResponse>를 반환한다")
     @Test
     void getGameData_existingMatchId_returnsGameData() {
         // given
@@ -171,7 +171,7 @@ class MatchPersistenceAdapterTest {
         given(matchTeamRepository.findByMatchId(matchId)).willReturn(Collections.emptyList());
 
         // when
-        Optional<GameData> result = adapter.getGameData(matchId);
+        Optional<GameResponse> result = adapter.getGameData(matchId);
 
         // then
         assertThat(result).isPresent();
@@ -187,7 +187,7 @@ class MatchPersistenceAdapterTest {
         given(matchRepository.findById(matchId)).willReturn(Optional.empty());
 
         // when
-        Optional<GameData> result = adapter.getGameData(matchId);
+        Optional<GameResponse> result = adapter.getGameData(matchId);
 
         // then
         assertThat(result).isEmpty();
@@ -289,11 +289,11 @@ class MatchPersistenceAdapterTest {
         given(matchTeamRepository.findByMatchId(anyString())).willReturn(Collections.emptyList());
 
         // when
-        Page<GameData> result = adapter.getMatches(puuid, queueId, pageable);
+        Page<GameResponse> result = adapter.getMatches(puuid, queueId, pageable);
 
         // then
         assertThat(result.getContent()).hasSize(1);
-        GameData gameData = result.getContent().get(0);
+        GameResponse gameData = result.getContent().get(0);
         assertThat(gameData.getParticipantData().get(0).getPlacement()).isEqualTo(1);
         assertThat(gameData.getParticipantData().get(1).getPlacement()).isEqualTo(3);
     }
@@ -349,7 +349,7 @@ class MatchPersistenceAdapterTest {
         given(matchMapper.toDomain(redTeamEntity)).willReturn(redTeamInfo);
 
         // when
-        Optional<GameData> result = adapter.getGameData(matchId);
+        Optional<GameResponse> result = adapter.getGameData(matchId);
 
         // then
         assertThat(result).isPresent();
