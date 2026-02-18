@@ -1,5 +1,7 @@
 package com.example.lolserver.repository.match.mapper;
 
+import com.example.lolserver.Division;
+import com.example.lolserver.Tier;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.Match;
 import com.example.lolserver.domain.match.domain.gameData.GameInfoData;
@@ -19,6 +21,7 @@ import com.example.lolserver.repository.match.entity.timeline.events.SkillEvents
 import com.example.lolserver.repository.match.entity.value.matchsummoner.StyleValue;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 import java.util.ArrayList;
@@ -67,7 +70,30 @@ public interface MatchMapper {
 
     MSChampion toDomain(MSChampionDTO msChampionDTO);
 
+    @Mapping(target = "averageTier", source = "averageTier", qualifiedByName = "mapAverageTierToString")
+    @Mapping(target = "averageRank", source = "averageTier", qualifiedByName = "mapAverageTierToRank")
     GameInfoData toGameInfoData(MatchEntity matchEntity);
+
+    @Named("mapAverageTierToString")
+    default String mapAverageTierToString(Integer absolutePoints) {
+        if (absolutePoints == null) {
+            return null;
+        }
+        return Tier.fromAbsolutePoints(absolutePoints).name();
+    }
+
+    @Named("mapAverageTierToRank")
+    default String mapAverageTierToRank(Integer absolutePoints) {
+        if (absolutePoints == null) {
+            return null;
+        }
+        Tier tier = Tier.fromAbsolutePoints(absolutePoints);
+        if (!tier.hasDivision()) {
+            return null;
+        }
+        int remainder = absolutePoints - tier.getScore();
+        return Division.fromRemainingPoints(remainder).name();
+    }
 
     // Mappers for value objects
     ItemValue toDomain(com.example.lolserver.repository.match.entity.value.matchsummoner.ItemValue itemValue);

@@ -54,13 +54,13 @@ public class SummonerRankingEntity {
     @Column(name = "tag_line", length = 10)
     private String tagLine;
 
-    @Column(name = "most_champion_1")
+    @Column(name = "most_champion1")
     private String mostChampion1;
 
-    @Column(name = "most_champion_2")
+    @Column(name = "most_champion2")
     private String mostChampion2;
 
-    @Column(name = "most_champion_3")
+    @Column(name = "most_champion3")
     private String mostChampion3;
 
     @Column(name = "wins", nullable = false)

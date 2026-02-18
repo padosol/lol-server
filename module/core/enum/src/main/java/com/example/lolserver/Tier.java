@@ -22,4 +22,17 @@ public enum Tier {
         this.score = score;
     }
 
+    public static Tier fromAbsolutePoints(int absolutePoints) {
+        for (Tier tier : values()) {
+            if (tier.score <= absolutePoints) {
+                return tier;
+            }
+        }
+        return IRON;
+    }
+
+    public boolean hasDivision() {
+        return this != MASTER && this != GRANDMASTER && this != CHALLENGER;
+    }
+
 }
