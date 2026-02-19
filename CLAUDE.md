@@ -21,9 +21,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # 클린 빌드
 ./gradlew clean build
 
-# 인프라 서비스 시작
-cd docker && docker-compose up -d
-# 서비스: PostgreSQL:5432, Redis:6379, RabbitMQ:5672 (관리UI:15672)
 ```
 
 ## 기술 스택
@@ -98,34 +95,9 @@ module/
 
 #### Read Model 생성 방식
 
-**1. 팩토리 메서드** (권장)
-```java
-public class SummonerResponse {
-    public static SummonerResponse of(Summoner summoner) {
-        return SummonerResponse.builder()
-            .puuid(summoner.getPuuid())
-            .gameName(summoner.getGameName())
-            .build();
-    }
-}
-```
-
-**2. Java Record** (외부 API 결과)
-```java
-public record CurrentGameInfoReadModel(
-    long gameId,
-    String gameType,
-    List<ParticipantReadModel> participants
-) {}
-```
-
-**3. QueryDSL Projection** (복잡한 조회)
-```java
-@QueryProjection
-public MSChampionDTO(Double kills, Double deaths, ...) {
-    this.winRate = calculateWinRate();  // 계산 필드
-}
-```
+- **팩토리 메서드** (권장): `SummonerResponse.of(Summoner)` - Builder 패턴으로 도메인→DTO 변환
+- **Java Record**: 외부 API 조회 결과용 불변 객체 (예: `CurrentGameInfoReadModel`)
+- **QueryDSL Projection**: `@QueryProjection` 생성자로 DB→DTO 직접 매핑
 
 ### 패키지 명명 규칙
 
@@ -148,18 +120,52 @@ public MSChampionDTO(Double kills, Double deaths, ...) {
 | 엔티티 | `*Entity` | `MatchEntity` | `repository/*/entity/` |
 | 커맨드 | `*Command` | `MatchCommand` | `application/command/` |
 
+### API 응답 래퍼 패턴
+
+모든 API 응답은 `ApiResponse<T>` 래퍼로 감쌉니다:
+- `ApiResponse.success(data)` - 성공 응답
+- `ApiResponse.error(errorType)` - 에러 응답
+- 페이지네이션: `SliceResponse<T>` (Spring `Page<T>` 대신 커스텀 `Page<T>` 사용)
+
+### 에러 처리
+
+- `CoreException(ErrorType)` - 비즈니스 예외 (RuntimeException 상속)
+- `ErrorType` enum - HTTP 상태 코드 매핑
+- `@RestControllerAdvice(CoreExceptionAdvice)` - 전역 예외 핸들러
+
+### 테스트 패턴
+
+- **단위 테스트**: `@ExtendWith(MockitoExtension.class)`, BDDMockito (`given/then`)
+- **JPA 테스트**: `RepositoryTestBase` 상속 (`@DataJpaTest` + H2)
+- **RestDocs 테스트**: `RestDocsSupport` 상속 (Standalone MockMvc)
+- **어댑터 테스트**: Mock 기반 단위 테스트 (통합 테스트 아님)
+- `@DisplayName("한글 설명")`, AssertJ `assertThat` 사용
+
+### 코드 컨벤션
+
+- DI: `@RequiredArgsConstructor` + `private final` 필드 (생성자 주입)
+- 로깅: `@Slf4j`
+- 컨트롤러 응답 DTO: Java `record` (불변)
+- 커맨드: `@Builder @Getter @Setter @NoArgsConstructor @AllArgsConstructor`
+- 트랜잭션: 조회 `@Transactional(readOnly = true)`, 변경 `@Transactional`
+
+### 커밋 메시지 컨벤션
+
+- 형식: `<type>: <한글 설명>`
+- 타입: `feat`, `fix`, `refactor`, `docs`, `chore`
+- 예시: `feat: 소환사별 매치 목록 배치 조회 API 추가`
+
 ## 설정
 
 애플리케이션 설정은 모듈별 YAML 파일에서 가져옵니다:
-- `application.yml` imports: `core.yml`, `api.yml`, `client-repository.yml`, `rabbitmq.yml`, `postgresql.yml`, `redis.yml`
-- 프로파일: `local`, `prod`, `test`
+- `application.yml` imports: `core-local.yml`, `api-local.yml`, `client-repository-local.yml`, `rabbitmq-local.yml`, `postgresql-local.yml`, `redis-local.yml`
+- 프로파일: `local`, `dev`, `prod`, `test`
 
 Riot API 키 설정: `riot.api.key` 속성
 
 ### 참조 문서
 
-TDD 진행 시 다음 문서를 참조하여 패턴 준수:
-- `.claude/agents/test-analyzer.md` - 테스트 대상 분석
-- `.claude/agents/port-analyzer.md` - 포트 인터페이스 분석
-- `.claude/agents/test-generator.md` - 테스트 생성 패턴
-- `.claude/agents/restdocs-generator.md` - RestDocs 패턴
+TDD 진행 시 다음 스킬을 참조하여 패턴 준수:
+- `.claude/skills/test-driven-development/SKILL.md` - TDD 워크플로우 및 패턴
+- `.claude/skills/test-driven-development/testing-anti-patterns.md` - 테스트 안티패턴
+- `.claude/skills/build-validator/SKILL.md` - 빌드 오류 분석
