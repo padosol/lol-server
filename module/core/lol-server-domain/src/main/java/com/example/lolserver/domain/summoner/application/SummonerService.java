@@ -2,6 +2,7 @@ package com.example.lolserver.domain.summoner.application;
 
 import com.example.lolserver.RenewalStatus;
 import com.example.lolserver.domain.summoner.application.dto.SummonerAutoResponse;
+import com.example.lolserver.domain.summoner.application.dto.SummonerRenewalInfoResponse;
 import com.example.lolserver.domain.summoner.application.dto.SummonerResponse;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerCachePort;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerClientPort;
@@ -19,8 +20,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -117,6 +122,8 @@ public class SummonerService {
         if (summonerCachePort.isClickCooldown(puuid)) {
             return new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
         }
+        // 10초 클릭 쿨다운을 설정한다
+        summonerCachePort.setClickCooldown(puuid);
 
         // DB에서 소환사 정보를 조회한다
         Summoner summoner = summonerPersistencePort.findById(puuid)
@@ -125,7 +132,6 @@ public class SummonerService {
         // 마지막 갱신으로부터 3분이 경과했는지 확인한다
         LocalDateTime clickDateTime = LocalDateTime.now();
         if (summoner.isRevision(clickDateTime)) {
-            summonerCachePort.setClickCooldown(puuid);           // 10초 클릭 쿨다운을 설정한다
             summonerCachePort.createSummonerRenewal(puuid);      // Redis에 갱신 세션 마커를 생성한다 (진행 상태 추적용)
             // RabbitMQ로 갱신 메시지를 발행하여 비동기 처리를 시작한다
             summonerMessagePort.sendMessage(
@@ -168,5 +174,23 @@ public class SummonerService {
         } finally {
             summonerCachePort.unlock(lockKey);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<SummonerRenewalInfoResponse> getRefreshingSummoners() {
+        Set<String> puuids = summonerCachePort.getRefreshingPuuids();
+        if (puuids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Summoner> summoners = summonerPersistencePort.findAllByPuuidIn(puuids);
+        Map<String, Summoner> map = summoners.stream()
+                .collect(Collectors.toMap(Summoner::getPuuid, Function.identity()));
+
+        return puuids.stream()
+                .map(puuid -> map.containsKey(puuid)
+                        ? SummonerRenewalInfoResponse.of(map.get(puuid))
+                        : SummonerRenewalInfoResponse.ofPuuidOnly(puuid))
+                .collect(Collectors.toList());
     }
 }

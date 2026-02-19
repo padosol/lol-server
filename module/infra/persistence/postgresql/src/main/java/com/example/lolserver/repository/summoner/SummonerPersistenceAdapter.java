@@ -8,6 +8,8 @@ import com.example.lolserver.repository.summoner.repository.dsl.SummonerReposito
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,5 +53,14 @@ public class SummonerPersistenceAdapter implements SummonerPersistencePort {
         SummonerEntity summonerEntity = summonerMapper.toEntity(summoner);
         SummonerEntity savedSummoner = summonerJpaRepository.save(summonerEntity);
         return summonerMapper.toDomain(savedSummoner);
+    }
+
+    @Override
+    public List<Summoner> findAllByPuuidIn(Collection<String> puuids) {
+        if (puuids == null || puuids.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<SummonerEntity> entities = summonerJpaRepository.findAllByPuuidIn(puuids);
+        return summonerMapper.toDomainList(entities);
     }
 }

@@ -16,8 +16,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -163,6 +165,46 @@ class SummonerPersistenceAdapterTest extends RepositoryTestBase {
         // verify persistence
         Optional<SummonerEntity> persisted = summonerJpaRepository.findById("save-test-puuid");
         assertThat(persisted).isPresent();
+    }
+
+    @DisplayName("PUUID 목록으로 소환사를 일괄 조회하면 도메인 객체 리스트를 반환한다")
+    @Test
+    void findAllByPuuidIn_validPuuids_returnsDomainList() {
+        // given
+        SummonerEntity summoner1 = createSummonerEntity("batch-puuid-1", "Player1", "KR1", "kr");
+        SummonerEntity summoner2 = createSummonerEntity("batch-puuid-2", "Player2", "KR2", "kr");
+        summonerJpaRepository.save(summoner1);
+        summonerJpaRepository.save(summoner2);
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        List<Summoner> result = adapter.findAllByPuuidIn(Set.of("batch-puuid-1", "batch-puuid-2"));
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting(Summoner::getPuuid)
+                .containsExactlyInAnyOrder("batch-puuid-1", "batch-puuid-2");
+    }
+
+    @DisplayName("빈 PUUID 목록으로 조회하면 빈 리스트를 반환한다")
+    @Test
+    void findAllByPuuidIn_emptyPuuids_returnsEmptyList() {
+        // given & when
+        List<Summoner> result = adapter.findAllByPuuidIn(Collections.emptySet());
+
+        // then
+        assertThat(result).isEmpty();
+    }
+
+    @DisplayName("존재하지 않는 PUUID 목록으로 조회하면 빈 리스트를 반환한다")
+    @Test
+    void findAllByPuuidIn_nonExistingPuuids_returnsEmptyList() {
+        // given & when
+        List<Summoner> result = adapter.findAllByPuuidIn(Set.of("non-existing-1", "non-existing-2"));
+
+        // then
+        assertThat(result).isEmpty();
     }
 
     private SummonerEntity createSummonerEntity(String puuid, String gameName, String tagLine, String region) {
