@@ -27,8 +27,12 @@ public class SummonerResponse {
                 .summonerLevel(summoner.getSummonerLevel())
                 .gameName(summoner.getGameName())
                 .tagLine(summoner.getTagLine())
-                .lastRevisionDateTime(summoner.getRevisionDate() != null ? summoner.getRevisionDate().toString() : null)
-                .lastRevisionClickDateTime(summoner.getRevisionClickDate() != null ? summoner.getRevisionClickDate().toString() : null)
+                .lastRevisionDateTime(
+                    summoner.getRevisionDate() != null
+                        ? summoner.getRevisionDate().toString() : null)
+                .lastRevisionClickDateTime(
+                    summoner.getRevisionClickDate() != null
+                        ? summoner.getRevisionClickDate().toString() : null)
                 .build();
     }
 }

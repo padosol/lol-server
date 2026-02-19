@@ -1,4 +1,4 @@
-package com.example.lolserver.repository.champion_stat.entity;
+package com.example.lolserver.repository.championstat.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

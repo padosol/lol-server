@@ -1,4 +1,4 @@
-package com.example.lolserver.repository.champion_stat.entity;
+package com.example.lolserver.repository.championstat.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -6,15 +6,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-
 @Entity
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "champion_matchup_stat")
-public class ChampionMatchupStatEntity {
+@Table(name = "champion_spell_stat")
+public class ChampionSpellStatEntity {
 
     @Id
     @Column(name = "id")
@@ -42,24 +40,15 @@ public class ChampionMatchupStatEntity {
     @Column(name = "game_version", nullable = false, length = 20)
     private String gameVersion;
 
-    @Column(name = "opponent_champion_id", nullable = false)
-    private int opponentChampionId;
+    @Column(name = "spell1_id", nullable = false)
+    private int spell1Id;
+
+    @Column(name = "spell2_id", nullable = false)
+    private int spell2Id;
 
     @Column(name = "games", nullable = false)
     private int games;
 
     @Column(name = "wins", nullable = false)
     private int wins;
-
-    @Column(name = "avg_kills", nullable = false, precision = 5, scale = 2)
-    private BigDecimal avgKills;
-
-    @Column(name = "avg_deaths", nullable = false, precision = 5, scale = 2)
-    private BigDecimal avgDeaths;
-
-    @Column(name = "avg_assists", nullable = false, precision = 5, scale = 2)
-    private BigDecimal avgAssists;
-
-    @Column(name = "avg_gold_diff", nullable = false, precision = 9, scale = 2)
-    private BigDecimal avgGoldDiff;
 }

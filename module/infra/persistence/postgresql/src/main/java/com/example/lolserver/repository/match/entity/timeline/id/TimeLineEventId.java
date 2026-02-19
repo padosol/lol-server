@@ -15,8 +15,12 @@ public class TimeLineEventId implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
         TimeLineEventId timeLineEventId = (TimeLineEventId) obj;
         return Objects.equals(this.matchEntity, timeLineEventId.matchEntity)
                 && Objects.equals(this.timestamp, timeLineEventId.timestamp);

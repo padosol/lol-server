@@ -75,6 +75,8 @@ public class FakeChampionClientAdapter implements ChampionClientPort {
                 }
             }
             case REJECT_SILENTLY -> bucket.tryConsume(1);
+            default -> throw new IllegalArgumentException(
+                "Unknown rate limit strategy: " + properties.getRateLimitStrategy());
         }
     }
 

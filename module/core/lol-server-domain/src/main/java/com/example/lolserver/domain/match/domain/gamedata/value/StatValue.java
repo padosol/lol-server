@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.match.domain.gameData.value;
+package com.example.lolserver.domain.match.domain.gamedata.value;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

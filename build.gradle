@@ -26,6 +26,7 @@ subprojects {
     apply plugin: 'io.spring.dependency-management'
     apply plugin: 'org.asciidoctor.jvm.convert'
     apply plugin: 'jacoco'
+    apply plugin: 'checkstyle'
 
     jacoco {
         toolVersion = "0.8.11"
@@ -49,6 +50,22 @@ subprojects {
                 ])
             }))
         }
+    }
+
+    checkstyle {
+        toolVersion = '10.21.4'
+        configFile = rootProject.file('config/checkstyle/checkstyle.xml')
+        configProperties = ['suppressionFile': rootProject.file('config/checkstyle/suppressions.xml')]
+        maxWarnings = 0
+        maxErrors = 0
+        ignoreFailures = false
+    }
+
+    tasks.withType(Checkstyle).configureEach {
+        exclude '**/build/generated/**'
+        exclude '**/Q*.java'
+        exclude '**/*MapperImpl.java'
+        exclude '**/*ClientMapperImpl.java'
     }
 
     java {

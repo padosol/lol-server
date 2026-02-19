@@ -1,10 +1,10 @@
 package com.example.lolserver.domain.match.domain;
 
-import com.example.lolserver.domain.match.domain.gameData.timeline.ItemSeqData;
-import com.example.lolserver.domain.match.domain.gameData.timeline.ParticipantTimeline;
-import com.example.lolserver.domain.match.domain.gameData.timeline.SkillSeqData;
-import com.example.lolserver.domain.match.domain.gameData.timeline.events.ItemEvents;
-import com.example.lolserver.domain.match.domain.gameData.timeline.events.SkillEvents;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.ItemSeqData;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.ParticipantTimeline;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.SkillSeqData;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.events.ItemEvents;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.events.SkillEvents;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

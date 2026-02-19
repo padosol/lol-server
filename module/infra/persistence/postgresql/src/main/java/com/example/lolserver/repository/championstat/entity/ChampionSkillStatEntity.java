@@ -1,4 +1,4 @@
-package com.example.lolserver.repository.champion_stat.entity;
+package com.example.lolserver.repository.championstat.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "champion_item_stat")
-public class ChampionItemStatEntity {
+@Table(name = "champion_skill_stat")
+public class ChampionSkillStatEntity {
 
     @Id
     @Column(name = "id")
@@ -40,11 +40,11 @@ public class ChampionItemStatEntity {
     @Column(name = "game_version", nullable = false, length = 20)
     private String gameVersion;
 
-    @Column(name = "build_type", nullable = false, length = 20)
-    private String buildType;
+    @Column(name = "skill_order", nullable = false, length = 500)
+    private String skillOrder;
 
-    @Column(name = "item_ids", nullable = false, length = 255)
-    private String itemIds;
+    @Column(name = "skill_priority", nullable = false, length = 20)
+    private String skillPriority;
 
     @Column(name = "games", nullable = false)
     private int games;

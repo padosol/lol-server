@@ -3,8 +3,6 @@ package com.example.lolserver.domain.match.application.port.out;
 import com.example.lolserver.domain.match.application.dto.GameResponse;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.TimelineData;
-import com.example.lolserver.domain.match.domain.gameData.timeline.events.ItemEvents;
-import com.example.lolserver.domain.match.domain.gameData.timeline.events.SkillEvents;
 import com.example.lolserver.support.Page;
 import org.springframework.data.domain.Pageable;
 

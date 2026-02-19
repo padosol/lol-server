@@ -9,7 +9,11 @@ import com.example.lolserver.controller.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import com.example.lolserver.domain.summoner.domain.vo.GameName;
@@ -96,7 +100,7 @@ public class SummonerController {
     }
 
     /**
-     * 유저 정보 갱신 상태 조회 API 
+     * 유저 정보 갱신 상태 조회 API
      * @param puuid 유저 ID
      * @return 유저 정보 갱신 상태
      */

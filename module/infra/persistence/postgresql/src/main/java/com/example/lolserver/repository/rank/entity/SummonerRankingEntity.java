@@ -18,12 +18,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Table(
         name = "summoner_ranking",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "unique_puuid_queue_region",
-                        columnNames = {"puuid", "queue", "region"}
-                )
-        }
+        uniqueConstraints = @UniqueConstraint(
+                name = "unique_puuid_queue_region",
+                columnNames = {"puuid", "queue", "region"}
+        )
 )
 @EntityListeners(AuditingEntityListener.class)
 public class SummonerRankingEntity {

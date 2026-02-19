@@ -45,13 +45,13 @@ public class SummonerEntity {
     }
 
     public void splitGameNameTagLine() {
-        if(StringUtils.hasText(this.gameName)) {
+        if (StringUtils.hasText(this.gameName)) {
 
             String[] split = this.gameName.split("-");
 
             this.gameName = split[0];
 
-            if(split.length > 1) {
+            if (split.length > 1) {
                 this.tagLine = split[1];
             }
         }

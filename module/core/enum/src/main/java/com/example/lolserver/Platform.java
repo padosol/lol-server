@@ -23,12 +23,11 @@ public enum Platform {
     SG("SG2", "en_SG", "SEA"),
     TR("TH2", "th_TH", "SEA"),
     TW("TW2", "zh_TW", "SEA"),
-    VN("VN2", "vn_VN", "SEA"),
-    ;
+    VN("VN2", "vn_VN", "SEA");
 
     private static final Map<String, Platform> PLATFORM_NAME = new HashMap<>();
     static {
-        for(Platform p : values()) {
+        for (Platform p : values()) {
             PLATFORM_NAME.put(p.name(), p);
         }
     }
@@ -39,7 +38,7 @@ public enum Platform {
 
     Platform(String region, String language, String platform) {
         this.region = region;
-        this. language = language;
+        this.language = language;
         this.platform = platform;
     }
 
@@ -49,7 +48,7 @@ public enum Platform {
 
     public static String getValueOfName(String name) {
 
-        if(PLATFORM_NAME.containsKey(name.toUpperCase())) {
+        if (PLATFORM_NAME.containsKey(name.toUpperCase())) {
             return PLATFORM_NAME.get(name.toUpperCase()).name();
         }
 

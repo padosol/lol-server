@@ -6,7 +6,7 @@ import java.util.List;
 
 public record ChampionRotateResponse(
         int maxNewPlayerLevel,
-        List<Integer>freeChampionIdsForNewPlayers,
+        List<Integer> freeChampionIdsForNewPlayers,
         List<Integer> freeChampionIds
 ) {
 

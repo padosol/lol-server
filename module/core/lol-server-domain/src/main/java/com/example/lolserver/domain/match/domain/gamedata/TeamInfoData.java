@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.match.domain.gameData;
+package com.example.lolserver.domain.match.domain.gamedata;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,8 +14,8 @@ import java.util.List;
 @AllArgsConstructor
 public class TeamInfoData {
 
-    private	int teamId;
-    private	boolean win;
+    private int teamId;
+    private boolean win;
 
     private int championKills;
 
@@ -24,6 +24,6 @@ public class TeamInfoData {
     private int towerKills;
     private int inhibitorKills;
 
-    private	List<Integer> championId = new ArrayList<>();
-    private	List<Integer> pickTurn = new ArrayList<>();
+    private List<Integer> championId = new ArrayList<>();
+    private List<Integer> pickTurn = new ArrayList<>();
 }

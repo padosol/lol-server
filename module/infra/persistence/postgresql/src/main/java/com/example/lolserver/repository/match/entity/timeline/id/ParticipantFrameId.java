@@ -16,8 +16,12 @@ public class ParticipantFrameId implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
         ParticipantFrameId participantFrameId = (ParticipantFrameId) obj;
         return Objects.equals(this.matchEntity, participantFrameId.matchEntity)
             && Objects.equals(this.timestamp, participantFrameId.timestamp)

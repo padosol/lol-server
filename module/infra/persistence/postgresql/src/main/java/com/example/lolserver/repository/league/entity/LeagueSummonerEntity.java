@@ -18,12 +18,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Table(
         name = "league_summoner",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "unique_index_puuid_and_queue",
-                        columnNames = {"puuid", "queue"}
-                )
-        }
+        uniqueConstraints = @UniqueConstraint(
+                name = "unique_index_puuid_and_queue",
+                columnNames = {"puuid", "queue"}
+        )
 )
 @EntityListeners(AuditingEntityListener.class)
 public class LeagueSummonerEntity {
@@ -59,7 +57,11 @@ public class LeagueSummonerEntity {
     @LastModifiedBy
     private LocalDateTime updateAt;
 
-//    public LeagueSummonerEntity(String puuid, String queue, String leagueId, int wins, int losses, String tier, String rank, int leaguePoints, boolean veteran, boolean inactive, boolean freshBlood, boolean hotStreak) {
+//    public LeagueSummonerEntity(
+//            String puuid, String queue, String leagueId,
+//            int wins, int losses, String tier, String rank,
+//            int leaguePoints, boolean veteran, boolean inactive,
+//            boolean freshBlood, boolean hotStreak) {
 //        this.puuid = puuid;
 //        this.queue = queue;
 //        this.leagueId = leagueId;

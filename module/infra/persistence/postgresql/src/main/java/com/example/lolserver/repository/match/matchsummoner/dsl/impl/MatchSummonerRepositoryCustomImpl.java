@@ -6,7 +6,10 @@ import com.example.lolserver.repository.match.dto.QMSChampionDTO;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
 import com.example.lolserver.repository.match.matchsummoner.dsl.MatchSummonerRepositoryCustom;
 import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.dsl.*;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -73,13 +76,23 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                         Projections.fields(MSChampionDTO.class,
                                 matchSummonerEntity.championId,
                                 matchSummonerEntity.championName,
-                                Expressions.template(Double.class, "ROUND({0}, 1)", matchSummonerEntity.kills.avg()).as("kills"),
-                                Expressions.template(Double.class, "ROUND({0}, 1)", matchSummonerEntity.deaths.avg()).as("deaths"),
-                                Expressions.template(Double.class, "ROUND({0}, 1)", matchSummonerEntity.assists.avg()).as("assists"),
-                                Expressions.template(Double.class, "ROUND({0}, 1)", matchSummonerEntity.assists.avg()).as("assists"),
-                                Expressions.template(Double.class, "ROUND({0}, 1)", matchSummonerEntity.neutralMinionsKilled.add(matchSummonerEntity.totalMinionsKilled).avg()).as("cs"),
-                                Expressions.template(Double.class, "ROUND({0}, 1)", matchEntity.gameDuration.avg()).as("duration"),
-                                new CaseBuilder().when(matchSummonerEntity.win.isTrue()).then(1L).otherwise(0L).sum().as("win"),
+                                Expressions.template(Double.class, "ROUND({0}, 1)",
+                                        matchSummonerEntity.kills.avg()).as("kills"),
+                                Expressions.template(Double.class, "ROUND({0}, 1)",
+                                        matchSummonerEntity.deaths.avg()).as("deaths"),
+                                Expressions.template(Double.class, "ROUND({0}, 1)",
+                                        matchSummonerEntity.assists.avg()).as("assists"),
+                                Expressions.template(Double.class, "ROUND({0}, 1)",
+                                        matchSummonerEntity.assists.avg()).as("assists"),
+                                Expressions.template(Double.class, "ROUND({0}, 1)",
+                                        matchSummonerEntity.neutralMinionsKilled
+                                                .add(matchSummonerEntity.totalMinionsKilled)
+                                                .avg()).as("cs"),
+                                Expressions.template(Double.class, "ROUND({0}, 1)",
+                                        matchEntity.gameDuration.avg()).as("duration"),
+                                new CaseBuilder()
+                                        .when(matchSummonerEntity.win.isTrue())
+                                        .then(1L).otherwise(0L).sum().as("win"),
                                 matchSummonerEntity.count().as("playCount")
                         )
                 ).from(matchSummonerEntity)
@@ -163,7 +176,7 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                 .orderBy(Expressions.stringPath("playCount").desc())
                 .groupBy(matchSummonerEntity.individualPosition);
 
-        if(limit != null) {
+        if (limit != null) {
             query.limit(limit);
         }
 
@@ -192,11 +205,15 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                 );
 
 
-        return PageableExecutionUtils.getPage(matchIds, pageable, count::fetchOne);
+        return PageableExecutionUtils.getPage(
+                matchIds, pageable, count::fetchOne);
     }
 
     private BooleanExpression queueIdEqOrAll(Integer queueId) {
-        return queueId == null ? matchEntity.queueId.eq(420).or(matchEntity.queueId.eq(440)) : matchEntity.queueId.eq(queueId);
+        return queueId == null
+                ? matchEntity.queueId.eq(420)
+                    .or(matchEntity.queueId.eq(440))
+                : matchEntity.queueId.eq(queueId);
     }
 
     private BooleanExpression puuidEq(String puuid) {

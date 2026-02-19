@@ -1,0 +1,195 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+    Google Java Style 기반 Checkstyle 설정
+    프로젝트 컨벤션에 맞게 조정:
+      - 들여쓰기: 4칸 (Google 기본 2칸)
+      - 연속 들여쓰기: 4칸 (Google 기본 4칸)
+      - 최대 줄 길이: 120 (Google 기본 100)
+      - Javadoc: OFF (프로젝트에 Javadoc 거의 없음)
+-->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java"/>
+
+    <!-- Suppressions -->
+    <module name="SuppressionFilter">
+        <property name="file" value="${suppressionFile}"/>
+        <property name="optional" value="false"/>
+    </module>
+
+    <!-- 파일 크기 제한: 500행 -->
+    <module name="FileLength">
+        <property name="max" value="500"/>
+    </module>
+
+    <!-- 탭 문자 금지 -->
+    <module name="FileTabCharacter">
+        <property name="eachLine" value="true"/>
+    </module>
+
+    <!-- 줄 끝 공백 금지 -->
+    <module name="RegexpSingleline">
+        <property name="format" value="\s+$"/>
+        <property name="message" value="Line has trailing whitespace."/>
+    </module>
+
+    <!-- 최대 줄 길이: 120 -->
+    <module name="LineLength">
+        <property name="max" value="120"/>
+        <property name="ignorePattern" value="^package.*|^import.*|a]* href|href|http://|https://|ftp://"/>
+    </module>
+
+    <module name="TreeWalker">
+
+        <!-- ==================== -->
+        <!-- 네이밍 규칙            -->
+        <!-- ==================== -->
+
+        <!-- 패키지명: 소문자+숫자 -->
+        <module name="PackageName">
+            <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+        </module>
+
+        <!-- 타입명: UpperCamelCase -->
+        <module name="TypeName"/>
+
+        <!-- 멤버명: lowerCamelCase -->
+        <module name="MemberName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+
+        <!-- 메서드명: lowerCamelCase -->
+        <module name="MethodName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+
+        <!-- 파라미터명: lowerCamelCase -->
+        <module name="ParameterName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+
+        <!-- 지역변수명: lowerCamelCase -->
+        <module name="LocalVariableName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+
+        <!-- 상수명: UPPER_SNAKE_CASE -->
+        <module name="ConstantName">
+            <property name="format" value="^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$"/>
+        </module>
+
+        <!-- ==================== -->
+        <!-- 임포트                -->
+        <!-- ==================== -->
+
+        <!-- 스타 임포트 금지 -->
+        <module name="AvoidStarImport"/>
+
+        <!-- 미사용 임포트 금지 -->
+        <module name="UnusedImports"/>
+
+        <!-- 중복 임포트 금지 -->
+        <module name="RedundantImport"/>
+
+        <!-- ==================== -->
+        <!-- 크기 제한             -->
+        <!-- ==================== -->
+
+        <!-- 메서드 길이: 60행 -->
+        <module name="MethodLength">
+            <property name="max" value="60"/>
+        </module>
+
+        <!-- 파라미터 수: 8개 -->
+        <module name="ParameterNumber">
+            <property name="max" value="8"/>
+        </module>
+
+        <!-- ==================== -->
+        <!-- 들여쓰기 / 공백       -->
+        <!-- ==================== -->
+
+        <!-- 들여쓰기: 4칸 기본, 4칸 연속 -->
+        <module name="Indentation">
+            <property name="basicOffset" value="4"/>
+            <property name="braceAdjustment" value="0"/>
+            <property name="caseIndent" value="4"/>
+            <property name="throwsIndent" value="4"/>
+            <property name="lineWrappingIndentation" value="4"/>
+            <property name="arrayInitIndent" value="4"/>
+        </module>
+
+        <!-- 공백 규칙 -->
+        <module name="GenericWhitespace"/>
+        <module name="NoWhitespaceBefore"/>
+        <module name="NoWhitespaceAfter"/>
+        <module name="WhitespaceAround">
+            <property name="allowEmptyConstructors" value="true"/>
+            <property name="allowEmptyMethods" value="true"/>
+            <property name="allowEmptyTypes" value="true"/>
+            <property name="allowEmptyLoops" value="true"/>
+            <property name="allowEmptyLambdas" value="true"/>
+        </module>
+
+        <!-- ==================== -->
+        <!-- 중괄호 스타일          -->
+        <!-- ==================== -->
+
+        <!-- 좌중괄호: 같은 줄 -->
+        <module name="LeftCurly"/>
+
+        <!-- 우중괄호: 단독 줄 -->
+        <module name="RightCurly"/>
+
+        <!-- if/else/for/while/do 중괄호 필수 -->
+        <module name="NeedBraces"/>
+
+        <!-- 빈 블록 허용 조건: 주석이 있을 때 -->
+        <module name="EmptyBlock">
+            <property name="option" value="TEXT"/>
+        </module>
+
+        <!-- ==================== -->
+        <!-- 코딩 규칙             -->
+        <!-- ==================== -->
+
+        <!-- switch default 검사 (warning) -->
+        <module name="MissingSwitchDefault">
+            <property name="severity" value="warning"/>
+        </module>
+
+        <!-- fall-through 금지 -->
+        <module name="FallThrough"/>
+
+        <!-- equals 오버라이드 시 hashCode도 필수 -->
+        <module name="EqualsHashCode"/>
+
+        <!-- 불필요한 세미콜론 -->
+        <module name="EmptyStatement"/>
+
+        <!-- String 리터럴 동등 비교 -->
+        <module name="EqualsAvoidNull"/>
+
+        <!-- 중첩 삼항 연산자 금지 -->
+        <module name="AvoidNestedBlocks"/>
+
+        <!-- 하나의 Top-level 클래스만 허용 -->
+        <module name="OneTopLevelClass"/>
+
+        <!-- 유틸리티 클래스 생성자 숨김 -->
+        <module name="HideUtilityClassConstructor"/>
+
+        <!-- ==================== -->
+        <!-- 어노테이션             -->
+        <!-- ==================== -->
+
+        <!-- @Override 필수 -->
+        <module name="MissingOverride"/>
+
+    </module>
+</module>

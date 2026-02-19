@@ -3,7 +3,7 @@ package com.example.lolserver.error;
 import lombok.Getter;
 
 @Getter
-public class RestClientException extends RuntimeException{
+public class RestClientException extends RuntimeException {
 
     private final ErrorType errorType;
     private final String message;

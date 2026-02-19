@@ -1,7 +1,11 @@
 package com.example.lolserver.domain.league.domain;
 
 import com.example.lolserver.domain.league.domain.vo.LeagueHistory;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

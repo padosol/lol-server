@@ -1,7 +1,7 @@
 package com.example.lolserver.domain.match.application.dto;
 
-import com.example.lolserver.domain.match.domain.gameData.GameInfoData;
-import com.example.lolserver.domain.match.domain.gameData.ParticipantData;
+import com.example.lolserver.domain.match.domain.gamedata.GameInfoData;
+import com.example.lolserver.domain.match.domain.gamedata.ParticipantData;
 import com.example.lolserver.domain.match.domain.TeamData;
 import lombok.Getter;
 import lombok.Setter;

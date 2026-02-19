@@ -1,6 +1,6 @@
-package com.example.lolserver.domain.match.domain.gameData.timeline;
+package com.example.lolserver.domain.match.domain.gamedata.timeline;
 
-import com.example.lolserver.domain.match.domain.gameData.timeline.events.SkillEvents;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.events.ItemEvents;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,13 +10,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SkillSeqData {
-    private int skillSlot;
+public class ItemSeqData {
+    private int itemId;
     private long minute;
     private String type;
 
-    public SkillSeqData(SkillEvents event) {
-        this.skillSlot = event.getSkillSlot();
+    public ItemSeqData(ItemEvents event) {
+        this.itemId = event.getItemId();
         this.minute = event.getTimestamp() / 1000 / 60;
         this.type = event.getType();
     }

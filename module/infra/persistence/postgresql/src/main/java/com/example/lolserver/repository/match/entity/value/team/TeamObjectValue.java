@@ -1,7 +1,11 @@
 package com.example.lolserver.repository.match.entity.value.team;
 
 import jakarta.persistence.Embeddable;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -11,21 +15,21 @@ import lombok.*;
 @AllArgsConstructor
 public class TeamObjectValue {
 
-    private	boolean baronFirst;
-    private	int baronKills;
+    private boolean baronFirst;
+    private int baronKills;
 
-    private	boolean championFirst;
-    private	int championKills;
+    private boolean championFirst;
+    private int championKills;
 
-    private	boolean dragonFirst;
-    private	int dragonKills;
+    private boolean dragonFirst;
+    private int dragonKills;
 
-    private	boolean inhibitorFirst;
-    private	int inhibitorKills;
+    private boolean inhibitorFirst;
+    private int inhibitorKills;
 
-    private	boolean riftHeraldFirst;
-    private	int riftHeraldKills;
+    private boolean riftHeraldFirst;
+    private int riftHeraldKills;
 
-    private	boolean towerFirst;
-    private	int towerKills;
+    private boolean towerFirst;
+    private int towerKills;
 }

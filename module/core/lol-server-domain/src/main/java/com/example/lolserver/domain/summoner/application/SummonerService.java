@@ -127,7 +127,9 @@ public class SummonerService {
         if (summoner.isRevision(clickDateTime)) {
             summonerCachePort.setClickCooldown(puuid);           // 10초 클릭 쿨다운을 설정한다
             summonerCachePort.createSummonerRenewal(puuid);      // Redis에 갱신 세션 마커를 생성한다 (진행 상태 추적용)
-            summonerMessagePort.sendMessage(platform, puuid, summoner.getRevisionDate()); // RabbitMQ로 갱신 메시지를 발행하여 비동기 처리를 시작한다
+            // RabbitMQ로 갱신 메시지를 발행하여 비동기 처리를 시작한다
+            summonerMessagePort.sendMessage(
+                    platform, puuid, summoner.getRevisionDate());
         } else {
             return new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
         }

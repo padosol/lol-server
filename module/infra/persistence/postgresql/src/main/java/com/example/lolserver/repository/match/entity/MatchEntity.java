@@ -6,10 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Getter
@@ -28,21 +26,21 @@ public class MatchEntity {
 
     // info
     private String endOfGameResult;
-    private	long gameCreation;
-    private	long gameDuration;
-    private	long gameEndTimestamp;
-    private	long gameStartTimestamp;
-    private	long gameId;
-    private	String gameMode;
-    private	String gameName;
-    private	String gameType;
+    private long gameCreation;
+    private long gameDuration;
+    private long gameEndTimestamp;
+    private long gameStartTimestamp;
+    private long gameId;
+    private String gameMode;
+    private String gameName;
+    private String gameType;
 
-    private	String gameVersion;
+    private String gameVersion;
 
-    private	int mapId;
-    private	int queueId;
-    private	String platformId;
-    private	String tournamentCode;
+    private int mapId;
+    private int queueId;
+    private String platformId;
+    private String tournamentCode;
 
     // 시즌
     private int season;
@@ -96,9 +94,15 @@ public class MatchEntity {
 //                .platformId(matchDto.getInfo().getPlatformId())
 //                .tournamentCode(matchDto.getInfo().getTournamentCode())
 //                .season(season)
-//                .gameCreateDatetime(LocalDateTime.ofInstant(Instant.ofEpochMilli(matchDto.getInfo().getGameCreation()), ZoneId.systemDefault()))
-//                .gameEndDatetime(LocalDateTime.ofInstant(Instant.ofEpochMilli(matchDto.getInfo().getGameEndTimestamp()), ZoneId.systemDefault()))
-//                .gameStartDatetime(LocalDateTime.ofInstant(Instant.ofEpochMilli(matchDto.getInfo().getGameStartTimestamp()), ZoneId.systemDefault()))
+//                .gameCreateDatetime(LocalDateTime.ofInstant(
+//                        Instant.ofEpochMilli(matchDto.getInfo().getGameCreation()),
+//                        ZoneId.systemDefault()))
+//                .gameEndDatetime(LocalDateTime.ofInstant(
+//                        Instant.ofEpochMilli(matchDto.getInfo().getGameEndTimestamp()),
+//                        ZoneId.systemDefault()))
+//                .gameStartDatetime(LocalDateTime.ofInstant(
+//                        Instant.ofEpochMilli(matchDto.getInfo().getGameStartTimestamp()),
+//                        ZoneId.systemDefault()))
 //                .build();
 //    }
 //

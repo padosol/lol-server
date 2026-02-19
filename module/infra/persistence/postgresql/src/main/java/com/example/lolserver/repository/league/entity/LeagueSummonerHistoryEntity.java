@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Table(
         name = "league_summoner_history",
         indexes = {
-                @Index(name = "idx_puuid_queue", columnList = "puuid, queue")
+            @Index(name = "idx_puuid_queue", columnList = "puuid, queue")
         }
 )
 public class LeagueSummonerHistoryEntity {

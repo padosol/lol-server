@@ -16,12 +16,11 @@ import java.util.List;
 
 import static com.example.lolserver.repository.match.entity.QMatchSummonerEntity.matchSummonerEntity;
 import static com.example.lolserver.repository.match.entity.QMatchEntity.matchEntity;
-import static com.example.lolserver.repository.match.entity.QChallengesEntity.challengesEntity;
 
 @Slf4j
 @Repository
 @RequiredArgsConstructor
-public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
+public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
 
@@ -35,7 +34,8 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
                 .where(
                         puuidEq(puuid),
                         queueIdEq(queueId),
-                        matchEntity.gameMode.equalsIgnoreCase("CLASSIC").or(matchEntity.gameMode.equalsIgnoreCase("CHERRY"))
+                        matchEntity.gameMode.equalsIgnoreCase("CLASSIC")
+                                .or(matchEntity.gameMode.equalsIgnoreCase("CHERRY"))
                 )
                 .orderBy(matchSummonerEntity.matchId.desc())
                 .offset((long) pageable.getPageNumber() * pageable.getPageSize())
@@ -58,7 +58,7 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom{
     }
 
     private BooleanExpression queueIdEq(Integer queueId) {
-        if(queueId != null) {
+        if (queueId != null) {
             return matchEntity.queueId.eq(queueId);
         }
 

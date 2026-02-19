@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.match.domain.gameData.seqType;
+package com.example.lolserver.domain.match.domain.gamedata.seqtype;
 
 import lombok.Getter;
 

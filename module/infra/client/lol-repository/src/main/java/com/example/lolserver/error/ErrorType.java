@@ -12,8 +12,7 @@ public enum ErrorType {
     NOT_FOUND_PUUID(404, ErrorCode.E404, "존재하지 않는 PUUID 입니다.", LogLevel.INFO),
     NOT_FOUND_MATCH_ID(404, ErrorCode.E404, "존재하지 않는 MatchId 입니다.", LogLevel.INFO),
 
-    NOT_FOUND_USER(404, ErrorCode.E404, "존재하지 않는 유저 입니다.", LogLevel.INFO)
-    ;
+    NOT_FOUND_USER(404, ErrorCode.E404, "존재하지 않는 유저 입니다.", LogLevel.INFO);
 
     private int httpStatus;
     private ErrorCode errorCode;

@@ -11,7 +11,10 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LeagueMapper {
+public final class LeagueMapper {
+    private LeagueMapper() {
+    }
+
     private static final BigDecimal ONE_HUNDRED = new BigDecimal(100);
 
     public static LeagueResponse domainToResponse(List<League> leagues) {
@@ -34,7 +37,7 @@ public class LeagueMapper {
             if (league.getQueue().equals(QueueType.RANKED_SOLO_5x5.name())) {
                 soloLeague = leagueSummonerResponse;
             } else {
-                flexLeague= leagueSummonerResponse;
+                flexLeague = leagueSummonerResponse;
             }
 
             List<LeagueHistory> leagueHistory = league.getLeagueHistory();
