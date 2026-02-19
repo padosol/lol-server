@@ -39,6 +39,8 @@ public class Match {
     // 시즌
     private int season;
 
+    private Integer averageTier;
+
     // date time
     private LocalDateTime gameCreateDatetime;
     private LocalDateTime gameEndDatetime;

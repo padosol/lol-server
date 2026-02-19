@@ -47,6 +47,9 @@ public class MatchEntity {
     // 시즌
     private int season;
 
+    @Column(name = "average_tier")
+    private Integer averageTier;
+
     // date time
     private LocalDateTime gameCreateDatetime;
     private LocalDateTime gameEndDatetime;

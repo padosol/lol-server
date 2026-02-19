@@ -244,7 +244,6 @@ class MatchRepositoryIntegrationTest extends RepositoryTestBase {
                 .riotIdGameName("TestPlayer")
                 .riotIdTagline("KR1")
                 .profileIcon(5001)
-                .summonerName("TestPlayer")
                 .participantId(1)
                 .champLevel(18)
                 .championId(157)

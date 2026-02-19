@@ -68,7 +68,6 @@ class MatchControllerTest extends RestDocsSupport {
         String matchId = "KR_123456789";
 
         ParticipantData participant = mock(ParticipantData.class);
-        given(participant.getSummonerName()).willReturn("MySummoner");
         given(participant.getChampionName()).willReturn("Ahri");
         given(participant.getKills()).willReturn(10);
         given(participant.getDeaths()).willReturn(2);
@@ -220,7 +219,7 @@ class MatchControllerTest extends RestDocsSupport {
         GameInfoData gameInfoData = new GameInfoData(
                 "2", 1700000000000L, 1800L, 1700001800000L,
                 "CLASSIC", 1700000000000L, "MATCHED_GAME",
-                "14.1.1", 11, "KR", 420, "", "KR_7123456789"
+                "14.1.1", 11, "KR", 420, "", "KR_7123456789", "IRON", "IV"
         );
 
         ItemValue itemValue = ItemValue.builder()
@@ -246,9 +245,10 @@ class MatchControllerTest extends RestDocsSupport {
                 .build();
 
         ParticipantData participant = ParticipantData.builder()
-                .summonerName("TestSummoner").profileIcon(4892)
+                .profileIcon(4892)
                 .riotIdGameName("TestSummoner").riotIdTagline("KR1")
                 .puuid("test-puuid-1234").summonerLevel(350).summonerId("summoner-id-1234")
+                .tier("DIAMOND").tierRank("I").absolutePoints(2850)
                 .individualPosition("MIDDLE")
                 .kills(10).deaths(2).assists(5)
                 .champExperience(15000).champLevel(18)
@@ -333,15 +333,19 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].gameInfoData.queueId").type(JsonFieldType.NUMBER).description("큐 ID (420: 솔로랭크, 430: 일반 등)"),
                                 fieldWithPath("data.content[].gameInfoData.tournamentCode").type(JsonFieldType.STRING).description("토너먼트 코드"),
                                 fieldWithPath("data.content[].gameInfoData.matchId").type(JsonFieldType.STRING).description("매치 ID"),
+                                fieldWithPath("data.content[].gameInfoData.averageTier").type(JsonFieldType.STRING).description("평균 티어 (IRON, BRONZE, SILVER, GOLD, PLATINUM, EMERALD, DIAMOND, MASTER, GRANDMASTER, CHALLENGER)"),
+                                fieldWithPath("data.content[].gameInfoData.averageRank").type(JsonFieldType.STRING).description("평균 티어 등급 (I, II, III, IV / MASTER 이상은 null)"),
 
                                 // ParticipantData - 유저 정보
-                                fieldWithPath("data.content[].participantData[].summonerName").type(JsonFieldType.STRING).description("소환사 이름"),
                                 fieldWithPath("data.content[].participantData[].profileIcon").type(JsonFieldType.NUMBER).description("프로필 아이콘 ID"),
                                 fieldWithPath("data.content[].participantData[].riotIdGameName").type(JsonFieldType.STRING).description("Riot ID 게임 이름"),
                                 fieldWithPath("data.content[].participantData[].riotIdTagline").type(JsonFieldType.STRING).description("Riot ID 태그라인"),
                                 fieldWithPath("data.content[].participantData[].puuid").type(JsonFieldType.STRING).description("소환사 PUUID"),
                                 fieldWithPath("data.content[].participantData[].summonerLevel").type(JsonFieldType.NUMBER).description("소환사 레벨"),
                                 fieldWithPath("data.content[].participantData[].summonerId").type(JsonFieldType.STRING).description("소환사 ID"),
+                                fieldWithPath("data.content[].participantData[].tier").type(JsonFieldType.STRING).description("소환사 티어").optional(),
+                                fieldWithPath("data.content[].participantData[].tierRank").type(JsonFieldType.STRING).description("소환사 티어 등급 (I~IV)").optional(),
+                                fieldWithPath("data.content[].participantData[].absolutePoints").type(JsonFieldType.NUMBER).description("절대 포인트 (티어+등급+LP 수치화)").optional(),
 
                                 // ParticipantData - 게임 정보
                                 fieldWithPath("data.content[].participantData[].individualPosition").type(JsonFieldType.STRING).description("개인 포지션 (TOP, JUNGLE, MIDDLE, BOTTOM, UTILITY)"),

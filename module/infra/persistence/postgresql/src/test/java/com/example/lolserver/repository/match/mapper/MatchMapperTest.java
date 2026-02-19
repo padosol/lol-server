@@ -38,6 +38,7 @@ class MatchMapperTest {
                 .gameMode("CLASSIC")
                 .gameType("MATCHED_GAME")
                 .gameVersion("14.1.1")
+                .averageTier(4175)
                 .build();
 
         // when
@@ -49,6 +50,59 @@ class MatchMapperTest {
         assertThat(result.getQueueId()).isEqualTo(420);
         assertThat(result.getGameDuration()).isEqualTo(1800L);
         assertThat(result.getGameMode()).isEqualTo("CLASSIC");
+        assertThat(result.getAverageTier()).isEqualTo("GOLD");
+        assertThat(result.getAverageRank()).isEqualTo("I");
+    }
+
+    @DisplayName("MatchEntity의 averageTier가 IRON 영역이면 IRON + Division으로 변환한다")
+    @Test
+    void toGameInfoData_ironTier_convertsCorrectly() {
+        // given
+        MatchEntity matchEntity = MatchEntity.builder()
+                .matchId("KR_12346")
+                .averageTier(1600)
+                .build();
+
+        // when
+        GameInfoData result = matchMapper.toGameInfoData(matchEntity);
+
+        // then
+        assertThat(result.getAverageTier()).isEqualTo("IRON");
+        assertThat(result.getAverageRank()).isEqualTo("IV");
+    }
+
+    @DisplayName("MatchEntity의 averageTier가 MASTER 이상이면 averageRank는 null이다")
+    @Test
+    void toGameInfoData_masterTier_rankIsNull() {
+        // given
+        MatchEntity matchEntity = MatchEntity.builder()
+                .matchId("KR_12347")
+                .averageTier(8200)
+                .build();
+
+        // when
+        GameInfoData result = matchMapper.toGameInfoData(matchEntity);
+
+        // then
+        assertThat(result.getAverageTier()).isEqualTo("MASTER");
+        assertThat(result.getAverageRank()).isNull();
+    }
+
+    @DisplayName("MatchEntity의 averageTier가 null이면 둘 다 null이다")
+    @Test
+    void toGameInfoData_nullAverageTier_bothNull() {
+        // given
+        MatchEntity matchEntity = MatchEntity.builder()
+                .matchId("KR_12348")
+                .averageTier(null)
+                .build();
+
+        // when
+        GameInfoData result = matchMapper.toGameInfoData(matchEntity);
+
+        // then
+        assertThat(result.getAverageTier()).isNull();
+        assertThat(result.getAverageRank()).isNull();
     }
 
     @DisplayName("MatchSummonerEntity를 ParticipantData로 변환한다")

@@ -20,8 +20,8 @@ import java.time.LocalDateTime;
         name = "summoner_ranking",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "unique_puuid_queue",
-                        columnNames = {"puuid", "queue"}
+                        name = "unique_puuid_queue_region",
+                        columnNames = {"puuid", "queue", "region"}
                 )
         }
 )
@@ -38,6 +38,9 @@ public class SummonerRankingEntity {
 
     @Column(name = "queue", nullable = false, length = 50)
     private String queue;
+
+    @Column(name = "region", nullable = false, length = 10)
+    private String region;
 
     @Column(name = "current_rank", nullable = false)
     private int currentRank;

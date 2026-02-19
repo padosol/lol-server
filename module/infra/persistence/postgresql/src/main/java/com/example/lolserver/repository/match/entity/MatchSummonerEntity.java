@@ -44,8 +44,16 @@ public class MatchSummonerEntity {
     private String riotIdTagline;
 
     private int profileIcon;
-    private String summonerName;
     private int participantId;
+
+    @Column(name = "tier", length = 20)
+    private String tier;
+
+    @Column(name = "tier_rank", length = 5)
+    private String tierRank;
+
+    @Column(name = "absolute_points")
+    private Integer absolutePoints;
 
     // 챔피언, 룬, 스펠 정보
     private int champLevel;
@@ -185,7 +193,6 @@ public class MatchSummonerEntity {
     private int playerAugment4;
     private int playerSubteamId;
     private int pushPings;
-    private String riotIdName;
     private int subteamPlacement;
     private int totalAllyJungleMinionsKilled;
     private int totalEnemyJungleMinionsKilled;
