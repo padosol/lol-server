@@ -1,6 +1,5 @@
 package com.example.lolserver.repository.match.entity.id;
 
-import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -14,5 +13,5 @@ public class MatchTeamId implements Serializable {
 
     private String match;
 
-    private	int teamId;
+    private int teamId;
 }

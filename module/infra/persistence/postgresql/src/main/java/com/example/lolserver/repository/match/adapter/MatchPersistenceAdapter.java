@@ -4,14 +4,15 @@ import com.example.lolserver.domain.match.application.port.out.MatchPersistenceP
 import com.example.lolserver.domain.match.application.dto.GameResponse;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.TimelineData;
-import com.example.lolserver.domain.match.domain.gameData.GameInfoData;
-import com.example.lolserver.domain.match.domain.gameData.ParticipantData;
-import com.example.lolserver.domain.match.domain.gameData.TeamInfoData;
+import com.example.lolserver.domain.match.domain.gamedata.GameInfoData;
+import com.example.lolserver.domain.match.domain.gamedata.ParticipantData;
+import com.example.lolserver.domain.match.domain.gamedata.TeamInfoData;
 import com.example.lolserver.domain.match.domain.TeamData;
-import com.example.lolserver.domain.match.domain.gameData.timeline.ParticipantTimeline;
-import com.example.lolserver.domain.match.domain.gameData.timeline.events.ItemEvents;
-import com.example.lolserver.domain.match.domain.gameData.timeline.events.SkillEvents;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.ParticipantTimeline;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.events.ItemEvents;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.events.SkillEvents;
 import com.example.lolserver.repository.match.entity.MatchEntity;
+import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
 import com.example.lolserver.repository.match.entity.MatchTeamEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.ItemEventsEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.SkillEventsEntity;
@@ -50,7 +51,8 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
 
     @Override
     public Page<GameResponse> getMatches(String puuid, Integer queueId, Pageable pageable) {
-        Slice<com.example.lolserver.repository.match.entity.MatchEntity> matchesSlice = matchRepositoryCustom.getMatches(puuid, queueId, pageable);
+        Slice<MatchEntity> matchesSlice =
+                matchRepositoryCustom.getMatches(puuid, queueId, pageable);
 
         List<GameResponse> gameDataList = matchesSlice.getContent().stream()
                 .map(matchEntity -> convertToGameData(matchEntity, puuid))
@@ -86,7 +88,8 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
 
     @Override
     public Page<String> findAllMatchIds(String puuid, Integer queueId, Pageable pageable) {
-        Slice<String> matchIdsSlice = matchSummonerRepositoryCustom.findAllMatchIdsByPuuidWithPage(puuid, queueId, pageable);
+        Slice<String> matchIdsSlice = matchSummonerRepositoryCustom
+                .findAllMatchIdsByPuuidWithPage(puuid, queueId, pageable);
         return new Page<>(matchIdsSlice.getContent(), matchIdsSlice.hasNext());
     }
 
@@ -105,9 +108,10 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                 .toList();
 
         // 배치 쿼리: 4개 쿼리로 모든 데이터 로딩
-        Map<String, List<com.example.lolserver.repository.match.entity.MatchSummonerEntity>> participantsByMatch =
+        Map<String, List<MatchSummonerEntity>> participantsByMatch =
                 matchSummonerRepository.findByMatchIdIn(matchIds).stream()
-                        .collect(Collectors.groupingBy(com.example.lolserver.repository.match.entity.MatchSummonerEntity::getMatchId));
+                        .collect(Collectors.groupingBy(
+                                MatchSummonerEntity::getMatchId));
 
         Map<String, List<MatchTeamEntity>> teamsByMatch =
                 matchTeamRepository.findByMatchIdIn(matchIds).stream()
@@ -138,7 +142,7 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     private GameResponse assembleGameData(
             MatchEntity matchEntity,
             String puuid,
-            List<com.example.lolserver.repository.match.entity.MatchSummonerEntity> summonerEntities,
+            List<MatchSummonerEntity> summonerEntities,
             List<MatchTeamEntity> teamEntities,
             List<ItemEventsEntity> itemEvents,
             List<SkillEventsEntity> skillEvents
@@ -198,21 +202,27 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         gameData.setGameInfoData(gameInfoData);
 
         // ParticipantsData
-        List<ParticipantData> participantDataList = new ArrayList<>(matchSummonerRepository.findByMatchId(matchEntity.getMatchId()).stream()
-                .map(matchMapper::toDomain)
-                .toList());
+        List<ParticipantData> participantDataList = new ArrayList<>(
+                matchSummonerRepository.findByMatchId(matchEntity.getMatchId())
+                        .stream()
+                        .map(matchMapper::toDomain)
+                        .toList());
         gameData.setParticipantData(participantDataList);
 
         // Sorting for specific queue types
-        if(gameData.getGameInfoData().getQueueId() == 1700 || gameData.getGameInfoData().getQueueId() == 1710) {
+        if (gameData.getGameInfoData().getQueueId() == 1700 || gameData.getGameInfoData().getQueueId() == 1710) {
             participantDataList.sort(Comparator.comparingInt(ParticipantData::getPlacement));
         }
 
         // TimelineData - construct it
         // The previous MatchService had this logic, we need to replicate it here using the domain events
         // Note: The MatchMapper now provides lists of domain events for TimelineData
-        List<com.example.lolserver.repository.match.entity.timeline.events.ItemEventsEntity> persistenceItemEvents = timelineRepositoryCustom.selectAllItemEventsByMatch(matchEntity.getMatchId());
-        List<com.example.lolserver.repository.match.entity.timeline.events.SkillEventsEntity> persistenceSkillEvents = timelineRepositoryCustom.selectAllSkillEventsByMatch(matchEntity.getMatchId());
+        List<ItemEventsEntity> persistenceItemEvents =
+                timelineRepositoryCustom.selectAllItemEventsByMatch(
+                        matchEntity.getMatchId());
+        List<SkillEventsEntity> persistenceSkillEvents =
+                timelineRepositoryCustom.selectAllSkillEventsByMatch(
+                        matchEntity.getMatchId());
 
         List<ItemEvents> domainItemEvents = matchMapper.toDomainItemEventsList(persistenceItemEvents);
         List<SkillEvents> domainSkillEvents = matchMapper.toDomainSkillEventsList(persistenceSkillEvents);

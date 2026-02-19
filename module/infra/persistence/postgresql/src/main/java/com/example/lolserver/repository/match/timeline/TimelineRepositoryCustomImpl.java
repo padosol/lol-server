@@ -1,6 +1,5 @@
 package com.example.lolserver.repository.match.timeline;
 
-import com.example.lolserver.repository.match.entity.timeline.QTimeLineEventEntity;
 import com.example.lolserver.repository.match.entity.timeline.TimeLineEventEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.ItemEventsEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.SkillEventsEntity;
@@ -17,7 +16,7 @@ import static com.example.lolserver.repository.match.entity.timeline.events.QSki
 
 @Repository
 @RequiredArgsConstructor
-public class TimelineRepositoryCustomImpl implements TimelineRepositoryCustom{
+public class TimelineRepositoryCustomImpl implements TimelineRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
 

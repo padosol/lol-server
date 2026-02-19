@@ -1,10 +1,10 @@
 package com.example.lolserver.domain.match.domain;
 
-import com.example.lolserver.domain.match.domain.gameData.timeline.ItemSeqData;
-import com.example.lolserver.domain.match.domain.gameData.timeline.ParticipantTimeline;
-import com.example.lolserver.domain.match.domain.gameData.timeline.SkillSeqData;
-import com.example.lolserver.domain.match.domain.gameData.timeline.events.ItemEvents;
-import com.example.lolserver.domain.match.domain.gameData.timeline.events.SkillEvents;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.ItemSeqData;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.ParticipantTimeline;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.SkillSeqData;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.events.ItemEvents;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.events.SkillEvents;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,7 +24,8 @@ public class TimelineData {
         this.participants = buildParticipants(itemEvents, skillEvents);
     }
 
-    private Map<Integer, ParticipantTimeline> buildParticipants(List<ItemEvents> itemEvents, List<SkillEvents> skillEvents) {
+    private Map<Integer, ParticipantTimeline> buildParticipants(
+            List<ItemEvents> itemEvents, List<SkillEvents> skillEvents) {
         Map<Integer, ParticipantTimeline> participantMap = new HashMap<>();
 
         for (ItemEvents itemEvent : itemEvents) {

@@ -1,4 +1,4 @@
-package com.example.lolserver.repository.champion_stat.entity;
+package com.example.lolserver.repository.championstat.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "champion_rune_stat")
-public class ChampionRuneStatEntity {
+@Table(name = "champion_item_stat")
+public class ChampionItemStatEntity {
 
     @Id
     @Column(name = "id")
@@ -40,26 +40,11 @@ public class ChampionRuneStatEntity {
     @Column(name = "game_version", nullable = false, length = 20)
     private String gameVersion;
 
-    @Column(name = "primary_rune_id", nullable = false)
-    private int primaryRuneId;
+    @Column(name = "build_type", nullable = false, length = 20)
+    private String buildType;
 
-    @Column(name = "primary_rune_ids", nullable = false, length = 255)
-    private String primaryRuneIds;
-
-    @Column(name = "secondary_rune_id", nullable = false)
-    private int secondaryRuneId;
-
-    @Column(name = "secondary_rune_ids", nullable = false, length = 255)
-    private String secondaryRuneIds;
-
-    @Column(name = "stat_offense", nullable = false)
-    private int statOffense;
-
-    @Column(name = "stat_flex", nullable = false)
-    private int statFlex;
-
-    @Column(name = "stat_defense", nullable = false)
-    private int statDefense;
+    @Column(name = "item_ids", nullable = false, length = 255)
+    private String itemIds;
 
     @Column(name = "games", nullable = false)
     private int games;

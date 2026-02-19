@@ -31,7 +31,9 @@ public class LeaguePersistenceAdapter implements LeaguePersistencePort {
 
     @Override
     public List<LeagueHistory> findAllHistoryByLeagueSummonerIds(List<Long> ids) {
-        List<LeagueSummonerHistoryEntity> leagueSummonerHistoryEntities = leagueSummonerHistoryRepository.findAllByLeagueSummonerIdInOrderByCreatedAtDesc(ids);
+        List<LeagueSummonerHistoryEntity> leagueSummonerHistoryEntities =
+                leagueSummonerHistoryRepository
+                        .findAllByLeagueSummonerIdInOrderByCreatedAtDesc(ids);
         return leagueDomainMapper.toDomainHistoryList(leagueSummonerHistoryEntities);
     }
 

@@ -1,7 +1,15 @@
 package com.example.lolserver.repository.match.entity.timeline;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
+import jakarta.persistence.ManyToOne;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -22,9 +30,9 @@ public class EventVictimDamageReceived {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumns({
-            @JoinColumn(name = "matchId", referencedColumnName = "match_id"),
-            @JoinColumn(name = "timestamp", referencedColumnName = "timestamp"),
-            @JoinColumn(name = "timeLineEventId", referencedColumnName = "time_line_event_id")
+        @JoinColumn(name = "matchId", referencedColumnName = "match_id"),
+        @JoinColumn(name = "timestamp", referencedColumnName = "timestamp"),
+        @JoinColumn(name = "timeLineEventId", referencedColumnName = "time_line_event_id")
     })
     private TimeLineEventEntity timeLineEvent;
 

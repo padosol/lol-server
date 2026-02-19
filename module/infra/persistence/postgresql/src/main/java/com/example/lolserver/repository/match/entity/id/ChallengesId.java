@@ -15,10 +15,15 @@ public class ChallengesId implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
         ChallengesId challengesId = (ChallengesId) obj;
-        return Objects.equals(this.match, challengesId.match) && Objects.equals(this.summonerId, challengesId.summonerId);
+        return Objects.equals(this.match, challengesId.match)
+                && Objects.equals(this.summonerId, challengesId.summonerId);
     }
 
     @Override

@@ -23,7 +23,7 @@ public class LeagueController {
     private final LeagueService leagueService;
 
     /**
-     * 소환사 리그 정보 조회 API    
+     * 소환사 리그 정보 조회 API
      * @param puuid 소환사 puuid
      * @return 리그 정보
      */

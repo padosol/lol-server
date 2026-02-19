@@ -5,15 +5,15 @@ import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.match.application.command.MSChampionCommand;
 import com.example.lolserver.domain.match.application.command.MatchCommand;
 import com.example.lolserver.domain.match.domain.MSChampion;
-import com.example.lolserver.domain.match.domain.gameData.GameInfoData;
-import com.example.lolserver.domain.match.domain.gameData.ParticipantData;
-import com.example.lolserver.domain.match.domain.gameData.TeamInfoData;
-import com.example.lolserver.domain.match.domain.gameData.timeline.ItemSeqData;
-import com.example.lolserver.domain.match.domain.gameData.timeline.ParticipantTimeline;
-import com.example.lolserver.domain.match.domain.gameData.timeline.SkillSeqData;
-import com.example.lolserver.domain.match.domain.gameData.value.ItemValue;
-import com.example.lolserver.domain.match.domain.gameData.value.StatValue;
-import com.example.lolserver.domain.match.domain.gameData.value.Style;
+import com.example.lolserver.domain.match.domain.gamedata.GameInfoData;
+import com.example.lolserver.domain.match.domain.gamedata.ParticipantData;
+import com.example.lolserver.domain.match.domain.gamedata.TeamInfoData;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.ItemSeqData;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.ParticipantTimeline;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.SkillSeqData;
+import com.example.lolserver.domain.match.domain.gamedata.value.ItemValue;
+import com.example.lolserver.domain.match.domain.gamedata.value.StatValue;
+import com.example.lolserver.domain.match.domain.gamedata.value.Style;
 import com.example.lolserver.domain.match.domain.TeamData;
 import com.example.lolserver.domain.match.application.MatchService;
 import com.example.lolserver.domain.match.application.dto.GameResponse;
@@ -174,7 +174,7 @@ class MatchControllerTest extends RestDocsSupport {
     void fetchGameData() throws Exception {
         // given
         MatchCommand request = MatchCommand.builder().puuid("puuid-1234").queueId(420).pageNo(1).region("kr").build();
-        
+
         GameResponse gameData = mock(GameResponse.class);
 
         Page<GameResponse> pageOfGameData = new Page<>(List.of(gameData), false);

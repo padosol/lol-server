@@ -1,6 +1,6 @@
 package com.example.lolserver.domain.match.domain;
 
-import com.example.lolserver.domain.match.domain.gameData.ParticipantData;
+import com.example.lolserver.domain.match.domain.gamedata.ParticipantData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,21 +20,21 @@ public class Match {
 
     // info
     private String endOfGameResult;
-    private	long gameCreation;
-    private	long gameDuration;
-    private	long gameEndTimestamp;
-    private	long gameStartTimestamp;
-    private	long gameId;
-    private	String gameMode;
-    private	String gameName;
-    private	String gameType;
+    private long gameCreation;
+    private long gameDuration;
+    private long gameEndTimestamp;
+    private long gameStartTimestamp;
+    private long gameId;
+    private String gameMode;
+    private String gameName;
+    private String gameType;
 
-    private	String gameVersion;
+    private String gameVersion;
 
-    private	int mapId;
-    private	int queueId;
-    private	String platformId;
-    private	String tournamentCode;
+    private int mapId;
+    private int queueId;
+    private String platformId;
+    private String tournamentCode;
 
     // 시즌
     private int season;

@@ -4,7 +4,6 @@ import com.example.lolserver.domain.spectator.application.model.CurrentGameInfoR
 import com.example.lolserver.domain.spectator.application.port.out.SpectatorCachePort;
 import com.example.lolserver.domain.spectator.application.port.out.SpectatorClientPort;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerPersistencePort;
-import com.example.lolserver.domain.summoner.domain.Summoner;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

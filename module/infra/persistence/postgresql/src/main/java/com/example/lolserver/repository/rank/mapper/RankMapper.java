@@ -4,7 +4,6 @@ import com.example.lolserver.domain.rank.domain.Rank;
 import com.example.lolserver.repository.rank.entity.SummonerRankingEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 import java.util.ArrayList;

@@ -1,14 +1,14 @@
 package com.example.lolserver.repository.match.mapper;
 
 import com.example.lolserver.domain.match.domain.MSChampion;
-import com.example.lolserver.domain.match.domain.gameData.GameInfoData;
-import com.example.lolserver.domain.match.domain.gameData.ParticipantData;
-import com.example.lolserver.domain.match.domain.gameData.TeamInfoData;
-import com.example.lolserver.domain.match.domain.gameData.timeline.events.ItemEvents;
-import com.example.lolserver.domain.match.domain.gameData.timeline.events.SkillEvents;
-import com.example.lolserver.domain.match.domain.gameData.value.ItemValue;
-import com.example.lolserver.domain.match.domain.gameData.value.StatValue;
-import com.example.lolserver.domain.match.domain.gameData.value.Style;
+import com.example.lolserver.domain.match.domain.gamedata.GameInfoData;
+import com.example.lolserver.domain.match.domain.gamedata.ParticipantData;
+import com.example.lolserver.domain.match.domain.gamedata.TeamInfoData;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.events.ItemEvents;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.events.SkillEvents;
+import com.example.lolserver.domain.match.domain.gamedata.value.ItemValue;
+import com.example.lolserver.domain.match.domain.gamedata.value.StatValue;
+import com.example.lolserver.domain.match.domain.gamedata.value.Style;
 import com.example.lolserver.repository.match.dto.MSChampionDTO;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;

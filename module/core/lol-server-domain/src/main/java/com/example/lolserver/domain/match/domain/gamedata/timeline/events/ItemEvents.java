@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.match.domain.gameData.timeline.events;
+package com.example.lolserver.domain.match.domain.gamedata.timeline.events;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,10 +9,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SkillEvents {
-    private int skillSlot;
+public class ItemEvents {
+    private int itemId;
     private int participantId;
-    private String levelUpType;
     private long timestamp;
     private String type;
+    private int afterId;
+    private int beforeId;
+    private int goldGain;
 }

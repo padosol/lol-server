@@ -1,8 +1,6 @@
 package com.example.lolserver.repository.summoner.repository.dsl.impl;
 
 import com.example.lolserver.repository.summoner.repository.dsl.SummonerRepositoryCustom;
-import com.example.lolserver.repository.summoner.dto.QSummonerAutoDTO;
-import com.example.lolserver.repository.summoner.dto.SummonerAutoDTO;
 import com.example.lolserver.repository.summoner.entity.SummonerEntity;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
@@ -62,7 +60,11 @@ public class SummonerRepositoryCustomImpl implements SummonerRepositoryCustom {
     }
 
     public BooleanExpression gameNameEq(String gameName) {
-        return StringUtils.hasText(gameName) ? Expressions.stringTemplate("REPLACE({0}, ' ', '')", summonerEntity.gameName).equalsIgnoreCase(gameName.replace(" ","")) : null;
+        return StringUtils.hasText(gameName)
+                ? Expressions.stringTemplate(
+                        "REPLACE({0}, ' ', '')", summonerEntity.gameName)
+                    .equalsIgnoreCase(gameName.replace(" ", ""))
+                : null;
     }
 
     public BooleanExpression tagLineEq(String tagLine) {

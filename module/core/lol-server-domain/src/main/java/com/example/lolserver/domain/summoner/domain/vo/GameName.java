@@ -7,16 +7,20 @@ public record GameName(
         String tagLine
 ) {
     public GameName {
-        if(!StringUtils.hasText(summonerName)) throw new IllegalArgumentException("q 값은 null 일 수 없습니다.");
+        if (!StringUtils.hasText(summonerName)) {
+            throw new IllegalArgumentException("q 값은 null 일 수 없습니다.");
+        }
     }
     public static GameName create(String q) {
-        if(!StringUtils.hasText(q)) throw new IllegalArgumentException("q 값은 null 일 수 없습니다.");
+        if (!StringUtils.hasText(q)) {
+            throw new IllegalArgumentException("q 값은 null 일 수 없습니다.");
+        }
 
         String[] split = q.split("-");
 
         String summonerName = split[0];
         String tagLine = null;
-        if(split.length > 1) {
+        if (split.length > 1) {
             tagLine = split[1];
         }
 

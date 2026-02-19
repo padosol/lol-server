@@ -12,7 +12,7 @@ public class MatchResponse {
     private List<GameResponse> gameData;
     private Long totalCount;
 
-    public MatchResponse(){}
+    public MatchResponse() { }
 
     public MatchResponse(List<GameResponse> gameData, Long totalCount) {
         this.gameData = gameData;

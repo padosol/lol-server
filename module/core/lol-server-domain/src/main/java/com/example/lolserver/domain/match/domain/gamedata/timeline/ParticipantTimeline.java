@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.match.domain.gameData.timeline;
+package com.example.lolserver.domain.match.domain.gamedata.timeline;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

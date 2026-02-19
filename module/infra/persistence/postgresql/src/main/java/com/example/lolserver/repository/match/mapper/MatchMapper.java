@@ -4,14 +4,14 @@ import com.example.lolserver.Division;
 import com.example.lolserver.Tier;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.Match;
-import com.example.lolserver.domain.match.domain.gameData.GameInfoData;
-import com.example.lolserver.domain.match.domain.gameData.ParticipantData;
-import com.example.lolserver.domain.match.domain.gameData.TeamInfoData;
-import com.example.lolserver.domain.match.domain.gameData.timeline.events.ItemEvents;
-import com.example.lolserver.domain.match.domain.gameData.timeline.events.SkillEvents;
-import com.example.lolserver.domain.match.domain.gameData.value.ItemValue;
-import com.example.lolserver.domain.match.domain.gameData.value.StatValue;
-import com.example.lolserver.domain.match.domain.gameData.value.Style;
+import com.example.lolserver.domain.match.domain.gamedata.GameInfoData;
+import com.example.lolserver.domain.match.domain.gamedata.ParticipantData;
+import com.example.lolserver.domain.match.domain.gamedata.TeamInfoData;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.events.ItemEvents;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.events.SkillEvents;
+import com.example.lolserver.domain.match.domain.gamedata.value.ItemValue;
+import com.example.lolserver.domain.match.domain.gamedata.value.StatValue;
+import com.example.lolserver.domain.match.domain.gamedata.value.Style;
 import com.example.lolserver.repository.match.dto.MSChampionDTO;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
@@ -50,21 +50,41 @@ public interface MatchMapper {
 
     default List<Integer> mapChampionIds(MatchTeamEntity entity) {
         List<Integer> ids = new ArrayList<>();
-        if (entity.getChampion1Id() > 0) ids.add(entity.getChampion1Id());
-        if (entity.getChampion2Id() > 0) ids.add(entity.getChampion2Id());
-        if (entity.getChampion3Id() > 0) ids.add(entity.getChampion3Id());
-        if (entity.getChampion4Id() > 0) ids.add(entity.getChampion4Id());
-        if (entity.getChampion5Id() > 0) ids.add(entity.getChampion5Id());
+        if (entity.getChampion1Id() > 0) {
+            ids.add(entity.getChampion1Id());
+        }
+        if (entity.getChampion2Id() > 0) {
+            ids.add(entity.getChampion2Id());
+        }
+        if (entity.getChampion3Id() > 0) {
+            ids.add(entity.getChampion3Id());
+        }
+        if (entity.getChampion4Id() > 0) {
+            ids.add(entity.getChampion4Id());
+        }
+        if (entity.getChampion5Id() > 0) {
+            ids.add(entity.getChampion5Id());
+        }
         return ids;
     }
 
     default List<Integer> mapPickTurns(MatchTeamEntity entity) {
         List<Integer> turns = new ArrayList<>();
-        if (entity.getPick1Turn() > 0) turns.add(entity.getPick1Turn());
-        if (entity.getPick2Turn() > 0) turns.add(entity.getPick2Turn());
-        if (entity.getPick3Turn() > 0) turns.add(entity.getPick3Turn());
-        if (entity.getPick4Turn() > 0) turns.add(entity.getPick4Turn());
-        if (entity.getPick5Turn() > 0) turns.add(entity.getPick5Turn());
+        if (entity.getPick1Turn() > 0) {
+            turns.add(entity.getPick1Turn());
+        }
+        if (entity.getPick2Turn() > 0) {
+            turns.add(entity.getPick2Turn());
+        }
+        if (entity.getPick3Turn() > 0) {
+            turns.add(entity.getPick3Turn());
+        }
+        if (entity.getPick4Turn() > 0) {
+            turns.add(entity.getPick4Turn());
+        }
+        if (entity.getPick5Turn() > 0) {
+            turns.add(entity.getPick5Turn());
+        }
         return turns;
     }
 

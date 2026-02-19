@@ -1,12 +1,14 @@
 spring:
   config:
+    activate:
+      on-profile: local
     import:
-      - core.yml
-      - api.yml
-      - client-repository.yml
-      - rabbitmq.yml
-      - postgresql.yml
-      - redis.yml
+      - core-local.yml
+      - api-local.yml
+      - client-repository-local.yml
+      - rabbitmq-local.yml
+      - postgresql-local.yml
+      - redis-local.yml
 
 ---
 spring:

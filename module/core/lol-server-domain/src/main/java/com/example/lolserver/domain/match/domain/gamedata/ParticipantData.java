@@ -1,10 +1,10 @@
-package com.example.lolserver.domain.match.domain.gameData;
+package com.example.lolserver.domain.match.domain.gamedata;
 
-import com.example.lolserver.domain.match.domain.gameData.timeline.ItemSeqData;
-import com.example.lolserver.domain.match.domain.gameData.timeline.SkillSeqData;
-import com.example.lolserver.domain.match.domain.gameData.value.ItemValue;
-import com.example.lolserver.domain.match.domain.gameData.value.StatValue;
-import com.example.lolserver.domain.match.domain.gameData.value.Style;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.ItemSeqData;
+import com.example.lolserver.domain.match.domain.gamedata.timeline.SkillSeqData;
+import com.example.lolserver.domain.match.domain.gamedata.value.ItemValue;
+import com.example.lolserver.domain.match.domain.gamedata.value.StatValue;
+import com.example.lolserver.domain.match.domain.gamedata.value.Style;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

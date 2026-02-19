@@ -1,10 +1,11 @@
 package com.example.lolserver.repository.match.entity.value.team;
 
 import jakarta.persistence.Embeddable;
-import lombok.*;
-
-import java.util.ArrayList;
-import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -14,20 +15,20 @@ import java.util.List;
 @AllArgsConstructor
 public class TeamBanValue {
 
-    private	int champion1Id;
-    private	int pick1Turn;
+    private int champion1Id;
+    private int pick1Turn;
 
-    private	int champion2Id;
-    private	int pick2Turn;
+    private int champion2Id;
+    private int pick2Turn;
 
-    private	int champion3Id;
-    private	int pick3Turn;
+    private int champion3Id;
+    private int pick3Turn;
 
-    private	int champion4Id;
-    private	int pick4Turn;
+    private int champion4Id;
+    private int pick4Turn;
 
-    private	int champion5Id;
-    private	int pick5Turn;
+    private int champion5Id;
+    private int pick5Turn;
 
     public String test() {
         return "test";

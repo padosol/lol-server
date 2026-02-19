@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+        "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+        "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+
+<suppressions>
+
+    <!-- Entity: JPA jakarta.persistence.* 스타 임포트 관행 허용 -->
+    <suppress files=".*Entity\.java$" checks="AvoidStarImport"/>
+
+    <!-- DTO: @QueryProjection 생성자의 많은 파라미터 및 긴 줄 허용 -->
+    <suppress files=".*DTO\.java$" checks="ParameterNumber"/>
+    <suppress files=".*DTO\.java$" checks="LineLength"/>
+
+    <!-- Test: 한글 메서드명, 긴 테스트 메서드, 긴 줄, RestDocs 스타 임포트, 파일 크기 허용 -->
+    <suppress files=".*Test\.java$" checks="MethodName"/>
+    <suppress files=".*Test\.java$" checks="MethodLength"/>
+    <suppress files=".*Test\.java$" checks="LineLength"/>
+    <suppress files=".*Test\.java$" checks="AvoidStarImport"/>
+    <suppress files=".*Test\.java$" checks="FileLength"/>
+    <suppress files=".*Test\.java$" checks="MemberName"/>
+    <suppress files=".*Test\.java$" checks="ParameterNumber"/>
+
+    <!-- Config: Bean 정의 메서드가 길어질 수 있음 -->
+    <suppress files=".*Config\.java$" checks="MethodLength"/>
+
+    <!-- Spring Boot Application: 유틸리티 클래스가 아님 -->
+    <suppress files=".*Application\.java$" checks="HideUtilityClassConstructor"/>
+
+    <!-- Adapter: 매핑 메서드가 길어질 수 있음 -->
+    <suppress files=".*Adapter\.java$" checks="MethodLength"/>
+
+</suppressions>

@@ -12,12 +12,10 @@ import org.hibernate.annotations.Comment;
 @AllArgsConstructor
 @Table(
         name = "challenges",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "unique_index_puuid_and_match_id",
-                        columnNames = {"puuid", "match_id"}
-                )
-        }
+        uniqueConstraints = @UniqueConstraint(
+                name = "unique_index_puuid_and_match_id",
+                columnNames = {"puuid", "match_id"}
+        )
 )
 public class ChallengesEntity {
 

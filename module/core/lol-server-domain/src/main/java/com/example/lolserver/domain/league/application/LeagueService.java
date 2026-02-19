@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class LeagueService{
+public class LeagueService {
 
     private final LeaguePersistencePort leaguePersistencePort;
 

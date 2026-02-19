@@ -1,7 +1,6 @@
 package com.example.lolserver.repository.match.entity;
 
 
-import com.example.lolserver.repository.match.entity.id.MatchSummonerId;
 import com.example.lolserver.repository.match.entity.value.matchsummoner.ItemValue;
 import com.example.lolserver.repository.match.entity.value.matchsummoner.StatValue;
 import com.example.lolserver.repository.match.entity.value.matchsummoner.StyleValue;
@@ -18,12 +17,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Table(
         name = "match_summoner",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "unique_index_match_id_and_puuid",
-                        columnNames = {"puuid", "match_id"}
-                )
-        }
+        uniqueConstraints = @UniqueConstraint(
+                name = "unique_index_match_id_and_puuid",
+                columnNames = {"puuid", "match_id"}
+        )
 )
 public class MatchSummonerEntity {
 

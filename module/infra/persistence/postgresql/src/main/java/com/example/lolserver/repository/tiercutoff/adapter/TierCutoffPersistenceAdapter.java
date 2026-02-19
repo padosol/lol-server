@@ -3,7 +3,6 @@ package com.example.lolserver.repository.tiercutoff.adapter;
 import com.example.lolserver.domain.tiercutoff.application.model.TierCutoffReadModel;
 import com.example.lolserver.domain.tiercutoff.application.port.out.TierCutoffPersistencePort;
 import com.example.lolserver.repository.tiercutoff.TierCutoffJpaRepository;
-import com.example.lolserver.repository.tiercutoff.entity.TierCutoffEntity;
 import com.example.lolserver.repository.tiercutoff.mapper.TierCutoffMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
