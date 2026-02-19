@@ -2,8 +2,6 @@ package com.example.lolserver.repository.match.matchsummoner.dsl.impl;
 
 import com.example.lolserver.repository.config.RepositoryTestBase;
 import com.example.lolserver.repository.match.dto.LinePosition;
-import com.example.lolserver.repository.match.dto.MSChampionDTO;
-import com.example.lolserver.repository.match.entity.ChallengesEntity;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
 import com.example.lolserver.repository.match.match.MatchRepository;
@@ -18,7 +16,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;

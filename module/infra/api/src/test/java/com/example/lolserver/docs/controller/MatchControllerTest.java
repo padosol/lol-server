@@ -174,7 +174,7 @@ class MatchControllerTest extends RestDocsSupport {
     void fetchGameData() throws Exception {
         // given
         MatchCommand request = MatchCommand.builder().puuid("puuid-1234").queueId(420).pageNo(1).region("kr").build();
-        
+
         GameResponse gameData = mock(GameResponse.class);
 
         Page<GameResponse> pageOfGameData = new Page<>(List.of(gameData), false);
