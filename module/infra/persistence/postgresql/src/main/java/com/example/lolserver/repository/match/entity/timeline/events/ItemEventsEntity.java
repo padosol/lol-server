@@ -20,15 +20,9 @@ public class ItemEventsEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "match_id", referencedColumnName = "match_id",
-            foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    @JoinColumn(name = "timeline_timestamp",
-            referencedColumnName = "timestamp",
+    @JoinColumn(name = "time_line_event_id",
             foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private TimeLineEventEntity timeLineEvent;
-
-    @Column(name = "match_id", insertable = false, updatable = false)
-    private String matchId;
 
     private int itemId;
     private int participantId;

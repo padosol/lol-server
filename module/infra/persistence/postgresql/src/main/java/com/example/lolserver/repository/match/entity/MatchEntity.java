@@ -18,7 +18,10 @@ import java.time.LocalDateTime;
 public class MatchEntity {
 
     @Id
-    @Column(name = "match_id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "match_id", nullable = false, unique = true)
     private String matchId;
 
     @Column(name = "data_version")

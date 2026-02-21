@@ -67,7 +67,7 @@ class MatchRepositoryIntegrationTest extends RepositoryTestBase {
         entityManager.flush();
         entityManager.clear();
 
-        Optional<MatchEntity> found = matchRepository.findById("KR_TEST_12345");
+        Optional<MatchEntity> found = matchRepository.findByMatchId("KR_TEST_12345");
 
         // then
         assertThat(found).isPresent();

@@ -108,19 +108,19 @@ public class SummonerService {
      *
      * @param platform 플랫폼 코드 (예: "kr")
      * @param puuid    소환사 고유 식별자
-     * @return 갱신 상태 (PROGRESS: 갱신 시작/진행 중, SUCCESS: 갱신 불필요 또는 쿨다운 중)
+     * @return 갱신 상태 (SUCCESS: 갱신 진행 중이거나 시작됨, FAILED: 쿨다운으로 갱신 불가)
      */
     @Transactional
     public SummonerRenewal renewalSummonerInfo(String platform, String puuid) {
         // 이미 갱신이 진행 중이면 중복 요청을 방지한다
         boolean updating = summonerCachePort.isUpdating(puuid);
         if (updating) {
-            return new SummonerRenewal(puuid, RenewalStatus.PROGRESS);
+            return new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
         }
 
         // 10초 클릭 쿨다운 내 재요청이면 즉시 반환한다
         if (summonerCachePort.isClickCooldown(puuid)) {
-            return new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
+            return new SummonerRenewal(puuid, RenewalStatus.FAILED);
         }
         // 10초 클릭 쿨다운을 설정한다
         summonerCachePort.setClickCooldown(puuid);
@@ -137,10 +137,10 @@ public class SummonerService {
             summonerMessagePort.sendMessage(
                     platform, puuid, summoner.getRevisionDate());
         } else {
-            return new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
+            return new SummonerRenewal(puuid, RenewalStatus.FAILED);
         }
 
-        return new SummonerRenewal(puuid, RenewalStatus.PROGRESS);
+        return new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
     }
 
     public SummonerRenewal renewalSummonerStatus(String puuid) {

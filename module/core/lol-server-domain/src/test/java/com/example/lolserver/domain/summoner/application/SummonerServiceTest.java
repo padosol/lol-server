@@ -195,9 +195,9 @@ class SummonerServiceTest {
 
     // ========== renewalSummonerInfo 테스트 ==========
 
-    @DisplayName("이미 갱신 중인 경우 PROGRESS 상태를 반환한다")
+    @DisplayName("이미 갱신 중인 경우 SUCCESS 상태를 반환한다")
     @Test
-    void renewalSummonerInfo_갱신중_PROGRESS반환() {
+    void renewalSummonerInfo_갱신중_SUCCESS반환() {
         // given
         String platform = "kr";
         String puuid = "puuid-updating";
@@ -208,14 +208,14 @@ class SummonerServiceTest {
         SummonerRenewal result = summonerService.renewalSummonerInfo(platform, puuid);
 
         // then
-        assertThat(result.getStatus()).isEqualTo(RenewalStatus.PROGRESS);
+        assertThat(result.getStatus()).isEqualTo(RenewalStatus.SUCCESS);
         assertThat(result.getPuuid()).isEqualTo(puuid);
         then(summonerPersistencePort).should(never()).findById(any());
     }
 
-    @DisplayName("갱신이 가능한 경우 갱신 처리 후 PROGRESS 상태를 반환한다")
+    @DisplayName("갱신이 가능한 경우 갱신 처리 후 SUCCESS 상태를 반환한다")
     @Test
-    void renewalSummonerInfo_갱신가능_갱신후PROGRESS반환() {
+    void renewalSummonerInfo_갱신가능_갱신후SUCCESS반환() {
         // given
         String platform = "kr";
         String puuid = "puuid-renewable";
@@ -235,16 +235,16 @@ class SummonerServiceTest {
         SummonerRenewal result = summonerService.renewalSummonerInfo(platform, puuid);
 
         // then
-        assertThat(result.getStatus()).isEqualTo(RenewalStatus.PROGRESS);
+        assertThat(result.getStatus()).isEqualTo(RenewalStatus.SUCCESS);
         then(summonerPersistencePort).should(never()).save(any());
         then(summonerCachePort).should().setClickCooldown(puuid);
         then(summonerCachePort).should().createSummonerRenewal(puuid);
         then(summonerMessagePort).should().sendMessage(any(), any(), any());
     }
 
-    @DisplayName("갱신 조건이 충족되지 않으면 SUCCESS 상태를 반환한다")
+    @DisplayName("갱신 조건이 충족되지 않으면 FAILED 상태를 반환한다")
     @Test
-    void renewalSummonerInfo_갱신불가_SUCCESS반환() {
+    void renewalSummonerInfo_갱신불가_FAILED반환() {
         // given
         String platform = "kr";
         String puuid = "puuid-recent";
@@ -265,7 +265,7 @@ class SummonerServiceTest {
         SummonerRenewal result = summonerService.renewalSummonerInfo(platform, puuid);
 
         // then
-        assertThat(result.getStatus()).isEqualTo(RenewalStatus.SUCCESS);
+        assertThat(result.getStatus()).isEqualTo(RenewalStatus.FAILED);
         then(summonerPersistencePort).should(never()).save(any());
         then(summonerCachePort).should(never()).createSummonerRenewal(any());
     }
@@ -288,9 +288,9 @@ class SummonerServiceTest {
                 .isEqualTo(ErrorType.NOT_FOUND_PUUID);
     }
 
-    @DisplayName("클릭 쿨다운 중이면 DB 조회 없이 SUCCESS 상태를 반환한다")
+    @DisplayName("클릭 쿨다운 중이면 DB 조회 없이 FAILED 상태를 반환한다")
     @Test
-    void renewalSummonerInfo_클릭쿨다운_SUCCESS반환() {
+    void renewalSummonerInfo_클릭쿨다운_FAILED반환() {
         // given
         String platform = "kr";
         String puuid = "puuid-cooldown";
@@ -302,7 +302,7 @@ class SummonerServiceTest {
         SummonerRenewal result = summonerService.renewalSummonerInfo(platform, puuid);
 
         // then
-        assertThat(result.getStatus()).isEqualTo(RenewalStatus.SUCCESS);
+        assertThat(result.getStatus()).isEqualTo(RenewalStatus.FAILED);
         assertThat(result.getPuuid()).isEqualTo(puuid);
         then(summonerPersistencePort).should(never()).findById(any());
         then(summonerPersistencePort).should(never()).save(any());

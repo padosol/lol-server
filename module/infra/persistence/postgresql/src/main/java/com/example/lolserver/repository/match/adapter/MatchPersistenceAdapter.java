@@ -71,7 +71,7 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
 
     @Override
     public Optional<GameResponse> getGameData(String matchId) {
-        return matchRepository.findById(matchId)
+        return matchRepository.findByMatchId(matchId)
                 .map(matchEntity -> convertToGameData(matchEntity, null)); // puuid is null if not specific user
     }
 
@@ -119,11 +119,11 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
 
         Map<String, List<ItemEventsEntity>> itemEventsByMatch =
                 timelineRepositoryCustom.selectAllItemEventsByMatchIds(matchIds).stream()
-                        .collect(Collectors.groupingBy(ItemEventsEntity::getMatchId));
+                        .collect(Collectors.groupingBy(ie -> ie.getTimeLineEvent().getMatchId()));
 
         Map<String, List<SkillEventsEntity>> skillEventsByMatch =
                 timelineRepositoryCustom.selectAllSkillEventsByMatchIds(matchIds).stream()
-                        .collect(Collectors.groupingBy(SkillEventsEntity::getMatchId));
+                        .collect(Collectors.groupingBy(se -> se.getTimeLineEvent().getMatchId()));
 
         // 매치별 GameResponse 조립 (DB 호출 없이 메모리에서)
         List<GameResponse> gameDataList = matchEntities.stream()

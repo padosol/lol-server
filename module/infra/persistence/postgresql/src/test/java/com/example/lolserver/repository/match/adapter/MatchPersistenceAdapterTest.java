@@ -159,7 +159,7 @@ class MatchPersistenceAdapterTest {
                 .gameMode("CLASSIC")
                 .build();
 
-        given(matchRepository.findById(matchId)).willReturn(Optional.of(matchEntity));
+        given(matchRepository.findByMatchId(matchId)).willReturn(Optional.of(matchEntity));
         given(matchSummonerRepository.findByMatchId(matchId)).willReturn(List.of(summonerEntity));
         given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(420));
         given(matchMapper.toDomain(any(MatchSummonerEntity.class))).willReturn(createParticipantData("test-puuid"));
@@ -175,7 +175,7 @@ class MatchPersistenceAdapterTest {
         // then
         assertThat(result).isPresent();
         assertThat(result.get().getGameInfoData()).isNotNull();
-        then(matchRepository).should().findById(matchId);
+        then(matchRepository).should().findByMatchId(matchId);
     }
 
     @DisplayName("존재하지 않는 매치 ID로 조회하면 빈 Optional을 반환한다")
@@ -183,14 +183,14 @@ class MatchPersistenceAdapterTest {
     void getGameData_nonExistingMatchId_returnsEmpty() {
         // given
         String matchId = "KR_99999";
-        given(matchRepository.findById(matchId)).willReturn(Optional.empty());
+        given(matchRepository.findByMatchId(matchId)).willReturn(Optional.empty());
 
         // when
         Optional<GameResponse> result = adapter.getGameData(matchId);
 
         // then
         assertThat(result).isEmpty();
-        then(matchRepository).should().findById(matchId);
+        then(matchRepository).should().findByMatchId(matchId);
     }
 
     @DisplayName("매치 ID로 타임라인 데이터를 조회한다")
@@ -335,7 +335,7 @@ class MatchPersistenceAdapterTest {
         redTeamInfo.setWin(false);
         redTeamInfo.setChampionKills(15);
 
-        given(matchRepository.findById(matchId)).willReturn(Optional.of(matchEntity));
+        given(matchRepository.findByMatchId(matchId)).willReturn(Optional.of(matchEntity));
         given(matchSummonerRepository.findByMatchId(matchId)).willReturn(List.of(summonerEntity));
         given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(420));
         given(matchMapper.toDomain(any(MatchSummonerEntity.class))).willReturn(createParticipantData("test-puuid"));

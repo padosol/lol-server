@@ -206,7 +206,7 @@ class SummonerControllerTest extends RestDocsSupport {
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
                                 fieldWithPath("data.puuid").type(JsonFieldType.STRING).description("갱신 요청한 소환사 PUUID"),
-                                fieldWithPath("data.status").type(JsonFieldType.STRING).description("갱신 요청 상태 (SUCCESS, PROGRESS)"),
+                                fieldWithPath("data.status").type(JsonFieldType.STRING).description("갱신 요청 상태 (SUCCESS: 갱신 진행/시작, FAILED: 쿨다운)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 정보 (정상 응답 시 null)")
                         )
                 ));
