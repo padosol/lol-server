@@ -44,7 +44,7 @@ class TimelineRepositoryCustomImplTest extends RepositoryTestBase {
 
         // TimeLineEventEntity 생성 - Builder 사용
         TimeLineEventEntity timeLineEvent = TimeLineEventEntity.builder()
-                .matchEntity(matchEntity)
+                .matchId(TEST_MATCH_ID)
                 .timestamp(60000)
                 .build();
         entityManager.persist(timeLineEvent);

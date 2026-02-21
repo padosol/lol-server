@@ -1,9 +1,7 @@
 package com.example.lolserver.repository.match.entity.timeline;
 
-import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.ItemEventsEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.SkillEventsEntity;
-import com.example.lolserver.repository.match.entity.timeline.id.TimeLineEventId;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
@@ -16,16 +14,17 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@IdClass(TimeLineEventId.class)
-@Table(name = "time_line_event")
+@Table(name = "time_line_event",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"match_id", "timestamp"}))
 public class TimeLineEventEntity {
 
     @Id
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "match_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    private MatchEntity matchEntity;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Id
+    @Column(name = "match_id")
+    private String matchId;
+
     private int timestamp;
 
     @BatchSize(size = 500)

@@ -1,7 +1,7 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
     properties:
       hibernate:
         format_sql: true
@@ -13,6 +13,11 @@ spring:
           order_updates: true
 
     show-sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 7
 
   datasource:
 #    url: jdbc:postgresql://localhost:5432/postgres

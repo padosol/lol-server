@@ -2,6 +2,7 @@ package com.example.lolserver.domain.summoner.application;
 
 import com.example.lolserver.RenewalStatus;
 import com.example.lolserver.domain.summoner.application.dto.SummonerAutoResponse;
+import com.example.lolserver.domain.summoner.application.dto.SummonerRenewalInfoResponse;
 import com.example.lolserver.domain.summoner.application.dto.SummonerResponse;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerCachePort;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerClientPort;
@@ -24,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -193,9 +195,9 @@ class SummonerServiceTest {
 
     // ========== renewalSummonerInfo 테스트 ==========
 
-    @DisplayName("이미 갱신 중인 경우 PROGRESS 상태를 반환한다")
+    @DisplayName("이미 갱신 중인 경우 SUCCESS 상태를 반환한다")
     @Test
-    void renewalSummonerInfo_갱신중_PROGRESS반환() {
+    void renewalSummonerInfo_갱신중_SUCCESS반환() {
         // given
         String platform = "kr";
         String puuid = "puuid-updating";
@@ -206,14 +208,14 @@ class SummonerServiceTest {
         SummonerRenewal result = summonerService.renewalSummonerInfo(platform, puuid);
 
         // then
-        assertThat(result.getStatus()).isEqualTo(RenewalStatus.PROGRESS);
+        assertThat(result.getStatus()).isEqualTo(RenewalStatus.SUCCESS);
         assertThat(result.getPuuid()).isEqualTo(puuid);
         then(summonerPersistencePort).should(never()).findById(any());
     }
 
-    @DisplayName("갱신이 가능한 경우 갱신 처리 후 PROGRESS 상태를 반환한다")
+    @DisplayName("갱신이 가능한 경우 갱신 처리 후 SUCCESS 상태를 반환한다")
     @Test
-    void renewalSummonerInfo_갱신가능_갱신후PROGRESS반환() {
+    void renewalSummonerInfo_갱신가능_갱신후SUCCESS반환() {
         // given
         String platform = "kr";
         String puuid = "puuid-renewable";
@@ -233,16 +235,16 @@ class SummonerServiceTest {
         SummonerRenewal result = summonerService.renewalSummonerInfo(platform, puuid);
 
         // then
-        assertThat(result.getStatus()).isEqualTo(RenewalStatus.PROGRESS);
+        assertThat(result.getStatus()).isEqualTo(RenewalStatus.SUCCESS);
         then(summonerPersistencePort).should(never()).save(any());
         then(summonerCachePort).should().setClickCooldown(puuid);
         then(summonerCachePort).should().createSummonerRenewal(puuid);
         then(summonerMessagePort).should().sendMessage(any(), any(), any());
     }
 
-    @DisplayName("갱신 조건이 충족되지 않으면 SUCCESS 상태를 반환한다")
+    @DisplayName("갱신 조건이 충족되지 않으면 FAILED 상태를 반환한다")
     @Test
-    void renewalSummonerInfo_갱신불가_SUCCESS반환() {
+    void renewalSummonerInfo_갱신불가_FAILED반환() {
         // given
         String platform = "kr";
         String puuid = "puuid-recent";
@@ -263,7 +265,7 @@ class SummonerServiceTest {
         SummonerRenewal result = summonerService.renewalSummonerInfo(platform, puuid);
 
         // then
-        assertThat(result.getStatus()).isEqualTo(RenewalStatus.SUCCESS);
+        assertThat(result.getStatus()).isEqualTo(RenewalStatus.FAILED);
         then(summonerPersistencePort).should(never()).save(any());
         then(summonerCachePort).should(never()).createSummonerRenewal(any());
     }
@@ -286,9 +288,9 @@ class SummonerServiceTest {
                 .isEqualTo(ErrorType.NOT_FOUND_PUUID);
     }
 
-    @DisplayName("클릭 쿨다운 중이면 DB 조회 없이 SUCCESS 상태를 반환한다")
+    @DisplayName("클릭 쿨다운 중이면 DB 조회 없이 FAILED 상태를 반환한다")
     @Test
-    void renewalSummonerInfo_클릭쿨다운_SUCCESS반환() {
+    void renewalSummonerInfo_클릭쿨다운_FAILED반환() {
         // given
         String platform = "kr";
         String puuid = "puuid-cooldown";
@@ -300,7 +302,7 @@ class SummonerServiceTest {
         SummonerRenewal result = summonerService.renewalSummonerInfo(platform, puuid);
 
         // then
-        assertThat(result.getStatus()).isEqualTo(RenewalStatus.SUCCESS);
+        assertThat(result.getStatus()).isEqualTo(RenewalStatus.FAILED);
         assertThat(result.getPuuid()).isEqualTo(puuid);
         then(summonerPersistencePort).should(never()).findById(any());
         then(summonerPersistencePort).should(never()).save(any());
@@ -403,6 +405,62 @@ class SummonerServiceTest {
                 .isInstanceOf(CoreException.class)
                 .extracting("errorType")
                 .isEqualTo(ErrorType.NOT_FOUND_PUUID);
+    }
+
+    // ========== getRefreshingSummoners 테스트 ==========
+
+    @DisplayName("갱신 중인 소환사가 없으면 빈 리스트를 반환한다")
+    @Test
+    void getRefreshingSummoners_없음_빈리스트반환() {
+        // given
+        given(summonerCachePort.getRefreshingPuuids()).willReturn(Collections.emptySet());
+
+        // when
+        List<SummonerRenewalInfoResponse> result = summonerService.getRefreshingSummoners();
+
+        // then
+        assertThat(result).isEmpty();
+        then(summonerPersistencePort).should(never()).findAllByPuuidIn(any());
+    }
+
+    @DisplayName("갱신 중인 소환사가 DB에 존재하면 소환사 정보를 포함하여 반환한다")
+    @Test
+    void getRefreshingSummoners_DB존재_소환사정보포함반환() {
+        // given
+        Set<String> puuids = Set.of("puuid-1", "puuid-2");
+        Summoner summoner1 = createSummoner("puuid-1", "Player1", "KR1");
+        Summoner summoner2 = createSummoner("puuid-2", "Player2", "KR2");
+
+        given(summonerCachePort.getRefreshingPuuids()).willReturn(puuids);
+        given(summonerPersistencePort.findAllByPuuidIn(puuids)).willReturn(List.of(summoner1, summoner2));
+
+        // when
+        List<SummonerRenewalInfoResponse> result = summonerService.getRefreshingSummoners();
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting(SummonerRenewalInfoResponse::getPuuid)
+                .containsExactlyInAnyOrder("puuid-1", "puuid-2");
+        assertThat(result).allSatisfy(r -> assertThat(r.getGameName()).isNotNull());
+    }
+
+    @DisplayName("갱신 중인 소환사가 DB에 없으면 puuid만 포함하여 반환한다")
+    @Test
+    void getRefreshingSummoners_DB없음_puuid만반환() {
+        // given
+        Set<String> puuids = Set.of("unknown-puuid");
+
+        given(summonerCachePort.getRefreshingPuuids()).willReturn(puuids);
+        given(summonerPersistencePort.findAllByPuuidIn(puuids)).willReturn(Collections.emptyList());
+
+        // when
+        List<SummonerRenewalInfoResponse> result = summonerService.getRefreshingSummoners();
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getPuuid()).isEqualTo("unknown-puuid");
+        assertThat(result.get(0).getGameName()).isNull();
+        assertThat(result.get(0).getTagLine()).isNull();
     }
 
     // ========== Helper Methods ==========

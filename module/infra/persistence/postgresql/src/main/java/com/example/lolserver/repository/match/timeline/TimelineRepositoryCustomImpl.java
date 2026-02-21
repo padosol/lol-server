@@ -26,35 +26,37 @@ public class TimelineRepositoryCustomImpl implements TimelineRepositoryCustom {
         return jpaQueryFactory.selectFrom(timeLineEventEntity)
                 .leftJoin(timeLineEventEntity.itemEvents, itemEventsEntity)
                 .leftJoin(timeLineEventEntity.skillEvents, skillEventsEntity)
-                .where(timeLineEventEntity.matchEntity.matchId.eq(matchId))
+                .where(timeLineEventEntity.matchId.eq(matchId))
                 .fetch();
     }
 
     @Override
     public List<ItemEventsEntity> selectAllItemEventsByMatch(String matchId) {
         return jpaQueryFactory.selectFrom(itemEventsEntity)
-                .where(itemEventsEntity.timeLineEvent.matchEntity.matchId.eq(matchId))
+                .where(itemEventsEntity.timeLineEvent.matchId.eq(matchId))
                 .fetch();
     }
 
     @Override
     public List<SkillEventsEntity> selectAllSkillEventsByMatch(String matchId) {
         return jpaQueryFactory.selectFrom(skillEventsEntity)
-                .where(skillEventsEntity.timeLineEvent.matchEntity.matchId.eq(matchId))
+                .where(skillEventsEntity.timeLineEvent.matchId.eq(matchId))
                 .fetch();
     }
 
     @Override
     public List<ItemEventsEntity> selectAllItemEventsByMatchIds(List<String> matchIds) {
         return jpaQueryFactory.selectFrom(itemEventsEntity)
-                .where(itemEventsEntity.matchId.in(matchIds))
+                .join(itemEventsEntity.timeLineEvent, timeLineEventEntity).fetchJoin()
+                .where(timeLineEventEntity.matchId.in(matchIds))
                 .fetch();
     }
 
     @Override
     public List<SkillEventsEntity> selectAllSkillEventsByMatchIds(List<String> matchIds) {
         return jpaQueryFactory.selectFrom(skillEventsEntity)
-                .where(skillEventsEntity.matchId.in(matchIds))
+                .join(skillEventsEntity.timeLineEvent, timeLineEventEntity).fetchJoin()
+                .where(timeLineEventEntity.matchId.in(matchIds))
                 .fetch();
     }
 }
