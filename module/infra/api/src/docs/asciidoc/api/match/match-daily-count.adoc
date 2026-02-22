@@ -1,0 +1,11 @@
+[[match-daily-count]]
+=== 날짜별 게임 수
+
+==== HTTP Request
+include::{snippets}/match-daily-count/http-request.adoc[]
+include::{snippets}/match-daily-count/path-parameters.adoc[]
+include::{snippets}/match-daily-count/query-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/match-daily-count/http-response.adoc[]
+include::{snippets}/match-daily-count/response-fields.adoc[]

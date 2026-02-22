@@ -31,6 +31,8 @@ include::api/match/match-chapion.adoc[]
 
 include::api/match/match-summoner-list.adoc[]
 
+include::api/match/match-daily-count.adoc[]
+
 [[League-API]]
 == League API
 

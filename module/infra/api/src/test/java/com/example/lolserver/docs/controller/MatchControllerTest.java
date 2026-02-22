@@ -16,6 +16,7 @@ import com.example.lolserver.domain.match.domain.gamedata.value.StatValue;
 import com.example.lolserver.domain.match.domain.gamedata.value.Style;
 import com.example.lolserver.domain.match.domain.TeamData;
 import com.example.lolserver.domain.match.application.MatchService;
+import com.example.lolserver.domain.match.application.dto.DailyGameCountResponse;
 import com.example.lolserver.domain.match.application.dto.GameResponse;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.support.Page;
@@ -31,11 +32,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.payload.JsonFieldType;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
@@ -508,6 +511,47 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data[].damageTakenOnTeamPercentage").type(JsonFieldType.NUMBER).description("팀 피해 분담률 (%)"),
                                 fieldWithPath("data[].goldPerMinute").type(JsonFieldType.NUMBER).description("분당 골드"),
                                 fieldWithPath("data[].playCount").type(JsonFieldType.NUMBER).description("플레이 횟수")
+                        )
+                ));
+    }
+
+    @DisplayName("날짜별 게임 수 조회 API")
+    @Test
+    void getDailyGameCounts() throws Exception {
+        // given
+        String puuid = "puuid-1234";
+        List<DailyGameCountResponse> response = List.of(
+                new DailyGameCountResponse(LocalDate.of(2025, 1, 15), 3L),
+                new DailyGameCountResponse(LocalDate.of(2025, 1, 14), 5L),
+                new DailyGameCountResponse(LocalDate.of(2025, 1, 13), 2L)
+        );
+
+        given(matchService.getDailyGameCounts(anyString(), anyInt(), any())).willReturn(response);
+
+        // when & then
+        mockMvc.perform(
+                        get("/api/v1/summoners/{puuid}/matches/daily-count", puuid)
+                                .param("season", "2025")
+                                .param("queueId", "420")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andDo(document("match-daily-count",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("puuid").description("조회할 소환사의 PUUID")
+                        ),
+                        queryParameters(
+                                parameterWithName("season").description("시즌 (연도)"),
+                                parameterWithName("queueId").description("큐 ID (e.g., 420:솔로랭크, 440:자유랭크)").optional()
+                        ),
+                        responseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
+                                fieldWithPath("data[].gameDate").type(JsonFieldType.STRING).description("게임 날짜 (yyyy-MM-dd)"),
+                                fieldWithPath("data[].gameCount").type(JsonFieldType.NUMBER).description("해당 날짜의 게임 수")
                         )
                 ));
     }
