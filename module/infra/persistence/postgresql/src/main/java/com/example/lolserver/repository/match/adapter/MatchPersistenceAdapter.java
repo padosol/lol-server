@@ -1,6 +1,7 @@
 package com.example.lolserver.repository.match.adapter;
 
 import com.example.lolserver.domain.match.application.port.out.MatchPersistencePort;
+import com.example.lolserver.domain.match.application.dto.DailyGameCountResponse;
 import com.example.lolserver.domain.match.application.dto.GameResponse;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.TimelineData;
@@ -29,6 +30,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -192,6 +194,16 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         }
 
         return gameData;
+    }
+
+    @Override
+    public List<DailyGameCountResponse> getDailyGameCounts(
+            String puuid, Integer season, Integer queueId, LocalDateTime startDate) {
+        return matchSummonerRepositoryCustom
+                .findDailyGameCounts(puuid, season, queueId, startDate)
+                .stream()
+                .map(dto -> new DailyGameCountResponse(dto.getGameDate(), dto.getGameCount()))
+                .toList();
     }
 
     private GameResponse convertToGameData(MatchEntity matchEntity, String puuid) {

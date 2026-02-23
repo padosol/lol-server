@@ -43,8 +43,11 @@ public class SummonerCacheAdapter implements SummonerCachePort {
 
     @Override
     public boolean isSummonerRenewal(String puuid) {
-        String summonerRenewal = stringRedisTemplate.opsForValue().get(RENEWAL_PREFIX + puuid);
-        return StringUtils.hasText(summonerRenewal);
+        String key = RENEWAL_PREFIX + puuid;
+        String summonerRenewal = stringRedisTemplate.opsForValue().get(key);
+        boolean result = StringUtils.hasText(summonerRenewal);
+        log.info("소환사 갱신 상태 조회 - key: {}, puuid: {}, value: {}, result: {}", key, puuid, summonerRenewal, result);
+        return result;
     }
 
     @Override

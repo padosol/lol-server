@@ -2,6 +2,7 @@ package com.example.lolserver.domain.match.application;
 
 import com.example.lolserver.domain.match.application.command.MSChampionCommand;
 import com.example.lolserver.domain.match.application.command.MatchCommand;
+import com.example.lolserver.domain.match.application.dto.DailyGameCountResponse;
 import com.example.lolserver.domain.match.application.dto.GameResponse;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.TimelineData;
@@ -16,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -59,5 +62,11 @@ public class MatchService {
                 Sort.by(Sort.Direction.DESC, "match")
         );
         return matchPersistencePort.findAllMatchIds(matchCommand.getPuuid(), matchCommand.getQueueId(), pageable);
+    }
+
+    public List<DailyGameCountResponse> getDailyGameCounts(
+            String puuid, Integer season, Integer queueId) {
+        LocalDateTime startDate = LocalDate.now().minusMonths(3).atStartOfDay();
+        return matchPersistencePort.getDailyGameCounts(puuid, season, queueId, startDate);
     }
 }

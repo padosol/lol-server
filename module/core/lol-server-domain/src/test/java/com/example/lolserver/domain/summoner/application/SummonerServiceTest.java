@@ -221,7 +221,7 @@ class SummonerServiceTest {
         String puuid = "puuid-renewable";
 
         LocalDateTime oldRevisionDate = LocalDateTime.now().minusMinutes(10);
-        LocalDateTime oldClickDate = LocalDateTime.now().minusSeconds(30);
+        LocalDateTime oldClickDate = LocalDateTime.now().minusMinutes(3);
 
         Summoner summoner = new Summoner(
                 puuid, 100L, 123, "Player", "KR1",

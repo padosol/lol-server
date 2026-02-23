@@ -31,8 +31,8 @@ public class SummonerResponse {
                     summoner.getRevisionDate() != null
                         ? summoner.getRevisionDate().toString() : null)
                 .lastRevisionClickDateTime(
-                    summoner.getRevisionClickDate() != null
-                        ? summoner.getRevisionClickDate().toString() : null)
+                    summoner.getLastRiotCallDate() != null
+                        ? summoner.getLastRiotCallDate().toString() : null)
                 .build();
     }
 }

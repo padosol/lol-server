@@ -47,7 +47,7 @@ class SummonerRepositoryCustomImplTest extends RepositoryTestBase {
                 .profileIconId(5001)
                 .searchName("testplayer")
                 .revisionDate(LocalDateTime.now())
-                .revisionClickDate(LocalDateTime.now())
+                .lastRiotCallDate(LocalDateTime.now())
                 .build();
         summonerRepository.save(summoner);
 
@@ -74,7 +74,7 @@ class SummonerRepositoryCustomImplTest extends RepositoryTestBase {
                 .profileIconId(5001)
                 .searchName("testplayer")
                 .revisionDate(LocalDateTime.now())
-                .revisionClickDate(LocalDateTime.now())
+                .lastRiotCallDate(LocalDateTime.now())
                 .build();
         summonerRepository.save(summoner);
 
@@ -100,7 +100,7 @@ class SummonerRepositoryCustomImplTest extends RepositoryTestBase {
                 .profileIconId(5001)
                 .searchName("testplayer")
                 .revisionDate(LocalDateTime.now())
-                .revisionClickDate(LocalDateTime.now())
+                .lastRiotCallDate(LocalDateTime.now())
                 .build();
         summonerRepository.save(summoner);
 
@@ -136,7 +136,7 @@ class SummonerRepositoryCustomImplTest extends RepositoryTestBase {
                 .profileIconId(5001)
                 .searchName("testplayer")
                 .revisionDate(LocalDateTime.now())
-                .revisionClickDate(LocalDateTime.now())
+                .lastRiotCallDate(LocalDateTime.now())
                 .build();
         summonerRepository.save(summoner);
 

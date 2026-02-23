@@ -13,7 +13,7 @@ import { BASE_URL, ENDPOINTS, HEADERS, DEFAULT_REGION } from '../lib/config.js';
 
 // 테스트 데이터 로드 (master_summoners.json에서 puuid 추출)
 const masterPuuids = new SharedArray('master_puuids', function () {
-    const data = JSON.parse(open('../../data/challenger_summoner.json'));
+    const data = JSON.parse(open('../../data/grand_master_summoner.json'));
     return data.entries.map(entry => entry.puuid);
 });
 

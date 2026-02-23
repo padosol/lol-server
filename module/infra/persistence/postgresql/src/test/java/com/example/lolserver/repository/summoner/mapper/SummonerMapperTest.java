@@ -31,7 +31,7 @@ class SummonerMapperTest {
                 .region("kr")
                 .searchName("testplayer")
                 .revisionDate(now)
-                .revisionClickDate(now.minusMinutes(5))
+                .lastRiotCallDate(now.minusMinutes(5))
                 .build();
 
         // when
@@ -47,7 +47,7 @@ class SummonerMapperTest {
         assertThat(result.getRegion()).isEqualTo("kr");
         assertThat(result.getSearchName()).isEqualTo("testplayer");
         assertThat(result.getRevisionDate()).isEqualTo(now);
-        assertThat(result.getRevisionClickDate()).isEqualTo(now.minusMinutes(5));
+        assertThat(result.getLastRiotCallDate()).isEqualTo(now.minusMinutes(5));
     }
 
     @DisplayName("LeagueSummonerEntity를 LeagueSummoner 도메인으로 변환한다")
@@ -102,7 +102,7 @@ class SummonerMapperTest {
         summoner.setRegion("kr");
         summoner.setSearchName("testplayer");
         summoner.setRevisionDate(now);
-        summoner.setRevisionClickDate(now.minusMinutes(5));
+        summoner.setLastRiotCallDate(now.minusMinutes(5));
 
         // when
         SummonerEntity result = mapper.toEntity(summoner);

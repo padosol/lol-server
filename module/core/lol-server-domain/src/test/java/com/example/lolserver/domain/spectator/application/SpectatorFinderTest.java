@@ -230,7 +230,7 @@ class SpectatorFinderTest {
         summoner.setGameName("TestPlayer");
         summoner.setTagLine("KR1");
         summoner.setRevisionDate(revisionDate);
-        summoner.setRevisionClickDate(revisionDate);
+        summoner.setLastRiotCallDate(revisionDate);
         return summoner;
     }
 

@@ -4,6 +4,7 @@ import com.example.lolserver.domain.match.application.command.MSChampionCommand;
 import com.example.lolserver.domain.match.application.command.MatchCommand;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.application.MatchService;
+import com.example.lolserver.domain.match.application.dto.DailyGameCountResponse;
 import com.example.lolserver.domain.match.application.dto.GameResponse;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.controller.support.response.ApiResponse;
@@ -82,6 +83,16 @@ public class MatchController {
                 .build();
         Page<GameResponse> matches = matchService.getMatchesBatch(matchCommand);
         return ResponseEntity.ok(ApiResponse.success(SliceResponse.of(matches)));
+    }
+
+    @GetMapping("/summoners/{puuid}/matches/daily-count")
+    public ResponseEntity<ApiResponse<List<DailyGameCountResponse>>> getDailyGameCounts(
+            @PathVariable("puuid") String puuid,
+            @RequestParam Integer season,
+            @RequestParam(required = false) Integer queueId) {
+        List<DailyGameCountResponse> result =
+                matchService.getDailyGameCounts(puuid, season, queueId);
+        return ResponseEntity.ok(ApiResponse.success(result));
     }
 
     @GetMapping("/match/timeline/{matchId}")

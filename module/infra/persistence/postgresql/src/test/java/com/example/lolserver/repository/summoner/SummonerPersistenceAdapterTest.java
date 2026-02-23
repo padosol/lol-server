@@ -217,7 +217,7 @@ class SummonerPersistenceAdapterTest extends RepositoryTestBase {
                 .profileIconId(1234)
                 .searchName(gameName.toLowerCase().replace(" ", ""))
                 .revisionDate(LocalDateTime.now())
-                .revisionClickDate(LocalDateTime.now())
+                .lastRiotCallDate(LocalDateTime.now())
                 .build();
     }
 }

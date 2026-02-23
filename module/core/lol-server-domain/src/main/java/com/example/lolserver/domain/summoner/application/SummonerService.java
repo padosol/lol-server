@@ -99,7 +99,7 @@ public class SummonerService {
      *   <li>Redis에서 이미 갱신 중인지 확인 (중복 요청 방지)</li>
      *   <li>클릭 쿨다운(10초) 확인 (연타 방지)</li>
      *   <li>DB에서 소환사 조회</li>
-     *   <li>마지막 갱신으로부터 3분 경과 여부 확인</li>
+     *   <li>마지막 Riot API 호출로부터 2분 경과 여부 확인</li>
      *   <li>조건 충족 시 쿨다운 설정, 갱신 세션 생성, RabbitMQ 메시지 발행</li>
      * </ol>
      *
@@ -129,7 +129,7 @@ public class SummonerService {
         Summoner summoner = summonerPersistencePort.findById(puuid)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_PUUID, "존재하지 않는 PUUID 입니다. " + puuid));
 
-        // 마지막 갱신으로부터 3분이 경과했는지 확인한다
+        // 마지막 Riot API 호출로부터 2분이 경과했는지 확인한다
         LocalDateTime clickDateTime = LocalDateTime.now();
         if (summoner.isRevision(clickDateTime)) {
             summonerCachePort.createSummonerRenewal(puuid);      // Redis에 갱신 세션 마커를 생성한다 (진행 상태 추적용)

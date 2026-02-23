@@ -1,13 +1,16 @@
 package com.example.lolserver.repository.match.matchsummoner.dsl.impl;
 
+import com.example.lolserver.repository.match.dto.DailyGameCountDTO;
 import com.example.lolserver.repository.match.dto.LinePosition;
 import com.example.lolserver.repository.match.dto.MSChampionDTO;
+import com.example.lolserver.repository.match.dto.QDailyGameCountDTO;
 import com.example.lolserver.repository.match.dto.QMSChampionDTO;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
 import com.example.lolserver.repository.match.matchsummoner.dsl.MatchSummonerRepositoryCustom;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.DateTemplate;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -20,6 +23,8 @@ import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.example.lolserver.repository.match.entity.QMatchEntity.matchEntity;
@@ -207,6 +212,28 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
 
         return PageableExecutionUtils.getPage(
                 matchIds, pageable, count::fetchOne);
+    }
+
+    @Override
+    public List<DailyGameCountDTO> findDailyGameCounts(
+            String puuid, Integer season, Integer queueId, LocalDateTime startDate) {
+
+        DateTemplate<LocalDate> gameDate = Expressions.dateTemplate(
+                LocalDate.class, "CAST({0} AS DATE)", matchEntity.gameCreateDatetime);
+
+        return jpaQueryFactory
+                .select(new QDailyGameCountDTO(gameDate, matchSummonerEntity.count()))
+                .from(matchSummonerEntity)
+                .join(matchEntity).on(matchEntity.matchId.eq(matchSummonerEntity.matchId))
+                .where(
+                        puuidEq(puuid),
+                        seasonEq(season),
+                        queueIdEqOrAll(queueId),
+                        matchEntity.gameCreateDatetime.goe(startDate)
+                )
+                .groupBy(gameDate)
+                .orderBy(gameDate.asc())
+                .fetch();
     }
 
     private BooleanExpression queueIdEqOrAll(Integer queueId) {

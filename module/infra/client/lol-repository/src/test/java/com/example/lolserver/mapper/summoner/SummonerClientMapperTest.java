@@ -55,7 +55,7 @@ class SummonerClientMapperTest {
 
         // then
         assertThat(result.getLeagueSummoners()).isNull();
-        assertThat(result.getRevisionClickDate()).isNull();
+        assertThat(result.getLastRiotCallDate()).isNull();
         assertThat(result.getSearchName()).isNull();
         assertThat(result.getRegion()).isNull();
     }

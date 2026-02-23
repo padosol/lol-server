@@ -1,4 +1,5 @@
 {
   "enabledPlugins": {},
-  "hooks": {}
+  "hooks": {},
+  "plansDirectory": "./plans"
 }

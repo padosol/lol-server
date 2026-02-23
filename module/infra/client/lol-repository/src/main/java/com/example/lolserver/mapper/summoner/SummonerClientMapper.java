@@ -12,7 +12,7 @@ public interface SummonerClientMapper {
     SummonerClientMapper INSTANCE = Mappers.getMapper(SummonerClientMapper.class);
 
     @Mapping(target = "leagueSummoners", ignore = true)
-    @Mapping(target = "revisionClickDate", ignore = true)
+    @Mapping(target = "lastRiotCallDate", ignore = true)
     @Mapping(target = "searchName", ignore = true)
     @Mapping(target = "region", ignore = true)
     Summoner toDomain(SummonerVO summonerVO);

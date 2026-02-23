@@ -108,7 +108,6 @@ public class SummonerController {
     public ResponseEntity<ApiResponse<SummonerRenewalResponse>> summonerRenewalStatus(
             @PathVariable String puuid
     ) {
-        log.info("summonerRenewalStatus");
         SummonerRenewal summonerRenewal = summonerService.renewalSummonerStatus(puuid);
         return ResponseEntity.ok(ApiResponse.success(
                 new SummonerRenewalResponse(
