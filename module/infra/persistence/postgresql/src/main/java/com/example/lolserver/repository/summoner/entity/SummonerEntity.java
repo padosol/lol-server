@@ -26,7 +26,7 @@ public class SummonerEntity {
     private int profileIconId;
     private String gameName;
     private String tagLine;
-    @Column(name = "region")
+    @Column(name = "platform_id")
     private String platformId;
     private String searchName;
     private LocalDateTime revisionDate;
