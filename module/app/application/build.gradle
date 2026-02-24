@@ -11,6 +11,7 @@ dependencies {
     implementation project(":module:infra:message:rabbitmq")
     implementation project(":module:infra:persistence:postgresql")
     implementation project(":module:infra:persistence:redis")
+    implementation project(":module:infra:persistence:clickhouse")
 
     implementation 'org.springframework.boot:spring-boot-starter'
 

@@ -102,7 +102,7 @@ class SummonerCacheAdapterTest {
 
         // then
         then(stringRedisTemplate).should().opsForValue();
-        then(valueOperations).should().set("summoner:renewal:" + puuid, puuid);
+        then(valueOperations).should().set("summoner:renewal:" + puuid, puuid, 2, TimeUnit.MINUTES);
     }
 
     @DisplayName("puuid가 캐시에 존재하면 isSummonerRenewal은 true를 반환한다")

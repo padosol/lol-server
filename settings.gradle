@@ -10,5 +10,6 @@ include(
         "module:infra:message:rabbitmq",
         "module:infra:persistence:postgresql",
         "module:infra:persistence:redis",
+        "module:infra:persistence:clickhouse",
         "module:support:logging"
 )

@@ -38,7 +38,7 @@ public class SummonerCacheAdapter implements SummonerCachePort {
 
     @Override
     public void createSummonerRenewal(String puuid) {
-        stringRedisTemplate.opsForValue().set(RENEWAL_PREFIX + puuid, puuid);
+        stringRedisTemplate.opsForValue().set(RENEWAL_PREFIX + puuid, puuid, 2, TimeUnit.MINUTES);
     }
 
     @Override
