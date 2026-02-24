@@ -54,10 +54,9 @@ class ChampionStatsControllerTest extends RestDocsSupport {
     @Test
     void getChampionStats() throws Exception {
         // given
-        String region = "kr";
+        String platformId = "kr";
         int championId = 266;
         String patch = "14.24";
-        String platformId = "KR";
 
         ChampionWinRateResponse winRate = new ChampionWinRateResponse(
                 266, "TOP", 1500, 825, 55.0
@@ -93,10 +92,9 @@ class ChampionStatsControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/{region}/champion-stats", region)
+                        get("/api/v1/{platformId}/champion-stats", platformId)
                                 .param("championId", String.valueOf(championId))
                                 .param("patch", patch)
-                                .param("platformId", platformId)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
@@ -105,12 +103,11 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("region").description("조회할 지역 (e.g., kr)")
+                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)")
                         ),
                         queryParameters(
                                 parameterWithName("championId").description("챔피언 ID (e.g., 266)"),
-                                parameterWithName("patch").description("패치 버전 (e.g., 14.24)"),
-                                parameterWithName("platformId").description("플랫폼 ID (e.g., KR)")
+                                parameterWithName("patch").description("패치 버전 (e.g., 14.24)")
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과"),

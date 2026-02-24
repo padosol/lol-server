@@ -15,5 +15,5 @@ public class MatchCommand {
     private String puuid;
     private Integer queueId;
     private Integer pageNo;
-    private String region;
+    private String platformId;
 }

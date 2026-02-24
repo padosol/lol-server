@@ -137,7 +137,7 @@ class MatchControllerTest extends RestDocsSupport {
     @Test
     void findAllMatchIds() throws Exception {
         // given
-        MatchCommand request = MatchCommand.builder().puuid("puuid-1234").queueId(420).pageNo(1).region("kr").build();
+        MatchCommand request = MatchCommand.builder().puuid("puuid-1234").queueId(420).pageNo(1).platformId("kr").build();
         List<String> matchIds = List.of("KR_123456789", "KR_987654321");
 
         Page<String> stringPage = new Page<>(matchIds, true);
@@ -145,11 +145,10 @@ class MatchControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/matches/matchIds")
+                        get("/api/v1/{platformId}/matches/matchIds", request.getPlatformId())
                                 .param("puuid", request.getPuuid())
                                 .param("queueId", String.valueOf(request.getQueueId()))
                                 .param("pageNo", String.valueOf(request.getPageNo()))
-                                .param("region", request.getRegion())
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
@@ -157,11 +156,13 @@ class MatchControllerTest extends RestDocsSupport {
                 .andDo(document("match-get-ids",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)")
+                        ),
                         queryParameters(
                                 parameterWithName("puuid").description("조회할 유저의 PUUID"),
                                 parameterWithName("queueId").description("큐 ID (e.g., 420:솔로랭크, 430:일반, 450:칼바람)").optional(),
-                                parameterWithName("pageNo").description("페이지 번호 (1부터 시작)").optional(),
-                                parameterWithName("region").description("지역")
+                                parameterWithName("pageNo").description("페이지 번호 (1부터 시작)").optional()
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
@@ -176,7 +177,7 @@ class MatchControllerTest extends RestDocsSupport {
     @Test
     void fetchGameData() throws Exception {
         // given
-        MatchCommand request = MatchCommand.builder().puuid("puuid-1234").queueId(420).pageNo(1).region("kr").build();
+        MatchCommand request = MatchCommand.builder().puuid("puuid-1234").queueId(420).pageNo(1).platformId("kr").build();
 
         GameResponse gameData = mock(GameResponse.class);
 
@@ -186,11 +187,10 @@ class MatchControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/matches")
+                        get("/api/v1/{platformId}/matches", request.getPlatformId())
                                 .param("puuid", request.getPuuid())
                                 .param("queueId", String.valueOf(request.getQueueId()))
                                 .param("pageNo", String.valueOf(request.getPageNo()))
-                                .param("region", request.getRegion())
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
@@ -198,11 +198,13 @@ class MatchControllerTest extends RestDocsSupport {
                 .andDo(document("match-get-list",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)")
+                        ),
                         queryParameters(
                                 parameterWithName("puuid").description("조회할 유저의 PUUID"),
                                 parameterWithName("queueId").description("큐 ID (e.g., 420:솔로랭크, 430:일반, 450:칼바람)").optional(),
-                                parameterWithName("pageNo").description("페이지 번호 (1부터 시작)").optional(),
-                                parameterWithName("region").description("지역")
+                                parameterWithName("pageNo").description("페이지 번호 (1부터 시작)").optional()
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
@@ -298,10 +300,9 @@ class MatchControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/summoners/{puuid}/matches", puuid)
+                        get("/api/v1/{platformId}/summoners/{puuid}/matches", "kr", puuid)
                                 .param("queueId", "420")
                                 .param("pageNo", "1")
-                                .param("region", "kr")
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
@@ -310,12 +311,12 @@ class MatchControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
+                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)"),
                                 parameterWithName("puuid").description("조회할 소환사의 PUUID")
                         ),
                         queryParameters(
                                 parameterWithName("queueId").description("큐 ID (e.g., 420:솔로랭크, 430:일반, 450:칼바람)").optional(),
-                                parameterWithName("pageNo").description("페이지 번호 (1부터 시작)").optional(),
-                                parameterWithName("region").description("지역").optional()
+                                parameterWithName("pageNo").description("페이지 번호 (1부터 시작)").optional()
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
@@ -530,7 +531,7 @@ class MatchControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/summoners/{puuid}/matches/daily-count", puuid)
+                        get("/api/v1/{platformId}/summoners/{puuid}/matches/daily-count", "kr", puuid)
                                 .param("season", "2025")
                                 .param("queueId", "420")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -541,6 +542,7 @@ class MatchControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
+                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)"),
                                 parameterWithName("puuid").description("조회할 소환사의 PUUID")
                         ),
                         queryParameters(

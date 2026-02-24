@@ -27,51 +27,51 @@ public class SpectatorRedisAdapter implements SpectatorCachePort {
     private static final String NO_GAME_VALUE = "NO_GAME";
 
     @Override
-    public CurrentGameInfoReadModel findByPuuid(String region, String puuid) {
-        String key = buildKey(region, puuid);
+    public CurrentGameInfoReadModel findByPuuid(String platformId, String puuid) {
+        String key = buildKey(platformId, puuid);
         log.debug("Attempting to retrieve current game from cache for key: {}", key);
         return (CurrentGameInfoReadModel) redisTemplate.opsForValue().get(key);
     }
 
     @Override
-    public void saveCurrentGame(String region, CurrentGameInfoReadModel gameInfo) {
+    public void saveCurrentGame(String platformId, CurrentGameInfoReadModel gameInfo) {
         if (gameInfo == null || gameInfo.participants() == null) {
             return;
         }
 
         // 모든 참여자의 puuid를 키로 동일한 게임 정보 저장
         for (ParticipantReadModel participant : gameInfo.participants()) {
-            String key = buildKey(region, participant.puuid());
+            String key = buildKey(platformId, participant.puuid());
             log.debug("Caching current game for key: {}", key);
             redisTemplate.opsForValue().set(key, gameInfo, CACHE_TTL);
         }
     }
 
     @Override
-    public void deleteByPuuid(String region, String puuid) {
-        String key = buildKey(region, puuid);
+    public void deleteByPuuid(String platformId, String puuid) {
+        String key = buildKey(platformId, puuid);
         log.debug("Deleting cache for key: {}", key);
         redisTemplate.delete(key);
     }
 
     @Override
-    public void saveNoGame(String region, String puuid) {
-        String key = buildNoGameKey(region, puuid);
+    public void saveNoGame(String platformId, String puuid) {
+        String key = buildNoGameKey(platformId, puuid);
         log.debug("Saving no-game cache for key: {}", key);
         redisTemplate.opsForValue().set(key, NO_GAME_VALUE, NO_GAME_TTL);
     }
 
     @Override
-    public boolean isNoGameCached(String region, String puuid) {
-        String key = buildNoGameKey(region, puuid);
+    public boolean isNoGameCached(String platformId, String puuid) {
+        String key = buildNoGameKey(platformId, puuid);
         Boolean hasKey = redisTemplate.hasKey(key);
         log.debug("Checking no-game cache for key: {}, exists: {}", key, hasKey);
         return Boolean.TRUE.equals(hasKey);
     }
 
     @Override
-    public void saveGameMeta(String region, long gameId, long gameStartTime, List<String> participantPuuids) {
-        String key = buildGameMetaKey(region, gameId);
+    public void saveGameMeta(String platformId, long gameId, long gameStartTime, List<String> participantPuuids) {
+        String key = buildGameMetaKey(platformId, gameId);
         log.debug("Saving game meta for key: {}", key);
 
         Map<String, Object> metaData = Map.of(
@@ -83,8 +83,8 @@ public class SpectatorRedisAdapter implements SpectatorCachePort {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void deleteGameWithAllParticipants(String region, long gameId) {
-        String metaKey = buildGameMetaKey(region, gameId);
+    public void deleteGameWithAllParticipants(String platformId, long gameId) {
+        String metaKey = buildGameMetaKey(platformId, gameId);
         log.debug("Deleting game with all participants for key: {}", metaKey);
 
         Object metaData = redisTemplate.opsForValue().get(metaKey);
@@ -93,7 +93,7 @@ public class SpectatorRedisAdapter implements SpectatorCachePort {
             if (puuidsObj instanceof List<?> puuids) {
                 for (Object puuid : puuids) {
                     if (puuid instanceof String puuidStr) {
-                        String participantKey = buildKey(region, puuidStr);
+                        String participantKey = buildKey(platformId, puuidStr);
                         redisTemplate.delete(participantKey);
                         log.debug("Deleted participant cache: {}", participantKey);
                     }
@@ -106,15 +106,15 @@ public class SpectatorRedisAdapter implements SpectatorCachePort {
         log.debug("Deleted game meta: {}", metaKey);
     }
 
-    private String buildKey(String region, String puuid) {
-        return CACHE_KEY_PREFIX + region + ":" + puuid;
+    private String buildKey(String platformId, String puuid) {
+        return CACHE_KEY_PREFIX + platformId + ":" + puuid;
     }
 
-    private String buildNoGameKey(String region, String puuid) {
-        return NO_GAME_KEY_PREFIX + region + ":" + puuid;
+    private String buildNoGameKey(String platformId, String puuid) {
+        return NO_GAME_KEY_PREFIX + platformId + ":" + puuid;
     }
 
-    private String buildGameMetaKey(String region, long gameId) {
-        return GAME_META_KEY_PREFIX + region + ":" + gameId;
+    private String buildGameMetaKey(String platformId, long gameId) {
+        return GAME_META_KEY_PREFIX + platformId + ":" + gameId;
     }
 }

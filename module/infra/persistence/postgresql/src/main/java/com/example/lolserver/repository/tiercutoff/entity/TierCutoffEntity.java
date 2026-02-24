@@ -29,7 +29,7 @@ public class TierCutoffEntity {
     private String tier;
 
     @Column(name = "region", nullable = false, length = 10)
-    private String region;
+    private String platformId;
 
     @Column(name = "min_league_points", nullable = false)
     private int minLeaguePoints;

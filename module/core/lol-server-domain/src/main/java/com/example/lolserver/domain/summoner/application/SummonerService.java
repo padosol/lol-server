@@ -38,15 +38,15 @@ public class SummonerService {
     private final SummonerCachePort summonerCachePort;
     private final SummonerMessagePort summonerMessagePort;
 
-    public SummonerResponse getSummoner(GameName gameName, String region) {
+    public SummonerResponse getSummoner(GameName gameName, String platformId) {
         Optional<Summoner> summonerOpt = summonerPersistencePort.getSummoner(
-                gameName.summonerName(), gameName.tagLine(), region);
+                gameName.summonerName(), gameName.tagLine(), platformId);
 
         if (summonerOpt.isPresent()) {
             return SummonerResponse.of(summonerOpt.get());
         }
 
-        String lockKey = gameName.summonerName() + ":" + gameName.tagLine() + ":" + region;
+        String lockKey = gameName.summonerName() + ":" + gameName.tagLine() + ":" + platformId;
         boolean locked = summonerCachePort.tryLock(lockKey);
         if (!locked) {
             log.warn("해당 유저는 이미 조회중 입니다. {}", lockKey);
@@ -55,7 +55,7 @@ public class SummonerService {
 
         try {
             Summoner summoner = summonerClientPort.getSummoner(
-                    gameName.summonerName(), gameName.tagLine(), region)
+                    gameName.summonerName(), gameName.tagLine(), platformId)
                     .orElseThrow(() -> new CoreException(
                             ErrorType.NOT_FOUND_USER,
                             "존재하지 않는 유저 입니다. " + gameName.summonerName()));
@@ -66,8 +66,8 @@ public class SummonerService {
         }
     }
 
-    public List<SummonerAutoResponse> getAllSummonerAutoComplete(String q, String region) {
-        List<Summoner> summoners = summonerPersistencePort.getSummonerAuthComplete(q, region);
+    public List<SummonerAutoResponse> getAllSummonerAutoComplete(String q, String platformId) {
+        List<Summoner> summoners = summonerPersistencePort.getSummonerAuthComplete(q, platformId);
         return summoners.stream().map(summoner -> {
             String tier = null;
             String rank = null;
@@ -106,12 +106,12 @@ public class SummonerService {
      * <p>실제 갱신은 RabbitMQ 컨슈머에서 비동기로 처리되며,
      * 클라이언트는 {@link #renewalSummonerStatus(String)}를 폴링하여 완료 여부를 확인한다.
      *
-     * @param platform 플랫폼 코드 (예: "kr")
+     * @param platformId 플랫폼 코드 (예: "kr")
      * @param puuid    소환사 고유 식별자
      * @return 갱신 상태 (SUCCESS: 갱신 진행 중이거나 시작됨, FAILED: 쿨다운으로 갱신 불가)
      */
     @Transactional
-    public SummonerRenewal renewalSummonerInfo(String platform, String puuid) {
+    public SummonerRenewal renewalSummonerInfo(String platformId, String puuid) {
         // 이미 갱신이 진행 중이면 중복 요청을 방지한다
         boolean updating = summonerCachePort.isUpdating(puuid);
         if (updating) {
@@ -135,7 +135,7 @@ public class SummonerService {
             summonerCachePort.createSummonerRenewal(puuid);      // Redis에 갱신 세션 마커를 생성한다 (진행 상태 추적용)
             // RabbitMQ로 갱신 메시지를 발행하여 비동기 처리를 시작한다
             summonerMessagePort.sendMessage(
-                    platform, puuid, summoner.getRevisionDate());
+                    platformId, puuid, summoner.getRevisionDate());
         } else {
             return new SummonerRenewal(puuid, RenewalStatus.FAILED);
         }
@@ -151,7 +151,7 @@ public class SummonerService {
         return new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
     }
 
-    public SummonerResponse getSummonerByPuuid(String region, String puuid) {
+    public SummonerResponse getSummonerByPuuid(String platformId, String puuid) {
         Optional<Summoner> summonerOpt = summonerPersistencePort.findById(puuid);
 
         if (summonerOpt.isPresent()) {
@@ -165,7 +165,7 @@ public class SummonerService {
         }
 
         try {
-            Summoner summoner = summonerClientPort.getSummonerByPuuid(region, puuid)
+            Summoner summoner = summonerClientPort.getSummonerByPuuid(platformId, puuid)
                     .orElseThrow(() -> new CoreException(
                             ErrorType.NOT_FOUND_PUUID,
                             "존재하지 않는 PUUID 입니다. " + puuid));

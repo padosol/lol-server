@@ -14,6 +14,6 @@ public interface SummonerClientMapper {
     @Mapping(target = "leagueSummoners", ignore = true)
     @Mapping(target = "lastRiotCallDate", ignore = true)
     @Mapping(target = "searchName", ignore = true)
-    @Mapping(target = "region", ignore = true)
+    @Mapping(target = "platformId", ignore = true)
     Summoner toDomain(SummonerVO summonerVO);
 }

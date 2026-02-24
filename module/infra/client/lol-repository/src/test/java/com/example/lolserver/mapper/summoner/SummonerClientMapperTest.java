@@ -57,7 +57,7 @@ class SummonerClientMapperTest {
         assertThat(result.getLeagueSummoners()).isNull();
         assertThat(result.getLastRiotCallDate()).isNull();
         assertThat(result.getSearchName()).isNull();
-        assertThat(result.getRegion()).isNull();
+        assertThat(result.getPlatformId()).isNull();
     }
 
     @DisplayName("null SummonerVO는 null을 반환한다")

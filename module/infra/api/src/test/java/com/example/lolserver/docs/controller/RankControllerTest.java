@@ -51,7 +51,7 @@ class RankControllerTest extends RestDocsSupport {
     @Test
     void getSummonerRank() throws Exception {
         // given
-        String region = "kr";
+        String platformId = "kr";
 
         RankSearchDto searchDto = new RankSearchDto();
         searchDto.setRankType(RankSearchDto.GameType.SOLO);
@@ -75,11 +75,11 @@ class RankControllerTest extends RestDocsSupport {
         List<RankResponse> rankResponses = List.of(new RankResponse(rank));
         Page<RankResponse> response = new PageImpl<>(rankResponses, PageRequest.of(0, 50), 1);
 
-        given(rankService.getRanks(any(RankSearchDto.class), eq(region))).willReturn(response);
+        given(rankService.getRanks(any(RankSearchDto.class), eq(platformId))).willReturn(response);
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/{region}/rank", region)
+                        get("/api/v1/{platformId}/rank", platformId)
                                 .param("rankType", searchDto.getRankType().name())
                                 .param("page", String.valueOf(searchDto.getPage()))
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -90,7 +90,7 @@ class RankControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("region").description("조회할 지역 (e.g., kr)")
+                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)")
                         ),
                         queryParameters(
                                 parameterWithName("rankType").description("게임 타입 (SOLO, FLEX)").optional(),

@@ -67,7 +67,7 @@ class SummonerPersistenceAdapterTest extends RepositoryTestBase {
         assertThat(result).isPresent();
         assertThat(result.get().getGameName()).isEqualTo("HideOnBush");
         assertThat(result.get().getTagLine()).isEqualTo("KR1");
-        assertThat(result.get().getRegion()).isEqualTo("kr");
+        assertThat(result.get().getPlatformId()).isEqualTo("kr");
     }
 
     @DisplayName("존재하지 않는 소환사를 조회하면 빈 Optional을 반환한다")
@@ -207,12 +207,12 @@ class SummonerPersistenceAdapterTest extends RepositoryTestBase {
         assertThat(result).isEmpty();
     }
 
-    private SummonerEntity createSummonerEntity(String puuid, String gameName, String tagLine, String region) {
+    private SummonerEntity createSummonerEntity(String puuid, String gameName, String tagLine, String platformId) {
         return SummonerEntity.builder()
                 .puuid(puuid)
                 .gameName(gameName)
                 .tagLine(tagLine)
-                .region(region)
+                .platformId(platformId)
                 .summonerLevel(100L)
                 .profileIconId(1234)
                 .searchName(gameName.toLowerCase().replace(" ", ""))

@@ -10,7 +10,7 @@ public class SpectatorService {
 
     private final SpectatorFinder spectatorFinder;
 
-    public CurrentGameInfoReadModel getCurrentGameInfo(String puuid, String region) {
-        return spectatorFinder.getCurrentGameInfo(puuid, region);
+    public CurrentGameInfoReadModel getCurrentGameInfo(String puuid, String platformId) {
+        return spectatorFinder.getCurrentGameInfo(puuid, platformId);
     }
 }

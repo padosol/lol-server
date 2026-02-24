@@ -72,7 +72,7 @@ class SummonerControllerTest extends RestDocsSupport {
 
         // when
         ResultActions result = mockMvc.perform(
-                get(BASE_URL + "/{region}/{gameName}", "kr", "hide on bush-KR1"));
+                get(BASE_URL + "/{platformId}/{gameName}", "kr", "hide on bush-KR1"));
 
         // then
         result.andExpect(status().isOk())
@@ -80,7 +80,7 @@ class SummonerControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("region").description("지역명"),
+                                parameterWithName("platformId").description("플랫폼 ID"),
                                 parameterWithName("gameName").description("게임 유저명")
                         ),
                         responseFields(
@@ -117,7 +117,7 @@ class SummonerControllerTest extends RestDocsSupport {
 
         // when
         ResultActions result = mockMvc.perform(
-                get("/api/v1/{region}/summoners/{puuid}", "kr", "test-puuid"));
+                get("/api/v1/{platformId}/summoners/{puuid}", "kr", "test-puuid"));
 
         // then
         result.andExpect(status().isOk())
@@ -125,7 +125,7 @@ class SummonerControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("region").description("지역명"),
+                                parameterWithName("platformId").description("플랫폼 ID"),
                                 parameterWithName("puuid").description("소환사 고유 PUUID")
                         ),
                         responseFields(
@@ -154,18 +154,19 @@ class SummonerControllerTest extends RestDocsSupport {
         given(summonerService.getAllSummonerAutoComplete(anyString(), anyString())).willReturn(responses);
 
         // when
-        ResultActions result = mockMvc.perform(get(BASE_URL + "/autocomplete")
-                .param("q", "hide on bush")
-                .param("region", "kr"));
+        ResultActions result = mockMvc.perform(get("/api/v1/{platformId}/summoners/autocomplete", "kr")
+                .param("q", "hide on bush"));
 
         // then
         result.andExpect(status().isOk())
                 .andDo(document("summoner-autocomplete",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)")
+                        ),
                         queryParameters(
-                                parameterWithName("q").description("자동완성 검색어"),
-                                parameterWithName("region").description("검색할 지역 (기본값: kr)")
+                                parameterWithName("q").description("자동완성 검색어")
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
@@ -186,13 +187,13 @@ class SummonerControllerTest extends RestDocsSupport {
     void renewalSummonerInfo() throws Exception {
         // given
         String puuid = "test-puuid";
-        String platform = "kr";
+        String platformId = "kr";
 
         SummonerRenewal serviceResponse = new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
         given(summonerService.renewalSummonerInfo(anyString(), anyString())).willReturn(serviceResponse);
 
         // when
-        ResultActions result = mockMvc.perform(get("/api/summoners/renewal/{platform}/{puuid}", platform, puuid));
+        ResultActions result = mockMvc.perform(get("/api/v1/{platformId}/summoners/{puuid}/renewal", platformId, puuid));
 
         // then
         result.andExpect(status().isOk())
@@ -200,7 +201,7 @@ class SummonerControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("platform").description("플랫폼(지역)"),
+                                parameterWithName("platformId").description("플랫폼 ID"),
                                 parameterWithName("puuid").description("소환사 고유 PUUID")
                         ),
                         responseFields(

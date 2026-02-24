@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/{region}")
+@RequestMapping("/api/v1/{platformId}")
 @RequiredArgsConstructor
 public class RankController {
 
@@ -23,10 +23,10 @@ public class RankController {
 
     @GetMapping("/rank")
     public ResponseEntity<ApiResponse<PageResponse<RankResponse>>> getSummonerRank(
-        @PathVariable("region") String region,
+        @PathVariable("platformId") String platformId,
         RankSearchDto rankSearchDto
     ) {
-        Page<RankResponse> ranks = rankService.getRanks(rankSearchDto, region);
+        Page<RankResponse> ranks = rankService.getRanks(rankSearchDto, platformId);
 
         return new ResponseEntity<>(ApiResponse.success(PageResponse.of(ranks)), HttpStatus.OK);
     }

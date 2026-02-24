@@ -54,23 +54,23 @@ class SpectatorFinderTest {
         void getCurrentGameInfo_캐시에데이터있고유효함_캐시결과반환() {
             // given
             String puuid = "test-puuid";
-            String region = "kr";
+            String platformId = "kr";
             long gameStartTime = System.currentTimeMillis();
             CurrentGameInfoReadModel cachedResult = createGameInfo(12345L, gameStartTime);
             Summoner summoner = createSummoner(puuid, toLocalDateTime(gameStartTime).minusMinutes(10));
 
-            given(spectatorCachePort.findByPuuid(region, puuid))
+            given(spectatorCachePort.findByPuuid(platformId, puuid))
                     .willReturn(cachedResult);
             given(summonerPersistencePort.findById(puuid))
                     .willReturn(Optional.of(summoner));
 
             // when
-            CurrentGameInfoReadModel result = spectatorFinder.getCurrentGameInfo(puuid, region);
+            CurrentGameInfoReadModel result = spectatorFinder.getCurrentGameInfo(puuid, platformId);
 
             // then
             assertThat(result).isEqualTo(cachedResult);
             assertThat(result.gameId()).isEqualTo(12345L);
-            then(spectatorCachePort).should().findByPuuid(region, puuid);
+            then(spectatorCachePort).should().findByPuuid(platformId, puuid);
             then(spectatorClientPort).should(never()).getCurrentGameInfo(any(), any());
             then(spectatorCachePort).should(never()).deleteGameWithAllParticipants(any(), anyLong());
         }
@@ -80,28 +80,28 @@ class SpectatorFinderTest {
         void getCurrentGameInfo_캐시무효화_API호출() {
             // given
             String puuid = "test-puuid";
-            String region = "kr";
+            String platformId = "kr";
             long gameStartTime = System.currentTimeMillis() - 3600_000; // 1시간 전
             CurrentGameInfoReadModel cachedResult = createGameInfo(12345L, gameStartTime);
             Summoner summoner = createSummoner(puuid, LocalDateTime.now()); // 현재 시간 (게임 시작 이후)
             CurrentGameInfoReadModel apiResult = createGameInfo(67890L, System.currentTimeMillis());
 
-            given(spectatorCachePort.findByPuuid(region, puuid))
+            given(spectatorCachePort.findByPuuid(platformId, puuid))
                     .willReturn(cachedResult);
             given(summonerPersistencePort.findById(puuid))
                     .willReturn(Optional.of(summoner));
-            given(spectatorCachePort.isNoGameCached(region, puuid))
+            given(spectatorCachePort.isNoGameCached(platformId, puuid))
                     .willReturn(false);
-            given(spectatorClientPort.getCurrentGameInfo(region, puuid))
+            given(spectatorClientPort.getCurrentGameInfo(platformId, puuid))
                     .willReturn(apiResult);
 
             // when
-            CurrentGameInfoReadModel result = spectatorFinder.getCurrentGameInfo(puuid, region);
+            CurrentGameInfoReadModel result = spectatorFinder.getCurrentGameInfo(puuid, platformId);
 
             // then
             assertThat(result).isEqualTo(apiResult);
-            then(spectatorCachePort).should().deleteGameWithAllParticipants(region, 12345L);
-            then(spectatorClientPort).should().getCurrentGameInfo(region, puuid);
+            then(spectatorCachePort).should().deleteGameWithAllParticipants(platformId, 12345L);
+            then(spectatorClientPort).should().getCurrentGameInfo(platformId, puuid);
         }
 
         @DisplayName("Summoner가 존재하지 않으면 캐시 결과 그대로 반환")
@@ -109,16 +109,16 @@ class SpectatorFinderTest {
         void getCurrentGameInfo_Summoner없음_캐시결과반환() {
             // given
             String puuid = "test-puuid";
-            String region = "kr";
+            String platformId = "kr";
             CurrentGameInfoReadModel cachedResult = createGameInfo(12345L, System.currentTimeMillis());
 
-            given(spectatorCachePort.findByPuuid(region, puuid))
+            given(spectatorCachePort.findByPuuid(platformId, puuid))
                     .willReturn(cachedResult);
             given(summonerPersistencePort.findById(puuid))
                     .willReturn(Optional.empty());
 
             // when
-            CurrentGameInfoReadModel result = spectatorFinder.getCurrentGameInfo(puuid, region);
+            CurrentGameInfoReadModel result = spectatorFinder.getCurrentGameInfo(puuid, platformId);
 
             // then
             assertThat(result).isEqualTo(cachedResult);
@@ -136,25 +136,25 @@ class SpectatorFinderTest {
         void getCurrentGameInfo_캐시없음_Client결과반환() {
             // given
             String puuid = "test-puuid";
-            String region = "kr";
+            String platformId = "kr";
             CurrentGameInfoReadModel clientResult = createGameInfo(67890L, System.currentTimeMillis());
 
-            given(spectatorCachePort.findByPuuid(region, puuid))
+            given(spectatorCachePort.findByPuuid(platformId, puuid))
                     .willReturn(null);
-            given(spectatorCachePort.isNoGameCached(region, puuid))
+            given(spectatorCachePort.isNoGameCached(platformId, puuid))
                     .willReturn(false);
-            given(spectatorClientPort.getCurrentGameInfo(region, puuid))
+            given(spectatorClientPort.getCurrentGameInfo(platformId, puuid))
                     .willReturn(clientResult);
 
             // when
-            CurrentGameInfoReadModel result = spectatorFinder.getCurrentGameInfo(puuid, region);
+            CurrentGameInfoReadModel result = spectatorFinder.getCurrentGameInfo(puuid, platformId);
 
             // then
             assertThat(result).isEqualTo(clientResult);
             assertThat(result.gameId()).isEqualTo(67890L);
-            then(spectatorCachePort).should().findByPuuid(region, puuid);
-            then(spectatorCachePort).should().isNoGameCached(region, puuid);
-            then(spectatorClientPort).should().getCurrentGameInfo(region, puuid);
+            then(spectatorCachePort).should().findByPuuid(platformId, puuid);
+            then(spectatorCachePort).should().isNoGameCached(platformId, puuid);
+            then(spectatorClientPort).should().getCurrentGameInfo(platformId, puuid);
         }
 
         @DisplayName("캐시와 Client 모두 null이면 null을 반환한다")
@@ -162,22 +162,22 @@ class SpectatorFinderTest {
         void getCurrentGameInfo_둘다null_null반환() {
             // given
             String puuid = "test-puuid";
-            String region = "kr";
+            String platformId = "kr";
 
-            given(spectatorCachePort.findByPuuid(region, puuid))
+            given(spectatorCachePort.findByPuuid(platformId, puuid))
                     .willReturn(null);
-            given(spectatorCachePort.isNoGameCached(region, puuid))
+            given(spectatorCachePort.isNoGameCached(platformId, puuid))
                     .willReturn(false);
-            given(spectatorClientPort.getCurrentGameInfo(region, puuid))
+            given(spectatorClientPort.getCurrentGameInfo(platformId, puuid))
                     .willReturn(null);
 
             // when
-            CurrentGameInfoReadModel result = spectatorFinder.getCurrentGameInfo(puuid, region);
+            CurrentGameInfoReadModel result = spectatorFinder.getCurrentGameInfo(puuid, platformId);
 
             // then
             assertThat(result).isNull();
-            then(spectatorCachePort).should().findByPuuid(region, puuid);
-            then(spectatorClientPort).should().getCurrentGameInfo(region, puuid);
+            then(spectatorCachePort).should().findByPuuid(platformId, puuid);
+            then(spectatorClientPort).should().getCurrentGameInfo(platformId, puuid);
         }
     }
 
@@ -190,20 +190,20 @@ class SpectatorFinderTest {
         void getCurrentGameInfo_NegativeCache있음_null반환() {
             // given
             String puuid = "test-puuid";
-            String region = "kr";
+            String platformId = "kr";
 
-            given(spectatorCachePort.findByPuuid(region, puuid))
+            given(spectatorCachePort.findByPuuid(platformId, puuid))
                     .willReturn(null);
-            given(spectatorCachePort.isNoGameCached(region, puuid))
+            given(spectatorCachePort.isNoGameCached(platformId, puuid))
                     .willReturn(true);
 
             // when
-            CurrentGameInfoReadModel result = spectatorFinder.getCurrentGameInfo(puuid, region);
+            CurrentGameInfoReadModel result = spectatorFinder.getCurrentGameInfo(puuid, platformId);
 
             // then
             assertThat(result).isNull();
-            then(spectatorCachePort).should().findByPuuid(region, puuid);
-            then(spectatorCachePort).should().isNoGameCached(region, puuid);
+            then(spectatorCachePort).should().findByPuuid(platformId, puuid);
+            then(spectatorCachePort).should().isNoGameCached(platformId, puuid);
             then(spectatorClientPort).should(never()).getCurrentGameInfo(any(), any());
         }
     }

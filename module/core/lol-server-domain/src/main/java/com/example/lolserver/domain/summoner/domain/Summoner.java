@@ -19,7 +19,7 @@ public class Summoner {
     private int profileIconId;
     private String gameName;
     private String tagLine;
-    private String region;
+    private String platformId;
     private String searchName;
     private LocalDateTime revisionDate;
     private LocalDateTime lastRiotCallDate;

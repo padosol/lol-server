@@ -26,7 +26,8 @@ public class SummonerEntity {
     private int profileIconId;
     private String gameName;
     private String tagLine;
-    private String region;
+    @Column(name = "region")
+    private String platformId;
     private String searchName;
     private LocalDateTime revisionDate;
     private LocalDateTime lastRiotCallDate;
@@ -39,9 +40,9 @@ public class SummonerEntity {
     )
     private List<LeagueSummonerEntity> leagueSummonerEntities;
 
-    public SummonerEntity(String summonerName, String region) {
+    public SummonerEntity(String summonerName, String platformId) {
         this.gameName = summonerName;
-        this.region = region;
+        this.platformId = platformId;
     }
 
     public void splitGameNameTagLine() {

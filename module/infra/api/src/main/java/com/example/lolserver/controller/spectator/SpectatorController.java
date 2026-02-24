@@ -32,12 +32,12 @@ public class SpectatorController {
         );
     }
 
-    @GetMapping("/v1/{region}/spectator/active-games/by-puuid/{puuid}")
+    @GetMapping("/v1/{platformId}/spectator/active-games/by-puuid/{puuid}")
     public ResponseEntity<ApiResponse<CurrentGameInfoReadModel>> getCurrentGameInfo(
-            @PathVariable("region") String region,
+            @PathVariable("platformId") String platformId,
             @PathVariable("puuid") String puuid
     ) {
-        CurrentGameInfoReadModel gameInfo = spectatorService.getCurrentGameInfo(puuid, region);
+        CurrentGameInfoReadModel gameInfo = spectatorService.getCurrentGameInfo(puuid, platformId);
         return ResponseEntity.ok(ApiResponse.success(gameInfo));
     }
 

@@ -5,5 +5,5 @@ import lombok.Getter;
 @Getter
 public class SummonerCommand {
     private String q;
-    private String region;
+    private String platformId;
 }

@@ -41,24 +41,24 @@ class SummonerClientAdapterTest {
         // given
         String gameName = "Hide on bush";
         String tagLine = "KR1";
-        String region = "kr";
+        String platformId = "kr";
 
         SummonerVO summonerVO = createSummonerVO("test-puuid", gameName, tagLine);
         Summoner expectedSummoner = createSummoner("test-puuid", gameName, tagLine);
 
-        given(summonerRestClient.getSummonerByGameNameAndTagLine(region, gameName, tagLine))
+        given(summonerRestClient.getSummonerByGameNameAndTagLine(platformId, gameName, tagLine))
                 .willReturn(summonerVO);
         given(summonerClientMapper.toDomain(summonerVO)).willReturn(expectedSummoner);
 
         // when
-        Optional<Summoner> result = adapter.getSummoner(gameName, tagLine, region);
+        Optional<Summoner> result = adapter.getSummoner(gameName, tagLine, platformId);
 
         // then
         assertThat(result).isPresent();
         assertThat(result.get().getPuuid()).isEqualTo("test-puuid");
         assertThat(result.get().getGameName()).isEqualTo(gameName);
         assertThat(result.get().getTagLine()).isEqualTo(tagLine);
-        then(summonerRestClient).should().getSummonerByGameNameAndTagLine(region, gameName, tagLine);
+        then(summonerRestClient).should().getSummonerByGameNameAndTagLine(platformId, gameName, tagLine);
         then(summonerClientMapper).should().toDomain(summonerVO);
     }
 
@@ -68,39 +68,39 @@ class SummonerClientAdapterTest {
         // given
         String gameName = "NonExistentPlayer";
         String tagLine = "0000";
-        String region = "kr";
+        String platformId = "kr";
 
-        given(summonerRestClient.getSummonerByGameNameAndTagLine(region, gameName, tagLine))
+        given(summonerRestClient.getSummonerByGameNameAndTagLine(platformId, gameName, tagLine))
                 .willReturn(null);
 
         // when
-        Optional<Summoner> result = adapter.getSummoner(gameName, tagLine, region);
+        Optional<Summoner> result = adapter.getSummoner(gameName, tagLine, platformId);
 
         // then
         assertThat(result).isEmpty();
-        then(summonerRestClient).should().getSummonerByGameNameAndTagLine(region, gameName, tagLine);
+        then(summonerRestClient).should().getSummonerByGameNameAndTagLine(platformId, gameName, tagLine);
     }
 
     @DisplayName("PUUID로 소환사를 조회하면 도메인 객체를 반환한다")
     @Test
     void getSummonerByPuuid_validPuuid_returnsSummoner() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         String puuid = "test-puuid-123";
 
         SummonerVO summonerVO = createSummonerVO(puuid, "TestPlayer", "KR1");
         Summoner expectedSummoner = createSummoner(puuid, "TestPlayer", "KR1");
 
-        given(summonerRestClient.getSummonerByPuuid(region, puuid)).willReturn(summonerVO);
+        given(summonerRestClient.getSummonerByPuuid(platformId, puuid)).willReturn(summonerVO);
         given(summonerClientMapper.toDomain(summonerVO)).willReturn(expectedSummoner);
 
         // when
-        Optional<Summoner> result = adapter.getSummonerByPuuid(region, puuid);
+        Optional<Summoner> result = adapter.getSummonerByPuuid(platformId, puuid);
 
         // then
         assertThat(result).isPresent();
         assertThat(result.get().getPuuid()).isEqualTo(puuid);
-        then(summonerRestClient).should().getSummonerByPuuid(region, puuid);
+        then(summonerRestClient).should().getSummonerByPuuid(platformId, puuid);
         then(summonerClientMapper).should().toDomain(summonerVO);
     }
 
@@ -108,41 +108,41 @@ class SummonerClientAdapterTest {
     @Test
     void getSummonerByPuuid_nonExistingPuuid_returnsEmpty() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         String puuid = "non-existent-puuid";
 
-        given(summonerRestClient.getSummonerByPuuid(region, puuid)).willReturn(null);
+        given(summonerRestClient.getSummonerByPuuid(platformId, puuid)).willReturn(null);
 
         // when
-        Optional<Summoner> result = adapter.getSummonerByPuuid(region, puuid);
+        Optional<Summoner> result = adapter.getSummonerByPuuid(platformId, puuid);
 
         // then
         assertThat(result).isEmpty();
-        then(summonerRestClient).should().getSummonerByPuuid(region, puuid);
+        then(summonerRestClient).should().getSummonerByPuuid(platformId, puuid);
     }
 
     @DisplayName("다른 지역의 소환사를 조회할 수 있다")
     @Test
-    void getSummoner_differentRegion_returnsSummoner() {
+    void getSummoner_differentPlatformId_returnsSummoner() {
         // given
         String gameName = "Doublelift";
         String tagLine = "NA1";
-        String region = "na1";
+        String platformId = "na1";
 
         SummonerVO summonerVO = createSummonerVO("na-puuid", gameName, tagLine);
         Summoner expectedSummoner = createSummoner("na-puuid", gameName, tagLine);
 
-        given(summonerRestClient.getSummonerByGameNameAndTagLine(region, gameName, tagLine))
+        given(summonerRestClient.getSummonerByGameNameAndTagLine(platformId, gameName, tagLine))
                 .willReturn(summonerVO);
         given(summonerClientMapper.toDomain(summonerVO)).willReturn(expectedSummoner);
 
         // when
-        Optional<Summoner> result = adapter.getSummoner(gameName, tagLine, region);
+        Optional<Summoner> result = adapter.getSummoner(gameName, tagLine, platformId);
 
         // then
         assertThat(result).isPresent();
         assertThat(result.get().getGameName()).isEqualTo(gameName);
-        then(summonerRestClient).should().getSummonerByGameNameAndTagLine(region, gameName, tagLine);
+        then(summonerRestClient).should().getSummonerByGameNameAndTagLine(platformId, gameName, tagLine);
     }
 
     private SummonerVO createSummonerVO(String puuid, String gameName, String tagLine) {

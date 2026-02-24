@@ -22,9 +22,9 @@ public class SummonerPersistenceAdapter implements SummonerPersistencePort {
     private final SummonerMapper summonerMapper;
 
     @Override
-    public Optional<Summoner> getSummoner(String gameName, String tagLine, String region) {
-        List<SummonerEntity> findSummoner = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegion(
-                gameName, tagLine, region);
+    public Optional<Summoner> getSummoner(String gameName, String tagLine, String platformId) {
+        List<SummonerEntity> findSummoner = summonerRepositoryCustom.findAllByGameNameAndTagLineAndPlatformId(
+                gameName, tagLine, platformId);
 
         if (findSummoner.size() == 1) {
             return Optional.of(summonerMapper.toDomain(findSummoner.get(0)));
@@ -34,9 +34,9 @@ public class SummonerPersistenceAdapter implements SummonerPersistencePort {
     }
 
     @Override
-    public List<Summoner> getSummonerAuthComplete(String q, String region) {
-        List<SummonerEntity> summonerEntities = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegionLike(
-                q, region
+    public List<Summoner> getSummonerAuthComplete(String q, String platformId) {
+        List<SummonerEntity> summonerEntities = summonerRepositoryCustom.findAllByGameNameAndTagLineAndPlatformIdLike(
+                q, platformId
         );
 
         return summonerMapper.toDomainList(summonerEntities);

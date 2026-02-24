@@ -28,7 +28,7 @@ class SpectatorServiceTest {
     void getCurrentGameInfo_데이터존재_게임정보반환() {
         // given
         String puuid = "test-puuid-123";
-        String region = "kr";
+        String platformId = "kr";
 
         CurrentGameInfoReadModel gameInfo = new CurrentGameInfoReadModel(
                 12345L,
@@ -43,10 +43,10 @@ class SpectatorServiceTest {
                 Collections.emptyList(),
                 Collections.emptyList()
         );
-        given(spectatorFinder.getCurrentGameInfo(puuid, region)).willReturn(gameInfo);
+        given(spectatorFinder.getCurrentGameInfo(puuid, platformId)).willReturn(gameInfo);
 
         // when
-        CurrentGameInfoReadModel result = spectatorService.getCurrentGameInfo(puuid, region);
+        CurrentGameInfoReadModel result = spectatorService.getCurrentGameInfo(puuid, platformId);
 
         // then
         assertThat(result).isNotNull();
@@ -54,7 +54,7 @@ class SpectatorServiceTest {
         assertThat(result.gameType()).isEqualTo("MATCHED_GAME");
         assertThat(result.gameMode()).isEqualTo("CLASSIC");
         assertThat(result.platformId()).isEqualTo("KR");
-        then(spectatorFinder).should().getCurrentGameInfo(puuid, region);
+        then(spectatorFinder).should().getCurrentGameInfo(puuid, platformId);
     }
 
     @DisplayName("현재 진행 중인 게임이 없으면 null을 반환한다")
@@ -62,15 +62,15 @@ class SpectatorServiceTest {
     void getCurrentGameInfo_데이터없음_null반환() {
         // given
         String puuid = "test-puuid-no-game";
-        String region = "kr";
+        String platformId = "kr";
 
-        given(spectatorFinder.getCurrentGameInfo(puuid, region)).willReturn(null);
+        given(spectatorFinder.getCurrentGameInfo(puuid, platformId)).willReturn(null);
 
         // when
-        CurrentGameInfoReadModel result = spectatorService.getCurrentGameInfo(puuid, region);
+        CurrentGameInfoReadModel result = spectatorService.getCurrentGameInfo(puuid, platformId);
 
         // then
         assertThat(result).isNull();
-        then(spectatorFinder).should().getCurrentGameInfo(puuid, region);
+        then(spectatorFinder).should().getCurrentGameInfo(puuid, platformId);
     }
 }

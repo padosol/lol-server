@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SummonerPersistencePort {
-    Optional<Summoner> getSummoner(String gameName, String tagLine, String region);
+    Optional<Summoner> getSummoner(String gameName, String tagLine, String platformId);
 
-    List<Summoner> getSummonerAuthComplete(String q, String region);
+    List<Summoner> getSummonerAuthComplete(String q, String platformId);
 
     Optional<Summoner> findById(String puuid);
 

@@ -28,7 +28,7 @@ class SummonerMapperTest {
                 .profileIconId(5001)
                 .gameName("TestPlayer")
                 .tagLine("KR1")
-                .region("kr")
+                .platformId("kr")
                 .searchName("testplayer")
                 .revisionDate(now)
                 .lastRiotCallDate(now.minusMinutes(5))
@@ -44,7 +44,7 @@ class SummonerMapperTest {
         assertThat(result.getProfileIconId()).isEqualTo(5001);
         assertThat(result.getGameName()).isEqualTo("TestPlayer");
         assertThat(result.getTagLine()).isEqualTo("KR1");
-        assertThat(result.getRegion()).isEqualTo("kr");
+        assertThat(result.getPlatformId()).isEqualTo("kr");
         assertThat(result.getSearchName()).isEqualTo("testplayer");
         assertThat(result.getRevisionDate()).isEqualTo(now);
         assertThat(result.getLastRiotCallDate()).isEqualTo(now.minusMinutes(5));
@@ -99,7 +99,7 @@ class SummonerMapperTest {
         summoner.setProfileIconId(5001);
         summoner.setGameName("TestPlayer");
         summoner.setTagLine("KR1");
-        summoner.setRegion("kr");
+        summoner.setPlatformId("kr");
         summoner.setSearchName("testplayer");
         summoner.setRevisionDate(now);
         summoner.setLastRiotCallDate(now.minusMinutes(5));
@@ -114,7 +114,7 @@ class SummonerMapperTest {
         assertThat(result.getProfileIconId()).isEqualTo(5001);
         assertThat(result.getGameName()).isEqualTo("TestPlayer");
         assertThat(result.getTagLine()).isEqualTo("KR1");
-        assertThat(result.getRegion()).isEqualTo("kr");
+        assertThat(result.getPlatformId()).isEqualTo("kr");
     }
 
     @DisplayName("SummonerEntity 리스트를 Summoner 도메인 리스트로 변환한다")
@@ -127,7 +127,7 @@ class SummonerMapperTest {
                 .summonerLevel(200L)
                 .gameName("Player1")
                 .tagLine("KR1")
-                .region("kr")
+                .platformId("kr")
                 .revisionDate(now)
                 .build();
 
@@ -136,7 +136,7 @@ class SummonerMapperTest {
                 .summonerLevel(300L)
                 .gameName("Player2")
                 .tagLine("KR2")
-                .region("kr")
+                .platformId("kr")
                 .revisionDate(now)
                 .build();
 
@@ -186,7 +186,7 @@ class SummonerMapperTest {
                 .summonerLevel(300L)
                 .gameName("TestPlayer")
                 .tagLine("KR1")
-                .region("kr")
+                .platformId("kr")
                 .revisionDate(now)
                 .leagueSummonerEntities(List.of(leagueEntity))
                 .build();

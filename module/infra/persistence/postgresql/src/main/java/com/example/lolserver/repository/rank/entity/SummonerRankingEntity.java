@@ -38,7 +38,7 @@ public class SummonerRankingEntity {
     private String queue;
 
     @Column(name = "region", nullable = false, length = 10)
-    private String region;
+    private String platformId;
 
     @Column(name = "current_rank", nullable = false)
     private int currentRank;

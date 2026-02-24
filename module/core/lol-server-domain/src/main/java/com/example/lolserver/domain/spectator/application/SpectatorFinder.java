@@ -19,26 +19,26 @@ public class SpectatorFinder {
     private final SpectatorClientPort spectatorClientPort;
     private final SummonerPersistencePort summonerPersistencePort;
 
-    public CurrentGameInfoReadModel getCurrentGameInfo(String puuid, String region) {
+    public CurrentGameInfoReadModel getCurrentGameInfo(String puuid, String platformId) {
         // 1. 게임 정보 캐시 조회
-        CurrentGameInfoReadModel cached = spectatorCachePort.findByPuuid(region, puuid);
+        CurrentGameInfoReadModel cached = spectatorCachePort.findByPuuid(platformId, puuid);
         if (cached != null) {
             // 캐시 무효화 체크: Summoner.revisionDate > game.gameStartTime
             if (shouldInvalidateCache(puuid, cached)) {
                 // 모든 참여자 캐시 삭제
-                spectatorCachePort.deleteGameWithAllParticipants(region, cached.gameId());
+                spectatorCachePort.deleteGameWithAllParticipants(platformId, cached.gameId());
             } else {
                 return cached;
             }
         }
 
         // 2. Negative Cache 체크 (게임 없음 캐시)
-        if (spectatorCachePort.isNoGameCached(region, puuid)) {
+        if (spectatorCachePort.isNoGameCached(platformId, puuid)) {
             return null;
         }
 
         // 3. API 호출
-        return spectatorClientPort.getCurrentGameInfo(region, puuid);
+        return spectatorClientPort.getCurrentGameInfo(platformId, puuid);
     }
 
     /**

@@ -50,7 +50,7 @@ public class FakeChampionClientAdapter implements ChampionClientPort {
     }
 
     @Override
-    public ChampionRotate getChampionRotate(String region) {
+    public ChampionRotate getChampionRotate(String platformId) {
         handleRateLimit();
         simulateDelay();
         return createFakeChampionRotate();

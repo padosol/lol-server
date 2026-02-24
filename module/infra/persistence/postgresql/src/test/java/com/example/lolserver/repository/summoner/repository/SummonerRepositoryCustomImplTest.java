@@ -36,13 +36,13 @@ class SummonerRepositoryCustomImplTest extends RepositoryTestBase {
 
     @DisplayName("게임 이름, 태그라인, 리전으로 소환사를 조회한다")
     @Test
-    void findAllByGameNameAndTagLineAndRegion_validInput_returnsSummoners() {
+    void findAllByGameNameAndTagLineAndPlatformId_validInput_returnsSummoners() {
         // given
         SummonerEntity summoner = SummonerEntity.builder()
                 .puuid("test-puuid-1")
                 .gameName("TestPlayer")
                 .tagLine("KR1")
-                .region("kr")
+                .platformId("kr")
                 .summonerLevel(300L)
                 .profileIconId(5001)
                 .searchName("testplayer")
@@ -53,7 +53,7 @@ class SummonerRepositoryCustomImplTest extends RepositoryTestBase {
 
         // when
         List<SummonerEntity> result = summonerRepositoryCustom
-                .findAllByGameNameAndTagLineAndRegion("TestPlayer", "KR1", "kr");
+                .findAllByGameNameAndTagLineAndPlatformId("TestPlayer", "KR1", "kr");
 
         // then
         assertThat(result).hasSize(1);
@@ -63,13 +63,13 @@ class SummonerRepositoryCustomImplTest extends RepositoryTestBase {
 
     @DisplayName("공백이 포함된 게임 이름도 조회할 수 있다")
     @Test
-    void findAllByGameNameAndTagLineAndRegion_gameNameWithSpaces_returnsSummoners() {
+    void findAllByGameNameAndTagLineAndPlatformId_gameNameWithSpaces_returnsSummoners() {
         // given
         SummonerEntity summoner = SummonerEntity.builder()
                 .puuid("test-puuid-2")
                 .gameName("Test Player")
                 .tagLine("KR1")
-                .region("kr")
+                .platformId("kr")
                 .summonerLevel(300L)
                 .profileIconId(5001)
                 .searchName("testplayer")
@@ -80,7 +80,7 @@ class SummonerRepositoryCustomImplTest extends RepositoryTestBase {
 
         // when
         List<SummonerEntity> result = summonerRepositoryCustom
-                .findAllByGameNameAndTagLineAndRegion("TestPlayer", "KR1", "kr");
+                .findAllByGameNameAndTagLineAndPlatformId("TestPlayer", "KR1", "kr");
 
         // then
         assertThat(result).hasSize(1);
@@ -89,13 +89,13 @@ class SummonerRepositoryCustomImplTest extends RepositoryTestBase {
 
     @DisplayName("대소문자를 구분하지 않고 조회한다")
     @Test
-    void findAllByGameNameAndTagLineAndRegion_caseInsensitive_returnsSummoners() {
+    void findAllByGameNameAndTagLineAndPlatformId_caseInsensitive_returnsSummoners() {
         // given
         SummonerEntity summoner = SummonerEntity.builder()
                 .puuid("test-puuid-3")
                 .gameName("TestPlayer")
                 .tagLine("KR1")
-                .region("kr")
+                .platformId("kr")
                 .summonerLevel(300L)
                 .profileIconId(5001)
                 .searchName("testplayer")
@@ -106,7 +106,7 @@ class SummonerRepositoryCustomImplTest extends RepositoryTestBase {
 
         // when
         List<SummonerEntity> result = summonerRepositoryCustom
-                .findAllByGameNameAndTagLineAndRegion("TESTPLAYER", "kr1", "KR");
+                .findAllByGameNameAndTagLineAndPlatformId("TESTPLAYER", "kr1", "KR");
 
         // then
         assertThat(result).hasSize(1);
@@ -114,10 +114,10 @@ class SummonerRepositoryCustomImplTest extends RepositoryTestBase {
 
     @DisplayName("존재하지 않는 소환사 조회시 빈 리스트를 반환한다")
     @Test
-    void findAllByGameNameAndTagLineAndRegion_notFound_returnsEmptyList() {
+    void findAllByGameNameAndTagLineAndPlatformId_notFound_returnsEmptyList() {
         // when
         List<SummonerEntity> result = summonerRepositoryCustom
-                .findAllByGameNameAndTagLineAndRegion("NonExistent", "KR1", "kr");
+                .findAllByGameNameAndTagLineAndPlatformId("NonExistent", "KR1", "kr");
 
         // then
         assertThat(result).isEmpty();
@@ -125,13 +125,13 @@ class SummonerRepositoryCustomImplTest extends RepositoryTestBase {
 
     @DisplayName("자동완성 검색으로 소환사를 조회한다")
     @Test
-    void findAllByGameNameAndTagLineAndRegionLike_validInput_returnsSummoners() {
+    void findAllByGameNameAndTagLineAndPlatformIdLike_validInput_returnsSummoners() {
         // given
         SummonerEntity summoner = SummonerEntity.builder()
                 .puuid("test-puuid-4")
                 .gameName("TestPlayer")
                 .tagLine("KR1")
-                .region("kr")
+                .platformId("kr")
                 .summonerLevel(300L)
                 .profileIconId(5001)
                 .searchName("testplayer")
@@ -153,7 +153,7 @@ class SummonerRepositoryCustomImplTest extends RepositoryTestBase {
 
         // when
         List<SummonerEntity> result = summonerRepositoryCustom
-                .findAllByGameNameAndTagLineAndRegionLike("test", "kr");
+                .findAllByGameNameAndTagLineAndPlatformIdLike("test", "kr");
 
         // then
         assertThat(result).hasSize(1);
@@ -210,11 +210,11 @@ class SummonerRepositoryCustomImplTest extends RepositoryTestBase {
         assertThat(result).isNull();
     }
 
-    @DisplayName("regionEq 메서드가 null 입력시 null을 반환한다")
+    @DisplayName("platformIdEq 메서드가 null 입력시 null을 반환한다")
     @Test
-    void regionEq_nullInput_returnsNull() {
+    void platformIdEq_nullInput_returnsNull() {
         // when
-        var result = summonerRepositoryCustom.regionEq(null);
+        var result = summonerRepositoryCustom.platformIdEq(null);
 
         // then
         assertThat(result).isNull();

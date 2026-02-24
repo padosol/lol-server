@@ -18,8 +18,8 @@ public class ChampionClientAdapter implements ChampionClientPort {
     private final ChampionClientMapper championClientMapper;
 
     @Override
-    public ChampionRotate getChampionRotate(String region) {
-        ChampionInfo championInfo = championRotateRestClient.getChampionInfo(region);
+    public ChampionRotate getChampionRotate(String platformId) {
+        ChampionInfo championInfo = championRotateRestClient.getChampionInfo(platformId);
         return championClientMapper.toDomain(championInfo);
     }
 }

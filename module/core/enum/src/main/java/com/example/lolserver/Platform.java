@@ -32,12 +32,12 @@ public enum Platform {
         }
     }
 
-    final String region;
+    final String platformId;
     final String language;
     final String platform;
 
-    Platform(String region, String language, String platform) {
-        this.region = region;
+    Platform(String platformId, String language, String platform) {
+        this.platformId = platformId;
         this.language = language;
         this.platform = platform;
     }

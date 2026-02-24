@@ -59,19 +59,19 @@ class SummonerServiceTest {
     void getSummoner_DB존재_소환사응답반환() {
         // given
         GameName gameName = new GameName("TestPlayer", "KR1");
-        String region = "kr";
+        String platformId = "kr";
 
         Summoner summoner = createSummoner("puuid-123", "TestPlayer", "KR1");
-        given(summonerPersistencePort.getSummoner("TestPlayer", "KR1", region))
+        given(summonerPersistencePort.getSummoner("TestPlayer", "KR1", platformId))
                 .willReturn(Optional.of(summoner));
 
         // when
-        SummonerResponse result = summonerService.getSummoner(gameName, region);
+        SummonerResponse result = summonerService.getSummoner(gameName, platformId);
 
         // then
         assertThat(result.getGameName()).isEqualTo("TestPlayer");
         assertThat(result.getTagLine()).isEqualTo("KR1");
-        then(summonerPersistencePort).should().getSummoner("TestPlayer", "KR1", region);
+        then(summonerPersistencePort).should().getSummoner("TestPlayer", "KR1", platformId);
         then(summonerClientPort).should(never()).getSummoner(any(), any(), any());
     }
 
@@ -80,23 +80,23 @@ class SummonerServiceTest {
     void getSummoner_DB없음_클라이언트조회후반환() {
         // given
         GameName gameName = new GameName("NewPlayer", "KR1");
-        String region = "kr";
+        String platformId = "kr";
         String lockKey = "NewPlayer:KR1:kr";
 
         Summoner summoner = createSummoner("puuid-456", "NewPlayer", "KR1");
-        given(summonerPersistencePort.getSummoner("NewPlayer", "KR1", region))
+        given(summonerPersistencePort.getSummoner("NewPlayer", "KR1", platformId))
                 .willReturn(Optional.empty());
         given(summonerCachePort.tryLock(lockKey)).willReturn(true);
-        given(summonerClientPort.getSummoner("NewPlayer", "KR1", region))
+        given(summonerClientPort.getSummoner("NewPlayer", "KR1", platformId))
                 .willReturn(Optional.of(summoner));
 
         // when
-        SummonerResponse result = summonerService.getSummoner(gameName, region);
+        SummonerResponse result = summonerService.getSummoner(gameName, platformId);
 
         // then
         assertThat(result.getGameName()).isEqualTo("NewPlayer");
         then(summonerCachePort).should().tryLock(lockKey);
-        then(summonerClientPort).should().getSummoner("NewPlayer", "KR1", region);
+        then(summonerClientPort).should().getSummoner("NewPlayer", "KR1", platformId);
         then(summonerCachePort).should().unlock(lockKey);
     }
 
@@ -105,17 +105,17 @@ class SummonerServiceTest {
     void getSummoner_둘다없음_예외발생() {
         // given
         GameName gameName = new GameName("UnknownPlayer", "KR1");
-        String region = "kr";
+        String platformId = "kr";
         String lockKey = "UnknownPlayer:KR1:kr";
 
-        given(summonerPersistencePort.getSummoner("UnknownPlayer", "KR1", region))
+        given(summonerPersistencePort.getSummoner("UnknownPlayer", "KR1", platformId))
                 .willReturn(Optional.empty());
         given(summonerCachePort.tryLock(lockKey)).willReturn(true);
-        given(summonerClientPort.getSummoner("UnknownPlayer", "KR1", region))
+        given(summonerClientPort.getSummoner("UnknownPlayer", "KR1", platformId))
                 .willReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> summonerService.getSummoner(gameName, region))
+        assertThatThrownBy(() -> summonerService.getSummoner(gameName, platformId))
                 .isInstanceOf(CoreException.class)
                 .extracting("errorType")
                 .isEqualTo(ErrorType.NOT_FOUND_USER);
@@ -128,22 +128,22 @@ class SummonerServiceTest {
     void getAllSummonerAutoComplete_결과존재_자동완성리스트반환() {
         // given
         String query = "Test";
-        String region = "kr";
+        String platformId = "kr";
 
         List<Summoner> summoners = List.of(
                 createSummoner("puuid-1", "TestPlayer1", "KR1"),
                 createSummoner("puuid-2", "TestPlayer2", "KR2")
         );
-        given(summonerPersistencePort.getSummonerAuthComplete(query, region)).willReturn(summoners);
+        given(summonerPersistencePort.getSummonerAuthComplete(query, platformId)).willReturn(summoners);
 
         // when
-        List<SummonerAutoResponse> result = summonerService.getAllSummonerAutoComplete(query, region);
+        List<SummonerAutoResponse> result = summonerService.getAllSummonerAutoComplete(query, platformId);
 
         // then
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getGameName()).isEqualTo("TestPlayer1");
         assertThat(result.get(1).getGameName()).isEqualTo("TestPlayer2");
-        then(summonerPersistencePort).should().getSummonerAuthComplete(query, region);
+        then(summonerPersistencePort).should().getSummonerAuthComplete(query, platformId);
     }
 
     @DisplayName("자동완성 검색 결과에 리그 정보가 포함되면 티어와 랭크가 추가된다")
@@ -151,7 +151,7 @@ class SummonerServiceTest {
     void getAllSummonerAutoComplete_리그정보포함_티어랭크추가() {
         // given
         String query = "Ranked";
-        String region = "kr";
+        String platformId = "kr";
 
         LeagueSummoner leagueSummoner = new LeagueSummoner(
                 "puuid-ranked", "RANKED_SOLO_5x5", "league-1",
@@ -164,10 +164,10 @@ class SummonerServiceTest {
                 "kr", "rankedplayer", LocalDateTime.now(), LocalDateTime.now(),
                 List.of(leagueSummoner)
         );
-        given(summonerPersistencePort.getSummonerAuthComplete(query, region)).willReturn(List.of(summoner));
+        given(summonerPersistencePort.getSummonerAuthComplete(query, platformId)).willReturn(List.of(summoner));
 
         // when
-        List<SummonerAutoResponse> result = summonerService.getAllSummonerAutoComplete(query, region);
+        List<SummonerAutoResponse> result = summonerService.getAllSummonerAutoComplete(query, platformId);
 
         // then
         assertThat(result).hasSize(1);
@@ -181,16 +181,16 @@ class SummonerServiceTest {
     void getAllSummonerAutoComplete_결과없음_빈리스트반환() {
         // given
         String query = "NoMatch";
-        String region = "kr";
+        String platformId = "kr";
 
-        given(summonerPersistencePort.getSummonerAuthComplete(query, region)).willReturn(Collections.emptyList());
+        given(summonerPersistencePort.getSummonerAuthComplete(query, platformId)).willReturn(Collections.emptyList());
 
         // when
-        List<SummonerAutoResponse> result = summonerService.getAllSummonerAutoComplete(query, region);
+        List<SummonerAutoResponse> result = summonerService.getAllSummonerAutoComplete(query, platformId);
 
         // then
         assertThat(result).isEmpty();
-        then(summonerPersistencePort).should().getSummonerAuthComplete(query, region);
+        then(summonerPersistencePort).should().getSummonerAuthComplete(query, platformId);
     }
 
     // ========== renewalSummonerInfo 테스트 ==========
@@ -199,13 +199,13 @@ class SummonerServiceTest {
     @Test
     void renewalSummonerInfo_갱신중_SUCCESS반환() {
         // given
-        String platform = "kr";
+        String platformId = "kr";
         String puuid = "puuid-updating";
 
         given(summonerCachePort.isUpdating(puuid)).willReturn(true);
 
         // when
-        SummonerRenewal result = summonerService.renewalSummonerInfo(platform, puuid);
+        SummonerRenewal result = summonerService.renewalSummonerInfo(platformId, puuid);
 
         // then
         assertThat(result.getStatus()).isEqualTo(RenewalStatus.SUCCESS);
@@ -217,7 +217,7 @@ class SummonerServiceTest {
     @Test
     void renewalSummonerInfo_갱신가능_갱신후SUCCESS반환() {
         // given
-        String platform = "kr";
+        String platformId = "kr";
         String puuid = "puuid-renewable";
 
         LocalDateTime oldRevisionDate = LocalDateTime.now().minusMinutes(10);
@@ -232,7 +232,7 @@ class SummonerServiceTest {
         given(summonerCachePort.isClickCooldown(puuid)).willReturn(false);
         given(summonerPersistencePort.findById(puuid)).willReturn(Optional.of(summoner));
         // when
-        SummonerRenewal result = summonerService.renewalSummonerInfo(platform, puuid);
+        SummonerRenewal result = summonerService.renewalSummonerInfo(platformId, puuid);
 
         // then
         assertThat(result.getStatus()).isEqualTo(RenewalStatus.SUCCESS);
@@ -246,7 +246,7 @@ class SummonerServiceTest {
     @Test
     void renewalSummonerInfo_갱신불가_FAILED반환() {
         // given
-        String platform = "kr";
+        String platformId = "kr";
         String puuid = "puuid-recent";
 
         LocalDateTime recentRevisionDate = LocalDateTime.now().minusSeconds(30);
@@ -262,7 +262,7 @@ class SummonerServiceTest {
         given(summonerPersistencePort.findById(puuid)).willReturn(Optional.of(summoner));
 
         // when
-        SummonerRenewal result = summonerService.renewalSummonerInfo(platform, puuid);
+        SummonerRenewal result = summonerService.renewalSummonerInfo(platformId, puuid);
 
         // then
         assertThat(result.getStatus()).isEqualTo(RenewalStatus.FAILED);
@@ -274,7 +274,7 @@ class SummonerServiceTest {
     @Test
     void renewalSummonerInfo_puuid없음_예외발생() {
         // given
-        String platform = "kr";
+        String platformId = "kr";
         String puuid = "invalid-puuid";
 
         given(summonerCachePort.isUpdating(puuid)).willReturn(false);
@@ -282,7 +282,7 @@ class SummonerServiceTest {
         given(summonerPersistencePort.findById(puuid)).willReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> summonerService.renewalSummonerInfo(platform, puuid))
+        assertThatThrownBy(() -> summonerService.renewalSummonerInfo(platformId, puuid))
                 .isInstanceOf(CoreException.class)
                 .extracting("errorType")
                 .isEqualTo(ErrorType.NOT_FOUND_PUUID);
@@ -292,14 +292,14 @@ class SummonerServiceTest {
     @Test
     void renewalSummonerInfo_클릭쿨다운_FAILED반환() {
         // given
-        String platform = "kr";
+        String platformId = "kr";
         String puuid = "puuid-cooldown";
 
         given(summonerCachePort.isUpdating(puuid)).willReturn(false);
         given(summonerCachePort.isClickCooldown(puuid)).willReturn(true);
 
         // when
-        SummonerRenewal result = summonerService.renewalSummonerInfo(platform, puuid);
+        SummonerRenewal result = summonerService.renewalSummonerInfo(platformId, puuid);
 
         // then
         assertThat(result.getStatus()).isEqualTo(RenewalStatus.FAILED);
@@ -348,14 +348,14 @@ class SummonerServiceTest {
     @Test
     void getSummonerByPuuid_DB존재_소환사응답반환() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         String puuid = "puuid-existing";
 
         Summoner summoner = createSummoner(puuid, "ExistingPlayer", "KR1");
         given(summonerPersistencePort.findById(puuid)).willReturn(Optional.of(summoner));
 
         // when
-        SummonerResponse result = summonerService.getSummonerByPuuid(region, puuid);
+        SummonerResponse result = summonerService.getSummonerByPuuid(platformId, puuid);
 
         // then
         assertThat(result.getPuuid()).isEqualTo(puuid);
@@ -368,7 +368,7 @@ class SummonerServiceTest {
     @Test
     void getSummonerByPuuid_DB없음_클라이언트조회후반환() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         String puuid = "puuid-new";
         String lockKey = "puuid:" + puuid;
 
@@ -376,15 +376,15 @@ class SummonerServiceTest {
         given(summonerPersistencePort.findById(puuid))
                 .willReturn(Optional.empty());
         given(summonerCachePort.tryLock(lockKey)).willReturn(true);
-        given(summonerClientPort.getSummonerByPuuid(region, puuid)).willReturn(Optional.of(summoner));
+        given(summonerClientPort.getSummonerByPuuid(platformId, puuid)).willReturn(Optional.of(summoner));
 
         // when
-        SummonerResponse result = summonerService.getSummonerByPuuid(region, puuid);
+        SummonerResponse result = summonerService.getSummonerByPuuid(platformId, puuid);
 
         // then
         assertThat(result.getPuuid()).isEqualTo(puuid);
         then(summonerCachePort).should().tryLock(lockKey);
-        then(summonerClientPort).should().getSummonerByPuuid(region, puuid);
+        then(summonerClientPort).should().getSummonerByPuuid(platformId, puuid);
         then(summonerCachePort).should().unlock(lockKey);
     }
 
@@ -392,16 +392,16 @@ class SummonerServiceTest {
     @Test
     void getSummonerByPuuid_둘다없음_예외발생() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         String puuid = "invalid-puuid";
         String lockKey = "puuid:" + puuid;
 
         given(summonerPersistencePort.findById(puuid)).willReturn(Optional.empty());
         given(summonerCachePort.tryLock(lockKey)).willReturn(true);
-        given(summonerClientPort.getSummonerByPuuid(region, puuid)).willReturn(Optional.empty());
+        given(summonerClientPort.getSummonerByPuuid(platformId, puuid)).willReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> summonerService.getSummonerByPuuid(region, puuid))
+        assertThatThrownBy(() -> summonerService.getSummonerByPuuid(platformId, puuid))
                 .isInstanceOf(CoreException.class)
                 .extracting("errorType")
                 .isEqualTo(ErrorType.NOT_FOUND_PUUID);

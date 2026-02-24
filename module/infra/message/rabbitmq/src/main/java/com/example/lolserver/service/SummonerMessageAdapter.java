@@ -23,9 +23,9 @@ public class SummonerMessageAdapter implements SummonerMessagePort {
     private final RabbitTemplate rabbitTemplate;
 
     @Override
-    public void sendMessage(String platform, String puuid, LocalDateTime revisionDatea) {
+    public void sendMessage(String platformId, String puuid, LocalDateTime revisionDatea) {
         SummonerMessage summonerMessage = new SummonerMessage(
-                platform, puuid, revisionDatea
+                platformId, puuid, revisionDatea
         );
 
         rabbitTemplate.convertAndSend(exchangeName, routingKey, summonerMessage);
