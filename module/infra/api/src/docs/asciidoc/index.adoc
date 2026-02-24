@@ -44,6 +44,11 @@ include::api/league/league-detail.adoc[]
 
 include::api/champion/champion-rotate.adoc[]
 
+[[ChampionStats-API]]
+== ChampionStats API
+
+include::api/championstats/champion-stats-get.adoc[]
+
 [[Rank-API]]
 == Rank API
 

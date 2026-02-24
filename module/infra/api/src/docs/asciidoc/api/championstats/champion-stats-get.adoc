@@ -1,0 +1,11 @@
+[[champion-stats-get]]
+=== 챔피언 통계 조회
+
+==== HTTP Request
+include::{snippets}/champion-stats-get/http-request.adoc[]
+include::{snippets}/champion-stats-get/path-parameters.adoc[]
+include::{snippets}/champion-stats-get/query-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/champion-stats-get/http-response.adoc[]
+include::{snippets}/champion-stats-get/response-fields.adoc[]
