@@ -1,4 +1,4 @@
-package com.example.lolserver.controller.config;
+package com.example.lolserver.config;
 
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;

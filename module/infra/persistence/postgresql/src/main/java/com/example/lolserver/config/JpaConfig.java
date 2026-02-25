@@ -1,4 +1,4 @@
-package com.mmrtr.lol.infra.persistence.config;
+package com.example.lolserver.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @Configuration
 @EnableJpaAuditing
-@EnableJpaRepositories(basePackages = "com.mmrtr.lol.infra.persistence")
+@EnableJpaRepositories(basePackages = "com.example.lolserver.repository")
 public class JpaConfig {
 }

@@ -20,8 +20,8 @@ public class ClickHouseConfig {
         dataSource.setDriverClassName(driverClassName);
         dataSource.setUsername(username);
         dataSource.setPassword(password);
-        dataSource.setMaximumPoolSize(5);
-        dataSource.setMinimumIdle(2);
+        dataSource.setMaximumPoolSize(10);
+        dataSource.setMinimumIdle(10);
         return new JdbcTemplate(dataSource);
     }
 }

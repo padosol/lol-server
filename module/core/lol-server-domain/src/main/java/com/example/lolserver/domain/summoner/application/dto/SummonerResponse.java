@@ -6,11 +6,17 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.format.DateTimeFormatter;
+
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class SummonerResponse {
+
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     private int profileIconId;
     private String puuid;
     private long summonerLevel;
@@ -29,10 +35,10 @@ public class SummonerResponse {
                 .tagLine(summoner.getTagLine())
                 .lastRevisionDateTime(
                     summoner.getRevisionDate() != null
-                        ? summoner.getRevisionDate().toString() : null)
+                        ? summoner.getRevisionDate().format(DATE_FORMATTER) : null)
                 .lastRevisionClickDateTime(
                     summoner.getLastRiotCallDate() != null
-                        ? summoner.getLastRiotCallDate().toString() : null)
+                        ? summoner.getLastRiotCallDate().format(DATE_FORMATTER) : null)
                 .build();
     }
 }

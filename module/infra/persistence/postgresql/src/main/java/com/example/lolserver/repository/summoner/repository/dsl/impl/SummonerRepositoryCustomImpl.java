@@ -24,25 +24,26 @@ public class SummonerRepositoryCustomImpl implements SummonerRepositoryCustom {
     public List<SummonerEntity> findAllByGameNameAndTagLineAndPlatformId(
             String gameName, String tagLine, String platformId) {
         return jpaQueryFactory.selectFrom(summonerEntity)
+                .leftJoin(summonerEntity.leagueSummonerEntities, leagueSummonerEntity).fetchJoin()
                 .where(
                         gameNameEq(gameName),
                         tagLineEq(tagLine),
                         platformIdEq(platformId)
                 )
+                .distinct()
                 .fetch();
     }
 
     @Override
     public List<SummonerEntity> findAllByGameNameAndTagLineAndPlatformIdLike(String q, String platformId) {
         return jpaQueryFactory.selectFrom(summonerEntity)
-                .join(leagueSummonerEntity)
-                .on(
-                        summonerEntity.puuid.eq(leagueSummonerEntity.puuid)
-                )
+                .join(summonerEntity.leagueSummonerEntities, leagueSummonerEntity).fetchJoin()
                 .where(
                         gameNameLike(q),
                         platformIdEq(platformId)
-                ).fetch();
+                )
+                .distinct()
+                .fetch();
     }
 
     public BooleanExpression gameNameLike(String gameName) {

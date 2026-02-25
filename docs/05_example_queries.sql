@@ -20,6 +20,7 @@ FROM champion_stats_local
 WHERE champion_id = 13
   AND patch = '16.1'
   AND platform_id = 'KR'
+  AND tier = 'EMERALD'
 GROUP BY champion_id, team_position, platform_id
 ORDER BY total_games DESC;
 
@@ -38,6 +39,7 @@ FROM champion_matchup_stats_local
 WHERE champion_id = 13
   AND patch = '16.1'
   AND platform_id = 'KR'
+  AND tier = 'EMERALD'
 GROUP BY champion_id, opponent_champion_id, team_position
 ORDER BY total_win_rate DESC, total_games desc ;
 
@@ -56,6 +58,7 @@ FROM item_build_stats_local
 WHERE champion_id = 13
   AND patch = '16.1'
   AND platform_id = 'KR'
+  AND tier = 'EMERALD'
 GROUP BY champion_id, team_position, items_sorted
 ORDER BY total_games DESC
     LIMIT 5;
@@ -78,6 +81,7 @@ FROM rune_build_stats_local
 WHERE champion_id = 13
   AND patch = '16.1'
   AND platform_id = 'KR'
+  AND tier = 'EMERALD'
 GROUP BY champion_id, team_position,
          primary_style_id, primary_perk_ids, sub_style_id, sub_perk_ids
 ORDER BY total_games DESC, total_win_rate DESC
@@ -98,6 +102,7 @@ FROM skill_build_stats_local
 WHERE champion_id = 13
   AND patch = '16.1'
   AND platform_id = 'KR'
+  AND tier = 'EMERALD'
 GROUP BY champion_id, team_position, skill_order_15
 ORDER BY total_games DESC, total_win_rate DESC
     LIMIT 5;

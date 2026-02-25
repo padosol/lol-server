@@ -7,16 +7,17 @@ import com.example.lolserver.domain.championstats.application.dto.ChampionSkillB
 import com.example.lolserver.domain.championstats.application.dto.ChampionWinRateResponse;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ChampionStatsQueryPort {
 
-    List<ChampionWinRateResponse> getChampionWinRates(int championId, String patch, String platformId);
+    List<ChampionWinRateResponse> getChampionWinRates(int championId, String patch, String platformId, String tier);
 
-    List<ChampionMatchupResponse> getChampionMatchups(int championId, String patch, String platformId);
+    Map<String, List<ChampionMatchupResponse>> getChampionMatchups(int championId, String patch, String platformId, String tier);
 
-    List<ChampionItemBuildResponse> getChampionItemBuilds(int championId, String patch, String platformId);
+    Map<String, List<ChampionItemBuildResponse>> getChampionItemBuilds(int championId, String patch, String platformId, String tier);
 
-    List<ChampionRuneBuildResponse> getChampionRuneBuilds(int championId, String patch, String platformId);
+    Map<String, List<ChampionRuneBuildResponse>> getChampionRuneBuilds(int championId, String patch, String platformId, String tier);
 
-    List<ChampionSkillBuildResponse> getChampionSkillBuilds(int championId, String patch, String platformId);
+    Map<String, List<ChampionSkillBuildResponse>> getChampionSkillBuilds(int championId, String patch, String platformId, String tier);
 }

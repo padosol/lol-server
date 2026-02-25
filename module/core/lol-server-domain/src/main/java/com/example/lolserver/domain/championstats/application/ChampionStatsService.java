@@ -2,6 +2,7 @@ package com.example.lolserver.domain.championstats.application;
 
 import com.example.lolserver.domain.championstats.application.dto.ChampionItemBuildResponse;
 import com.example.lolserver.domain.championstats.application.dto.ChampionMatchupResponse;
+import com.example.lolserver.domain.championstats.application.dto.ChampionPositionStatsResponse;
 import com.example.lolserver.domain.championstats.application.dto.ChampionRuneBuildResponse;
 import com.example.lolserver.domain.championstats.application.dto.ChampionSkillBuildResponse;
 import com.example.lolserver.domain.championstats.application.dto.ChampionStatsResponse;
@@ -12,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -21,38 +22,30 @@ public class ChampionStatsService {
 
     private final ChampionStatsQueryPort championStatsQueryPort;
 
-    public ChampionStatsResponse getChampionStats(int championId, String patch, String platformId) {
-        CompletableFuture<List<ChampionWinRateResponse>> winRatesFuture =
-            CompletableFuture.supplyAsync(() ->
-                championStatsQueryPort.getChampionWinRates(championId, patch, platformId));
+    public ChampionStatsResponse getChampionStats(int championId, String patch, String platformId, String tier) {
+        List<ChampionWinRateResponse> winRates =
+            championStatsQueryPort.getChampionWinRates(championId, patch, platformId, tier);
+        Map<String, List<ChampionMatchupResponse>> matchupsByPos =
+            championStatsQueryPort.getChampionMatchups(championId, patch, platformId, tier);
+        Map<String, List<ChampionItemBuildResponse>> itemBuildsByPos =
+            championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tier);
+        Map<String, List<ChampionRuneBuildResponse>> runeBuildsByPos =
+            championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tier);
+        Map<String, List<ChampionSkillBuildResponse>> skillBuildsByPos =
+            championStatsQueryPort.getChampionSkillBuilds(championId, patch, platformId, tier);
 
-        CompletableFuture<List<ChampionMatchupResponse>> matchupsFuture =
-            CompletableFuture.supplyAsync(() ->
-                championStatsQueryPort.getChampionMatchups(championId, patch, platformId));
+        List<ChampionPositionStatsResponse> stats = winRates.stream()
+            .map(wr -> new ChampionPositionStatsResponse(
+                wr.teamPosition(),
+                wr.totalWinRate(),
+                wr.totalGames(),
+                matchupsByPos.getOrDefault(wr.teamPosition(), List.of()),
+                itemBuildsByPos.getOrDefault(wr.teamPosition(), List.of()),
+                runeBuildsByPos.getOrDefault(wr.teamPosition(), List.of()),
+                skillBuildsByPos.getOrDefault(wr.teamPosition(), List.of())
+            ))
+            .toList();
 
-        CompletableFuture<List<ChampionItemBuildResponse>> itemBuildsFuture =
-            CompletableFuture.supplyAsync(() ->
-                championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId));
-
-        CompletableFuture<List<ChampionRuneBuildResponse>> runeBuildsFuture =
-            CompletableFuture.supplyAsync(() ->
-                championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId));
-
-        CompletableFuture<List<ChampionSkillBuildResponse>> skillBuildsFuture =
-            CompletableFuture.supplyAsync(() ->
-                championStatsQueryPort.getChampionSkillBuilds(championId, patch, platformId));
-
-        CompletableFuture.allOf(
-            winRatesFuture, matchupsFuture, itemBuildsFuture,
-            runeBuildsFuture, skillBuildsFuture
-        ).join();
-
-        return new ChampionStatsResponse(
-            winRatesFuture.join(),
-            matchupsFuture.join(),
-            itemBuildsFuture.join(),
-            runeBuildsFuture.join(),
-            skillBuildsFuture.join()
-        );
+        return new ChampionStatsResponse(tier, stats);
     }
 }

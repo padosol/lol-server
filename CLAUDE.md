@@ -18,6 +18,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # 테스트 실행
 ./gradlew test
 
+# API 문서 생성 (RestDocs 테스트 성공 후 asciidoctor 실행)
+./gradlew :module:infra:api:asciidoctor
+
 # 클린 빌드
 ./gradlew clean build
 

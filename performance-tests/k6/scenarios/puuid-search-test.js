@@ -2,18 +2,18 @@ import http from 'k6/http';
 import { check } from 'k6';
 import { SharedArray } from 'k6/data';
 import { Trend, Rate } from 'k6/metrics';
-import { BASE_URL, ENDPOINTS, HEADERS, DEFAULT_REGION } from '../lib/config.js';
+import { BASE_URL, ENDPOINTS, HEADERS, DEFAULT_PLATFORM_ID } from '../lib/config.js';
 
 /**
  * PUUID 기반 소환사 검색 성능 테스트
  *
  * 목적: master_summoners.json의 puuid를 사용하여 소환사 검색 API 성능 측정
- * 대상 API: GET /api/v1/{region}/summoners/{puuid}
+ * 대상 API: GET /api/v1/{platformId}/summoners/{puuid}
  */
 
 // 테스트 데이터 로드 (master_summoners.json에서 puuid 추출)
 const masterPuuids = new SharedArray('master_puuids', function () {
-    const data = JSON.parse(open('../../data/grand_master_summoner.json'));
+    const data = JSON.parse(open('../../data/master_summoners.json'));
     return data.entries.map(entry => entry.puuid);
 });
 
@@ -49,10 +49,10 @@ const requestOptions = {
 export default function () {
     // 랜덤 puuid 선택
     const puuid = masterPuuids[Math.floor(Math.random() * masterPuuids.length)];
-    const region = DEFAULT_REGION;
+    const platformId = DEFAULT_PLATFORM_ID;
 
-    // API 호출: GET /api/v1/{region}/summoners/{puuid}
-    const url = `${BASE_URL}${ENDPOINTS.summoner.getByPuuid(region, puuid)}`;
+    // API 호출: GET /api/v1/{platformId}/summoners/{puuid}
+    const url = `${BASE_URL}${ENDPOINTS.summoner.getByPuuid(platformId, puuid)}`;
     const response = http.get(url, requestOptions);
 
     // 응답 검증

@@ -76,3 +76,10 @@ include::api/tiercutoff/tiercutoff-list.adoc[]
 include::api/tiercutoff/tiercutoff-list-by-queue.adoc[]
 
 include::api/tiercutoff/tiercutoff-detail.adoc[]
+
+[[Season-API]]
+== Season API
+
+include::api/season/season-list.adoc[]
+
+include::api/season/season-detail.adoc[]

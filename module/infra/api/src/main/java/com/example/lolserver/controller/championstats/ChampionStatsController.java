@@ -25,11 +25,12 @@ public class ChampionStatsController {
     public ResponseEntity<ApiResponse<ChampionStatsResponse>> getChampionStats(
             @PathVariable("platformId") String platformId,
             @RequestParam("championId") int championId,
-            @RequestParam("patch") String patch
+            @RequestParam("patch") String patch,
+            @RequestParam("tier") String tier
     ) {
         String riotPlatformId = Platform.valueOfName(platformId).getPlatformId();
         ChampionStatsResponse response = championStatsService.getChampionStats(
-                championId, patch, riotPlatformId);
+                championId, patch, riotPlatformId, tier);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }
