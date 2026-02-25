@@ -38,6 +38,7 @@ public class SummonerService {
     private final SummonerCachePort summonerCachePort;
     private final SummonerMessagePort summonerMessagePort;
 
+    @Transactional(readOnly = true)
     public SummonerResponse getSummoner(GameName gameName, String platformId) {
         Optional<Summoner> summonerOpt = summonerPersistencePort.getSummoner(
                 gameName.summonerName(), gameName.tagLine(), platformId);
@@ -66,6 +67,7 @@ public class SummonerService {
         }
     }
 
+    @Transactional(readOnly = true)
     public List<SummonerAutoResponse> getAllSummonerAutoComplete(String q, String platformId) {
         List<Summoner> summoners = summonerPersistencePort.getSummonerAuthComplete(q, platformId);
         return summoners.stream().map(summoner -> {
@@ -112,14 +114,18 @@ public class SummonerService {
      */
     @Transactional
     public SummonerRenewal renewalSummonerInfo(String platformId, String puuid) {
+        log.debug("소환사 갱신 요청 - platformId: {}, puuid: {}", platformId, puuid);
+
         // 이미 갱신이 진행 중이면 중복 요청을 방지한다
         boolean updating = summonerCachePort.isUpdating(puuid);
         if (updating) {
+            log.debug("이미 갱신 진행 중 - 중복 요청 방지, puuid: {}", puuid);
             return new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
         }
 
         // 10초 클릭 쿨다운 내 재요청이면 즉시 반환한다
         if (summonerCachePort.isClickCooldown(puuid)) {
+            log.debug("클릭 쿨다운 중 - 연타 방지, puuid: {}", puuid);
             return new SummonerRenewal(puuid, RenewalStatus.FAILED);
         }
         // 10초 클릭 쿨다운을 설정한다
@@ -136,7 +142,10 @@ public class SummonerService {
             // RabbitMQ로 갱신 메시지를 발행하여 비동기 처리를 시작한다
             summonerMessagePort.sendMessage(
                     platformId, puuid, summoner.getRevisionDate());
+            log.debug("갱신 메시지 발행 완료 - platformId: {}, puuid: {}, revisionDate: {}",
+                    platformId, puuid, summoner.getRevisionDate());
         } else {
+            log.debug("2분 미경과 - 갱신 불가, puuid: {}, revisionDate: {}", puuid, summoner.getRevisionDate());
             return new SummonerRenewal(puuid, RenewalStatus.FAILED);
         }
 
@@ -151,6 +160,7 @@ public class SummonerService {
         return new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
     }
 
+    @Transactional(readOnly = true)
     public SummonerResponse getSummonerByPuuid(String platformId, String puuid) {
         Optional<Summoner> summonerOpt = summonerPersistencePort.findById(puuid);
 
