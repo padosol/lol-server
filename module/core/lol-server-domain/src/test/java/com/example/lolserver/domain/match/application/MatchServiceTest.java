@@ -3,7 +3,7 @@ package com.example.lolserver.domain.match.application;
 import com.example.lolserver.domain.match.application.command.MSChampionCommand;
 import com.example.lolserver.domain.match.application.command.MatchCommand;
 import com.example.lolserver.domain.match.application.port.out.MatchPersistencePort;
-import com.example.lolserver.domain.match.application.dto.GameResponse;
+import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.support.Page;
@@ -49,14 +49,14 @@ class MatchServiceTest {
                 .platformId("kr")
                 .build();
 
-        List<GameResponse> games = List.of(new GameResponse(), new GameResponse());
-        Page<GameResponse> expected = new Page<>(games, true);
+        List<GameReadModel> games = List.of(new GameReadModel(), new GameReadModel());
+        Page<GameReadModel> expected = new Page<>(games, true);
 
         given(matchPersistencePort.getMatches(eq("test-puuid"), eq(420), any(Pageable.class)))
                 .willReturn(expected);
 
         // when
-        Page<GameResponse> result = matchService.getMatches(command);
+        Page<GameReadModel> result = matchService.getMatches(command);
 
         // then
         assertThat(result.getContent()).hasSize(2);
@@ -74,12 +74,12 @@ class MatchServiceTest {
                 .pageNo(0)
                 .build();
 
-        Page<GameResponse> emptyPage = new Page<>(Collections.emptyList(), false);
+        Page<GameReadModel> emptyPage = new Page<>(Collections.emptyList(), false);
         given(matchPersistencePort.getMatches(eq("test-puuid"), eq(420), any(Pageable.class)))
                 .willReturn(emptyPage);
 
         // when
-        Page<GameResponse> result = matchService.getMatches(command);
+        Page<GameReadModel> result = matchService.getMatches(command);
 
         // then
         assertThat(result.getContent()).isEmpty();
@@ -136,11 +136,11 @@ class MatchServiceTest {
     void getGameData_존재하는매치_게임데이터반환() {
         // given
         String matchId = "KR_1234567890";
-        GameResponse gameData = new GameResponse();
+        GameReadModel gameData = new GameReadModel();
         given(matchPersistencePort.getGameData(matchId)).willReturn(Optional.of(gameData));
 
         // when
-        GameResponse result = matchService.getGameData(matchId);
+        GameReadModel result = matchService.getGameData(matchId);
 
         // then
         assertThat(result).isNotNull();

@@ -1,7 +1,7 @@
 package com.example.lolserver.repository.match.matchsummoner.dsl.impl;
 
 import com.example.lolserver.repository.match.dto.DailyGameCountDTO;
-import com.example.lolserver.repository.match.dto.LinePosition;
+import com.example.lolserver.repository.match.dto.LinePositionDTO;
 import com.example.lolserver.repository.match.dto.MSChampionDTO;
 import com.example.lolserver.repository.match.dto.QDailyGameCountDTO;
 import com.example.lolserver.repository.match.dto.QMSChampionDTO;
@@ -167,11 +167,11 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
     }
 
     @Override
-    public List<LinePosition> findAllPositionByPuuidAndLimit(String puuid, Long limit) {
+    public List<LinePositionDTO> findAllPositionByPuuidAndLimit(String puuid, Long limit) {
 
-        JPAQuery<LinePosition> query = jpaQueryFactory.select(
+        JPAQuery<LinePositionDTO> query = jpaQueryFactory.select(
                         Projections.fields(
-                                LinePosition.class,
+                                LinePositionDTO.class,
                                 matchSummonerEntity.individualPosition.as("position"),
                                 matchSummonerEntity.individualPosition.count().as("playCount")
                         )

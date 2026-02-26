@@ -16,8 +16,8 @@ import com.example.lolserver.domain.match.domain.gamedata.value.StatValue;
 import com.example.lolserver.domain.match.domain.gamedata.value.Style;
 import com.example.lolserver.domain.match.domain.TeamData;
 import com.example.lolserver.domain.match.application.MatchService;
-import com.example.lolserver.domain.match.application.dto.DailyGameCountResponse;
-import com.example.lolserver.domain.match.application.dto.GameResponse;
+import com.example.lolserver.domain.match.application.model.DailyGameCountReadModel;
+import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.support.Page;
 
@@ -103,7 +103,7 @@ class MatchControllerTest extends RestDocsSupport {
         given(team200.isWin()).willReturn(false);
         given(team200.getChampionKills()).willReturn(15);
 
-        GameResponse gameData = mock(GameResponse.class);
+        GameReadModel gameData = mock(GameReadModel.class);
         given(gameData.getGameInfoData()).willReturn(gameInfoData);
         given(gameData.getParticipantData()).willReturn(List.of(participant));
         given(gameData.getTeamInfoData()).willReturn(TeamData.builder().blueTeam(team100).redTeam(team200).build());
@@ -179,9 +179,9 @@ class MatchControllerTest extends RestDocsSupport {
         // given
         MatchCommand request = MatchCommand.builder().puuid("puuid-1234").queueId(420).pageNo(1).platformId("kr").build();
 
-        GameResponse gameData = mock(GameResponse.class);
+        GameReadModel gameData = mock(GameReadModel.class);
 
-        Page<GameResponse> pageOfGameData = new Page<>(List.of(gameData), false);
+        Page<GameReadModel> pageOfGameData = new Page<>(List.of(gameData), false);
 
         given(matchService.getMatches(any(MatchCommand.class))).willReturn(pageOfGameData);
 
@@ -209,7 +209,7 @@ class MatchControllerTest extends RestDocsSupport {
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
-                                subsectionWithPath("data.content[]").type(JsonFieldType.ARRAY).description("매치 데이터 목록 (GameResponse)"),
+                                subsectionWithPath("data.content[]").type(JsonFieldType.ARRAY).description("매치 데이터 목록 (GameReadModel)"),
                                 fieldWithPath("data.hasNext").type(JsonFieldType.BOOLEAN).description("다음 페이지 존재 여부")
                         )
                 ));
@@ -289,12 +289,12 @@ class MatchControllerTest extends RestDocsSupport {
                 List.of(6, 7, 8, 9, 10)
         );
 
-        GameResponse gameData = new GameResponse();
+        GameReadModel gameData = new GameReadModel();
         gameData.setGameInfoData(gameInfoData);
         gameData.setParticipantData(List.of(participant));
         gameData.setTeamInfoData(TeamData.builder().blueTeam(blueTeam).redTeam(redTeam).build());
 
-        Page<GameResponse> pageOfGameData = new Page<>(List.of(gameData), false);
+        Page<GameReadModel> pageOfGameData = new Page<>(List.of(gameData), false);
 
         given(matchService.getMatchesBatch(any(MatchCommand.class))).willReturn(pageOfGameData);
 
@@ -521,10 +521,10 @@ class MatchControllerTest extends RestDocsSupport {
     void getDailyGameCounts() throws Exception {
         // given
         String puuid = "puuid-1234";
-        List<DailyGameCountResponse> response = List.of(
-                new DailyGameCountResponse(LocalDate.of(2025, 1, 15), 3L),
-                new DailyGameCountResponse(LocalDate.of(2025, 1, 14), 5L),
-                new DailyGameCountResponse(LocalDate.of(2025, 1, 13), 2L)
+        List<DailyGameCountReadModel> response = List.of(
+                new DailyGameCountReadModel(LocalDate.of(2025, 1, 15), 3L),
+                new DailyGameCountReadModel(LocalDate.of(2025, 1, 14), 5L),
+                new DailyGameCountReadModel(LocalDate.of(2025, 1, 13), 2L)
         );
 
         given(matchService.getDailyGameCounts(anyString(), anyInt(), any())).willReturn(response);

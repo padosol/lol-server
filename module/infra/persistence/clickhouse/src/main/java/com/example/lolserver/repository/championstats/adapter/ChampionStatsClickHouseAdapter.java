@@ -1,10 +1,10 @@
 package com.example.lolserver.repository.championstats.adapter;
 
-import com.example.lolserver.domain.championstats.application.dto.ChampionItemBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionMatchupResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionRuneBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionSkillBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionWinRateResponse;
+import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -32,7 +32,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
     }
 
     @Override
-    public List<ChampionWinRateResponse> getChampionWinRates(
+    public List<ChampionWinRateReadModel> getChampionWinRates(
             int championId, String patch, String platformId, String tier) {
         String sql = """
                 SELECT team_position,
@@ -46,7 +46,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                 """.formatted(championId, quote(patch), quote(platformId), quote(tier));
 
         return clickHouseJdbcTemplate.query(sql,
-                (rs, rowNum) -> new ChampionWinRateResponse(
+                (rs, rowNum) -> new ChampionWinRateReadModel(
                         rs.getString("team_position"),
                         rs.getLong("total_games"),
                         rs.getLong("total_wins"),
@@ -55,7 +55,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
     }
 
     @Override
-    public Map<String, List<ChampionMatchupResponse>> getChampionMatchups(
+    public Map<String, List<ChampionMatchupReadModel>> getChampionMatchups(
             int championId, String patch, String platformId, String tier) {
         String sql = """
                 SELECT team_position, opponent_champion_id,
@@ -71,7 +71,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new AbstractMap.SimpleEntry<>(
                         rs.getString("team_position"),
-                        new ChampionMatchupResponse(
+                        new ChampionMatchupReadModel(
                                 rs.getInt("opponent_champion_id"),
                                 rs.getLong("total_games"),
                                 rs.getLong("total_wins"),
@@ -85,7 +85,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
     }
 
     @Override
-    public Map<String, List<ChampionItemBuildResponse>> getChampionItemBuilds(
+    public Map<String, List<ChampionItemBuildReadModel>> getChampionItemBuilds(
             int championId, String patch, String platformId, String tier) {
         String sql = """
                 SELECT team_position, items_sorted, total_games, total_wins, total_win_rate
@@ -106,7 +106,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new AbstractMap.SimpleEntry<>(
                         rs.getString("team_position"),
-                        new ChampionItemBuildResponse(
+                        new ChampionItemBuildReadModel(
                                 rs.getString("items_sorted"),
                                 rs.getLong("total_games"),
                                 rs.getLong("total_wins"),
@@ -120,7 +120,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
     }
 
     @Override
-    public Map<String, List<ChampionRuneBuildResponse>> getChampionRuneBuilds(
+    public Map<String, List<ChampionRuneBuildReadModel>> getChampionRuneBuilds(
             int championId, String patch, String platformId, String tier) {
         String sql = """
                 SELECT team_position, primary_style_id, primary_perk_ids,
@@ -145,7 +145,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new AbstractMap.SimpleEntry<>(
                         rs.getString("team_position"),
-                        new ChampionRuneBuildResponse(
+                        new ChampionRuneBuildReadModel(
                                 rs.getInt("primary_style_id"),
                                 rs.getString("primary_perk_ids"),
                                 rs.getInt("sub_style_id"),
@@ -162,7 +162,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
     }
 
     @Override
-    public Map<String, List<ChampionSkillBuildResponse>> getChampionSkillBuilds(
+    public Map<String, List<ChampionSkillBuildReadModel>> getChampionSkillBuilds(
             int championId, String patch, String platformId, String tier) {
         String sql = """
                 SELECT team_position, skill_order_15, total_games, total_wins, total_win_rate
@@ -183,7 +183,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new AbstractMap.SimpleEntry<>(
                         rs.getString("team_position"),
-                        new ChampionSkillBuildResponse(
+                        new ChampionSkillBuildReadModel(
                                 rs.getString("skill_order_15"),
                                 rs.getLong("total_games"),
                                 rs.getLong("total_wins"),

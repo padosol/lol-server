@@ -1,6 +1,6 @@
-package com.example.lolserver.domain.championstats.application.dto;
+package com.example.lolserver.domain.championstats.application.model;
 
-public record ChampionRuneBuildResponse(
+public record ChampionRuneBuildReadModel(
     int primaryStyleId,
     String primaryPerkIds,
     int subStyleId,

@@ -12,7 +12,12 @@ import com.example.lolserver.domain.match.domain.gamedata.timeline.events.SkillE
 import com.example.lolserver.domain.match.domain.gamedata.value.ItemValue;
 import com.example.lolserver.domain.match.domain.gamedata.value.StatValue;
 import com.example.lolserver.domain.match.domain.gamedata.value.Style;
+import com.example.lolserver.repository.match.dto.ItemEventDTO;
 import com.example.lolserver.repository.match.dto.MSChampionDTO;
+import com.example.lolserver.repository.match.dto.MatchDTO;
+import com.example.lolserver.repository.match.dto.MatchSummonerDTO;
+import com.example.lolserver.repository.match.dto.MatchTeamDTO;
+import com.example.lolserver.repository.match.dto.SkillEventDTO;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
 import com.example.lolserver.repository.match.entity.MatchTeamEntity;
@@ -136,9 +141,71 @@ public interface MatchMapper {
     }
 
     // Mappers for timeline events
-    ItemEvents toDomain(ItemEventsEntity itemEvents); // Persistence ItemEvents to Domain ItemEvents
-    SkillEvents toDomain(SkillEventsEntity skillEvents); // Persistence SkillEvents to Domain SkillEvents
+    ItemEvents toDomain(ItemEventsEntity itemEvents);
+    SkillEvents toDomain(SkillEventsEntity skillEvents);
 
     List<ItemEvents> toDomainItemEventsList(List<ItemEventsEntity> itemEvents);
     List<SkillEvents> toDomainSkillEventsList(List<SkillEventsEntity> skillEvents);
+
+    // DTO → Domain 매핑
+    @Mapping(target = "averageTier", source = "averageTier",
+            qualifiedByName = "mapAverageTierToString")
+    @Mapping(target = "averageRank", source = "averageTier",
+            qualifiedByName = "mapAverageTierToRank")
+    GameInfoData toGameInfoData(MatchDTO dto);
+
+    @Mapping(target = "style", source = "styleValue")
+    ParticipantData toDomain(MatchSummonerDTO dto);
+
+    @Mapping(target = "championId",
+            expression = "java(mapChampionIds(dto))")
+    @Mapping(target = "pickTurn",
+            expression = "java(mapPickTurns(dto))")
+    TeamInfoData toDomain(MatchTeamDTO dto);
+
+    default List<Integer> mapChampionIds(MatchTeamDTO dto) {
+        List<Integer> ids = new ArrayList<>();
+        if (dto.getChampion1Id() > 0) {
+            ids.add(dto.getChampion1Id());
+        }
+        if (dto.getChampion2Id() > 0) {
+            ids.add(dto.getChampion2Id());
+        }
+        if (dto.getChampion3Id() > 0) {
+            ids.add(dto.getChampion3Id());
+        }
+        if (dto.getChampion4Id() > 0) {
+            ids.add(dto.getChampion4Id());
+        }
+        if (dto.getChampion5Id() > 0) {
+            ids.add(dto.getChampion5Id());
+        }
+        return ids;
+    }
+
+    default List<Integer> mapPickTurns(MatchTeamDTO dto) {
+        List<Integer> turns = new ArrayList<>();
+        if (dto.getPick1Turn() > 0) {
+            turns.add(dto.getPick1Turn());
+        }
+        if (dto.getPick2Turn() > 0) {
+            turns.add(dto.getPick2Turn());
+        }
+        if (dto.getPick3Turn() > 0) {
+            turns.add(dto.getPick3Turn());
+        }
+        if (dto.getPick4Turn() > 0) {
+            turns.add(dto.getPick4Turn());
+        }
+        if (dto.getPick5Turn() > 0) {
+            turns.add(dto.getPick5Turn());
+        }
+        return turns;
+    }
+
+    ItemEvents toDomain(ItemEventDTO dto);
+    SkillEvents toDomain(SkillEventDTO dto);
+
+    List<ItemEvents> toDomainItemEventDTOList(List<ItemEventDTO> dtos);
+    List<SkillEvents> toDomainSkillEventDTOList(List<SkillEventDTO> dtos);
 }

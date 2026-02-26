@@ -1,6 +1,6 @@
 package com.example.lolserver.repository.season.adapter;
 
-import com.example.lolserver.domain.season.application.dto.SeasonResponse;
+import com.example.lolserver.domain.season.application.model.SeasonReadModel;
 import com.example.lolserver.domain.season.application.port.out.SeasonPersistencePort;
 import com.example.lolserver.repository.season.SeasonJpaRepository;
 import com.example.lolserver.repository.season.mapper.SeasonMapper;
@@ -18,16 +18,16 @@ public class SeasonPersistenceAdapter implements SeasonPersistencePort {
     private final SeasonMapper seasonMapper;
 
     @Override
-    public List<SeasonResponse> findAllSeasons() {
+    public List<SeasonReadModel> findAllSeasons() {
         return seasonJpaRepository.findAllWithPatchVersions()
                 .stream()
-                .map(seasonMapper::toResponse)
+                .map(seasonMapper::toReadModel)
                 .toList();
     }
 
     @Override
-    public Optional<SeasonResponse> findById(Long seasonId) {
+    public Optional<SeasonReadModel> findById(Long seasonId) {
         return seasonJpaRepository.findByIdWithPatchVersions(seasonId)
-                .map(seasonMapper::toResponse);
+                .map(seasonMapper::toReadModel);
     }
 }

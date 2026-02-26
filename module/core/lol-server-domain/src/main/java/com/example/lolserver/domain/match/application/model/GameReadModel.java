@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.match.application.dto;
+package com.example.lolserver.domain.match.application.model;
 
 import com.example.lolserver.domain.match.domain.gamedata.GameInfoData;
 import com.example.lolserver.domain.match.domain.gamedata.ParticipantData;
@@ -11,7 +11,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class GameResponse {
+public class GameReadModel {
 
     // 게임정보
     private GameInfoData gameInfoData;
