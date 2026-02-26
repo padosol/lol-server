@@ -1,8 +1,8 @@
 package com.example.lolserver.repository.match.adapter;
 
 import com.example.lolserver.domain.match.application.port.out.MatchPersistencePort;
-import com.example.lolserver.domain.match.application.dto.DailyGameCountResponse;
-import com.example.lolserver.domain.match.application.dto.GameResponse;
+import com.example.lolserver.domain.match.application.model.DailyGameCountReadModel;
+import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.domain.match.domain.gamedata.GameInfoData;
@@ -12,8 +12,12 @@ import com.example.lolserver.domain.match.domain.TeamData;
 import com.example.lolserver.domain.match.domain.gamedata.timeline.ParticipantTimeline;
 import com.example.lolserver.domain.match.domain.gamedata.timeline.events.ItemEvents;
 import com.example.lolserver.domain.match.domain.gamedata.timeline.events.SkillEvents;
+import com.example.lolserver.repository.match.dto.ItemEventDTO;
+import com.example.lolserver.repository.match.dto.MatchDTO;
+import com.example.lolserver.repository.match.dto.MatchSummonerDTO;
+import com.example.lolserver.repository.match.dto.MatchTeamDTO;
+import com.example.lolserver.repository.match.dto.SkillEventDTO;
 import com.example.lolserver.repository.match.entity.MatchEntity;
-import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
 import com.example.lolserver.repository.match.entity.MatchTeamEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.ItemEventsEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.SkillEventsEntity;
@@ -37,6 +41,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Component
@@ -52,11 +57,11 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     private final MatchMapper matchMapper;
 
     @Override
-    public Page<GameResponse> getMatches(String puuid, Integer queueId, Pageable pageable) {
+    public Page<GameReadModel> getMatches(String puuid, Integer queueId, Pageable pageable) {
         Slice<MatchEntity> matchesSlice =
                 matchRepositoryCustom.getMatches(puuid, queueId, pageable);
 
-        List<GameResponse> gameDataList = matchesSlice.getContent().stream()
+        List<GameReadModel> gameDataList = matchesSlice.getContent().stream()
                 .map(matchEntity -> convertToGameData(matchEntity, puuid))
                 .toList();
 
@@ -72,7 +77,7 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     }
 
     @Override
-    public Optional<GameResponse> getGameData(String matchId) {
+    public Optional<GameReadModel> getGameData(String matchId) {
         return matchRepository.findByMatchId(matchId)
                 .map(matchEntity -> convertToGameData(matchEntity, null)); // puuid is null if not specific user
     }
@@ -97,93 +102,137 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
 
 
     @Override
-    public Page<GameResponse> getMatchesBatch(String puuid, Integer queueId, Pageable pageable) {
-        Slice<MatchEntity> matchesSlice = matchRepositoryCustom.getMatches(puuid, queueId, pageable);
-        List<MatchEntity> matchEntities = matchesSlice.getContent();
+    public Page<GameReadModel> getMatchesBatch(
+            String puuid, Integer queueId, Pageable pageable
+    ) {
+        Slice<MatchDTO> matchesSlice =
+                matchRepositoryCustom.getMatchDTOs(puuid, queueId, pageable);
+        List<MatchDTO> matchDTOs = matchesSlice.getContent();
 
-        if (matchEntities.isEmpty()) {
+        if (matchDTOs.isEmpty()) {
             return new Page<>(Collections.emptyList(), false);
         }
 
-        List<String> matchIds = matchEntities.stream()
-                .map(MatchEntity::getMatchId)
+        List<String> matchIds = matchDTOs.stream()
+                .map(MatchDTO::getMatchId)
                 .toList();
 
-        // 배치 쿼리: 4개 쿼리로 모든 데이터 로딩
-        Map<String, List<MatchSummonerEntity>> participantsByMatch =
-                matchSummonerRepository.findByMatchIdIn(matchIds).stream()
-                        .collect(Collectors.groupingBy(
-                                MatchSummonerEntity::getMatchId));
+        // 배치 쿼리: 병렬 실행으로 네트워크 라운드트립 최소화
+        CompletableFuture<Map<String, List<MatchSummonerDTO>>> summonersFuture =
+                CompletableFuture.supplyAsync(() ->
+                        matchRepositoryCustom.getMatchSummoners(matchIds)
+                                .stream()
+                                .collect(Collectors.groupingBy(
+                                        MatchSummonerDTO::getMatchId)));
 
-        Map<String, List<MatchTeamEntity>> teamsByMatch =
-                matchTeamRepository.findByMatchIdIn(matchIds).stream()
-                        .collect(Collectors.groupingBy(MatchTeamEntity::getMatchId));
+        CompletableFuture<Map<String, List<MatchTeamDTO>>> teamsFuture =
+                CompletableFuture.supplyAsync(() ->
+                        matchRepositoryCustom.getMatchTeams(matchIds)
+                                .stream()
+                                .collect(Collectors.groupingBy(
+                                        MatchTeamDTO::getMatchId)));
 
-        Map<String, List<ItemEventsEntity>> itemEventsByMatch =
-                timelineRepositoryCustom.selectAllItemEventsByMatchIds(matchIds).stream()
-                        .collect(Collectors.groupingBy(ie -> ie.getTimeLineEvent().getMatchId()));
+        CompletableFuture<Map<String, List<ItemEventDTO>>> itemsFuture =
+                CompletableFuture.supplyAsync(() ->
+                        timelineRepositoryCustom
+                                .selectItemEventsByMatchIds(matchIds)
+                                .stream()
+                                .collect(Collectors.groupingBy(
+                                        ItemEventDTO::getMatchId)));
 
-        Map<String, List<SkillEventsEntity>> skillEventsByMatch =
-                timelineRepositoryCustom.selectAllSkillEventsByMatchIds(matchIds).stream()
-                        .collect(Collectors.groupingBy(se -> se.getTimeLineEvent().getMatchId()));
+        CompletableFuture<Map<String, List<SkillEventDTO>>> skillsFuture =
+                CompletableFuture.supplyAsync(() ->
+                        timelineRepositoryCustom
+                                .selectSkillEventsByMatchIds(matchIds)
+                                .stream()
+                                .collect(Collectors.groupingBy(
+                                        SkillEventDTO::getMatchId)));
 
-        // 매치별 GameResponse 조립 (DB 호출 없이 메모리에서)
-        List<GameResponse> gameDataList = matchEntities.stream()
-                .map(matchEntity -> assembleGameData(
-                        matchEntity, puuid,
-                        participantsByMatch.getOrDefault(matchEntity.getMatchId(), Collections.emptyList()),
-                        teamsByMatch.getOrDefault(matchEntity.getMatchId(), Collections.emptyList()),
-                        itemEventsByMatch.getOrDefault(matchEntity.getMatchId(), Collections.emptyList()),
-                        skillEventsByMatch.getOrDefault(matchEntity.getMatchId(), Collections.emptyList())
+        CompletableFuture.allOf(
+                summonersFuture, teamsFuture, itemsFuture, skillsFuture
+        ).join();
+
+        Map<String, List<MatchSummonerDTO>> participantsByMatch =
+                summonersFuture.join();
+        Map<String, List<MatchTeamDTO>> teamsByMatch =
+                teamsFuture.join();
+        Map<String, List<ItemEventDTO>> itemEventsByMatch =
+                itemsFuture.join();
+        Map<String, List<SkillEventDTO>> skillEventsByMatch =
+                skillsFuture.join();
+
+        List<GameReadModel> gameDataList = matchDTOs.stream()
+                .map(matchDTO -> assembleGameDataFromDTO(
+                        matchDTO,
+                        participantsByMatch.getOrDefault(
+                                matchDTO.getMatchId(),
+                                Collections.emptyList()),
+                        teamsByMatch.getOrDefault(
+                                matchDTO.getMatchId(),
+                                Collections.emptyList()),
+                        itemEventsByMatch.getOrDefault(
+                                matchDTO.getMatchId(),
+                                Collections.emptyList()),
+                        skillEventsByMatch.getOrDefault(
+                                matchDTO.getMatchId(),
+                                Collections.emptyList())
                 ))
                 .toList();
 
         return new Page<>(gameDataList, matchesSlice.hasNext());
     }
 
-    private GameResponse assembleGameData(
-            MatchEntity matchEntity,
-            String puuid,
-            List<MatchSummonerEntity> summonerEntities,
-            List<MatchTeamEntity> teamEntities,
-            List<ItemEventsEntity> itemEvents,
-            List<SkillEventsEntity> skillEvents
+    private GameReadModel assembleGameDataFromDTO(
+            MatchDTO matchDTO,
+            List<MatchSummonerDTO> summonerDTOs,
+            List<MatchTeamDTO> teamDTOs,
+            List<ItemEventDTO> itemEventDTOs,
+            List<SkillEventDTO> skillEventDTOs
     ) {
-        GameResponse gameData = new GameResponse();
+        GameReadModel gameData = new GameReadModel();
 
-        GameInfoData gameInfoData = matchMapper.toGameInfoData(matchEntity);
+        GameInfoData gameInfoData = matchMapper.toGameInfoData(matchDTO);
         gameData.setGameInfoData(gameInfoData);
 
-        List<ParticipantData> participantDataList = new ArrayList<>(summonerEntities.stream()
-                .map(matchMapper::toDomain)
-                .toList());
+        List<ParticipantData> participantDataList =
+                new ArrayList<>(summonerDTOs.stream()
+                        .map(matchMapper::toDomain)
+                        .toList());
         gameData.setParticipantData(participantDataList);
 
-        if (gameData.getGameInfoData().getQueueId() == 1700 || gameData.getGameInfoData().getQueueId() == 1710) {
-            participantDataList.sort(Comparator.comparingInt(ParticipantData::getPlacement));
+        int queueId = gameInfoData.getQueueId();
+        if (queueId == 1700 || queueId == 1710) {
+            participantDataList.sort(
+                    Comparator.comparingInt(ParticipantData::getPlacement));
         }
 
-        List<ItemEvents> domainItemEvents = matchMapper.toDomainItemEventsList(itemEvents);
-        List<SkillEvents> domainSkillEvents = matchMapper.toDomainSkillEventsList(skillEvents);
-        TimelineData timelineData = new TimelineData(domainItemEvents, domainSkillEvents);
+        List<ItemEvents> domainItemEvents =
+                matchMapper.toDomainItemEventDTOList(itemEventDTOs);
+        List<SkillEvents> domainSkillEvents =
+                matchMapper.toDomainSkillEventDTOList(skillEventDTOs);
+        TimelineData timelineData =
+                new TimelineData(domainItemEvents, domainSkillEvents);
 
         for (ParticipantData participant : participantDataList) {
             int participantId = participant.getParticipantId();
-            ParticipantTimeline participantTimeline = timelineData.getParticipantTimeline(participantId);
+            ParticipantTimeline participantTimeline =
+                    timelineData.getParticipantTimeline(participantId);
             if (participantTimeline != null) {
-                participant.setItemSeq(participantTimeline.getItemSeq());
-                participant.setSkillSeq(participantTimeline.getSkillSeq());
+                participant.setItemSeq(
+                        participantTimeline.getItemSeq());
+                participant.setSkillSeq(
+                        participantTimeline.getSkillSeq());
             }
         }
 
-        if (!teamEntities.isEmpty()) {
+        if (!teamDTOs.isEmpty()) {
             TeamInfoData blueTeam = null;
             TeamInfoData redTeam = null;
-            for (MatchTeamEntity teamEntity : teamEntities) {
-                TeamInfoData teamInfo = matchMapper.toDomain(teamEntity);
-                if (teamEntity.getTeamId() == 100) {
+            for (MatchTeamDTO teamDTO : teamDTOs) {
+                TeamInfoData teamInfo = matchMapper.toDomain(teamDTO);
+                if (teamDTO.getTeamId() == 100) {
                     blueTeam = teamInfo;
-                } else if (teamEntity.getTeamId() == 200) {
+                } else if (teamDTO.getTeamId() == 200) {
                     redTeam = teamInfo;
                 }
             }
@@ -197,17 +246,17 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     }
 
     @Override
-    public List<DailyGameCountResponse> getDailyGameCounts(
+    public List<DailyGameCountReadModel> getDailyGameCounts(
             String puuid, Integer season, Integer queueId, LocalDateTime startDate) {
         return matchSummonerRepositoryCustom
                 .findDailyGameCounts(puuid, season, queueId, startDate)
                 .stream()
-                .map(dto -> new DailyGameCountResponse(dto.getGameDate(), dto.getGameCount()))
+                .map(dto -> new DailyGameCountReadModel(dto.getGameDate(), dto.getGameCount()))
                 .toList();
     }
 
-    private GameResponse convertToGameData(MatchEntity matchEntity, String puuid) {
-        GameResponse gameData = new GameResponse();
+    private GameReadModel convertToGameData(MatchEntity matchEntity, String puuid) {
+        GameReadModel gameData = new GameReadModel();
 
         // GameInfoData
         GameInfoData gameInfoData = matchMapper.toGameInfoData(matchEntity);

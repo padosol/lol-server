@@ -1,5 +1,9 @@
 package com.example.lolserver.repository.match.timeline;
 
+import com.example.lolserver.repository.match.dto.ItemEventDTO;
+import com.example.lolserver.repository.match.dto.QItemEventDTO;
+import com.example.lolserver.repository.match.dto.QSkillEventDTO;
+import com.example.lolserver.repository.match.dto.SkillEventDTO;
 import com.example.lolserver.repository.match.entity.timeline.TimeLineEventEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.ItemEventsEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.SkillEventsEntity;
@@ -56,6 +60,42 @@ public class TimelineRepositoryCustomImpl implements TimelineRepositoryCustom {
     public List<SkillEventsEntity> selectAllSkillEventsByMatchIds(List<String> matchIds) {
         return jpaQueryFactory.selectFrom(skillEventsEntity)
                 .join(skillEventsEntity.timeLineEvent, timeLineEventEntity).fetchJoin()
+                .where(timeLineEventEntity.matchId.in(matchIds))
+                .fetch();
+    }
+
+    @Override
+    public List<ItemEventDTO> selectItemEventsByMatchIds(
+            List<String> matchIds
+    ) {
+        return jpaQueryFactory
+                .select(new QItemEventDTO(
+                        timeLineEventEntity.matchId,
+                        itemEventsEntity.itemId,
+                        itemEventsEntity.participantId,
+                        itemEventsEntity.timestamp,
+                        itemEventsEntity.type
+                ))
+                .from(itemEventsEntity)
+                .join(itemEventsEntity.timeLineEvent, timeLineEventEntity)
+                .where(timeLineEventEntity.matchId.in(matchIds))
+                .fetch();
+    }
+
+    @Override
+    public List<SkillEventDTO> selectSkillEventsByMatchIds(
+            List<String> matchIds
+    ) {
+        return jpaQueryFactory
+                .select(new QSkillEventDTO(
+                        timeLineEventEntity.matchId,
+                        skillEventsEntity.skillSlot,
+                        skillEventsEntity.participantId,
+                        skillEventsEntity.timestamp,
+                        skillEventsEntity.type
+                ))
+                .from(skillEventsEntity)
+                .join(skillEventsEntity.timeLineEvent, timeLineEventEntity)
                 .where(timeLineEventEntity.matchId.in(matchIds))
                 .fetch();
     }

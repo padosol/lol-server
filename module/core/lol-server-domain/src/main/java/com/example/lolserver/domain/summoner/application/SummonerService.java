@@ -1,9 +1,9 @@
 package com.example.lolserver.domain.summoner.application;
 
 import com.example.lolserver.RenewalStatus;
-import com.example.lolserver.domain.summoner.application.dto.SummonerAutoResponse;
-import com.example.lolserver.domain.summoner.application.dto.SummonerRenewalInfoResponse;
-import com.example.lolserver.domain.summoner.application.dto.SummonerResponse;
+import com.example.lolserver.domain.summoner.application.model.SummonerAutoReadModel;
+import com.example.lolserver.domain.summoner.application.model.SummonerReadModel;
+import com.example.lolserver.domain.summoner.application.model.SummonerRenewalInfoReadModel;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerCachePort;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerClientPort;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerMessagePort;
@@ -39,12 +39,12 @@ public class SummonerService {
     private final SummonerMessagePort summonerMessagePort;
 
     @Transactional(readOnly = true)
-    public SummonerResponse getSummoner(GameName gameName, String platformId) {
+    public SummonerReadModel getSummoner(GameName gameName, String platformId) {
         Optional<Summoner> summonerOpt = summonerPersistencePort.getSummoner(
                 gameName.summonerName(), gameName.tagLine(), platformId);
 
         if (summonerOpt.isPresent()) {
-            return SummonerResponse.of(summonerOpt.get());
+            return SummonerReadModel.of(summonerOpt.get());
         }
 
         String lockKey = gameName.summonerName() + ":" + gameName.tagLine() + ":" + platformId;
@@ -61,14 +61,14 @@ public class SummonerService {
                             ErrorType.NOT_FOUND_USER,
                             "존재하지 않는 유저 입니다. " + gameName.summonerName()));
 
-            return SummonerResponse.of(summoner);
+            return SummonerReadModel.of(summoner);
         } finally {
             summonerCachePort.unlock(lockKey);
         }
     }
 
     @Transactional(readOnly = true)
-    public List<SummonerAutoResponse> getAllSummonerAutoComplete(String q, String platformId) {
+    public List<SummonerAutoReadModel> getAllSummonerAutoComplete(String q, String platformId) {
         List<Summoner> summoners = summonerPersistencePort.getSummonerAuthComplete(q, platformId);
         return summoners.stream().map(summoner -> {
             String tier = null;
@@ -81,7 +81,7 @@ public class SummonerService {
                 rank = leagueSummoner.getRank();
                 leaguePoints = leagueSummoner.getLeaguePoints();
             }
-            return new SummonerAutoResponse(
+            return new SummonerAutoReadModel(
                     summoner.getGameName(),
                     summoner.getTagLine(),
                     summoner.getProfileIconId(),
@@ -161,11 +161,11 @@ public class SummonerService {
     }
 
     @Transactional(readOnly = true)
-    public SummonerResponse getSummonerByPuuid(String platformId, String puuid) {
+    public SummonerReadModel getSummonerByPuuid(String platformId, String puuid) {
         Optional<Summoner> summonerOpt = summonerPersistencePort.findById(puuid);
 
         if (summonerOpt.isPresent()) {
-            return SummonerResponse.of(summonerOpt.get());
+            return SummonerReadModel.of(summonerOpt.get());
         }
 
         String lockKey = "puuid:" + puuid;
@@ -180,14 +180,14 @@ public class SummonerService {
                             ErrorType.NOT_FOUND_PUUID,
                             "존재하지 않는 PUUID 입니다. " + puuid));
 
-            return SummonerResponse.of(summoner);
+            return SummonerReadModel.of(summoner);
         } finally {
             summonerCachePort.unlock(lockKey);
         }
     }
 
     @Transactional(readOnly = true)
-    public List<SummonerRenewalInfoResponse> getRefreshingSummoners() {
+    public List<SummonerRenewalInfoReadModel> getRefreshingSummoners() {
         Set<String> puuids = summonerCachePort.getRefreshingPuuids();
         if (puuids.isEmpty()) {
             return Collections.emptyList();
@@ -199,8 +199,8 @@ public class SummonerService {
 
         return puuids.stream()
                 .map(puuid -> map.containsKey(puuid)
-                        ? SummonerRenewalInfoResponse.of(map.get(puuid))
-                        : SummonerRenewalInfoResponse.ofPuuidOnly(puuid))
+                        ? SummonerRenewalInfoReadModel.of(map.get(puuid))
+                        : SummonerRenewalInfoReadModel.ofPuuidOnly(puuid))
                 .collect(Collectors.toList());
     }
 }

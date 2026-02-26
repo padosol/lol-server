@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.summoner.application.dto;
+package com.example.lolserver.domain.summoner.application.model;
 
 import com.example.lolserver.domain.summoner.domain.Summoner;
 import lombok.AllArgsConstructor;
@@ -10,21 +10,21 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SummonerRenewalInfoResponse {
+public class SummonerRenewalInfoReadModel {
     private String puuid;
     private String gameName;
     private String tagLine;
 
-    public static SummonerRenewalInfoResponse of(Summoner summoner) {
-        return SummonerRenewalInfoResponse.builder()
+    public static SummonerRenewalInfoReadModel of(Summoner summoner) {
+        return SummonerRenewalInfoReadModel.builder()
                 .puuid(summoner.getPuuid())
                 .gameName(summoner.getGameName())
                 .tagLine(summoner.getTagLine())
                 .build();
     }
 
-    public static SummonerRenewalInfoResponse ofPuuidOnly(String puuid) {
-        return SummonerRenewalInfoResponse.builder()
+    public static SummonerRenewalInfoReadModel ofPuuidOnly(String puuid) {
+        return SummonerRenewalInfoReadModel.builder()
                 .puuid(puuid)
                 .build();
     }

@@ -3,7 +3,7 @@ package com.example.lolserver.docs.controller;
 import com.example.lolserver.controller.rank.RankController;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.rank.application.RankService;
-import com.example.lolserver.domain.rank.application.dto.RankResponse;
+import com.example.lolserver.domain.rank.application.model.RankReadModel;
 import com.example.lolserver.domain.rank.application.dto.RankSearchDto;
 import com.example.lolserver.domain.rank.domain.Rank;
 import org.junit.jupiter.api.DisplayName;
@@ -72,8 +72,8 @@ class RankControllerTest extends RestDocsSupport {
                 .champions(List.of("Ahri", "Zed"))
                 .build();
 
-        List<RankResponse> rankResponses = List.of(new RankResponse(rank));
-        Page<RankResponse> response = new PageImpl<>(rankResponses, PageRequest.of(0, 50), 1);
+        List<RankReadModel> rankResponses = List.of(new RankReadModel(rank));
+        Page<RankReadModel> response = new PageImpl<>(rankResponses, PageRequest.of(0, 50), 1);
 
         given(rankService.getRanks(any(RankSearchDto.class), eq(platformId))).willReturn(response);
 

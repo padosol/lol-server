@@ -1,10 +1,10 @@
 package com.example.lolserver.controller.summoner;
 
-import com.example.lolserver.domain.summoner.application.dto.SummonerAutoResponse;
+import com.example.lolserver.domain.summoner.application.model.SummonerAutoReadModel;
 import com.example.lolserver.controller.summoner.response.SummonerRenewalResponse;
 import com.example.lolserver.domain.summoner.application.SummonerService;
 import com.example.lolserver.domain.summoner.domain.SummonerRenewal;
-import com.example.lolserver.domain.summoner.application.dto.SummonerResponse;
+import com.example.lolserver.domain.summoner.application.model.SummonerReadModel;
 import com.example.lolserver.controller.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,12 +33,12 @@ public class SummonerController {
      * @return 유저 상세 정보
      */
     @GetMapping("/v1/summoners/{platformId}/{gameName}")
-    public ResponseEntity<ApiResponse<SummonerResponse>> getSummoner(
+    public ResponseEntity<ApiResponse<SummonerReadModel>> getSummoner(
             @PathVariable("platformId") String platformId,
             @PathVariable("gameName") String gameName
     ) {
         log.info("getSummoner");
-        SummonerResponse summoner = summonerService.getSummoner(GameName.create(gameName), platformId);
+        SummonerReadModel summoner = summonerService.getSummoner(GameName.create(gameName), platformId);
 
         return ResponseEntity.ok(ApiResponse.success(summoner));
     }
@@ -50,11 +50,11 @@ public class SummonerController {
      * @return 유저 상세 정보
      */
     @GetMapping("/v1/{platformId}/summoners/{puuid}")
-    public ResponseEntity<ApiResponse<SummonerResponse>> getSummonerByPuuid(
+    public ResponseEntity<ApiResponse<SummonerReadModel>> getSummonerByPuuid(
             @PathVariable("platformId") String platformId,
             @PathVariable("puuid") String puuid
     ) {
-        SummonerResponse summonerResponse = summonerService.getSummonerByPuuid(platformId, puuid);
+        SummonerReadModel summonerResponse = summonerService.getSummonerByPuuid(platformId, puuid);
 
         return ResponseEntity.ok(ApiResponse.success(summonerResponse));
     }
@@ -66,11 +66,11 @@ public class SummonerController {
      * @return 유저 리스트
      */
     @GetMapping("/v1/{platformId}/summoners/autocomplete")
-    public ResponseEntity<ApiResponse<List<SummonerAutoResponse>>> autoComplete(
+    public ResponseEntity<ApiResponse<List<SummonerAutoReadModel>>> autoComplete(
             @PathVariable("platformId") String platformId,
             @RequestParam String q
     ) {
-        List<SummonerAutoResponse> result = summonerService.getAllSummonerAutoComplete(q, platformId);
+        List<SummonerAutoReadModel> result = summonerService.getAllSummonerAutoComplete(q, platformId);
 
         return ResponseEntity.ok(ApiResponse.success(result));
     }
