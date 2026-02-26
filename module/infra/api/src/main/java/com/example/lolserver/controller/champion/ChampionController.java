@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RequestMapping("/api/v1/{region}/champion")
+@RequestMapping("/api/v1/{platformId}/champion")
 @RestController
 @RequiredArgsConstructor
 public class ChampionController {
@@ -20,11 +20,11 @@ public class ChampionController {
 
     @GetMapping("/rotation")
     public ResponseEntity<ApiResponse<ChampionRotateResponse>> getRotation(
-            @PathVariable("region") String region
+            @PathVariable("platformId") String platformId
     ) {
         return new ResponseEntity<>(
                 ApiResponse.success(
-                        ChampionRotateResponse.of(championService.getChampionRotate(region))
+                        ChampionRotateResponse.of(championService.getChampionRotate(platformId))
                 ),
                 HttpStatus.OK);
     }

@@ -21,24 +21,24 @@ export const TIMEOUTS = {
 export const ENDPOINTS = {
     // Summoner API
     summoner: {
-        getByGameName: (region, gameName) => `/api/v1/summoners/${region}/${encodeURIComponent(gameName)}`,
-        getByPuuid: (region, puuid) => `/api/v1/${region}/summoners/${puuid}`,
-        autocomplete: (q, region = 'kr') => `/api/v1/summoners/autocomplete?q=${encodeURIComponent(q)}&region=${region}`,
-        renewal: (platform, puuid) => `/api/summoners/renewal/${platform}/${puuid}`,
+        getByGameName: (platformId, gameName) => `/api/v1/summoners/${platformId}/${encodeURIComponent(gameName)}`,
+        getByPuuid: (platformId, puuid) => `/api/v1/${platformId}/summoners/${puuid}`,
+        autocomplete: (platformId, q) => `/api/v1/${platformId}/summoners/autocomplete?q=${encodeURIComponent(q)}`,
+        renewal: (platformId, puuid) => `/api/v1/${platformId}/summoners/${puuid}/renewal`,
         renewalStatus: (puuid) => `/api/v1/summoners/${puuid}/renewal-status`,
     },
 
     // Match API
     match: {
         getById: (matchId) => `/api/v1/matches/${matchId}`,
-        getMatchIds: (puuid, page = 0, size = 10) => `/api/v1/matches/matchIds?puuid=${puuid}&page=${page}&size=${size}`,
-        getMatches: (puuid, page = 0, size = 10) => `/api/v1/matches?puuid=${puuid}&page=${page}&size=${size}`,
+        getMatchIds: (platformId, puuid, page = 0, size = 10) => `/api/v1/${platformId}/matches/matchIds?puuid=${puuid}&page=${page}&size=${size}`,
+        getMatches: (platformId, puuid, page = 0, size = 10) => `/api/v1/${platformId}/matches?puuid=${puuid}&page=${page}&size=${size}`,
         timeline: (matchId) => `/api/v1/match/timeline/${matchId}`,
     },
 
     // Champion API
     champion: {
-        rotation: (region) => `/api/v1/${region}/champion/rotation`,
+        rotation: (platformId) => `/api/v1/${platformId}/champion/rotation`,
     },
 
     // League API
@@ -49,12 +49,12 @@ export const ENDPOINTS = {
     // Rank API
     rank: {
         champions: (puuid, queueId = 420) => `/api/v1/rank/champions?puuid=${puuid}&queueId=${queueId}`,
-        get: (tier, division, page = 0) => `/api/v1/rank?tier=${tier}&division=${division}&page=${page}`,
+        get: (platformId, tier, division, page = 0) => `/api/v1/${platformId}/rank?tier=${tier}&division=${division}&page=${page}`,
     },
 };
 
-// 테스트 지역
-export const REGIONS = ['kr', 'na1', 'euw1'];
+// 테스트 플랫폼
+export const PLATFORM_IDS = ['kr', 'na1', 'euw1'];
 
-// 기본 지역
-export const DEFAULT_REGION = 'kr';
+// 기본 플랫폼
+export const DEFAULT_PLATFORM_ID = 'kr';

@@ -24,40 +24,40 @@ public class TierCutoffController {
 
     /**
      * 지역별 티어 컷오프 목록 조회 API
-     * @param region 서버 지역 (예: kr, na)
+     * @param platformId 플랫폼 ID (예: kr, na)
      * @param queue 큐 타입 필터 (선택, 예: RANKED_SOLO_5x5)
      * @return 티어 컷오프 목록
      */
-    @GetMapping("/v1/{region}/tier-cutoffs")
+    @GetMapping("/v1/{platformId}/tier-cutoffs")
     public ResponseEntity<ApiResponse<List<TierCutoffReadModel>>> getTierCutoffs(
-            @PathVariable String region,
+            @PathVariable String platformId,
             @RequestParam(required = false) String queue
     ) {
-        log.info("getTierCutoffs - region: {}, queue: {}", region, queue);
+        log.info("getTierCutoffs - platformId: {}, queue: {}", platformId, queue);
 
         List<TierCutoffReadModel> tierCutoffs = queue != null
-                ? tierCutoffService.getTierCutoffsByRegionAndQueue(region, queue)
-                : tierCutoffService.getTierCutoffsByRegion(region);
+                ? tierCutoffService.getTierCutoffsByRegionAndQueue(platformId, queue)
+                : tierCutoffService.getTierCutoffsByRegion(platformId);
 
         return ResponseEntity.ok(ApiResponse.success(tierCutoffs));
     }
 
     /**
      * 특정 티어 컷오프 상세 조회 API
-     * @param region 서버 지역 (예: kr, na)
+     * @param platformId 플랫폼 ID (예: kr, na)
      * @param queue 큐 타입 (예: RANKED_SOLO_5x5)
      * @param tier 티어 (CHALLENGER, GRANDMASTER)
      * @return 티어 컷오프 상세 정보
      */
-    @GetMapping("/v1/{region}/tier-cutoffs/{queue}/{tier}")
+    @GetMapping("/v1/{platformId}/tier-cutoffs/{queue}/{tier}")
     public ResponseEntity<ApiResponse<TierCutoffReadModel>> getTierCutoff(
-            @PathVariable String region,
+            @PathVariable String platformId,
             @PathVariable String queue,
             @PathVariable String tier
     ) {
-        log.info("getTierCutoff - region: {}, queue: {}, tier: {}", region, queue, tier);
+        log.info("getTierCutoff - platformId: {}, queue: {}, tier: {}", platformId, queue, tier);
 
-        TierCutoffReadModel tierCutoff = tierCutoffService.getTierCutoff(region, queue, tier);
+        TierCutoffReadModel tierCutoff = tierCutoffService.getTierCutoff(platformId, queue, tier);
 
         return ResponseEntity.ok(ApiResponse.success(tierCutoff));
     }

@@ -19,8 +19,8 @@ import java.time.LocalDateTime;
 @Table(
         name = "summoner_ranking",
         uniqueConstraints = @UniqueConstraint(
-                name = "unique_puuid_queue_region",
-                columnNames = {"puuid", "queue", "region"}
+                name = "unique_puuid_queue_platform_id",
+                columnNames = {"puuid", "queue", "platform_id"}
         )
 )
 @EntityListeners(AuditingEntityListener.class)
@@ -37,8 +37,8 @@ public class SummonerRankingEntity {
     @Column(name = "queue", nullable = false, length = 50)
     private String queue;
 
-    @Column(name = "region", nullable = false, length = 10)
-    private String region;
+    @Column(name = "platform_id", nullable = false, length = 10)
+    private String platformId;
 
     @Column(name = "current_rank", nullable = false)
     private int currentRank;

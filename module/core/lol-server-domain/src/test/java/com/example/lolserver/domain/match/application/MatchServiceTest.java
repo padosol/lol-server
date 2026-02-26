@@ -46,7 +46,7 @@ class MatchServiceTest {
                 .puuid("test-puuid")
                 .queueId(420)
                 .pageNo(0)
-                .region("kr")
+                .platformId("kr")
                 .build();
 
         List<GameResponse> games = List.of(new GameResponse(), new GameResponse());

@@ -28,49 +28,49 @@ public class SummonerController {
 
     /**
      * 유저 상세 정보 API
-     * @param region 지역명
+     * @param platformId 플랫폼 ID
      * @param gameName 유저 게임명
      * @return 유저 상세 정보
      */
-    @GetMapping("/v1/summoners/{region}/{gameName}")
+    @GetMapping("/v1/summoners/{platformId}/{gameName}")
     public ResponseEntity<ApiResponse<SummonerResponse>> getSummoner(
-            @PathVariable("region") String region,
+            @PathVariable("platformId") String platformId,
             @PathVariable("gameName") String gameName
     ) {
         log.info("getSummoner");
-        SummonerResponse summoner = summonerService.getSummoner(GameName.create(gameName), region);
+        SummonerResponse summoner = summonerService.getSummoner(GameName.create(gameName), platformId);
 
         return ResponseEntity.ok(ApiResponse.success(summoner));
     }
 
     /**
      * 유저 상세 정보
-     * @param region
-     * @param puuid
-     * @return
+     * @param platformId 플랫폼 ID
+     * @param puuid 소환사 PUUID
+     * @return 유저 상세 정보
      */
-    @GetMapping("/v1/{region}/summoners/{puuid}")
+    @GetMapping("/v1/{platformId}/summoners/{puuid}")
     public ResponseEntity<ApiResponse<SummonerResponse>> getSummonerByPuuid(
-            @PathVariable("region") String region,
+            @PathVariable("platformId") String platformId,
             @PathVariable("puuid") String puuid
     ) {
-        SummonerResponse summonerResponse = summonerService.getSummonerByPuuid(region, puuid);
+        SummonerResponse summonerResponse = summonerService.getSummonerByPuuid(platformId, puuid);
 
         return ResponseEntity.ok(ApiResponse.success(summonerResponse));
     }
 
     /**
      * 유저명 자동완성 API
+     * @param platformId 플랫폼 ID
      * @param q 유저명
-     * @param region 지역명
      * @return 유저 리스트
      */
-    @GetMapping("/v1/summoners/autocomplete")
+    @GetMapping("/v1/{platformId}/summoners/autocomplete")
     public ResponseEntity<ApiResponse<List<SummonerAutoResponse>>> autoComplete(
-            @RequestParam String q,
-            @RequestParam(defaultValue = "kr") String region
+            @PathVariable("platformId") String platformId,
+            @RequestParam String q
     ) {
-        List<SummonerAutoResponse> result = summonerService.getAllSummonerAutoComplete(q, region);
+        List<SummonerAutoResponse> result = summonerService.getAllSummonerAutoComplete(q, platformId);
 
         return ResponseEntity.ok(ApiResponse.success(result));
     }
@@ -81,17 +81,16 @@ public class SummonerController {
      * <p>갱신 요청 후 즉시 응답하며, 실제 데이터 갱신은 비동기로 처리된다.
      * 클라이언트는 {@code /v1/summoners/{puuid}/renewal-status}를 폴링하여 완료를 확인한다.
      *
-     * @param platform 플랫폼 코드 (예: "kr")
+     * @param platformId 플랫폼 ID (예: "kr")
      * @param puuid    소환사 PUUID
      * @return 갱신 상태 (puuid, status)
      */
-    @GetMapping("/summoners/renewal/{platform}/{puuid}")
+    @GetMapping("/v1/{platformId}/summoners/{puuid}/renewal")
     public ResponseEntity<ApiResponse<SummonerRenewalResponse>> renewalSummonerInfo(
-            @PathVariable(name = "platform") String platform,
+            @PathVariable("platformId") String platformId,
             @PathVariable("puuid") String puuid
     ) {
-        log.info("API 호출 ");
-        SummonerRenewal summonerRenewal = summonerService.renewalSummonerInfo(platform, puuid);
+        SummonerRenewal summonerRenewal = summonerService.renewalSummonerInfo(platformId, puuid);
         return ResponseEntity.ok(ApiResponse.success(
                 new SummonerRenewalResponse(
                         summonerRenewal.getPuuid(), summonerRenewal.getStatus().name()
@@ -108,7 +107,6 @@ public class SummonerController {
     public ResponseEntity<ApiResponse<SummonerRenewalResponse>> summonerRenewalStatus(
             @PathVariable String puuid
     ) {
-        log.info("summonerRenewalStatus");
         SummonerRenewal summonerRenewal = summonerService.renewalSummonerStatus(puuid);
         return ResponseEntity.ok(ApiResponse.success(
                 new SummonerRenewalResponse(

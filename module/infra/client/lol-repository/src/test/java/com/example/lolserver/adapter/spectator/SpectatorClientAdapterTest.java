@@ -47,59 +47,59 @@ class SpectatorClientAdapterTest {
     @Test
     void getCurrentGameInfo_success_returnsAndCachesWithMeta() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         String puuid = "test-puuid";
         long gameStartTime = System.currentTimeMillis();
         CurrentGameInfoVO vo = createVO(12345L, gameStartTime);
         CurrentGameInfoReadModel readModel = createReadModel(12345L, gameStartTime);
 
-        given(spectatorRestClient.getCurrentGameInfoByPuuid(region, puuid)).willReturn(vo);
+        given(spectatorRestClient.getCurrentGameInfoByPuuid(platformId, puuid)).willReturn(vo);
         given(spectatorClientMapper.toReadModel(vo)).willReturn(readModel);
 
         // when
-        CurrentGameInfoReadModel result = adapter.getCurrentGameInfo(region, puuid);
+        CurrentGameInfoReadModel result = adapter.getCurrentGameInfo(platformId, puuid);
 
         // then
         assertThat(result).isEqualTo(readModel);
         assertThat(result.gameId()).isEqualTo(12345L);
-        then(spectatorRestClient).should().getCurrentGameInfoByPuuid(region, puuid);
+        then(spectatorRestClient).should().getCurrentGameInfoByPuuid(platformId, puuid);
         then(spectatorClientMapper).should().toReadModel(vo);
-        then(spectatorCachePort).should().saveCurrentGame(region, readModel);
-        then(spectatorCachePort).should().saveGameMeta(region, 12345L, gameStartTime, List.of("puuid-1"));
+        then(spectatorCachePort).should().saveCurrentGame(platformId, readModel);
+        then(spectatorCachePort).should().saveGameMeta(platformId, 12345L, gameStartTime, List.of("puuid-1"));
     }
 
     @DisplayName("API가 null을 반환하면 Negative Cache 저장 후 null 반환")
     @Test
     void getCurrentGameInfo_apiReturnsNull_savesNegativeCache() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         String puuid = "test-puuid";
 
-        given(spectatorRestClient.getCurrentGameInfoByPuuid(region, puuid)).willReturn(null);
+        given(spectatorRestClient.getCurrentGameInfoByPuuid(platformId, puuid)).willReturn(null);
 
         // when
-        CurrentGameInfoReadModel result = adapter.getCurrentGameInfo(region, puuid);
+        CurrentGameInfoReadModel result = adapter.getCurrentGameInfo(platformId, puuid);
 
         // then
         assertThat(result).isNull();
-        then(spectatorRestClient).should().getCurrentGameInfoByPuuid(region, puuid);
+        then(spectatorRestClient).should().getCurrentGameInfoByPuuid(platformId, puuid);
         then(spectatorClientMapper).should(never()).toReadModel(any(CurrentGameInfoVO.class));
         then(spectatorCachePort).should(never()).saveCurrentGame(any(), any());
-        then(spectatorCachePort).should().saveNoGame(region, puuid);
+        then(spectatorCachePort).should().saveNoGame(platformId, puuid);
     }
 
     @DisplayName("API 예외 발생 시 null 반환")
     @Test
     void getCurrentGameInfo_apiThrows_returnsNull() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         String puuid = "test-puuid";
 
-        given(spectatorRestClient.getCurrentGameInfoByPuuid(region, puuid))
+        given(spectatorRestClient.getCurrentGameInfoByPuuid(platformId, puuid))
                 .willThrow(new RuntimeException("API Error"));
 
         // when
-        CurrentGameInfoReadModel result = adapter.getCurrentGameInfo(region, puuid);
+        CurrentGameInfoReadModel result = adapter.getCurrentGameInfo(platformId, puuid);
 
         // then
         assertThat(result).isNull();

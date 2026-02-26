@@ -8,9 +8,9 @@ import java.util.Optional;
 
 public interface TierCutoffJpaRepository extends JpaRepository<TierCutoffEntity, Long> {
 
-    Optional<TierCutoffEntity> findByQueueAndTierAndRegion(String queue, String tier, String region);
+    Optional<TierCutoffEntity> findByQueueAndTierAndPlatformId(String queue, String tier, String platformId);
 
-    List<TierCutoffEntity> findAllByRegion(String region);
+    List<TierCutoffEntity> findAllByPlatformId(String platformId);
 
-    List<TierCutoffEntity> findByRegionAndQueue(String region, String queue);
+    List<TierCutoffEntity> findByPlatformIdAndQueue(String platformId, String queue);
 }

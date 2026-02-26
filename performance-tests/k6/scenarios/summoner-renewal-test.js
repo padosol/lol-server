@@ -2,7 +2,7 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { SharedArray } from 'k6/data';
 import { Trend, Rate } from 'k6/metrics';
-import { BASE_URL, ENDPOINTS, HEADERS, DEFAULT_REGION } from '../lib/config.js';
+import { BASE_URL, ENDPOINTS, HEADERS, DEFAULT_PLATFORM_ID } from '../lib/config.js';
 import { randomItem } from '../lib/helpers.js';
 
 /**
@@ -12,12 +12,12 @@ import { randomItem } from '../lib/helpers.js';
  * 흐름:
  *   1. GET /api/v1/{region}/summoners/{puuid} - 소환사 검색
  *   2. Think time (1~3초)
- *   3. GET /api/summoners/renewal/{platform}/{puuid} - 전적 갱신
+ *   3. GET /api/v1/{platformId}/summoners/{puuid}/renewal - 전적 갱신
  */
 
 // 테스트 데이터 로드
 const puuids = new SharedArray('challenger_puuids', function () {
-    const data = JSON.parse(open('../../data/grand_master_summoner.json'));
+    const data = JSON.parse(open('../../data/master_summoners.json'));
     return data.entries.map(entry => entry.puuid);
 });
 
@@ -61,10 +61,10 @@ const requestOptions = {
 
 export default function () {
     const puuid = randomItem(puuids);
-    const region = DEFAULT_REGION;
+    const platformId = DEFAULT_PLATFORM_ID;
 
     // Step 1: 소환사 검색
-    const searchUrl = `${BASE_URL}${ENDPOINTS.summoner.getByPuuid(region, puuid)}`;
+    const searchUrl = `${BASE_URL}${ENDPOINTS.summoner.getByPuuid(platformId, puuid)}`;
     const searchResponse = http.get(searchUrl, requestOptions);
 
     const searchOk = check(searchResponse, {
@@ -100,7 +100,7 @@ export default function () {
     sleep(1 + Math.random() * 2);
 
     // Step 3: 전적 갱신
-    const renewalUrl = `${BASE_URL}${ENDPOINTS.summoner.renewal(region, puuid)}`;
+    const renewalUrl = `${BASE_URL}${ENDPOINTS.summoner.renewal(platformId, puuid)}`;
     console.log(renewalUrl)
     const renewalResponse = http.get(renewalUrl, requestOptions);
 

@@ -27,6 +27,9 @@ public class VersionEntity {
     @Column(name = "version_id")
     private Long versionId;
 
+    @Column(name = "season_id")
+    private Long seasonId;
+
     @Column(name = "version_value", nullable = false, length = 20)
     private String versionValue;
 

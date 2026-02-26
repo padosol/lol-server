@@ -23,29 +23,29 @@ public class SpectatorClientAdapter implements SpectatorClientPort {
     private final SpectatorCachePort spectatorCachePort;
 
     @Override
-    public CurrentGameInfoReadModel getCurrentGameInfo(String region, String puuid) {
+    public CurrentGameInfoReadModel getCurrentGameInfo(String platformId, String puuid) {
         try {
-            CurrentGameInfoVO vo = spectatorRestClient.getCurrentGameInfoByPuuid(region, puuid);
+            CurrentGameInfoVO vo = spectatorRestClient.getCurrentGameInfoByPuuid(platformId, puuid);
             if (vo == null) {
                 // Negative Caching: 게임 중이 아님을 캐싱
-                spectatorCachePort.saveNoGame(region, puuid);
+                spectatorCachePort.saveNoGame(platformId, puuid);
                 return null;
             }
 
             CurrentGameInfoReadModel readModel = spectatorClientMapper.toReadModel(vo);
 
             // 조회 후 모든 참여자 puuid를 키로 캐시에 저장
-            spectatorCachePort.saveCurrentGame(region, readModel);
+            spectatorCachePort.saveCurrentGame(platformId, readModel);
 
             // 게임 메타데이터 캐싱 (삭제용)
             List<String> puuids = readModel.participants().stream()
                     .map(ParticipantReadModel::puuid)
                     .toList();
-            spectatorCachePort.saveGameMeta(region, readModel.gameId(), readModel.gameStartTime(), puuids);
+            spectatorCachePort.saveGameMeta(platformId, readModel.gameId(), readModel.gameStartTime(), puuids);
 
             return readModel;
         } catch (Exception e) {
-            log.warn("Failed to get current game info for puuid: {}, region: {}", puuid, region, e);
+            log.warn("Failed to get current game info for puuid: {}, platformId: {}", puuid, platformId, e);
             return null;
         }
     }

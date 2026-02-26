@@ -19,13 +19,13 @@ public class ChampionService implements ChampionRotateUseCase {
     private final ChampionPersistencePort championPersistencePort;
 
     @Override
-    public ChampionRotate getChampionRotate(String region) {
-        Optional<ChampionRotate> championRotate = championPersistencePort.getChampionRotate(region);
+    public ChampionRotate getChampionRotate(String platformId) {
+        Optional<ChampionRotate> championRotate = championPersistencePort.getChampionRotate(platformId);
         if (championRotate.isPresent()) {
             return championRotate.get();
         } else {
-            ChampionRotate newChampionRotate = championClientPort.getChampionRotate(region);
-            championPersistencePort.saveChampionRotate(region, newChampionRotate);
+            ChampionRotate newChampionRotate = championClientPort.getChampionRotate(platformId);
+            championPersistencePort.saveChampionRotate(platformId, newChampionRotate);
             return newChampionRotate;
         }
     }

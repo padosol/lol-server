@@ -35,69 +35,69 @@ class ChampionClientAdapterTest {
 
     @DisplayName("지역으로 챔피언 로테이션을 조회하면 도메인 객체를 반환한다")
     @Test
-    void getChampionRotate_validRegion_returnsChampionRotate() {
+    void getChampionRotate_validPlatformId_returnsChampionRotate() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         List<Integer> freeChampionIdsForNewPlayers = List.of(18, 81, 22);
         List<Integer> freeChampionIds = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
         ChampionInfo championInfo = new ChampionInfo(10, freeChampionIdsForNewPlayers, freeChampionIds);
         ChampionRotate expectedRotate = new ChampionRotate(10, freeChampionIdsForNewPlayers, freeChampionIds);
 
-        given(championRotateRestClient.getChampionInfo(region)).willReturn(championInfo);
+        given(championRotateRestClient.getChampionInfo(platformId)).willReturn(championInfo);
         given(championClientMapper.toDomain(championInfo)).willReturn(expectedRotate);
 
         // when
-        ChampionRotate result = adapter.getChampionRotate(region);
+        ChampionRotate result = adapter.getChampionRotate(platformId);
 
         // then
         assertThat(result).isNotNull();
         assertThat(result.getMaxNewPlayerLevel()).isEqualTo(10);
         assertThat(result.getFreeChampionIds()).hasSize(10);
         assertThat(result.getFreeChampionIdsForNewPlayers()).hasSize(3);
-        then(championRotateRestClient).should().getChampionInfo(region);
+        then(championRotateRestClient).should().getChampionInfo(platformId);
         then(championClientMapper).should().toDomain(championInfo);
     }
 
     @DisplayName("다른 지역의 챔피언 로테이션을 조회할 수 있다")
     @Test
-    void getChampionRotate_differentRegion_returnsChampionRotate() {
+    void getChampionRotate_differentPlatformId_returnsChampionRotate() {
         // given
-        String region = "na1";
+        String platformId = "na1";
         List<Integer> freeChampionIdsForNewPlayers = List.of(20, 30, 40);
         List<Integer> freeChampionIds = List.of(100, 101, 102, 103, 104);
 
         ChampionInfo championInfo = new ChampionInfo(10, freeChampionIdsForNewPlayers, freeChampionIds);
         ChampionRotate expectedRotate = new ChampionRotate(10, freeChampionIdsForNewPlayers, freeChampionIds);
 
-        given(championRotateRestClient.getChampionInfo(region)).willReturn(championInfo);
+        given(championRotateRestClient.getChampionInfo(platformId)).willReturn(championInfo);
         given(championClientMapper.toDomain(championInfo)).willReturn(expectedRotate);
 
         // when
-        ChampionRotate result = adapter.getChampionRotate(region);
+        ChampionRotate result = adapter.getChampionRotate(platformId);
 
         // then
         assertThat(result).isNotNull();
         assertThat(result.getFreeChampionIds()).containsExactly(100, 101, 102, 103, 104);
-        then(championRotateRestClient).should().getChampionInfo(region);
+        then(championRotateRestClient).should().getChampionInfo(platformId);
     }
 
     @DisplayName("신규 유저용 무료 챔피언 목록과 일반 무료 챔피언 목록이 다를 수 있다")
     @Test
     void getChampionRotate_differentChampionLists_returnsBothLists() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         List<Integer> newPlayerChampions = List.of(1, 2, 3);
         List<Integer> freeChampions = List.of(10, 20, 30, 40, 50);
 
         ChampionInfo championInfo = new ChampionInfo(10, newPlayerChampions, freeChampions);
         ChampionRotate expectedRotate = new ChampionRotate(10, newPlayerChampions, freeChampions);
 
-        given(championRotateRestClient.getChampionInfo(region)).willReturn(championInfo);
+        given(championRotateRestClient.getChampionInfo(platformId)).willReturn(championInfo);
         given(championClientMapper.toDomain(championInfo)).willReturn(expectedRotate);
 
         // when
-        ChampionRotate result = adapter.getChampionRotate(region);
+        ChampionRotate result = adapter.getChampionRotate(platformId);
 
         // then
         assertThat(result.getFreeChampionIdsForNewPlayers()).containsExactly(1, 2, 3);

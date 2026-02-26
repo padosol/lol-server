@@ -31,6 +31,8 @@ include::api/match/match-chapion.adoc[]
 
 include::api/match/match-summoner-list.adoc[]
 
+include::api/match/match-daily-count.adoc[]
+
 [[League-API]]
 == League API
 
@@ -41,6 +43,11 @@ include::api/league/league-detail.adoc[]
 == Champion API
 
 include::api/champion/champion-rotate.adoc[]
+
+[[ChampionStats-API]]
+== ChampionStats API
+
+include::api/championstats/champion-stats-get.adoc[]
 
 [[Rank-API]]
 == Rank API
@@ -69,3 +76,10 @@ include::api/tiercutoff/tiercutoff-list.adoc[]
 include::api/tiercutoff/tiercutoff-list-by-queue.adoc[]
 
 include::api/tiercutoff/tiercutoff-detail.adoc[]
+
+[[Season-API]]
+== Season API
+
+include::api/season/season-list.adoc[]
+
+include::api/season/season-detail.adoc[]

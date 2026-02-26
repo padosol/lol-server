@@ -9,7 +9,12 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
 
 @Slf4j
 @Service
@@ -20,25 +25,29 @@ public class SummonerCacheAdapter implements SummonerCachePort {
     private final RedissonClient redissonClient;
 
     private static final String LOCK_PREFIX = "summoner:lock:";
+    private static final String RENEWAL_PREFIX = "summoner:renewal:";
     private static final String CLICK_COOLDOWN_PREFIX = "summoner:click-cooldown:";
     private static final long LOCK_WAIT_TIME = 5L;
     private static final long LOCK_LEASE_TIME = 10L;
 
     @Override
     public boolean isUpdating(String puuid) {
-        String s = stringRedisTemplate.opsForValue().get(puuid);
+        String s = stringRedisTemplate.opsForValue().get(RENEWAL_PREFIX + puuid);
         return StringUtils.hasText(s);
     }
 
     @Override
     public void createSummonerRenewal(String puuid) {
-        stringRedisTemplate.opsForValue().set(puuid, puuid);
+        stringRedisTemplate.opsForValue().set(RENEWAL_PREFIX + puuid, puuid, 2, TimeUnit.MINUTES);
     }
 
     @Override
     public boolean isSummonerRenewal(String puuid) {
-        String summonerRenewal = stringRedisTemplate.opsForValue().get(puuid);
-        return StringUtils.hasText(summonerRenewal);
+        String key = RENEWAL_PREFIX + puuid;
+        String summonerRenewal = stringRedisTemplate.opsForValue().get(key);
+        boolean result = StringUtils.hasText(summonerRenewal);
+        log.info("소환사 갱신 상태 조회 - key: {}, puuid: {}, value: {}, result: {}", key, puuid, summonerRenewal, result);
+        return result;
     }
 
     @Override
@@ -59,6 +68,22 @@ public class SummonerCacheAdapter implements SummonerCachePort {
         if (lock.isHeldByCurrentThread()) {
             lock.unlock();
         }
+    }
+
+    @Override
+    public Set<String> getRefreshingPuuids() {
+        Set<String> puuids = new HashSet<>();
+        ScanOptions options = ScanOptions.scanOptions()
+                .match(RENEWAL_PREFIX + "*")
+                .count(100)
+                .build();
+        try (Cursor<String> cursor = stringRedisTemplate.scan(options)) {
+            while (cursor.hasNext()) {
+                String key = cursor.next();
+                puuids.add(key.substring(RENEWAL_PREFIX.length()));
+            }
+        }
+        return puuids;
     }
 
     @Override

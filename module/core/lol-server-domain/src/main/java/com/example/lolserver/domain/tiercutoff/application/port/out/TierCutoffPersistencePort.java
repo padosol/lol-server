@@ -7,9 +7,9 @@ import java.util.Optional;
 
 public interface TierCutoffPersistencePort {
 
-    Optional<TierCutoffReadModel> findByQueueAndTierAndRegion(String queue, String tier, String region);
+    Optional<TierCutoffReadModel> findByQueueAndTierAndPlatformId(String queue, String tier, String platformId);
 
-    List<TierCutoffReadModel> findAllByRegion(String region);
+    List<TierCutoffReadModel> findAllByPlatformId(String platformId);
 
-    List<TierCutoffReadModel> findByRegionAndQueue(String region, String queue);
+    List<TierCutoffReadModel> findByPlatformIdAndQueue(String platformId, String queue);
 }

@@ -5,7 +5,7 @@ import com.example.lolserver.domain.summoner.domain.Summoner;
 import java.util.Optional;
 
 public interface SummonerClientPort {
-    Optional<Summoner> getSummoner(String gameName, String tagLine, String region);
+    Optional<Summoner> getSummoner(String gameName, String tagLine, String platformId);
 
-    Optional<Summoner> getSummonerByPuuid(String region, String puuid);
+    Optional<Summoner> getSummonerByPuuid(String platformId, String puuid);
 }

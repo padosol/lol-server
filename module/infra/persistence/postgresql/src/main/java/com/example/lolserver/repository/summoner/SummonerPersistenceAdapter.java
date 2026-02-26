@@ -8,6 +8,8 @@ import com.example.lolserver.repository.summoner.repository.dsl.SummonerReposito
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,9 +22,9 @@ public class SummonerPersistenceAdapter implements SummonerPersistencePort {
     private final SummonerMapper summonerMapper;
 
     @Override
-    public Optional<Summoner> getSummoner(String gameName, String tagLine, String region) {
-        List<SummonerEntity> findSummoner = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegion(
-                gameName, tagLine, region);
+    public Optional<Summoner> getSummoner(String gameName, String tagLine, String platformId) {
+        List<SummonerEntity> findSummoner = summonerRepositoryCustom.findAllByGameNameAndTagLineAndPlatformId(
+                gameName, tagLine, platformId);
 
         if (findSummoner.size() == 1) {
             return Optional.of(summonerMapper.toDomain(findSummoner.get(0)));
@@ -32,9 +34,9 @@ public class SummonerPersistenceAdapter implements SummonerPersistencePort {
     }
 
     @Override
-    public List<Summoner> getSummonerAuthComplete(String q, String region) {
-        List<SummonerEntity> summonerEntities = summonerRepositoryCustom.findAllByGameNameAndTagLineAndRegionLike(
-                q, region
+    public List<Summoner> getSummonerAuthComplete(String q, String platformId) {
+        List<SummonerEntity> summonerEntities = summonerRepositoryCustom.findAllByGameNameAndTagLineAndPlatformIdLike(
+                q, platformId
         );
 
         return summonerMapper.toDomainList(summonerEntities);
@@ -51,5 +53,14 @@ public class SummonerPersistenceAdapter implements SummonerPersistencePort {
         SummonerEntity summonerEntity = summonerMapper.toEntity(summoner);
         SummonerEntity savedSummoner = summonerJpaRepository.save(summonerEntity);
         return summonerMapper.toDomain(savedSummoner);
+    }
+
+    @Override
+    public List<Summoner> findAllByPuuidIn(Collection<String> puuids) {
+        if (puuids == null || puuids.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<SummonerEntity> entities = summonerJpaRepository.findAllByPuuidIn(puuids);
+        return summonerMapper.toDomainList(entities);
     }
 }

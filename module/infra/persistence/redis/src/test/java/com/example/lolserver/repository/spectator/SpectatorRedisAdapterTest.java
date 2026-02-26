@@ -47,47 +47,47 @@ class SpectatorRedisAdapterTest {
     @Test
     void findByPuuid_cacheHit_returnsGameInfo() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         String puuid = "test-puuid";
         CurrentGameInfoReadModel cachedGame = createGameInfo(12345L);
 
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
-        given(valueOperations.get(CACHE_KEY_PREFIX + region + ":" + puuid)).willReturn(cachedGame);
+        given(valueOperations.get(CACHE_KEY_PREFIX + platformId + ":" + puuid)).willReturn(cachedGame);
 
         // when
-        CurrentGameInfoReadModel result = adapter.findByPuuid(region, puuid);
+        CurrentGameInfoReadModel result = adapter.findByPuuid(platformId, puuid);
 
         // then
         assertThat(result).isEqualTo(cachedGame);
         assertThat(result.gameId()).isEqualTo(12345L);
         then(redisTemplate).should().opsForValue();
-        then(valueOperations).should().get(CACHE_KEY_PREFIX + region + ":" + puuid);
+        then(valueOperations).should().get(CACHE_KEY_PREFIX + platformId + ":" + puuid);
     }
 
     @DisplayName("캐시에 게임 정보가 없으면 null을 반환한다")
     @Test
     void findByPuuid_cacheMiss_returnsNull() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         String puuid = "test-puuid";
 
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
-        given(valueOperations.get(CACHE_KEY_PREFIX + region + ":" + puuid)).willReturn(null);
+        given(valueOperations.get(CACHE_KEY_PREFIX + platformId + ":" + puuid)).willReturn(null);
 
         // when
-        CurrentGameInfoReadModel result = adapter.findByPuuid(region, puuid);
+        CurrentGameInfoReadModel result = adapter.findByPuuid(platformId, puuid);
 
         // then
         assertThat(result).isNull();
         then(redisTemplate).should().opsForValue();
-        then(valueOperations).should().get(CACHE_KEY_PREFIX + region + ":" + puuid);
+        then(valueOperations).should().get(CACHE_KEY_PREFIX + platformId + ":" + puuid);
     }
 
     @DisplayName("게임 정보를 저장하면 모든 참여자 puuid를 키로 저장한다")
     @Test
     void saveCurrentGame_validData_savesForAllParticipants() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         ParticipantReadModel participant1 = createParticipant("puuid-1");
         ParticipantReadModel participant2 = createParticipant("puuid-2");
         CurrentGameInfoReadModel gameInfo = createGameInfoWithParticipants(12345L, List.of(participant1, participant2));
@@ -95,16 +95,16 @@ class SpectatorRedisAdapterTest {
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
 
         // when
-        adapter.saveCurrentGame(region, gameInfo);
+        adapter.saveCurrentGame(platformId, gameInfo);
 
         // then
         then(valueOperations).should().set(
-                eq(CACHE_KEY_PREFIX + region + ":puuid-1"),
+                eq(CACHE_KEY_PREFIX + platformId + ":puuid-1"),
                 eq(gameInfo),
                 eq(CACHE_TTL)
         );
         then(valueOperations).should().set(
-                eq(CACHE_KEY_PREFIX + region + ":puuid-2"),
+                eq(CACHE_KEY_PREFIX + platformId + ":puuid-2"),
                 eq(gameInfo),
                 eq(CACHE_TTL)
         );
@@ -114,10 +114,10 @@ class SpectatorRedisAdapterTest {
     @Test
     void saveCurrentGame_nullData_doesNotSave() {
         // given
-        String region = "kr";
+        String platformId = "kr";
 
         // when
-        adapter.saveCurrentGame(region, null);
+        adapter.saveCurrentGame(platformId, null);
 
         // then
         then(redisTemplate).shouldHaveNoInteractions();
@@ -127,7 +127,7 @@ class SpectatorRedisAdapterTest {
     @Test
     void saveCurrentGame_nullParticipants_doesNotSave() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         CurrentGameInfoReadModel gameInfo = new CurrentGameInfoReadModel(
                 12345L, "MATCHED_GAME", "CLASSIC", 11L, 420L,
                 System.currentTimeMillis(), 600L, "KR", "key",
@@ -135,7 +135,7 @@ class SpectatorRedisAdapterTest {
         );
 
         // when
-        adapter.saveCurrentGame(region, gameInfo);
+        adapter.saveCurrentGame(platformId, gameInfo);
 
         // then
         then(redisTemplate).shouldHaveNoInteractions();
@@ -145,14 +145,14 @@ class SpectatorRedisAdapterTest {
     @Test
     void deleteByPuuid_validInput_deletesKey() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         String puuid = "test-puuid";
 
         // when
-        adapter.deleteByPuuid(region, puuid);
+        adapter.deleteByPuuid(platformId, puuid);
 
         // then
-        then(redisTemplate).should().delete(CACHE_KEY_PREFIX + region + ":" + puuid);
+        then(redisTemplate).should().delete(CACHE_KEY_PREFIX + platformId + ":" + puuid);
     }
 
     // === Negative Cache 테스트 ===
@@ -161,17 +161,17 @@ class SpectatorRedisAdapterTest {
     @Test
     void saveNoGame_validInput_savesWithTTL() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         String puuid = "test-puuid";
 
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
 
         // when
-        adapter.saveNoGame(region, puuid);
+        adapter.saveNoGame(platformId, puuid);
 
         // then
         then(valueOperations).should().set(
-                eq(NO_GAME_KEY_PREFIX + region + ":" + puuid),
+                eq(NO_GAME_KEY_PREFIX + platformId + ":" + puuid),
                 eq("NO_GAME"),
                 eq(NO_GAME_TTL)
         );
@@ -181,30 +181,30 @@ class SpectatorRedisAdapterTest {
     @Test
     void isNoGameCached_exists_returnsTrue() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         String puuid = "test-puuid";
 
-        given(redisTemplate.hasKey(NO_GAME_KEY_PREFIX + region + ":" + puuid)).willReturn(true);
+        given(redisTemplate.hasKey(NO_GAME_KEY_PREFIX + platformId + ":" + puuid)).willReturn(true);
 
         // when
-        boolean result = adapter.isNoGameCached(region, puuid);
+        boolean result = adapter.isNoGameCached(platformId, puuid);
 
         // then
         assertThat(result).isTrue();
-        then(redisTemplate).should().hasKey(NO_GAME_KEY_PREFIX + region + ":" + puuid);
+        then(redisTemplate).should().hasKey(NO_GAME_KEY_PREFIX + platformId + ":" + puuid);
     }
 
     @DisplayName("isNoGameCached는 Negative Cache 존재 여부를 반환한다 - 존재하지 않음")
     @Test
     void isNoGameCached_notExists_returnsFalse() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         String puuid = "test-puuid";
 
-        given(redisTemplate.hasKey(NO_GAME_KEY_PREFIX + region + ":" + puuid)).willReturn(false);
+        given(redisTemplate.hasKey(NO_GAME_KEY_PREFIX + platformId + ":" + puuid)).willReturn(false);
 
         // when
-        boolean result = adapter.isNoGameCached(region, puuid);
+        boolean result = adapter.isNoGameCached(platformId, puuid);
 
         // then
         assertThat(result).isFalse();
@@ -216,7 +216,7 @@ class SpectatorRedisAdapterTest {
     @Test
     void saveGameMeta_validInput_savesMetaData() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         long gameId = 12345L;
         long gameStartTime = System.currentTimeMillis();
         List<String> puuids = List.of("puuid-1", "puuid-2");
@@ -224,7 +224,7 @@ class SpectatorRedisAdapterTest {
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
 
         // when
-        adapter.saveGameMeta(region, gameId, gameStartTime, puuids);
+        adapter.saveGameMeta(platformId, gameId, gameStartTime, puuids);
 
         // then
         Map<String, Object> expectedMeta = Map.of(
@@ -232,7 +232,7 @@ class SpectatorRedisAdapterTest {
                 "participantPuuids", puuids
         );
         then(valueOperations).should().set(
-                eq(GAME_META_KEY_PREFIX + region + ":" + gameId),
+                eq(GAME_META_KEY_PREFIX + platformId + ":" + gameId),
                 eq(expectedMeta),
                 eq(CACHE_TTL)
         );
@@ -242,7 +242,7 @@ class SpectatorRedisAdapterTest {
     @Test
     void deleteGameWithAllParticipants_validData_deletesAllCaches() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         long gameId = 12345L;
         List<String> puuids = List.of("puuid-1", "puuid-2");
         Map<String, Object> metaData = Map.of(
@@ -251,32 +251,32 @@ class SpectatorRedisAdapterTest {
         );
 
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
-        given(valueOperations.get(GAME_META_KEY_PREFIX + region + ":" + gameId)).willReturn(metaData);
+        given(valueOperations.get(GAME_META_KEY_PREFIX + platformId + ":" + gameId)).willReturn(metaData);
 
         // when
-        adapter.deleteGameWithAllParticipants(region, gameId);
+        adapter.deleteGameWithAllParticipants(platformId, gameId);
 
         // then
-        then(redisTemplate).should().delete(CACHE_KEY_PREFIX + region + ":puuid-1");
-        then(redisTemplate).should().delete(CACHE_KEY_PREFIX + region + ":puuid-2");
-        then(redisTemplate).should().delete(GAME_META_KEY_PREFIX + region + ":" + gameId);
+        then(redisTemplate).should().delete(CACHE_KEY_PREFIX + platformId + ":puuid-1");
+        then(redisTemplate).should().delete(CACHE_KEY_PREFIX + platformId + ":puuid-2");
+        then(redisTemplate).should().delete(GAME_META_KEY_PREFIX + platformId + ":" + gameId);
     }
 
     @DisplayName("deleteGameWithAllParticipants는 메타데이터가 없으면 메타 키만 삭제한다")
     @Test
     void deleteGameWithAllParticipants_noMeta_deletesOnlyMetaKey() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         long gameId = 12345L;
 
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
-        given(valueOperations.get(GAME_META_KEY_PREFIX + region + ":" + gameId)).willReturn(null);
+        given(valueOperations.get(GAME_META_KEY_PREFIX + platformId + ":" + gameId)).willReturn(null);
 
         // when
-        adapter.deleteGameWithAllParticipants(region, gameId);
+        adapter.deleteGameWithAllParticipants(platformId, gameId);
 
         // then
-        then(redisTemplate).should().delete(GAME_META_KEY_PREFIX + region + ":" + gameId);
+        then(redisTemplate).should().delete(GAME_META_KEY_PREFIX + platformId + ":" + gameId);
     }
 
     private CurrentGameInfoReadModel createGameInfo(long gameId) {

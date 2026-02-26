@@ -363,6 +363,107 @@ private SummonerJpaRepository summonerJpaRepository;  // Don't mock implementati
 - Mocking "just to be safe"
 - Mocking concrete implementations instead of Port interfaces
 
+## Anti-Pattern 6: Layer Boundary Violation Mock
+
+**The violation - 도메인 서비스에서 JpaRepository 직접 Mock:**
+```java
+// ❌ BAD: 도메인 서비스 테스트에서 인프라 구현체를 직접 Mock
+@ExtendWith(MockitoExtension.class)
+class SummonerServiceTest {
+
+    @Mock
+    private SummonerJpaRepository summonerJpaRepository;  // Port가 아닌 구현체!
+
+    @InjectMocks
+    private SummonerService summonerService;
+
+    @Test
+    void getSummoner_소환사조회() {
+        given(summonerJpaRepository.findByPuuid("puuid")).willReturn(entity);  // Entity 직접 반환!
+        // ...
+    }
+}
+```
+
+**The violation - 영속성 어댑터에서 다른 어댑터 Mock:**
+```java
+// ❌ BAD: 영속성 어댑터 테스트에서 클라이언트 어댑터 Mock
+@ExtendWith(MockitoExtension.class)
+class SummonerPersistenceAdapterTest {
+
+    @Mock
+    private SummonerClientAdapter summonerClientAdapter;  // 다른 계층 어댑터!
+
+    // ...
+}
+```
+
+**Why this is wrong:**
+- **헥사고날 아키텍처 위반** - 도메인이 인프라에 의존하면 안 됨
+- **테스트가 구현 세부사항에 결합** - JPA 구현체가 바뀌면 도메인 테스트도 깨짐
+- **어댑터 간 의존성 생성** - 각 어댑터는 독립적이어야 함
+- **Port 인터페이스 존재 의미 상실** - 추상화 경계 무시
+
+**The fix:**
+```java
+// ✅ GOOD: 도메인 서비스는 Port 인터페이스만 Mock
+@ExtendWith(MockitoExtension.class)
+class SummonerServiceTest {
+
+    @Mock
+    private SummonerPersistencePort summonerPersistencePort;  // Port 인터페이스
+
+    @Mock
+    private SummonerClientPort summonerClientPort;  // Port 인터페이스
+
+    @InjectMocks
+    private SummonerService summonerService;
+
+    @Test
+    void getSummoner_소환사조회() {
+        given(summonerPersistencePort.getSummoner("Player", "KR1", "kr"))
+                .willReturn(Optional.of(summoner));  // 도메인 객체 반환
+        // ...
+    }
+}
+```
+
+```java
+// ✅ GOOD: 영속성 어댑터는 자신의 Repository/Mapper만 Mock
+@ExtendWith(MockitoExtension.class)
+class SummonerPersistenceAdapterTest {
+
+    @Mock
+    private SummonerJpaRepository summonerJpaRepository;  // 같은 계층
+
+    @Mock
+    private SummonerMapper summonerMapper;  // 같은 계층
+
+    // ...
+}
+```
+
+### Gate Function
+
+```
+BEFORE mocking any dependency in a test:
+  Ask: "Does this dependency belong to the same architectural layer?"
+
+  IF domain service test:
+    ONLY mock Port interfaces (SomePersistencePort, SomeClientPort)
+    NEVER mock JpaRepository, RestClient, or Adapter implementations
+
+  IF persistence adapter test:
+    ONLY mock same-layer dependencies (Repository, Mapper)
+    NEVER mock other adapters or domain services
+
+  IF client adapter test:
+    ONLY mock RestClient, ClientMapper
+    NEVER mock persistence or domain components
+
+  Rule: Each test mocks ONLY its own layer's dependencies
+```
+
 ## The Bottom Line
 
 **Mocks are tools to isolate, not things to test.**

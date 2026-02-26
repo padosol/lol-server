@@ -41,7 +41,7 @@ class ChampionCacheAdapterTest {
     @Test
     void getChampionRotate_cacheHit_returnsChampionRotate() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         ChampionRotate cachedRotate = new ChampionRotate(
                 10,
                 List.of(18, 81, 22),
@@ -49,10 +49,10 @@ class ChampionCacheAdapterTest {
         );
 
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
-        given(valueOperations.get(CACHE_KEY_PREFIX + region)).willReturn(cachedRotate);
+        given(valueOperations.get(CACHE_KEY_PREFIX + platformId)).willReturn(cachedRotate);
 
         // when
-        Optional<ChampionRotate> result = adapter.getChampionRotate(region);
+        Optional<ChampionRotate> result = adapter.getChampionRotate(platformId);
 
         // then
         assertThat(result).isPresent();
@@ -60,32 +60,32 @@ class ChampionCacheAdapterTest {
         assertThat(result.get().getMaxNewPlayerLevel()).isEqualTo(10);
         assertThat(result.get().getFreeChampionIds()).hasSize(5);
         then(redisTemplate).should().opsForValue();
-        then(valueOperations).should().get(CACHE_KEY_PREFIX + region);
+        then(valueOperations).should().get(CACHE_KEY_PREFIX + platformId);
     }
 
     @DisplayName("캐시에 챔피언 로테이션이 없으면 빈 Optional을 반환한다")
     @Test
     void getChampionRotate_cacheMiss_returnsEmpty() {
         // given
-        String region = "kr";
+        String platformId = "kr";
 
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
-        given(valueOperations.get(CACHE_KEY_PREFIX + region)).willReturn(null);
+        given(valueOperations.get(CACHE_KEY_PREFIX + platformId)).willReturn(null);
 
         // when
-        Optional<ChampionRotate> result = adapter.getChampionRotate(region);
+        Optional<ChampionRotate> result = adapter.getChampionRotate(platformId);
 
         // then
         assertThat(result).isEmpty();
         then(redisTemplate).should().opsForValue();
-        then(valueOperations).should().get(CACHE_KEY_PREFIX + region);
+        then(valueOperations).should().get(CACHE_KEY_PREFIX + platformId);
     }
 
     @DisplayName("챔피언 로테이션을 캐시에 저장한다")
     @Test
     void saveChampionRotate_validData_savesToCache() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         ChampionRotate championRotate = new ChampionRotate(
                 10,
                 List.of(18, 81, 22, 21, 36),
@@ -95,12 +95,12 @@ class ChampionCacheAdapterTest {
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
 
         // when
-        adapter.saveChampionRotate(region, championRotate);
+        adapter.saveChampionRotate(platformId, championRotate);
 
         // then
         then(redisTemplate).should().opsForValue();
         then(valueOperations).should().set(
-                eq(CACHE_KEY_PREFIX + region),
+                eq(CACHE_KEY_PREFIX + platformId),
                 eq(championRotate),
                 eq(Duration.ofHours(1))
         );
@@ -108,21 +108,21 @@ class ChampionCacheAdapterTest {
 
     @DisplayName("다른 지역의 챔피언 로테이션을 각각 캐시에 저장하고 조회할 수 있다")
     @Test
-    void getChampionRotate_differentRegions_returnsCorrectData() {
+    void getChampionRotate_differentPlatformIds_returnsCorrectData() {
         // given
-        String regionKr = "kr";
-        String regionNa = "na1";
+        String platformIdKr = "kr";
+        String platformIdNa = "na1";
 
         ChampionRotate krRotate = new ChampionRotate(10, List.of(1, 2, 3), List.of(100, 101));
         ChampionRotate naRotate = new ChampionRotate(10, List.of(4, 5, 6), List.of(200, 201));
 
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
-        given(valueOperations.get(CACHE_KEY_PREFIX + regionKr)).willReturn(krRotate);
-        given(valueOperations.get(CACHE_KEY_PREFIX + regionNa)).willReturn(naRotate);
+        given(valueOperations.get(CACHE_KEY_PREFIX + platformIdKr)).willReturn(krRotate);
+        given(valueOperations.get(CACHE_KEY_PREFIX + platformIdNa)).willReturn(naRotate);
 
         // when
-        Optional<ChampionRotate> krResult = adapter.getChampionRotate(regionKr);
-        Optional<ChampionRotate> naResult = adapter.getChampionRotate(regionNa);
+        Optional<ChampionRotate> krResult = adapter.getChampionRotate(platformIdKr);
+        Optional<ChampionRotate> naResult = adapter.getChampionRotate(platformIdNa);
 
         // then
         assertThat(krResult).isPresent();

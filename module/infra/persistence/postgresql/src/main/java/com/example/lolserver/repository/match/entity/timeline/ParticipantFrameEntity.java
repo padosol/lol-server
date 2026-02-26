@@ -1,7 +1,5 @@
 package com.example.lolserver.repository.match.entity.timeline;
 
-import com.example.lolserver.repository.match.entity.MatchEntity;
-import com.example.lolserver.repository.match.entity.timeline.id.ParticipantFrameId;
 import com.example.lolserver.repository.match.entity.timeline.value.ChampionStatsValue;
 import com.example.lolserver.repository.match.entity.timeline.value.DamageStatsValue;
 import com.example.lolserver.repository.match.entity.timeline.value.PositionValue;
@@ -14,20 +12,19 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@IdClass(ParticipantFrameId.class)
-@Table(name = "participant_frame")
+@Table(name = "participant_frame",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"match_id", "timestamp", "participant_id"}))
 public class ParticipantFrameEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "match_id")
+    private String matchId;
+
     private int timestamp;
-
-    @Id
     private int participantId;
-
-    @Id
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "matchId", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    private MatchEntity matchEntity;
 
     @Embedded
     private ChampionStatsValue championStats;

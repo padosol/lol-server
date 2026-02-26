@@ -34,7 +34,7 @@ class RankServiceTest {
     @Test
     void getRanks_유효한검색조건_랭크응답페이지반환() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         RankSearchDto searchDto = new RankSearchDto();
         searchDto.setTier("DIAMOND");
 
@@ -69,42 +69,42 @@ class RankServiceTest {
                         .build()
         );
         Page<Rank> rankPage = new PageImpl<>(ranks);
-        given(rankPersistencePort.getRanks(searchDto, region)).willReturn(rankPage);
+        given(rankPersistencePort.getRanks(searchDto, platformId)).willReturn(rankPage);
 
         // when
-        Page<RankResponse> result = rankService.getRanks(searchDto, region);
+        Page<RankResponse> result = rankService.getRanks(searchDto, platformId);
 
         // then
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.getContent().get(0).getGameName()).isEqualTo("Player1");
         assertThat(result.getContent().get(1).getGameName()).isEqualTo("Player2");
-        then(rankPersistencePort).should().getRanks(searchDto, region);
+        then(rankPersistencePort).should().getRanks(searchDto, platformId);
     }
 
     @DisplayName("랭크 조회 결과가 없는 경우 빈 페이지를 반환한다")
     @Test
     void getRanks_결과없음_빈페이지반환() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         RankSearchDto searchDto = new RankSearchDto();
         searchDto.setTier("CHALLENGER");
 
         Page<Rank> emptyPage = new PageImpl<>(Collections.emptyList());
-        given(rankPersistencePort.getRanks(searchDto, region)).willReturn(emptyPage);
+        given(rankPersistencePort.getRanks(searchDto, platformId)).willReturn(emptyPage);
 
         // when
-        Page<RankResponse> result = rankService.getRanks(searchDto, region);
+        Page<RankResponse> result = rankService.getRanks(searchDto, platformId);
 
         // then
         assertThat(result.getContent()).isEmpty();
-        then(rankPersistencePort).should().getRanks(searchDto, region);
+        then(rankPersistencePort).should().getRanks(searchDto, platformId);
     }
 
     @DisplayName("도메인 객체가 DTO로 올바르게 변환된다")
     @Test
     void getRanks_도메인객체_DTO변환확인() {
         // given
-        String region = "kr";
+        String platformId = "kr";
         RankSearchDto searchDto = new RankSearchDto();
 
         Rank rank = Rank.builder()
@@ -122,10 +122,10 @@ class RankServiceTest {
                 .champions(List.of("Jinx", "Caitlyn"))
                 .build();
         Page<Rank> rankPage = new PageImpl<>(List.of(rank));
-        given(rankPersistencePort.getRanks(searchDto, region)).willReturn(rankPage);
+        given(rankPersistencePort.getRanks(searchDto, platformId)).willReturn(rankPage);
 
         // when
-        Page<RankResponse> result = rankService.getRanks(searchDto, region);
+        Page<RankResponse> result = rankService.getRanks(searchDto, platformId);
 
         // then
         assertThat(result.getContent()).hasSize(1);
@@ -143,6 +143,6 @@ class RankServiceTest {
         assertThat(response.getLeaguePoints()).isEqualTo(100);
         assertThat(response.getChampions()).hasSize(2);
         assertThat(response.getChampions().get(0)).isEqualTo("Jinx");
-        then(rankPersistencePort).should().getRanks(searchDto, region);
+        then(rankPersistencePort).should().getRanks(searchDto, platformId);
     }
 }

@@ -1,6 +1,7 @@
 package com.example.lolserver.repository.match.adapter;
 
 import com.example.lolserver.domain.match.application.port.out.MatchPersistencePort;
+import com.example.lolserver.domain.match.application.dto.DailyGameCountResponse;
 import com.example.lolserver.domain.match.application.dto.GameResponse;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.TimelineData;
@@ -29,6 +30,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -71,7 +73,7 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
 
     @Override
     public Optional<GameResponse> getGameData(String matchId) {
-        return matchRepository.findById(matchId)
+        return matchRepository.findByMatchId(matchId)
                 .map(matchEntity -> convertToGameData(matchEntity, null)); // puuid is null if not specific user
     }
 
@@ -119,11 +121,11 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
 
         Map<String, List<ItemEventsEntity>> itemEventsByMatch =
                 timelineRepositoryCustom.selectAllItemEventsByMatchIds(matchIds).stream()
-                        .collect(Collectors.groupingBy(ItemEventsEntity::getMatchId));
+                        .collect(Collectors.groupingBy(ie -> ie.getTimeLineEvent().getMatchId()));
 
         Map<String, List<SkillEventsEntity>> skillEventsByMatch =
                 timelineRepositoryCustom.selectAllSkillEventsByMatchIds(matchIds).stream()
-                        .collect(Collectors.groupingBy(SkillEventsEntity::getMatchId));
+                        .collect(Collectors.groupingBy(se -> se.getTimeLineEvent().getMatchId()));
 
         // 매치별 GameResponse 조립 (DB 호출 없이 메모리에서)
         List<GameResponse> gameDataList = matchEntities.stream()
@@ -192,6 +194,16 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         }
 
         return gameData;
+    }
+
+    @Override
+    public List<DailyGameCountResponse> getDailyGameCounts(
+            String puuid, Integer season, Integer queueId, LocalDateTime startDate) {
+        return matchSummonerRepositoryCustom
+                .findDailyGameCounts(puuid, season, queueId, startDate)
+                .stream()
+                .map(dto -> new DailyGameCountResponse(dto.getGameDate(), dto.getGameCount()))
+                .toList();
     }
 
     private GameResponse convertToGameData(MatchEntity matchEntity, String puuid) {

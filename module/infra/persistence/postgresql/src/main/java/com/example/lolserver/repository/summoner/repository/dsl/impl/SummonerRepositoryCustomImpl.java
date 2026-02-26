@@ -21,27 +21,29 @@ public class SummonerRepositoryCustomImpl implements SummonerRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public List<SummonerEntity> findAllByGameNameAndTagLineAndRegion(String gameName, String tagLine, String region) {
+    public List<SummonerEntity> findAllByGameNameAndTagLineAndPlatformId(
+            String gameName, String tagLine, String platformId) {
         return jpaQueryFactory.selectFrom(summonerEntity)
+                .leftJoin(summonerEntity.leagueSummonerEntities, leagueSummonerEntity).fetchJoin()
                 .where(
                         gameNameEq(gameName),
                         tagLineEq(tagLine),
-                        regionEq(region)
+                        platformIdEq(platformId)
                 )
+                .distinct()
                 .fetch();
     }
 
     @Override
-    public List<SummonerEntity> findAllByGameNameAndTagLineAndRegionLike(String q, String region) {
+    public List<SummonerEntity> findAllByGameNameAndTagLineAndPlatformIdLike(String q, String platformId) {
         return jpaQueryFactory.selectFrom(summonerEntity)
-                .join(leagueSummonerEntity)
-                .on(
-                        summonerEntity.puuid.eq(leagueSummonerEntity.puuid)
-                )
+                .join(summonerEntity.leagueSummonerEntities, leagueSummonerEntity).fetchJoin()
                 .where(
                         gameNameLike(q),
-                        regionEq(region)
-                ).fetch();
+                        platformIdEq(platformId)
+                )
+                .distinct()
+                .fetch();
     }
 
     public BooleanExpression gameNameLike(String gameName) {
@@ -71,8 +73,8 @@ public class SummonerRepositoryCustomImpl implements SummonerRepositoryCustom {
         return StringUtils.hasText(tagLine) ? summonerEntity.tagLine.equalsIgnoreCase(tagLine) : null;
     }
 
-    public BooleanExpression regionEq(String region) {
-        return StringUtils.hasText(region) ? summonerEntity.region.equalsIgnoreCase(region) : null;
+    public BooleanExpression platformIdEq(String platformId) {
+        return StringUtils.hasText(platformId) ? summonerEntity.platformId.equalsIgnoreCase(platformId) : null;
     }
 
 }

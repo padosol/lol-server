@@ -3,76 +3,53 @@ name: test-driven-development
 description: Use when implementing any feature or bugfix, before writing implementation code
 ---
 
-# Test-Driven Development (TDD)
+# TDD (테스트 주도 개발)
 
-## Overview
+## 개요
 
-Write the test first. Watch it fail. Write minimal code to pass.
+테스트를 먼저 작성하고, 실패를 확인하고, 통과할 최소 코드를 작성한다.
 
-**Core principle:** If you didn't watch the test fail, you don't know if it tests the right thing.
+**핵심 원칙:** 테스트가 실패하는 것을 보지 않았다면, 그 테스트가 올바른 것을 검증하는지 알 수 없다.
 
-**Violating the letter of the rules is violating the spirit of the rules.**
+**규칙의 문구를 어기는 것은 규칙의 정신을 어기는 것이다.**
 
-## When to Use
+## 적용 시점
 
-**Always:**
-- New features
-- Bug fixes
-- Refactoring
-- Behavior changes
+**항상 적용:**
+- 새 기능 구현
+- 버그 수정
+- 리팩토링
+- 동작 변경
 
-**Exceptions (ask your human partner):**
-- Throwaway prototypes
-- Generated code
-- Configuration files
+**예외 (반드시 사용자에게 확인):**
+- 일회성 프로토타입
+- 생성된 코드
+- 설정 파일
 
-Thinking "skip TDD just this once"? Stop. That's rationalization.
+"이번만 TDD 건너뛰자"는 생각이 들면 멈춰라. 그것은 합리화다.
 
-## The Iron Law
+## 철칙
 
 ```
-NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
+실패하는 테스트 없이 프로덕션 코드를 작성하지 않는다
 ```
 
-Write code before the test? Delete it. Start over.
+테스트 전에 코드를 작성했다면 삭제하고 처음부터 시작한다.
 
-**No exceptions:**
-- Don't keep it as "reference"
-- Don't "adapt" it while writing tests
-- Don't look at it
-- Delete means delete
+**예외 없음:**
+- "참고용"으로 남기지 않는다
+- 테스트 작성하면서 "적용"하지 않는다
+- 보지도 않는다
+- 삭제는 삭제다
 
-Implement fresh from tests. Period.
+테스트로부터 새로 구현한다.
 
 ## Red-Green-Refactor
 
-```dot
-digraph tdd_cycle {
-    rankdir=LR;
-    red [label="RED\nWrite failing test", shape=box, style=filled, fillcolor="#ffcccc"];
-    verify_red [label="Verify fails\ncorrectly", shape=diamond];
-    green [label="GREEN\nMinimal code", shape=box, style=filled, fillcolor="#ccffcc"];
-    verify_green [label="Verify passes\nAll green", shape=diamond];
-    refactor [label="REFACTOR\nClean up", shape=box, style=filled, fillcolor="#ccccff"];
-    next [label="Next", shape=ellipse];
+### RED - 실패하는 테스트 작성
 
-    red -> verify_red;
-    verify_red -> green [label="yes"];
-    verify_red -> red [label="wrong\nfailure"];
-    green -> verify_green;
-    verify_green -> refactor [label="yes"];
-    verify_green -> green [label="no"];
-    refactor -> verify_green [label="stay\ngreen"];
-    verify_green -> next;
-    next -> red;
-}
-```
+원하는 동작을 보여주는 최소한의 테스트 하나를 작성한다.
 
-### RED - Write Failing Test
-
-Write one minimal test showing what should happen.
-
-<Good>
 ```java
 @DisplayName("실패한 작업을 3회 재시도한다")
 @Test
@@ -93,57 +70,31 @@ void retryOperation_실패시_3회재시도() {
     assertThat(attempts.get()).isEqualTo(3);
 }
 ```
-Clear name, tests real behavior, one thing
-</Good>
+명확한 이름, 실제 동작 테스트, 한 가지만 검증
 
-<Bad>
-```java
-@Test
-void retry_works() {
-    // given
-    Supplier<String> mockOperation = mock(Supplier.class);
-    given(mockOperation.get())
-        .willThrow(new RuntimeException())
-        .willThrow(new RuntimeException())
-        .willReturn("success");
+**요구사항:**
+- 하나의 동작만 테스트
+- 명확한 이름 (한글 `@DisplayName` 권장)
+- 실제 코드 사용 (Mock은 불가피한 경우만)
 
-    // when
-    retryService.retryOperation(mockOperation);
-
-    // then
-    then(mockOperation).should(times(3)).get();
-}
-```
-Vague name, tests mock not code
-</Bad>
-
-**Requirements:**
-- One behavior
-- Clear name (한글 @DisplayName 권장)
-- Real code (no mocks unless unavoidable)
-
-### Verify RED - Watch It Fail
-
-**MANDATORY. Never skip.**
+**RED 검증 — 반드시 실행:**
 
 ```bash
 ./gradlew test --tests RetryServiceTest
 ```
 
-Confirm:
-- Test fails (not errors)
-- Failure message is expected
-- Fails because feature missing (not typos)
+확인 사항:
+- 테스트가 실패한다 (에러가 아님)
+- 실패 메시지가 예상과 일치한다
+- 기능 미구현으로 실패한다 (오타가 아님)
 
-**Test passes?** You're testing existing behavior. Fix test.
+테스트가 통과하면? 이미 존재하는 동작을 테스트하고 있다. 테스트를 수정한다.
+테스트가 에러나면? 에러를 수정하고 올바르게 실패할 때까지 재실행한다.
 
-**Test errors?** Fix error, re-run until it fails correctly.
+### GREEN - 최소 코드 작성
 
-### GREEN - Minimal Code
+테스트를 통과시키는 가장 단순한 코드를 작성한다.
 
-Write simplest code to pass the test.
-
-<Good>
 ```java
 public <T> T retryOperation(Supplier<T> operation) {
     for (int i = 0; i < 3; i++) {
@@ -156,191 +107,62 @@ public <T> T retryOperation(Supplier<T> operation) {
     throw new IllegalStateException("unreachable");
 }
 ```
-Just enough to pass
-</Good>
+통과에 필요한 만큼만 작성
 
-<Bad>
-```java
-public <T> T retryOperation(
-        Supplier<T> operation,
-        RetryConfig config) {
-    // config includes: maxRetries, backoffStrategy, onRetry callback...
-    // YAGNI - 필요하지 않은 기능
-}
-```
-Over-engineered
-</Bad>
+기능을 추가하거나, 다른 코드를 리팩토링하거나, 테스트 범위를 넘어 "개선"하지 않는다.
 
-Don't add features, refactor other code, or "improve" beyond the test.
-
-### Verify GREEN - Watch It Pass
-
-**MANDATORY.**
+**GREEN 검증 — 반드시 실행:**
 
 ```bash
 ./gradlew test --tests RetryServiceTest
 ```
 
-Confirm:
-- Test passes
-- Other tests still pass
-- Output pristine (no errors, warnings)
+확인 사항:
+- 테스트가 통과한다
+- 다른 테스트도 여전히 통과한다
+- 출력이 깨끗하다 (에러, 경고 없음)
 
-**Test fails?** Fix code, not test.
+테스트가 실패하면? 코드를 수정한다 (테스트가 아님).
+다른 테스트가 실패하면? 지금 수정한다.
 
-**Other tests fail?** Fix now.
+### REFACTOR - 정리
 
-### REFACTOR - Clean Up
+GREEN 이후에만 수행:
+- 중복 제거
+- 이름 개선
+- 헬퍼 추출
 
-After green only:
-- Remove duplication
-- Improve names
-- Extract helpers
+테스트는 계속 GREEN 상태를 유지한다. 동작을 추가하지 않는다.
 
-Keep tests green. Don't add behavior.
+### 반복
 
-### Repeat
+다음 기능을 위한 다음 실패 테스트를 작성한다.
 
-Next failing test for next feature.
+## 좋은 테스트
 
-## Good Tests
+| 품질 | 좋은 예 | 나쁜 예 |
+|------|---------|---------|
+| **최소** | 한 가지만. 이름에 "그리고"가 있으면 분리 | `@DisplayName("이메일과 도메인과 공백을 검증한다")` |
+| **명확** | 이름이 동작을 설명 | `@Test void test1()` |
+| **의도 표현** | 원하는 API를 보여줌 | 코드가 뭘 해야 하는지 불분명 |
 
-| Quality | Good | Bad |
-|---------|------|-----|
-| **Minimal** | One thing. "and" in name? Split it. | `@DisplayName("이메일과 도메인과 공백을 검증한다")` |
-| **Clear** | Name describes behavior | `@Test void test1()` |
-| **Shows intent** | Demonstrates desired API | Obscures what code should do |
+## 흔한 합리화
 
-## Why Order Matters
+| 핑계 | 현실 |
+|------|------|
+| "테스트하기엔 너무 단순" | 단순한 코드도 깨진다. 테스트 30초면 된다. |
+| "나중에 테스트 추가하지" | 즉시 통과하는 테스트는 아무것도 증명 못한다. |
+| "테스트 후작성도 같은 효과" | 후작성 = "이게 뭘 하지?" 선작성 = "이게 뭘 해야 하지?" |
+| "이미 수동 테스트 했는데" | 즉흥적 ≠ 체계적. 기록 없고, 재실행 불가. |
+| "X시간 삭제는 낭비" | 매몰 비용 오류. 검증 안 된 코드 유지가 기술 부채. |
+| "참고용으로 남기고 테스트부터" | 적용하게 된다. 그건 후작성이다. 삭제는 삭제. |
+| "먼저 탐색이 필요해" | 좋다. 탐색 코드 버리고 TDD로 시작. |
+| "테스트 어려움 = 설계 불명확" | 테스트에 귀 기울여라. 테스트 어려움 = 사용 어려움. |
+| "TDD는 느려" | TDD가 디버깅보다 빠르다. 실용적 = 테스트 선작성. |
+| "수동 테스트가 더 빨라" | 수동은 엣지 케이스를 증명 못한다. 변경마다 다시 테스트해야 한다. |
+| "기존 코드에 테스트 없는데" | 개선하는 거다. 기존 코드에 테스트를 추가해라. |
 
-**"I'll write tests after to verify it works"**
-
-Tests written after code pass immediately. Passing immediately proves nothing:
-- Might test wrong thing
-- Might test implementation, not behavior
-- Might miss edge cases you forgot
-- You never saw it catch the bug
-
-Test-first forces you to see the test fail, proving it actually tests something.
-
-**"I already manually tested all the edge cases"**
-
-Manual testing is ad-hoc. You think you tested everything but:
-- No record of what you tested
-- Can't re-run when code changes
-- Easy to forget cases under pressure
-- "It worked when I tried it" ≠ comprehensive
-
-Automated tests are systematic. They run the same way every time.
-
-**"Deleting X hours of work is wasteful"**
-
-Sunk cost fallacy. The time is already gone. Your choice now:
-- Delete and rewrite with TDD (X more hours, high confidence)
-- Keep it and add tests after (30 min, low confidence, likely bugs)
-
-The "waste" is keeping code you can't trust. Working code without real tests is technical debt.
-
-**"TDD is dogmatic, being pragmatic means adapting"**
-
-TDD IS pragmatic:
-- Finds bugs before commit (faster than debugging after)
-- Prevents regressions (tests catch breaks immediately)
-- Documents behavior (tests show how to use code)
-- Enables refactoring (change freely, tests catch breaks)
-
-"Pragmatic" shortcuts = debugging in production = slower.
-
-**"Tests after achieve the same goals - it's spirit not ritual"**
-
-No. Tests-after answer "What does this do?" Tests-first answer "What should this do?"
-
-Tests-after are biased by your implementation. You test what you built, not what's required. You verify remembered edge cases, not discovered ones.
-
-Tests-first force edge case discovery before implementing. Tests-after verify you remembered everything (you didn't).
-
-30 minutes of tests after ≠ TDD. You get coverage, lose proof tests work.
-
-## Common Rationalizations
-
-| Excuse | Reality |
-|--------|---------|
-| "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
-| "I'll test after" | Tests passing immediately prove nothing. |
-| "Tests after achieve same goals" | Tests-after = "what does this do?" Tests-first = "what should this do?" |
-| "Already manually tested" | Ad-hoc ≠ systematic. No record, can't re-run. |
-| "Deleting X hours is wasteful" | Sunk cost fallacy. Keeping unverified code is technical debt. |
-| "Keep as reference, write tests first" | You'll adapt it. That's testing after. Delete means delete. |
-| "Need to explore first" | Fine. Throw away exploration, start with TDD. |
-| "Test hard = design unclear" | Listen to test. Hard to test = hard to use. |
-| "TDD will slow me down" | TDD faster than debugging. Pragmatic = test-first. |
-| "Manual test faster" | Manual doesn't prove edge cases. You'll re-test every change. |
-| "Existing code has no tests" | You're improving it. Add tests for existing code. |
-
-## Red Flags - STOP and Start Over
-
-- Code before test
-- Test after implementation
-- Test passes immediately
-- Can't explain why test failed
-- Tests added "later"
-- Rationalizing "just this once"
-- "I already manually tested it"
-- "Tests after achieve the same purpose"
-- "It's about spirit not ritual"
-- "Keep as reference" or "adapt existing code"
-- "Already spent X hours, deleting is wasteful"
-- "TDD is dogmatic, I'm being pragmatic"
-- "This is different because..."
-
-**All of these mean: Delete code. Start over with TDD.**
-
-## Example: Bug Fix
-
-**Bug:** Empty email accepted
-
-**RED**
-```java
-@DisplayName("빈 이메일을 거부한다")
-@Test
-void submitForm_빈이메일_에러반환() {
-    // given
-    FormRequest request = new FormRequest("");
-
-    // when
-    FormResult result = formService.submitForm(request);
-
-    // then
-    assertThat(result.getError()).isEqualTo("Email required");
-}
-```
-
-**Verify RED**
-```bash
-$ ./gradlew test --tests FormServiceTest.submitForm_빈이메일_에러반환
-FAIL: expected "Email required", got null
-```
-
-**GREEN**
-```java
-public FormResult submitForm(FormRequest request) {
-    if (request.getEmail() == null || request.getEmail().isBlank()) {
-        return FormResult.error("Email required");
-    }
-    // ...
-}
-```
-
-**Verify GREEN**
-```bash
-$ ./gradlew test --tests FormServiceTest
-PASS
-```
-
-**REFACTOR**
-Extract validation for multiple fields if needed.
-
-## Test Class Structure (권장 패턴)
+## 테스트 클래스 구조 (권장 패턴)
 
 ```java
 @ExtendWith(MockitoExtension.class)
@@ -385,48 +207,55 @@ class SomeServiceTest {
 }
 ```
 
-## Verification Checklist
+## 계층별 테스트 패턴
 
-Before marking work complete:
+| 계층 | 기반 클래스/어노테이션 | DI 방식 | 핵심 포인트 |
+|------|----------------------|---------|------------|
+| 도메인 서비스 | `@ExtendWith(MockitoExtension.class)` | `@InjectMocks` | Port 인터페이스만 Mock |
+| 영속성 어댑터 (Mock) | `@ExtendWith(MockitoExtension.class)` | `@BeforeEach` 수동 주입 | Mapper 별도 테스트 |
+| 영속성 어댑터 (DB) | `RepositoryTestBase` 상속 | `@Autowired` | `entityManager.flush/clear` |
+| MapStruct 매퍼 | 없음 | `INSTANCE` 직접 사용 | 전체 필드 + null 검증 |
+| RestDocs 컨트롤러 | `RestDocsSupport` 상속 | `@InjectMocks` | `initController()` + `document()` |
+| 클라이언트 어댑터 | `@ExtendWith(MockitoExtension.class)` | `@BeforeEach` 수동 주입 | null 응답 + `ReflectionTestUtils` |
 
-- [ ] Every new function/method has a test
-- [ ] Watched each test fail before implementing
-- [ ] Each test failed for expected reason (feature missing, not typo)
-- [ ] Wrote minimal code to pass each test
-- [ ] All tests pass
-- [ ] Output pristine (no errors, warnings)
-- [ ] Tests use real code (mocks only if unavoidable)
-- [ ] Edge cases and errors covered
+코드 예시, Parameterized Test 패턴, 계층별 체크리스트는 @layer-test-patterns.md 참조.
 
-Can't check all boxes? You skipped TDD. Start over.
+## 검증 체크리스트
 
-## When Stuck
+- [ ] 모든 새 함수/메서드에 테스트가 있다
+- [ ] 각 테스트가 실패하는 것을 구현 전에 확인했다
+- [ ] 각 테스트가 예상된 이유로 실패했다 (기능 미구현, 오타 아님)
+- [ ] 각 테스트를 통과시키는 최소 코드를 작성했다
+- [ ] 모든 테스트가 통과한다
+- [ ] 출력이 깨끗하다 (에러, 경고 없음)
+- [ ] 테스트가 실제 코드를 사용한다 (Mock은 불가피한 경우만)
+- [ ] 엣지 케이스와 에러가 커버되었다
+- [ ] 계층별 체크리스트 확인 (@layer-test-patterns.md)
 
-| Problem | Solution |
-|---------|----------|
-| Don't know how to test | Write wished-for API. Write assertion first. Ask your human partner. |
-| Test too complicated | Design too complicated. Simplify interface. |
-| Must mock everything | Code too coupled. Use dependency injection with Port interfaces. |
-| Test setup huge | Extract helpers or use `@BeforeEach`. Still complex? Simplify design. |
+모든 항목을 체크할 수 없다면 TDD를 건너뛴 것이다. 처음부터 다시 시작한다.
 
-## Debugging Integration
+## 막혔을 때
 
-Bug found? Write failing test reproducing it. Follow TDD cycle. Test proves fix and prevents regression.
+| 문제 | 해결 |
+|------|------|
+| 테스트 방법을 모르겠다 | 원하는 API를 작성한다. assertion부터 작성한다. 사용자에게 물어본다. |
+| 테스트가 너무 복잡하다 | 설계가 너무 복잡하다. 인터페이스를 단순화한다. |
+| 모든 걸 Mock해야 한다 | 코드 결합도가 높다. Port 인터페이스로 의존성 주입을 사용한다. |
+| 테스트 셋업이 거대하다 | 헬퍼를 추출하거나 `@BeforeEach`를 사용한다. 그래도 복잡하면 설계를 단순화한다. |
+| 버그를 발견했다 | 버그를 재현하는 실패 테스트를 작성한다. TDD 사이클을 따른다. 테스트 없이 수정하지 않는다. |
 
-Never fix bugs without a test.
+## 테스트 안티패턴
 
-## Testing Anti-Patterns
+Mock이나 테스트 유틸리티를 추가할 때 @testing-anti-patterns.md 를 읽고 흔한 함정을 피한다:
+- Mock 동작을 테스트하는 것 (실제 동작 대신)
+- 프로덕션 클래스에 테스트 전용 메서드 추가
+- 의존성을 이해하지 않고 Mock 사용
 
-When adding mocks or test utilities, read @testing-anti-patterns.md to avoid common pitfalls:
-- Testing mock behavior instead of real behavior
-- Adding test-only methods to production classes
-- Mocking without understanding dependencies
-
-## Final Rule
+## 최종 규칙
 
 ```
-Production code → test exists and failed first
-Otherwise → not TDD
+프로덕션 코드 → 테스트가 존재하고 먼저 실패했어야 한다
+그렇지 않으면 → TDD가 아니다
 ```
 
-No exceptions without your human partner's permission.
+사용자의 허락 없이 예외는 없다.

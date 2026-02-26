@@ -46,7 +46,7 @@ class ChampionControllerTest extends RestDocsSupport {
     @Test
     void getRotation() throws Exception {
         // given
-        String region = "kr";
+        String platformId = "kr";
         ChampionRotate championRotate = mock(ChampionRotate.class);
         given(championRotate.getMaxNewPlayerLevel()).willReturn(10);
         given(championRotate.getFreeChampionIds()).willReturn(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
@@ -56,7 +56,7 @@ class ChampionControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/{region}/champion/rotation", region)
+                        get("/api/v1/{platformId}/champion/rotation", platformId)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
@@ -65,7 +65,7 @@ class ChampionControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("region").description("조회할 지역 (e.g., kr)")
+                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)")
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),

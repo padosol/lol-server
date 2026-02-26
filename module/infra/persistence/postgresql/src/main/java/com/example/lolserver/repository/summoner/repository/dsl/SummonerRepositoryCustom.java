@@ -6,6 +6,6 @@ import java.util.List;
 
 public interface SummonerRepositoryCustom {
 
-    List<SummonerEntity> findAllByGameNameAndTagLineAndRegion(String gameName, String tagLine, String region);
-    List<SummonerEntity> findAllByGameNameAndTagLineAndRegionLike(String q, String region);
+    List<SummonerEntity> findAllByGameNameAndTagLineAndPlatformId(String gameName, String tagLine, String platformId);
+    List<SummonerEntity> findAllByGameNameAndTagLineAndPlatformIdLike(String q, String platformId);
 }

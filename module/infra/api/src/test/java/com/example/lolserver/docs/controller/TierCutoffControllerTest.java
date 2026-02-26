@@ -39,7 +39,7 @@ class TierCutoffControllerTest extends RestDocsSupport {
     @Test
     void getTierCutoffs_성공() throws Exception {
         // given
-        String region = "kr";
+        String platformId = "kr";
         List<TierCutoffReadModel> tierCutoffs = List.of(
                 new TierCutoffReadModel(1L, "RANKED_SOLO_5x5", "CHALLENGER", "KR", 1500, 10, 300, "2026-01-15T12:00:00"),
                 new TierCutoffReadModel(2L, "RANKED_SOLO_5x5", "GRANDMASTER", "KR", 800, 5, 700, "2026-01-15T12:00:00"),
@@ -47,11 +47,11 @@ class TierCutoffControllerTest extends RestDocsSupport {
                 new TierCutoffReadModel(4L, "RANKED_FLEX_SR", "GRANDMASTER", "KR", 600, 2, 500, "2026-01-15T12:00:00")
         );
 
-        given(tierCutoffService.getTierCutoffsByRegion(region)).willReturn(tierCutoffs);
+        given(tierCutoffService.getTierCutoffsByRegion(platformId)).willReturn(tierCutoffs);
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/{region}/tier-cutoffs", region)
+                        get("/api/v1/{platformId}/tier-cutoffs", platformId)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
@@ -60,7 +60,7 @@ class TierCutoffControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("region").description("서버 지역 (예: kr, na, euw)")
+                                parameterWithName("platformId").description("플랫폼 ID (예: kr, na, euw)")
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING)
@@ -75,8 +75,8 @@ class TierCutoffControllerTest extends RestDocsSupport {
                                         .description("큐 타입 (예: RANKED_SOLO_5x5, RANKED_FLEX_SR)"),
                                 fieldWithPath("data[].tier").type(JsonFieldType.STRING)
                                         .description("티어 (CHALLENGER, GRANDMASTER)"),
-                                fieldWithPath("data[].region").type(JsonFieldType.STRING)
-                                        .description("서버 지역"),
+                                fieldWithPath("data[].platformId").type(JsonFieldType.STRING)
+                                        .description("플랫폼 ID"),
                                 fieldWithPath("data[].minLeaguePoints").type(JsonFieldType.NUMBER)
                                         .description("해당 티어 진입에 필요한 최소 리그 포인트"),
                                 fieldWithPath("data[].lpChange").type(JsonFieldType.NUMBER)
@@ -93,18 +93,18 @@ class TierCutoffControllerTest extends RestDocsSupport {
     @Test
     void getTierCutoffsByQueue_성공() throws Exception {
         // given
-        String region = "kr";
+        String platformId = "kr";
         String queue = "RANKED_SOLO_5x5";
         List<TierCutoffReadModel> tierCutoffs = List.of(
                 new TierCutoffReadModel(1L, "RANKED_SOLO_5x5", "CHALLENGER", "KR", 1500, 10, 300, "2026-01-15T12:00:00"),
                 new TierCutoffReadModel(2L, "RANKED_SOLO_5x5", "GRANDMASTER", "KR", 800, 5, 700, "2026-01-15T12:00:00")
         );
 
-        given(tierCutoffService.getTierCutoffsByRegionAndQueue(region, queue)).willReturn(tierCutoffs);
+        given(tierCutoffService.getTierCutoffsByRegionAndQueue(platformId, queue)).willReturn(tierCutoffs);
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/{region}/tier-cutoffs", region)
+                        get("/api/v1/{platformId}/tier-cutoffs", platformId)
                                 .param("queue", queue)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
@@ -114,7 +114,7 @@ class TierCutoffControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("region").description("서버 지역 (예: kr, na, euw)")
+                                parameterWithName("platformId").description("플랫폼 ID (예: kr, na, euw)")
                         ),
                         queryParameters(
                                 parameterWithName("queue").description("큐 타입 필터 (예: RANKED_SOLO_5x5, RANKED_FLEX_SR)")
@@ -132,8 +132,8 @@ class TierCutoffControllerTest extends RestDocsSupport {
                                         .description("큐 타입 (예: RANKED_SOLO_5x5, RANKED_FLEX_SR)"),
                                 fieldWithPath("data[].tier").type(JsonFieldType.STRING)
                                         .description("티어 (CHALLENGER, GRANDMASTER)"),
-                                fieldWithPath("data[].region").type(JsonFieldType.STRING)
-                                        .description("서버 지역"),
+                                fieldWithPath("data[].platformId").type(JsonFieldType.STRING)
+                                        .description("플랫폼 ID"),
                                 fieldWithPath("data[].minLeaguePoints").type(JsonFieldType.NUMBER)
                                         .description("해당 티어 진입에 필요한 최소 리그 포인트"),
                                 fieldWithPath("data[].lpChange").type(JsonFieldType.NUMBER)
@@ -150,18 +150,18 @@ class TierCutoffControllerTest extends RestDocsSupport {
     @Test
     void getTierCutoff_성공() throws Exception {
         // given
-        String region = "kr";
+        String platformId = "kr";
         String queue = "RANKED_SOLO_5x5";
         String tier = "CHALLENGER";
         TierCutoffReadModel tierCutoff = new TierCutoffReadModel(
                 1L, "RANKED_SOLO_5x5", "CHALLENGER", "KR", 1500, 10, 300, "2026-01-15T12:00:00"
         );
 
-        given(tierCutoffService.getTierCutoff(region, queue, tier)).willReturn(tierCutoff);
+        given(tierCutoffService.getTierCutoff(platformId, queue, tier)).willReturn(tierCutoff);
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/{region}/tier-cutoffs/{queue}/{tier}", region, queue, tier)
+                        get("/api/v1/{platformId}/tier-cutoffs/{queue}/{tier}", platformId, queue, tier)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
@@ -170,7 +170,7 @@ class TierCutoffControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("region").description("서버 지역 (예: kr, na, euw)"),
+                                parameterWithName("platformId").description("플랫폼 ID (예: kr, na, euw)"),
                                 parameterWithName("queue").description("큐 타입 (예: RANKED_SOLO_5x5, RANKED_FLEX_SR)"),
                                 parameterWithName("tier").description("티어 (CHALLENGER, GRANDMASTER)")
                         ),
@@ -185,8 +185,8 @@ class TierCutoffControllerTest extends RestDocsSupport {
                                         .description("큐 타입 (예: RANKED_SOLO_5x5, RANKED_FLEX_SR)"),
                                 fieldWithPath("data.tier").type(JsonFieldType.STRING)
                                         .description("티어 (CHALLENGER, GRANDMASTER)"),
-                                fieldWithPath("data.region").type(JsonFieldType.STRING)
-                                        .description("서버 지역"),
+                                fieldWithPath("data.platformId").type(JsonFieldType.STRING)
+                                        .description("플랫폼 ID"),
                                 fieldWithPath("data.minLeaguePoints").type(JsonFieldType.NUMBER)
                                         .description("해당 티어 진입에 필요한 최소 리그 포인트"),
                                 fieldWithPath("data.lpChange").type(JsonFieldType.NUMBER)

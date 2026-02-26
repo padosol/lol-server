@@ -9,6 +9,7 @@ spring:
       - rabbitmq-local.yml
       - postgresql-local.yml
       - redis-local.yml
+      - clickhouse-local.yml
 
 ---
 spring:
@@ -22,6 +23,7 @@ spring:
       - rabbitmq-dev.yml
       - postgresql-dev.yml
       - redis-dev.yml
+      - clickhouse-dev.yml
 
 ---
 spring:
@@ -35,3 +37,4 @@ spring:
       - rabbitmq-prod.yml
       - postgresql-prod.yml
       - redis-prod.yml
+      - clickhouse-prod.yml

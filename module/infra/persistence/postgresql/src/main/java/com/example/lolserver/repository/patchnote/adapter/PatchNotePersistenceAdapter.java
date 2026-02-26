@@ -7,6 +7,7 @@ import com.example.lolserver.repository.patchnote.PatchNoteJpaRepository;
 import com.example.lolserver.repository.patchnote.entity.PatchNoteEntity;
 import com.example.lolserver.repository.patchnote.mapper.PatchNoteMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -21,7 +22,8 @@ public class PatchNotePersistenceAdapter implements PatchNotePersistencePort {
 
     @Override
     public List<PatchNoteSummaryReadModel> findAllSummary() {
-        List<PatchNoteEntity> entities = patchNoteJpaRepository.findAll();
+        List<PatchNoteEntity> entities = patchNoteJpaRepository.findAll(
+                Sort.by(Sort.Direction.DESC, "createdAt"));
         return patchNoteMapper.toSummaryReadModelList(entities);
     }
 

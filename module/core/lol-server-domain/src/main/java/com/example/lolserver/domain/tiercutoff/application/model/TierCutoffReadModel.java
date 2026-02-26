@@ -4,7 +4,7 @@ public record TierCutoffReadModel(
     Long id,
     String queue,
     String tier,
-    String region,
+    String platformId,
     int minLeaguePoints,
     int lpChange,
     int userCount,

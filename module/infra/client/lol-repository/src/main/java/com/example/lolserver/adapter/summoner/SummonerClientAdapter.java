@@ -18,16 +18,16 @@ public class SummonerClientAdapter implements SummonerClientPort {
     private final SummonerClientMapper summonerClientMapper;
 
     @Override
-    public Optional<Summoner> getSummoner(String gameName, String tagLine, String region) {
+    public Optional<Summoner> getSummoner(String gameName, String tagLine, String platformId) {
         SummonerVO summonerVO = summonerRestClient.getSummonerByGameNameAndTagLine(
-                region, gameName, tagLine);
+                platformId, gameName, tagLine);
         return Optional.ofNullable(summonerVO)
                 .map(summonerClientMapper::toDomain);
     }
 
     @Override
-    public Optional<Summoner> getSummonerByPuuid(String region, String puuid) {
-        SummonerVO summonerVO = summonerRestClient.getSummonerByPuuid(region, puuid);
+    public Optional<Summoner> getSummonerByPuuid(String platformId, String puuid) {
+        SummonerVO summonerVO = summonerRestClient.getSummonerByPuuid(platformId, puuid);
         return Optional.ofNullable(summonerVO)
                 .map(summonerClientMapper::toDomain);
     }

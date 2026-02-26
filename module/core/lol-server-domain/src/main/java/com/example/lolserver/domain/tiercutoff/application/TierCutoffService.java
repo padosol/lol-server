@@ -21,32 +21,32 @@ public class TierCutoffService {
 
     private final TierCutoffPersistencePort tierCutoffPersistencePort;
 
-    public List<TierCutoffReadModel> getTierCutoffsByRegion(String platform) {
-        return tierCutoffPersistencePort.findAllByRegion(resolveRegion(platform));
+    public List<TierCutoffReadModel> getTierCutoffsByRegion(String platformId) {
+        return tierCutoffPersistencePort.findAllByPlatformId(resolvePlatformId(platformId));
     }
 
-    public List<TierCutoffReadModel> getTierCutoffsByRegionAndQueue(String platform, String queue) {
-        String region = resolveRegion(platform);
-        return tierCutoffPersistencePort.findByRegionAndQueue(region, queue);
+    public List<TierCutoffReadModel> getTierCutoffsByRegionAndQueue(String platformId, String queue) {
+        String resolvedPlatformId = resolvePlatformId(platformId);
+        return tierCutoffPersistencePort.findByPlatformIdAndQueue(resolvedPlatformId, queue);
     }
 
-    public TierCutoffReadModel getTierCutoff(String platform, String queue, String tier) {
+    public TierCutoffReadModel getTierCutoff(String platformId, String queue, String tier) {
         String upperTier = tier.toUpperCase();
         validateTier(upperTier);
 
-        return tierCutoffPersistencePort.findByQueueAndTierAndRegion(
+        return tierCutoffPersistencePort.findByQueueAndTierAndPlatformId(
                         queue.toUpperCase(),
                         upperTier,
-                        resolveRegion(platform)
+                        resolvePlatformId(platformId)
                 )
                 .orElseThrow(() -> new CoreException(
                         ErrorType.NOT_FOUND_TIER_CUTOFF,
-                        String.format("존재하지 않는 티어 컷오프입니다. platform: %s, queue: %s, tier: %s", platform, queue, tier)
+                        String.format("존재하지 않는 티어 컷오프입니다. platform: %s, queue: %s, tier: %s", platformId, queue, tier)
                 ));
     }
 
-    private String resolveRegion(String platform) {
-        return Platform.valueOfName(platform).getRegion();
+    private String resolvePlatformId(String platformId) {
+        return Platform.valueOfName(platformId).getPlatformId();
     }
 
     private void validateTier(String tier) {

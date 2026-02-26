@@ -21,14 +21,14 @@ public class ChampionCacheAdapter implements ChampionPersistencePort {
     private static final Duration CACHE_TTL = Duration.ofHours(1); // Cache for 1 hour
 
     @Override
-    public Optional<ChampionRotate> getChampionRotate(String region) {
-        log.info("Attempting to retrieve champion rotation from cache for region: {}", region);
-        return Optional.ofNullable((ChampionRotate) redisTemplate.opsForValue().get(CACHE_KEY_PREFIX + region));
+    public Optional<ChampionRotate> getChampionRotate(String platformId) {
+        log.info("Attempting to retrieve champion rotation from cache for platformId: {}", platformId);
+        return Optional.ofNullable((ChampionRotate) redisTemplate.opsForValue().get(CACHE_KEY_PREFIX + platformId));
     }
 
     @Override
-    public void saveChampionRotate(String region, ChampionRotate championRotate) {
-        log.info("Caching champion rotation for region: {}", region);
-        redisTemplate.opsForValue().set(CACHE_KEY_PREFIX + region, championRotate, CACHE_TTL);
+    public void saveChampionRotate(String platformId, ChampionRotate championRotate) {
+        log.info("Caching champion rotation for platformId: {}", platformId);
+        redisTemplate.opsForValue().set(CACHE_KEY_PREFIX + platformId, championRotate, CACHE_TTL);
     }
 }

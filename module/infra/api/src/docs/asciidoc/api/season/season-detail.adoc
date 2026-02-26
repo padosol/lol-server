@@ -1,0 +1,12 @@
+[[season-detail]]
+=== 시즌 상세 조회
+
+==== HTTP Request
+include::{snippets}/season-detail/http-request.adoc[]
+
+==== Path Parameters
+include::{snippets}/season-detail/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/season-detail/http-response.adoc[]
+include::{snippets}/season-detail/response-fields.adoc[]

@@ -18,22 +18,22 @@ public class TierCutoffPersistenceAdapter implements TierCutoffPersistencePort {
     private final TierCutoffMapper tierCutoffMapper;
 
     @Override
-    public Optional<TierCutoffReadModel> findByQueueAndTierAndRegion(String queue, String tier, String region) {
-        return tierCutoffJpaRepository.findByQueueAndTierAndRegion(queue, tier, region)
+    public Optional<TierCutoffReadModel> findByQueueAndTierAndPlatformId(String queue, String tier, String platformId) {
+        return tierCutoffJpaRepository.findByQueueAndTierAndPlatformId(queue, tier, platformId)
                 .map(tierCutoffMapper::toReadModel);
     }
 
     @Override
-    public List<TierCutoffReadModel> findAllByRegion(String region) {
+    public List<TierCutoffReadModel> findAllByPlatformId(String platformId) {
         return tierCutoffMapper.toReadModelList(
-                tierCutoffJpaRepository.findAllByRegion(region)
+                tierCutoffJpaRepository.findAllByPlatformId(platformId)
         );
     }
 
     @Override
-    public List<TierCutoffReadModel> findByRegionAndQueue(String region, String queue) {
+    public List<TierCutoffReadModel> findByPlatformIdAndQueue(String platformId, String queue) {
         return tierCutoffMapper.toReadModelList(
-                tierCutoffJpaRepository.findByRegionAndQueue(region, queue)
+                tierCutoffJpaRepository.findByPlatformIdAndQueue(platformId, queue)
         );
     }
 }

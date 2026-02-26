@@ -4,6 +4,6 @@ import com.example.lolserver.domain.champion.domain.ChampionRotate;
 import java.util.Optional;
 
 public interface ChampionPersistencePort {
-    Optional<ChampionRotate> getChampionRotate(String region);
-    void saveChampionRotate(String region, ChampionRotate championRotate);
+    Optional<ChampionRotate> getChampionRotate(String platformId);
+    void saveChampionRotate(String platformId, ChampionRotate championRotate);
 }
