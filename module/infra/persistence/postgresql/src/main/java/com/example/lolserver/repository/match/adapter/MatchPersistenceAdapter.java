@@ -41,6 +41,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Component
@@ -116,28 +117,49 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                 .map(MatchDTO::getMatchId)
                 .toList();
 
-        // 배치 쿼리: DTO 프로젝션으로 필요한 컬럼만 SELECT
+        // 배치 쿼리: 병렬 실행으로 네트워크 라운드트립 최소화
+        CompletableFuture<Map<String, List<MatchSummonerDTO>>> summonersFuture =
+                CompletableFuture.supplyAsync(() ->
+                        matchRepositoryCustom.getMatchSummoners(matchIds)
+                                .stream()
+                                .collect(Collectors.groupingBy(
+                                        MatchSummonerDTO::getMatchId)));
+
+        CompletableFuture<Map<String, List<MatchTeamDTO>>> teamsFuture =
+                CompletableFuture.supplyAsync(() ->
+                        matchRepositoryCustom.getMatchTeams(matchIds)
+                                .stream()
+                                .collect(Collectors.groupingBy(
+                                        MatchTeamDTO::getMatchId)));
+
+        CompletableFuture<Map<String, List<ItemEventDTO>>> itemsFuture =
+                CompletableFuture.supplyAsync(() ->
+                        timelineRepositoryCustom
+                                .selectItemEventsByMatchIds(matchIds)
+                                .stream()
+                                .collect(Collectors.groupingBy(
+                                        ItemEventDTO::getMatchId)));
+
+        CompletableFuture<Map<String, List<SkillEventDTO>>> skillsFuture =
+                CompletableFuture.supplyAsync(() ->
+                        timelineRepositoryCustom
+                                .selectSkillEventsByMatchIds(matchIds)
+                                .stream()
+                                .collect(Collectors.groupingBy(
+                                        SkillEventDTO::getMatchId)));
+
+        CompletableFuture.allOf(
+                summonersFuture, teamsFuture, itemsFuture, skillsFuture
+        ).join();
+
         Map<String, List<MatchSummonerDTO>> participantsByMatch =
-                matchRepositoryCustom.getMatchSummoners(matchIds).stream()
-                        .collect(Collectors.groupingBy(
-                                MatchSummonerDTO::getMatchId));
-
+                summonersFuture.join();
         Map<String, List<MatchTeamDTO>> teamsByMatch =
-                matchRepositoryCustom.getMatchTeams(matchIds).stream()
-                        .collect(Collectors.groupingBy(
-                                MatchTeamDTO::getMatchId));
-
+                teamsFuture.join();
         Map<String, List<ItemEventDTO>> itemEventsByMatch =
-                timelineRepositoryCustom
-                        .selectItemEventsByMatchIds(matchIds).stream()
-                        .collect(Collectors.groupingBy(
-                                ItemEventDTO::getMatchId));
-
+                itemsFuture.join();
         Map<String, List<SkillEventDTO>> skillEventsByMatch =
-                timelineRepositoryCustom
-                        .selectSkillEventsByMatchIds(matchIds).stream()
-                        .collect(Collectors.groupingBy(
-                                SkillEventDTO::getMatchId));
+                skillsFuture.join();
 
         List<GameReadModel> gameDataList = matchDTOs.stream()
                 .map(matchDTO -> assembleGameDataFromDTO(
