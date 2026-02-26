@@ -13,11 +13,15 @@ public interface ChampionStatsQueryPort {
 
     List<ChampionWinRateResponse> getChampionWinRates(int championId, String patch, String platformId, String tier);
 
-    Map<String, List<ChampionMatchupResponse>> getChampionMatchups(int championId, String patch, String platformId, String tier);
+    Map<String, List<ChampionMatchupResponse>> getChampionMatchups(
+            int championId, String patch, String platformId, String tier);
 
-    Map<String, List<ChampionItemBuildResponse>> getChampionItemBuilds(int championId, String patch, String platformId, String tier);
+    Map<String, List<ChampionItemBuildResponse>> getChampionItemBuilds(
+            int championId, String patch, String platformId, String tier);
 
-    Map<String, List<ChampionRuneBuildResponse>> getChampionRuneBuilds(int championId, String patch, String platformId, String tier);
+    Map<String, List<ChampionRuneBuildResponse>> getChampionRuneBuilds(
+            int championId, String patch, String platformId, String tier);
 
-    Map<String, List<ChampionSkillBuildResponse>> getChampionSkillBuilds(int championId, String patch, String platformId, String tier);
+    Map<String, List<ChampionSkillBuildResponse>> getChampionSkillBuilds(
+            int championId, String patch, String platformId, String tier);
 }
