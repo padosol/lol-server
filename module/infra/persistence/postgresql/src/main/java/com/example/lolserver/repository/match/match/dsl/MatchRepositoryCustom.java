@@ -13,7 +13,7 @@ public interface MatchRepositoryCustom {
 
     Slice<MatchEntity> getMatches(String puuid, Integer queueId, Pageable pageable);
 
-    Slice<MatchDTO> getMatchDTOs(String puuid, Integer queueId, Pageable pageable);
+    Slice<MatchDTO> getMatchDTOs(String puuid, Integer season, Integer queueId, Pageable pageable);
 
     List<MatchSummonerDTO> getMatchSummoners(List<String> matchIds);
 

@@ -103,10 +103,10 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
 
     @Override
     public Page<GameReadModel> getMatchesBatch(
-            String puuid, Integer queueId, Pageable pageable
+            String puuid, Integer season, Integer queueId, Pageable pageable
     ) {
         Slice<MatchDTO> matchesSlice =
-                matchRepositoryCustom.getMatchDTOs(puuid, queueId, pageable);
+                matchRepositoryCustom.getMatchDTOs(puuid, season, queueId, pageable);
         List<MatchDTO> matchDTOs = matchesSlice.getContent();
 
         if (matchDTOs.isEmpty()) {

@@ -76,11 +76,13 @@ public class MatchController {
     public ResponseEntity<ApiResponse<SliceResponse<GameReadModel>>> fetchMatchesBySummoner(
             @PathVariable("platformId") String platformId,
             @PathVariable("puuid") String puuid,
+            @RequestParam(required = false) Integer season,
             @RequestParam(required = false) Integer queueId,
             @RequestParam(required = false) Integer pageNo
     ) {
         MatchCommand matchCommand = MatchCommand.builder()
                 .puuid(puuid)
+                .season(season)
                 .queueId(queueId)
                 .pageNo(pageNo != null ? pageNo : 1)
                 .platformId(platformId)

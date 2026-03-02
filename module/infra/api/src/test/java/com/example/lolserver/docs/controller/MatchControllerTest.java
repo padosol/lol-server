@@ -297,6 +297,7 @@ class MatchControllerTest extends RestDocsSupport {
         // when & then
         mockMvc.perform(
                         get("/api/v1/{platformId}/summoners/{puuid}/matches", "kr", puuid)
+                                .param("season", "2025")
                                 .param("queueId", "420")
                                 .param("pageNo", "1")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -311,6 +312,7 @@ class MatchControllerTest extends RestDocsSupport {
                                 parameterWithName("puuid").description("조회할 소환사의 PUUID")
                         ),
                         queryParameters(
+                                parameterWithName("season").description("시즌 (연도)").optional(),
                                 parameterWithName("queueId").description("큐 ID (e.g., 420:솔로랭크, 430:일반, 450:칼바람)").optional(),
                                 parameterWithName("pageNo").description("페이지 번호 (1부터 시작)").optional()
                         ),

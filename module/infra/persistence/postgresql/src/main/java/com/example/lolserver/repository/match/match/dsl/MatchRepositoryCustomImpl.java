@@ -73,9 +73,13 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
                 ? matchSummonerEntity.puuid.eq(puuid) : null;
     }
 
+    private BooleanExpression seasonEq(Integer season) {
+        return season != null ? matchEntity.season.eq(season) : null;
+    }
+
     @Override
     public Slice<MatchDTO> getMatchDTOs(
-            String puuid, Integer queueId, Pageable pageable
+            String puuid, Integer season, Integer queueId, Pageable pageable
     ) {
         int pageSize = pageable.getPageSize();
 
@@ -101,6 +105,7 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
                 .on(matchSummonerEntity.matchId.eq(matchEntity.matchId))
                 .where(
                         puuidEq(puuid),
+                        seasonEq(season),
                         queueIdEq(queueId),
                         matchEntity.gameMode.equalsIgnoreCase("CLASSIC")
                                 .or(matchEntity.gameMode

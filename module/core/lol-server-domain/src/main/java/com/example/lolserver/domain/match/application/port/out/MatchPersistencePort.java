@@ -22,7 +22,7 @@ public interface MatchPersistencePort {
 
     Page<String> findAllMatchIds(String puuid, Integer queueId, Pageable pageable);
 
-    Page<GameReadModel> getMatchesBatch(String puuid, Integer queueId, Pageable pageable);
+    Page<GameReadModel> getMatchesBatch(String puuid, Integer season, Integer queueId, Pageable pageable);
 
     List<DailyGameCountReadModel> getDailyGameCounts(
         String puuid, Integer season, Integer queueId, LocalDateTime startDate);

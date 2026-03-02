@@ -52,7 +52,8 @@ public class MatchService {
         Pageable pageable = PageRequest.of(
                 matchCommand.getPageNo(), 20, Sort.by(Sort.Direction.DESC, "match"));
 
-        return matchPersistencePort.getMatchesBatch(matchCommand.getPuuid(), matchCommand.getQueueId(), pageable);
+        return matchPersistencePort.getMatchesBatch(
+                matchCommand.getPuuid(), matchCommand.getSeason(), matchCommand.getQueueId(), pageable);
     }
 
     public Page<String> findAllMatchIds(MatchCommand matchCommand) {
