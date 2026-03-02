@@ -472,7 +472,6 @@ class MatchPersistenceAdapterTest {
         entity.setParticipantId(1);
         entity.setSkillSlot(1);
         entity.setTimestamp(30000L);
-        entity.setType("SKILL_LEVEL_UP");
         return entity;
     }
 }

@@ -5,8 +5,8 @@ import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
 import com.example.lolserver.repository.match.entity.MatchTeamEntity;
 import com.example.lolserver.repository.match.entity.value.matchsummoner.ItemValue;
-import com.example.lolserver.repository.match.entity.value.matchsummoner.StatValue;
-import com.example.lolserver.repository.match.entity.value.matchsummoner.StyleValue;
+import com.example.lolserver.repository.match.entity.value.matchsummoner.PerkStatValue;
+import com.example.lolserver.repository.match.entity.value.matchsummoner.PerkStyleValue;
 import com.example.lolserver.repository.match.match.MatchRepository;
 import com.example.lolserver.repository.match.matchsummoner.MatchSummonerRepository;
 import com.example.lolserver.repository.match.matchteam.MatchTeamRepository;
@@ -155,17 +155,21 @@ class MatchRepositoryIntegrationTest extends RepositoryTestBase {
                 .item6(3340)
                 .build();
 
-        StatValue statValue = StatValue.builder()
-                .defense(50)
-                .flex(30)
-                .offense(40)
+        PerkStatValue perkStatValue = PerkStatValue.builder()
+                .statPerkDefense(50)
+                .statPerkFlex(30)
+                .statPerkOffense(40)
                 .build();
 
-        StyleValue styleValue = StyleValue.builder()
-                .primaryRuneId(8000)
-                .secondaryRuneId(8100)
-                .primaryRuneIds("8005,9111,9104,8299")
-                .secondaryRuneIds("8139,8135")
+        PerkStyleValue perkStyleValue = PerkStyleValue.builder()
+                .primaryStyleId(8000)
+                .primaryPerk0(8005)
+                .primaryPerk1(9111)
+                .primaryPerk2(9104)
+                .primaryPerk3(8299)
+                .subStyleId(8100)
+                .subPerk0(8139)
+                .subPerk1(8135)
                 .build();
 
         MatchSummonerEntity summoner = MatchSummonerEntity.builder()
@@ -180,8 +184,8 @@ class MatchRepositoryIntegrationTest extends RepositoryTestBase {
                 .win(true)
                 .teamId(100)
                 .item(itemValue)
-                .statValue(statValue)
-                .styleValue(styleValue)
+                .perkStat(perkStatValue)
+                .perkStyle(perkStyleValue)
                 .build();
 
         // when
@@ -198,8 +202,8 @@ class MatchRepositoryIntegrationTest extends RepositoryTestBase {
                 .findFirst()
                 .orElseThrow();
         assertThat(found.getItem().getItem0()).isEqualTo(3006);
-        assertThat(found.getStatValue().getDefense()).isEqualTo(50);
-        assertThat(found.getStyleValue().getPrimaryRuneId()).isEqualTo(8000);
+        assertThat(found.getPerkStat().getStatPerkDefense()).isEqualTo(50);
+        assertThat(found.getPerkStyle().getPrimaryStyleId()).isEqualTo(8000);
     }
 
     @DisplayName("MatchTeamEntity를 저장하고 조회할 수 있다")

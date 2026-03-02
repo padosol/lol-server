@@ -7,8 +7,8 @@ import com.example.lolserver.repository.match.dto.QMatchDTO;
 import com.example.lolserver.repository.match.dto.QMatchTeamDTO;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.value.matchsummoner.ItemValue;
-import com.example.lolserver.repository.match.entity.value.matchsummoner.StatValue;
-import com.example.lolserver.repository.match.entity.value.matchsummoner.StyleValue;
+import com.example.lolserver.repository.match.entity.value.matchsummoner.PerkStatValue;
+import com.example.lolserver.repository.match.entity.value.matchsummoner.PerkStyleValue;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -34,7 +34,8 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public Slice<MatchEntity> getMatches(String puuid, Integer queueId, Pageable pageable) {
+    public Slice<MatchEntity> getMatches(String puuid, Integer queueId,
+            Pageable pageable) {
         int pageSize = pageable.getPageSize();
 
         List<MatchEntity> result = jpaQueryFactory.selectFrom(matchEntity)
@@ -44,7 +45,8 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
                         puuidEq(puuid),
                         queueIdEq(queueId),
                         matchEntity.gameMode.equalsIgnoreCase("CLASSIC")
-                                .or(matchEntity.gameMode.equalsIgnoreCase("CHERRY"))
+                                .or(matchEntity.gameMode
+                                        .equalsIgnoreCase("CHERRY"))
                 )
                 .orderBy(matchEntity.gameEndTimestamp.desc())
                 .offset((long) pageable.getPageNumber() * pageSize)
@@ -67,7 +69,8 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
     }
 
     private BooleanExpression puuidEq(String puuid) {
-        return StringUtils.hasText(puuid) ? matchSummonerEntity.puuid.eq(puuid) : null;
+        return StringUtils.hasText(puuid)
+                ? matchSummonerEntity.puuid.eq(puuid) : null;
     }
 
     @Override
@@ -170,8 +173,8 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
                         matchSummonerEntity.playerAugment3,
                         matchSummonerEntity.playerAugment4,
                         itemProjection(),
-                        statValueProjection(),
-                        styleValueProjection()
+                        perkStatProjection(),
+                        perkStyleProjection()
                 ))
                 .from(matchSummonerEntity)
                 .where(matchSummonerEntity.matchId.in(matchIds))
@@ -190,21 +193,27 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
         ).as("item");
     }
 
-    private com.querydsl.core.types.Expression<StatValue> statValueProjection() {
-        return Projections.bean(StatValue.class,
-                matchSummonerEntity.statValue.defense,
-                matchSummonerEntity.statValue.flex,
-                matchSummonerEntity.statValue.offense
-        ).as("statValue");
+    private com.querydsl.core.types.Expression<PerkStatValue>
+            perkStatProjection() {
+        return Projections.bean(PerkStatValue.class,
+                matchSummonerEntity.perkStat.statPerkDefense,
+                matchSummonerEntity.perkStat.statPerkFlex,
+                matchSummonerEntity.perkStat.statPerkOffense
+        ).as("perkStat");
     }
 
-    private com.querydsl.core.types.Expression<StyleValue> styleValueProjection() {
-        return Projections.bean(StyleValue.class,
-                matchSummonerEntity.styleValue.primaryRuneId,
-                matchSummonerEntity.styleValue.primaryRuneIds,
-                matchSummonerEntity.styleValue.secondaryRuneId,
-                matchSummonerEntity.styleValue.secondaryRuneIds
-        ).as("styleValue");
+    private com.querydsl.core.types.Expression<PerkStyleValue>
+            perkStyleProjection() {
+        return Projections.bean(PerkStyleValue.class,
+                matchSummonerEntity.perkStyle.primaryStyleId,
+                matchSummonerEntity.perkStyle.primaryPerk0,
+                matchSummonerEntity.perkStyle.primaryPerk1,
+                matchSummonerEntity.perkStyle.primaryPerk2,
+                matchSummonerEntity.perkStyle.primaryPerk3,
+                matchSummonerEntity.perkStyle.subStyleId,
+                matchSummonerEntity.perkStyle.subPerk0,
+                matchSummonerEntity.perkStyle.subPerk1
+        ).as("perkStyle");
     }
 
     @Override
@@ -218,17 +227,7 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
                         matchTeamEntity.baronKills,
                         matchTeamEntity.dragonKills,
                         matchTeamEntity.towerKills,
-                        matchTeamEntity.inhibitorKills,
-                        matchTeamEntity.champion1Id,
-                        matchTeamEntity.champion2Id,
-                        matchTeamEntity.champion3Id,
-                        matchTeamEntity.champion4Id,
-                        matchTeamEntity.champion5Id,
-                        matchTeamEntity.pick1Turn,
-                        matchTeamEntity.pick2Turn,
-                        matchTeamEntity.pick3Turn,
-                        matchTeamEntity.pick4Turn,
-                        matchTeamEntity.pick5Turn
+                        matchTeamEntity.inhibitorKills
                 ))
                 .from(matchTeamEntity)
                 .where(matchTeamEntity.matchId.in(matchIds))

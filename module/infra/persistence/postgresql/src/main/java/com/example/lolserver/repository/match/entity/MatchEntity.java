@@ -40,6 +40,8 @@ public class MatchEntity {
 
     private String gameVersion;
 
+    private String patchVersion;
+
     private int mapId;
     private int queueId;
     private String platformId;

@@ -32,6 +32,9 @@ public class MatchTeamEntity {
 
     private boolean win;
 
+    private boolean atakhanFirst;
+    private int atakhanKills;
+
     private boolean baronFirst;
     private int baronKills;
 
@@ -40,6 +43,9 @@ public class MatchTeamEntity {
 
     private boolean dragonFirst;
     private int dragonKills;
+
+    private boolean hordeFirst;
+    private int hordeKills;
 
     private boolean inhibitorFirst;
     private int inhibitorKills;
@@ -50,18 +56,7 @@ public class MatchTeamEntity {
     private boolean towerFirst;
     private int towerKills;
 
-    private int champion1Id;
-    private int pick1Turn;
-
-    private int champion2Id;
-    private int pick2Turn;
-
-    private int champion3Id;
-    private int pick3Turn;
-
-    private int champion4Id;
-    private int pick4Turn;
-
-    private int champion5Id;
-    private int pick5Turn;
+    private int featEpicMonsterKill;
+    private int featFirstBlood;
+    private int featFirstTurret;
 }

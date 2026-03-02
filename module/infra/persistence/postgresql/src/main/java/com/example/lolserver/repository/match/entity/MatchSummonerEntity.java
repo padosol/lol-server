@@ -2,8 +2,8 @@ package com.example.lolserver.repository.match.entity;
 
 
 import com.example.lolserver.repository.match.entity.value.matchsummoner.ItemValue;
-import com.example.lolserver.repository.match.entity.value.matchsummoner.StatValue;
-import com.example.lolserver.repository.match.entity.value.matchsummoner.StyleValue;
+import com.example.lolserver.repository.match.entity.value.matchsummoner.PerkStatValue;
+import com.example.lolserver.repository.match.entity.value.matchsummoner.PerkStyleValue;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,9 +16,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(
-        name = "match_summoner",
+        name = "match_participant",
         uniqueConstraints = @UniqueConstraint(
-                name = "unique_index_match_id_and_puuid",
+                name = "unique_index_match_participant_puuid_match_id",
                 columnNames = {"puuid", "match_id"}
         )
 )
@@ -26,7 +26,7 @@ public class MatchSummonerEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "match_sumoner_id")
+    @Column(name = "match_participant_id")
     private Long id;
 
     private String puuid;
@@ -39,6 +39,7 @@ public class MatchSummonerEntity {
     // 유저 정보
     private String riotIdGameName;
     private String riotIdTagline;
+    private String summonerName;
 
     private int profileIcon;
     private int participantId;
@@ -63,9 +64,13 @@ public class MatchSummonerEntity {
     private int spell2Casts;
     private int spell3Casts;
     private int spell4Casts;
+    @Column(name = "summoner1casts")
     private int summoner1Casts;
+    @Column(name = "summoner1id")
     private int summoner1Id;
+    @Column(name = "summoner2casts")
     private int summoner2Casts;
+    @Column(name = "summoner2id")
     private int summoner2Id;
     private int summonerLevel;
     private int bountyLevel;
@@ -140,6 +145,7 @@ public class MatchSummonerEntity {
     private int damageDealtToBuildings;
     private int damageDealtToObjectives;
     private int damageDealtToTurrets;
+    private int damageDealtToEpicMonsters;
     private int damageSelfMitigated;
     private int totalDamageDealt;
     private int totalDamageDealtToChampions;
@@ -160,10 +166,12 @@ public class MatchSummonerEntity {
     private int largestMultiKill;
     private int longestTimeSpentLiving;
 
-    // 아레나
+    // 핑
     private int allInPings;
     private int assistMePings;
+    private int basicPings;
     private int commandPings;
+    private int dangerPings;
     private boolean eligibleForProgression;
     private int enemyMissingPings;
     private int enemyVisionPings;
@@ -188,20 +196,24 @@ public class MatchSummonerEntity {
     private int playerAugment2;
     private int playerAugment3;
     private int playerAugment4;
+    private int playerAugment5;
+    private int playerAugment6;
     private int playerSubteamId;
     private int pushPings;
+    private int retreatPings;
     private int subteamPlacement;
     private int totalAllyJungleMinionsKilled;
     private int totalEnemyJungleMinionsKilled;
     private int visionClearedPings;
+    private int roleBoundItem;
 
     @Embedded
     private ItemValue item;
 
     @Embedded
-    private StatValue statValue;
+    private PerkStatValue perkStat;
 
     @Embedded
-    private StyleValue styleValue;
+    private PerkStyleValue perkStyle;
 
 }

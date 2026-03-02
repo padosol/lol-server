@@ -1,6 +1,5 @@
 package com.example.lolserver.repository.match.entity.timeline.events;
 
-import com.example.lolserver.repository.match.entity.timeline.TimeLineEventEntity;
 import com.example.lolserver.repository.match.entity.timeline.value.PositionValue;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -13,18 +12,15 @@ import lombok.Setter;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "kill_events")
+@Table(name = "kill_event")
 public class KillEventsEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "kill_event_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "time_line_event_id",
-            foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    private TimeLineEventEntity timeLineEvent;
+    @Column(name = "match_id")
+    private String matchId;
 
     private String assistingParticipantIds;
     private int bounty;
@@ -37,6 +33,11 @@ public class KillEventsEntity {
     private int shutdownBounty;
     private int victimId;
 
+    @Column(columnDefinition = "jsonb")
+    private String victimDamageDealt;
+
+    @Column(columnDefinition = "jsonb")
+    private String victimDamageReceived;
+
     private long timestamp;
-    private String type;
 }

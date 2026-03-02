@@ -1,6 +1,5 @@
 package com.example.lolserver.repository.match.dto;
 
-import com.querydsl.core.annotations.QueryProjection;
 import lombok.Getter;
 
 import java.time.LocalDate;
@@ -9,10 +8,9 @@ import java.time.LocalDate;
 public class DailyGameCountDTO {
 
     private LocalDate gameDate;
-    private long gameCount;
+    private Long gameCount;
 
-    @QueryProjection
-    public DailyGameCountDTO(LocalDate gameDate, long gameCount) {
+    public DailyGameCountDTO(LocalDate gameDate, Long gameCount) {
         this.gameDate = gameDate;
         this.gameCount = gameCount;
     }

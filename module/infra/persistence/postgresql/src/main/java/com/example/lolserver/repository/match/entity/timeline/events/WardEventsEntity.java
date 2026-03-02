@@ -1,6 +1,5 @@
 package com.example.lolserver.repository.match.entity.timeline.events;
 
-import com.example.lolserver.repository.match.entity.timeline.TimeLineEventEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,22 +11,18 @@ import lombok.Setter;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "ward_events")
+@Table(name = "ward_event")
 public class WardEventsEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ward_event_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "time_line_event_id",
-            foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    private TimeLineEventEntity timeLineEvent;
+    @Column(name = "match_id")
+    private String matchId;
 
-    private int participantId;
+    private int creatorId;
     private String wardType;
 
     private long timestamp;
-    private String type;
 }

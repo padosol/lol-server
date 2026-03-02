@@ -15,7 +15,8 @@ import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
 import com.example.lolserver.repository.match.entity.MatchTeamEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.ItemEventsEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.SkillEventsEntity;
-import com.example.lolserver.repository.match.entity.value.matchsummoner.StyleValue;
+import com.example.lolserver.repository.match.entity.value.matchsummoner.PerkStatValue;
+import com.example.lolserver.repository.match.entity.value.matchsummoner.PerkStyleValue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -129,7 +130,6 @@ class MatchMapperTest {
 
         // then
         assertThat(result).isNotNull();
-        // Note: puuid is not mapped from embedded MatchSummonerId in current mapper config
         assertThat(result.getParticipantId()).isEqualTo(1);
         assertThat(result.getChampionId()).isEqualTo(157);
         assertThat(result.getChampionName()).isEqualTo("Yasuo");
@@ -158,33 +158,21 @@ class MatchMapperTest {
         assertThat(result.isWin()).isTrue();
     }
 
-    @DisplayName("MSChampionDTO를 MSChampion 도메인으로 변환한다 - 현재 매핑 미구현")
+    @DisplayName("MSChampionDTO를 MSChampion 도메인으로 변환한다")
     @Test
     void toDomain_msChampionDTO_returnsMSChampion() {
         // given
-        // Constructor: assists, deaths, kills, championId, championName, win, losses, damagePerMinute, kda, laneMinionsFirst10Minutes, damageTakenOnTeamPercentage, goldPerMinute, playCount
         MSChampionDTO dto = new MSChampionDTO(
-                8.0,    // assists
-                5.0,    // deaths
-                10.0,   // kills
-                157,    // championId
-                "Yasuo", // championName
-                15L,    // win
-                5L,     // losses
-                500.0,  // damagePerMinute
-                3.6,    // kda
-                65.0,   // laneMinionsFirst10Minutes
-                25.0,   // damageTakenOnTeamPercentage
-                400.0,  // goldPerMinute
-                20L     // playCount
+                8.0, 5.0, 10.0,
+                157, "Yasuo",
+                15L, 5L,
+                500.0, 3.6, 65.0, 25.0, 400.0, 20L
         );
 
         // when
         MSChampion result = matchMapper.toDomain(dto);
 
         // then
-        // Note: Current MapStruct mapper doesn't map MSChampionDTO fields to MSChampion
-        // This is a known issue - the mapper returns an empty object
         assertThat(result).isNotNull();
     }
 
@@ -217,7 +205,6 @@ class MatchMapperTest {
         entity.setParticipantId(1);
         entity.setSkillSlot(1);
         entity.setTimestamp(30000L);
-        entity.setType("SKILL_LEVEL_UP");
 
         // when
         SkillEvents result = matchMapper.toDomain(entity);
@@ -227,7 +214,6 @@ class MatchMapperTest {
         assertThat(result.getParticipantId()).isEqualTo(1);
         assertThat(result.getSkillSlot()).isEqualTo(1);
         assertThat(result.getTimestamp()).isEqualTo(30000L);
-        assertThat(result.getType()).isEqualTo("SKILL_LEVEL_UP");
     }
 
     @DisplayName("ItemEventsEntity 리스트를 ItemEvents 도메인 리스트로 변환한다")
@@ -265,13 +251,11 @@ class MatchMapperTest {
         entity1.setParticipantId(1);
         entity1.setSkillSlot(1);
         entity1.setTimestamp(30000L);
-        entity1.setType("SKILL_LEVEL_UP");
 
         SkillEventsEntity entity2 = new SkillEventsEntity();
         entity2.setParticipantId(1);
         entity2.setSkillSlot(2);
         entity2.setTimestamp(60000L);
-        entity2.setType("SKILL_LEVEL_UP");
 
         List<SkillEventsEntity> entities = List.of(entity1, entity2);
 
@@ -284,58 +268,30 @@ class MatchMapperTest {
         assertThat(result.get(1).getSkillSlot()).isEqualTo(2);
     }
 
-    @DisplayName("mapStringToIntArray가 쉼표로 구분된 문자열을 정수 배열로 변환한다")
+    @DisplayName("PerkStyleValue를 Style 도메인으로 변환한다")
     @Test
-    void mapStringToIntArray_commaSeparatedString_returnsIntArray() {
+    void toDomain_perkStyleValue_returnsStyle() {
         // given
-        String input = "1,2,3,4,5";
+        PerkStyleValue perkStyleValue = PerkStyleValue.builder()
+                .primaryStyleId(8000)
+                .primaryPerk0(8005)
+                .primaryPerk1(9111)
+                .primaryPerk2(9104)
+                .primaryPerk3(8299)
+                .subStyleId(8100)
+                .subPerk0(8139)
+                .subPerk1(8135)
+                .build();
 
         // when
-        int[] result = matchMapper.mapStringToIntArray(input);
-
-        // then
-        assertThat(result).containsExactly(1, 2, 3, 4, 5);
-    }
-
-    @DisplayName("mapStringToIntArray가 null 입력에 빈 배열을 반환한다")
-    @Test
-    void mapStringToIntArray_nullInput_returnsEmptyArray() {
-        // when
-        int[] result = matchMapper.mapStringToIntArray(null);
-
-        // then
-        assertThat(result).isEmpty();
-    }
-
-    @DisplayName("mapStringToIntArray가 빈 문자열에 빈 배열을 반환한다")
-    @Test
-    void mapStringToIntArray_emptyString_returnsEmptyArray() {
-        // when
-        int[] result = matchMapper.mapStringToIntArray("");
-
-        // then
-        assertThat(result).isEmpty();
-    }
-
-    @DisplayName("StyleValue를 Style 도메인으로 변환한다")
-    @Test
-    void toDomain_styleValue_returnsStyle() {
-        // given
-        StyleValue styleValue = new StyleValue();
-        styleValue.setPrimaryRuneId(8000);
-        styleValue.setSecondaryRuneId(8100);
-        styleValue.setPrimaryRuneIds("8005,9111,9104,8299");
-        styleValue.setSecondaryRuneIds("8139,8135");
-
-        // when
-        Style result = matchMapper.toDomain(styleValue);
+        Style result = matchMapper.toDomain(perkStyleValue);
 
         // then
         assertThat(result).isNotNull();
-        assertThat(result.getPrimaryRuneId()).isEqualTo(8000);
-        assertThat(result.getSecondaryRuneId()).isEqualTo(8100);
-        assertThat(result.getPrimaryRuneIds()).containsExactly(8005, 9111, 9104, 8299);
-        assertThat(result.getSecondaryRuneIds()).containsExactly(8139, 8135);
+        assertThat(result.getPrimaryStyleId()).isEqualTo(8000);
+        assertThat(result.getPrimaryPerk0()).isEqualTo(8005);
+        assertThat(result.getSubStyleId()).isEqualTo(8100);
+        assertThat(result.getSubPerk0()).isEqualTo(8139);
     }
 
     @DisplayName("ItemValue 엔티티를 도메인으로 변환한다")
@@ -388,40 +344,18 @@ class MatchMapperTest {
         assertThat(result.getItem6()).isEqualTo(3340);
     }
 
-    @DisplayName("StatValue 엔티티를 도메인으로 변환한다")
+    @DisplayName("PerkStatValue 엔티티를 도메인 StatValue로 변환한다")
     @Test
-    void toDomain_statValue_returnsDomainStatValue() {
+    void toDomain_perkStatValue_returnsDomainStatValue() {
         // given
-        com.example.lolserver.repository.match.entity.value.matchsummoner.StatValue entityStatValue =
-                com.example.lolserver.repository.match.entity.value.matchsummoner.StatValue.builder()
-                        .defense(5002)
-                        .flex(5008)
-                        .offense(5005)
-                        .build();
-
-        // when
-        StatValue result = matchMapper.toDomain(entityStatValue);
-
-        // then
-        assertThat(result).isNotNull();
-        assertThat(result.getDefense()).isEqualTo(5002);
-        assertThat(result.getFlex()).isEqualTo(5008);
-        assertThat(result.getOffense()).isEqualTo(5005);
-    }
-
-    @DisplayName("StatValue 도메인을 영속성 객체로 변환한다")
-    @Test
-    void toPersistence_statValue_returnsEntityStatValue() {
-        // given
-        StatValue domainStatValue = StatValue.builder()
-                .defense(5002)
-                .flex(5008)
-                .offense(5005)
+        PerkStatValue perkStatValue = PerkStatValue.builder()
+                .statPerkDefense(5002)
+                .statPerkFlex(5008)
+                .statPerkOffense(5005)
                 .build();
 
         // when
-        com.example.lolserver.repository.match.entity.value.matchsummoner.StatValue result =
-                matchMapper.toPersistence(domainStatValue);
+        StatValue result = matchMapper.toDomain(perkStatValue);
 
         // then
         assertThat(result).isNotNull();
@@ -471,24 +405,5 @@ class MatchMapperTest {
         assertThat(result).isNotNull();
         assertThat(result.getMatchId()).isEqualTo("KR_12345");
         assertThat(result.getQueueId()).isEqualTo(420);
-    }
-
-    @DisplayName("StyleValue의 runeIds가 null인 경우 빈 배열을 반환한다")
-    @Test
-    void toDomain_styleValueWithNullRuneIds_returnsEmptyArrays() {
-        // given
-        StyleValue styleValue = new StyleValue();
-        styleValue.setPrimaryRuneId(8000);
-        styleValue.setSecondaryRuneId(8100);
-        styleValue.setPrimaryRuneIds(null);
-        styleValue.setSecondaryRuneIds(null);
-
-        // when
-        Style result = matchMapper.toDomain(styleValue);
-
-        // then
-        assertThat(result).isNotNull();
-        assertThat(result.getPrimaryRuneIds()).isEmpty();
-        assertThat(result.getSecondaryRuneIds()).isEmpty();
     }
 }

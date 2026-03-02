@@ -11,10 +11,14 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Style {
 
-    private int primaryRuneId;
-    private int[] primaryRuneIds;
+    private int primaryStyleId;
+    private int primaryPerk0;
+    private int primaryPerk1;
+    private int primaryPerk2;
+    private int primaryPerk3;
 
-    private int secondaryRuneId;
-    private int[] secondaryRuneIds;
+    private int subStyleId;
+    private int subPerk0;
+    private int subPerk1;
 
 }

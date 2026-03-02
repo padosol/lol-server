@@ -1,8 +1,8 @@
 package com.example.lolserver.repository.match.dto;
 
 import com.example.lolserver.repository.match.entity.value.matchsummoner.ItemValue;
-import com.example.lolserver.repository.match.entity.value.matchsummoner.StatValue;
-import com.example.lolserver.repository.match.entity.value.matchsummoner.StyleValue;
+import com.example.lolserver.repository.match.entity.value.matchsummoner.PerkStatValue;
+import com.example.lolserver.repository.match.entity.value.matchsummoner.PerkStyleValue;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -84,6 +84,6 @@ public class MatchSummonerDTO {
 
     // 임베디드 값객체
     private ItemValue item;
-    private StatValue statValue;
-    private StyleValue styleValue;
+    private PerkStatValue perkStat;
+    private PerkStyleValue perkStyle;
 }

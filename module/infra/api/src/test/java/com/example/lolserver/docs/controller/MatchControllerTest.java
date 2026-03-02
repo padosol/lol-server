@@ -237,8 +237,8 @@ class MatchControllerTest extends RestDocsSupport {
                 .build();
 
         Style style = new Style(
-                8100, new int[]{8112, 8126, 8138, 8135},
-                8300, new int[]{8304, 8347}
+                8100, 8112, 8126, 8138, 8135,
+                8300, 8304, 8347
         );
 
         ItemSeqData itemSeqData = ItemSeqData.builder()
@@ -278,15 +278,11 @@ class MatchControllerTest extends RestDocsSupport {
                 .build();
 
         TeamInfoData blueTeam = new TeamInfoData(
-                100, true, 35, 2, 3, 9, 2,
-                List.of(103, 236, 412, 110, 22),
-                List.of(1, 2, 3, 4, 5)
+                100, true, 35, 2, 3, 9, 2
         );
 
         TeamInfoData redTeam = new TeamInfoData(
-                200, false, 20, 1, 1, 3, 0,
-                List.of(238, 64, 127, 21, 89),
-                List.of(6, 7, 8, 9, 10)
+                200, false, 20, 1, 1, 3, 0
         );
 
         GameReadModel gameData = new GameReadModel();
@@ -398,10 +394,14 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].participantData[].statValue.offense").type(JsonFieldType.NUMBER).description("룬 공격 스탯"),
 
                                 // ParticipantData - 룬 스타일
-                                fieldWithPath("data.content[].participantData[].style.primaryRuneId").type(JsonFieldType.NUMBER).description("주 룬 트리 ID"),
-                                fieldWithPath("data.content[].participantData[].style.primaryRuneIds").type(JsonFieldType.ARRAY).description("주 룬 ID 목록"),
-                                fieldWithPath("data.content[].participantData[].style.secondaryRuneId").type(JsonFieldType.NUMBER).description("부 룬 트리 ID"),
-                                fieldWithPath("data.content[].participantData[].style.secondaryRuneIds").type(JsonFieldType.ARRAY).description("부 룬 ID 목록"),
+                                fieldWithPath("data.content[].participantData[].style.primaryStyleId").type(JsonFieldType.NUMBER).description("주 룬 트리 ID"),
+                                fieldWithPath("data.content[].participantData[].style.primaryPerk0").type(JsonFieldType.NUMBER).description("주 룬 0"),
+                                fieldWithPath("data.content[].participantData[].style.primaryPerk1").type(JsonFieldType.NUMBER).description("주 룬 1"),
+                                fieldWithPath("data.content[].participantData[].style.primaryPerk2").type(JsonFieldType.NUMBER).description("주 룬 2"),
+                                fieldWithPath("data.content[].participantData[].style.primaryPerk3").type(JsonFieldType.NUMBER).description("주 룬 3"),
+                                fieldWithPath("data.content[].participantData[].style.subStyleId").type(JsonFieldType.NUMBER).description("부 룬 트리 ID"),
+                                fieldWithPath("data.content[].participantData[].style.subPerk0").type(JsonFieldType.NUMBER).description("부 룬 0"),
+                                fieldWithPath("data.content[].participantData[].style.subPerk1").type(JsonFieldType.NUMBER).description("부 룬 1"),
 
                                 // ParticipantData - 팀 정보
                                 fieldWithPath("data.content[].participantData[].teamId").type(JsonFieldType.NUMBER).description("팀 ID (100: 블루, 200: 레드)"),
@@ -435,8 +435,6 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].teamInfoData.blueTeam.dragonKills").type(JsonFieldType.NUMBER).description("블루팀 드래곤 처치 수"),
                                 fieldWithPath("data.content[].teamInfoData.blueTeam.towerKills").type(JsonFieldType.NUMBER).description("블루팀 타워 파괴 수"),
                                 fieldWithPath("data.content[].teamInfoData.blueTeam.inhibitorKills").type(JsonFieldType.NUMBER).description("블루팀 억제기 파괴 수"),
-                                fieldWithPath("data.content[].teamInfoData.blueTeam.championId").type(JsonFieldType.ARRAY).description("블루팀 챔피언 ID 목록"),
-                                fieldWithPath("data.content[].teamInfoData.blueTeam.pickTurn").type(JsonFieldType.ARRAY).description("블루팀 픽 순서"),
 
                                 // TeamInfoData - 레드팀
                                 fieldWithPath("data.content[].teamInfoData.redTeam.teamId").type(JsonFieldType.NUMBER).description("레드팀 ID (200)"),
@@ -445,9 +443,7 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].teamInfoData.redTeam.baronKills").type(JsonFieldType.NUMBER).description("레드팀 바론 처치 수"),
                                 fieldWithPath("data.content[].teamInfoData.redTeam.dragonKills").type(JsonFieldType.NUMBER).description("레드팀 드래곤 처치 수"),
                                 fieldWithPath("data.content[].teamInfoData.redTeam.towerKills").type(JsonFieldType.NUMBER).description("레드팀 타워 파괴 수"),
-                                fieldWithPath("data.content[].teamInfoData.redTeam.inhibitorKills").type(JsonFieldType.NUMBER).description("레드팀 억제기 파괴 수"),
-                                fieldWithPath("data.content[].teamInfoData.redTeam.championId").type(JsonFieldType.ARRAY).description("레드팀 챔피언 ID 목록"),
-                                fieldWithPath("data.content[].teamInfoData.redTeam.pickTurn").type(JsonFieldType.ARRAY).description("레드팀 픽 순서")
+                                fieldWithPath("data.content[].teamInfoData.redTeam.inhibitorKills").type(JsonFieldType.NUMBER).description("레드팀 억제기 파괴 수")
                         )
                 ));
     }
