@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.summoner.application.dto;
+package com.example.lolserver.domain.summoner.application.model;
 
 import com.example.lolserver.domain.summoner.domain.Summoner;
 import lombok.AllArgsConstructor;
@@ -12,7 +12,7 @@ import java.time.format.DateTimeFormatter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SummonerResponse {
+public class SummonerReadModel {
 
     private static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -26,8 +26,8 @@ public class SummonerResponse {
     private String lastRevisionDateTime;
     private String lastRevisionClickDateTime;
 
-    public static SummonerResponse of(Summoner summoner) {
-        return SummonerResponse.builder()
+    public static SummonerReadModel of(Summoner summoner) {
+        return SummonerReadModel.builder()
                 .profileIconId(summoner.getProfileIconId())
                 .puuid(summoner.getPuuid())
                 .summonerLevel(summoner.getSummonerLevel())
@@ -42,4 +42,3 @@ public class SummonerResponse {
                 .build();
     }
 }
-

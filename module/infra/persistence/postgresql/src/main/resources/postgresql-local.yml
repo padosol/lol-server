@@ -17,7 +17,7 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
-    baseline-version: 7
+    baseline-version: 2
 
   datasource:
 #    url: jdbc:postgresql://localhost:5432/postgres

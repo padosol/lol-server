@@ -1,7 +1,7 @@
 package com.example.lolserver.repository.match.matchsummoner.dsl.impl;
 
 import com.example.lolserver.repository.config.RepositoryTestBase;
-import com.example.lolserver.repository.match.dto.LinePosition;
+import com.example.lolserver.repository.match.dto.LinePositionDTO;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
 import com.example.lolserver.repository.match.match.MatchRepository;
@@ -111,7 +111,7 @@ class MatchSummonerRepositoryCustomImplTest extends RepositoryTestBase {
         Long limit = 5L;
 
         // when
-        List<LinePosition> result = matchSummonerRepositoryCustom.findAllPositionByPuuidAndLimit(
+        List<LinePositionDTO> result = matchSummonerRepositoryCustom.findAllPositionByPuuidAndLimit(
                 TEST_PUUID, limit);
 
         // then
@@ -154,7 +154,7 @@ class MatchSummonerRepositoryCustomImplTest extends RepositoryTestBase {
         // given - no limit
 
         // when
-        List<LinePosition> result = matchSummonerRepositoryCustom.findAllPositionByPuuidAndLimit(
+        List<LinePositionDTO> result = matchSummonerRepositoryCustom.findAllPositionByPuuidAndLimit(
                 TEST_PUUID, null);
 
         // then

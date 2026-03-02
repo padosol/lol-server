@@ -16,8 +16,8 @@ import com.example.lolserver.domain.match.domain.gamedata.value.StatValue;
 import com.example.lolserver.domain.match.domain.gamedata.value.Style;
 import com.example.lolserver.domain.match.domain.TeamData;
 import com.example.lolserver.domain.match.application.MatchService;
-import com.example.lolserver.domain.match.application.dto.DailyGameCountResponse;
-import com.example.lolserver.domain.match.application.dto.GameResponse;
+import com.example.lolserver.domain.match.application.model.DailyGameCountReadModel;
+import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.support.Page;
 
@@ -103,7 +103,7 @@ class MatchControllerTest extends RestDocsSupport {
         given(team200.isWin()).willReturn(false);
         given(team200.getChampionKills()).willReturn(15);
 
-        GameResponse gameData = mock(GameResponse.class);
+        GameReadModel gameData = mock(GameReadModel.class);
         given(gameData.getGameInfoData()).willReturn(gameInfoData);
         given(gameData.getParticipantData()).willReturn(List.of(participant));
         given(gameData.getTeamInfoData()).willReturn(TeamData.builder().blueTeam(team100).redTeam(team200).build());
@@ -179,9 +179,9 @@ class MatchControllerTest extends RestDocsSupport {
         // given
         MatchCommand request = MatchCommand.builder().puuid("puuid-1234").queueId(420).pageNo(1).platformId("kr").build();
 
-        GameResponse gameData = mock(GameResponse.class);
+        GameReadModel gameData = mock(GameReadModel.class);
 
-        Page<GameResponse> pageOfGameData = new Page<>(List.of(gameData), false);
+        Page<GameReadModel> pageOfGameData = new Page<>(List.of(gameData), false);
 
         given(matchService.getMatches(any(MatchCommand.class))).willReturn(pageOfGameData);
 
@@ -209,7 +209,7 @@ class MatchControllerTest extends RestDocsSupport {
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
-                                subsectionWithPath("data.content[]").type(JsonFieldType.ARRAY).description("매치 데이터 목록 (GameResponse)"),
+                                subsectionWithPath("data.content[]").type(JsonFieldType.ARRAY).description("매치 데이터 목록 (GameReadModel)"),
                                 fieldWithPath("data.hasNext").type(JsonFieldType.BOOLEAN).description("다음 페이지 존재 여부")
                         )
                 ));
@@ -237,8 +237,8 @@ class MatchControllerTest extends RestDocsSupport {
                 .build();
 
         Style style = new Style(
-                8100, new int[]{8112, 8126, 8138, 8135},
-                8300, new int[]{8304, 8347}
+                8100, 8112, 8126, 8138, 8135,
+                8300, 8304, 8347
         );
 
         ItemSeqData itemSeqData = ItemSeqData.builder()
@@ -278,29 +278,26 @@ class MatchControllerTest extends RestDocsSupport {
                 .build();
 
         TeamInfoData blueTeam = new TeamInfoData(
-                100, true, 35, 2, 3, 9, 2,
-                List.of(103, 236, 412, 110, 22),
-                List.of(1, 2, 3, 4, 5)
+                100, true, 35, 2, 3, 9, 2
         );
 
         TeamInfoData redTeam = new TeamInfoData(
-                200, false, 20, 1, 1, 3, 0,
-                List.of(238, 64, 127, 21, 89),
-                List.of(6, 7, 8, 9, 10)
+                200, false, 20, 1, 1, 3, 0
         );
 
-        GameResponse gameData = new GameResponse();
+        GameReadModel gameData = new GameReadModel();
         gameData.setGameInfoData(gameInfoData);
         gameData.setParticipantData(List.of(participant));
         gameData.setTeamInfoData(TeamData.builder().blueTeam(blueTeam).redTeam(redTeam).build());
 
-        Page<GameResponse> pageOfGameData = new Page<>(List.of(gameData), false);
+        Page<GameReadModel> pageOfGameData = new Page<>(List.of(gameData), false);
 
         given(matchService.getMatchesBatch(any(MatchCommand.class))).willReturn(pageOfGameData);
 
         // when & then
         mockMvc.perform(
                         get("/api/v1/{platformId}/summoners/{puuid}/matches", "kr", puuid)
+                                .param("season", "2025")
                                 .param("queueId", "420")
                                 .param("pageNo", "1")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -315,6 +312,7 @@ class MatchControllerTest extends RestDocsSupport {
                                 parameterWithName("puuid").description("조회할 소환사의 PUUID")
                         ),
                         queryParameters(
+                                parameterWithName("season").description("시즌 (연도)").optional(),
                                 parameterWithName("queueId").description("큐 ID (e.g., 420:솔로랭크, 430:일반, 450:칼바람)").optional(),
                                 parameterWithName("pageNo").description("페이지 번호 (1부터 시작)").optional()
                         ),
@@ -398,10 +396,14 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].participantData[].statValue.offense").type(JsonFieldType.NUMBER).description("룬 공격 스탯"),
 
                                 // ParticipantData - 룬 스타일
-                                fieldWithPath("data.content[].participantData[].style.primaryRuneId").type(JsonFieldType.NUMBER).description("주 룬 트리 ID"),
-                                fieldWithPath("data.content[].participantData[].style.primaryRuneIds").type(JsonFieldType.ARRAY).description("주 룬 ID 목록"),
-                                fieldWithPath("data.content[].participantData[].style.secondaryRuneId").type(JsonFieldType.NUMBER).description("부 룬 트리 ID"),
-                                fieldWithPath("data.content[].participantData[].style.secondaryRuneIds").type(JsonFieldType.ARRAY).description("부 룬 ID 목록"),
+                                fieldWithPath("data.content[].participantData[].style.primaryStyleId").type(JsonFieldType.NUMBER).description("주 룬 트리 ID"),
+                                fieldWithPath("data.content[].participantData[].style.primaryPerk0").type(JsonFieldType.NUMBER).description("주 룬 0"),
+                                fieldWithPath("data.content[].participantData[].style.primaryPerk1").type(JsonFieldType.NUMBER).description("주 룬 1"),
+                                fieldWithPath("data.content[].participantData[].style.primaryPerk2").type(JsonFieldType.NUMBER).description("주 룬 2"),
+                                fieldWithPath("data.content[].participantData[].style.primaryPerk3").type(JsonFieldType.NUMBER).description("주 룬 3"),
+                                fieldWithPath("data.content[].participantData[].style.subStyleId").type(JsonFieldType.NUMBER).description("부 룬 트리 ID"),
+                                fieldWithPath("data.content[].participantData[].style.subPerk0").type(JsonFieldType.NUMBER).description("부 룬 0"),
+                                fieldWithPath("data.content[].participantData[].style.subPerk1").type(JsonFieldType.NUMBER).description("부 룬 1"),
 
                                 // ParticipantData - 팀 정보
                                 fieldWithPath("data.content[].participantData[].teamId").type(JsonFieldType.NUMBER).description("팀 ID (100: 블루, 200: 레드)"),
@@ -435,8 +437,6 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].teamInfoData.blueTeam.dragonKills").type(JsonFieldType.NUMBER).description("블루팀 드래곤 처치 수"),
                                 fieldWithPath("data.content[].teamInfoData.blueTeam.towerKills").type(JsonFieldType.NUMBER).description("블루팀 타워 파괴 수"),
                                 fieldWithPath("data.content[].teamInfoData.blueTeam.inhibitorKills").type(JsonFieldType.NUMBER).description("블루팀 억제기 파괴 수"),
-                                fieldWithPath("data.content[].teamInfoData.blueTeam.championId").type(JsonFieldType.ARRAY).description("블루팀 챔피언 ID 목록"),
-                                fieldWithPath("data.content[].teamInfoData.blueTeam.pickTurn").type(JsonFieldType.ARRAY).description("블루팀 픽 순서"),
 
                                 // TeamInfoData - 레드팀
                                 fieldWithPath("data.content[].teamInfoData.redTeam.teamId").type(JsonFieldType.NUMBER).description("레드팀 ID (200)"),
@@ -445,9 +445,7 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].teamInfoData.redTeam.baronKills").type(JsonFieldType.NUMBER).description("레드팀 바론 처치 수"),
                                 fieldWithPath("data.content[].teamInfoData.redTeam.dragonKills").type(JsonFieldType.NUMBER).description("레드팀 드래곤 처치 수"),
                                 fieldWithPath("data.content[].teamInfoData.redTeam.towerKills").type(JsonFieldType.NUMBER).description("레드팀 타워 파괴 수"),
-                                fieldWithPath("data.content[].teamInfoData.redTeam.inhibitorKills").type(JsonFieldType.NUMBER).description("레드팀 억제기 파괴 수"),
-                                fieldWithPath("data.content[].teamInfoData.redTeam.championId").type(JsonFieldType.ARRAY).description("레드팀 챔피언 ID 목록"),
-                                fieldWithPath("data.content[].teamInfoData.redTeam.pickTurn").type(JsonFieldType.ARRAY).description("레드팀 픽 순서")
+                                fieldWithPath("data.content[].teamInfoData.redTeam.inhibitorKills").type(JsonFieldType.NUMBER).description("레드팀 억제기 파괴 수")
                         )
                 ));
     }
@@ -521,10 +519,10 @@ class MatchControllerTest extends RestDocsSupport {
     void getDailyGameCounts() throws Exception {
         // given
         String puuid = "puuid-1234";
-        List<DailyGameCountResponse> response = List.of(
-                new DailyGameCountResponse(LocalDate.of(2025, 1, 15), 3L),
-                new DailyGameCountResponse(LocalDate.of(2025, 1, 14), 5L),
-                new DailyGameCountResponse(LocalDate.of(2025, 1, 13), 2L)
+        List<DailyGameCountReadModel> response = List.of(
+                new DailyGameCountReadModel(LocalDate.of(2025, 1, 15), 3L),
+                new DailyGameCountReadModel(LocalDate.of(2025, 1, 14), 5L),
+                new DailyGameCountReadModel(LocalDate.of(2025, 1, 13), 2L)
         );
 
         given(matchService.getDailyGameCounts(anyString(), anyInt(), any())).willReturn(response);

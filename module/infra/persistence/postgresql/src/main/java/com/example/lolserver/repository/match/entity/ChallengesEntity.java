@@ -11,9 +11,9 @@ import org.hibernate.annotations.Comment;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(
-        name = "challenges",
+        name = "match_participant_challenges",
         uniqueConstraints = @UniqueConstraint(
-                name = "unique_index_puuid_and_match_id",
+                name = "unique_index_match_participant_challenges_puuid_match_id",
                 columnNames = {"puuid", "match_id"}
         )
 )
@@ -48,6 +48,7 @@ public class ChallengesEntity {
     private int dodgeSkillShotsSmallWindow;
     private int doubleAces;
     private int dragonTakedowns;
+    private double earliestBaron;
     private int earlyLaningPhaseGoldExpAdvantage;
     private int effectiveHealAndShielding;
     private int elderDragonKillsWithOpposingSoul;
@@ -152,5 +153,8 @@ public class ChallengesEntity {
     private int wardTakedowns;
     private int wardTakedownsBefore20M;
     private int wardsGuarded;
+    private double healFromMapSources;
+    private double fastestLegendary;
+    private double shortestTimeToAceFromFirstTakedown;
 
 }

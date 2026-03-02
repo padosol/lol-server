@@ -2,7 +2,7 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
-    baseline-version: 7
+    baseline-version: 2
   jpa:
     hibernate:
       ddl-auto: validate

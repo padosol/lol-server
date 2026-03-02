@@ -3,12 +3,12 @@ package com.example.lolserver.docs.controller;
 import com.example.lolserver.controller.championstats.ChampionStatsController;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.championstats.application.ChampionStatsService;
-import com.example.lolserver.domain.championstats.application.dto.ChampionItemBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionMatchupResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionPositionStatsResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionRuneBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionSkillBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionStatsResponse;
+import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionPositionStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -58,16 +58,16 @@ class ChampionStatsControllerTest extends RestDocsSupport {
         int championId = 266;
         String patch = "14.24";
 
-        ChampionMatchupResponse matchup = new ChampionMatchupResponse(86, 200, 110, 55.0);
-        ChampionItemBuildResponse itemBuild = new ChampionItemBuildResponse("3078,3053,3065", 300, 170, 56.67);
-        ChampionRuneBuildResponse runeBuild = new ChampionRuneBuildResponse(
+        ChampionMatchupReadModel matchup = new ChampionMatchupReadModel(86, 200, 110, 55.0);
+        ChampionItemBuildReadModel itemBuild = new ChampionItemBuildReadModel("3078,3053,3065", 300, 170, 56.67);
+        ChampionRuneBuildReadModel runeBuild = new ChampionRuneBuildReadModel(
                 8000, "8010,9111,9104,8299", 8400, "8446,8451", 250, 140, 56.0
         );
-        ChampionSkillBuildResponse skillBuild = new ChampionSkillBuildResponse(
+        ChampionSkillBuildReadModel skillBuild = new ChampionSkillBuildReadModel(
                 "Q,E,W,Q,Q,R,Q,E,Q,E,R,E,E,W,W", 400, 220, 55.0
         );
 
-        ChampionPositionStatsResponse positionStats = new ChampionPositionStatsResponse(
+        ChampionPositionStatsReadModel positionStats = new ChampionPositionStatsReadModel(
                 "TOP", 55.0, 1500,
                 List.of(matchup),
                 List.of(itemBuild),
@@ -75,7 +75,7 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                 List.of(skillBuild)
         );
 
-        ChampionStatsResponse response = new ChampionStatsResponse(
+        ChampionStatsReadModel response = new ChampionStatsReadModel(
                 "EMERALD",
                 List.of(positionStats)
         );

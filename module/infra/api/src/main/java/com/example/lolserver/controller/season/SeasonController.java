@@ -2,7 +2,7 @@ package com.example.lolserver.controller.season;
 
 import com.example.lolserver.controller.support.response.ApiResponse;
 import com.example.lolserver.domain.season.application.SeasonService;
-import com.example.lolserver.domain.season.application.dto.SeasonResponse;
+import com.example.lolserver.domain.season.application.model.SeasonReadModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,16 +20,16 @@ public class SeasonController {
     private final SeasonService seasonService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<SeasonResponse>>> getAllSeasons() {
-        List<SeasonResponse> seasons = seasonService.getAllSeasons();
+    public ResponseEntity<ApiResponse<List<SeasonReadModel>>> getAllSeasons() {
+        List<SeasonReadModel> seasons = seasonService.getAllSeasons();
         return ResponseEntity.ok(ApiResponse.success(seasons));
     }
 
     @GetMapping("/{seasonId}")
-    public ResponseEntity<ApiResponse<SeasonResponse>> getSeasonById(
+    public ResponseEntity<ApiResponse<SeasonReadModel>> getSeasonById(
             @PathVariable("seasonId") Long seasonId
     ) {
-        SeasonResponse season = seasonService.getSeasonById(seasonId);
+        SeasonReadModel season = seasonService.getSeasonById(seasonId);
         return ResponseEntity.ok(ApiResponse.success(season));
     }
 }

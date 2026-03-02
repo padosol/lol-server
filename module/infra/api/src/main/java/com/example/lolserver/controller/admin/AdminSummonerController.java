@@ -2,7 +2,7 @@ package com.example.lolserver.controller.admin;
 
 import com.example.lolserver.controller.support.response.ApiResponse;
 import com.example.lolserver.domain.summoner.application.SummonerService;
-import com.example.lolserver.domain.summoner.application.dto.SummonerRenewalInfoResponse;
+import com.example.lolserver.domain.summoner.application.model.SummonerRenewalInfoReadModel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +21,8 @@ public class AdminSummonerController {
     private final SummonerService summonerService;
 
     @GetMapping("/summoners/renewals")
-    public ResponseEntity<ApiResponse<List<SummonerRenewalInfoResponse>>> getRefreshingSummoners() {
-        List<SummonerRenewalInfoResponse> result = summonerService.getRefreshingSummoners();
+    public ResponseEntity<ApiResponse<List<SummonerRenewalInfoReadModel>>> getRefreshingSummoners() {
+        List<SummonerRenewalInfoReadModel> result = summonerService.getRefreshingSummoners();
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 }

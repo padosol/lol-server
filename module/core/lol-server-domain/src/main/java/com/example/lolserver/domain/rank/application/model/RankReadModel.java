@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.rank.application.dto;
+package com.example.lolserver.domain.rank.application.model;
 
 import com.example.lolserver.domain.rank.domain.Rank;
 import lombok.Getter;
@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
-public class RankResponse {
+public class RankReadModel {
 
     private String puuid;
     private int currentRank;
@@ -22,7 +22,7 @@ public class RankResponse {
     private int leaguePoints;
     private List<String> champions;
 
-    public RankResponse(Rank rank) {
+    public RankReadModel(Rank rank) {
         this.puuid = rank.getPuuid();
         this.currentRank = rank.getCurrentRank();
         this.rankChange = rank.getRankChange();

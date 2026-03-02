@@ -1,9 +1,9 @@
 package com.example.lolserver.domain.summoner.application;
 
 import com.example.lolserver.RenewalStatus;
-import com.example.lolserver.domain.summoner.application.dto.SummonerAutoResponse;
-import com.example.lolserver.domain.summoner.application.dto.SummonerRenewalInfoResponse;
-import com.example.lolserver.domain.summoner.application.dto.SummonerResponse;
+import com.example.lolserver.domain.summoner.application.model.SummonerAutoReadModel;
+import com.example.lolserver.domain.summoner.application.model.SummonerReadModel;
+import com.example.lolserver.domain.summoner.application.model.SummonerRenewalInfoReadModel;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerCachePort;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerClientPort;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerMessagePort;
@@ -66,7 +66,7 @@ class SummonerServiceTest {
                 .willReturn(Optional.of(summoner));
 
         // when
-        SummonerResponse result = summonerService.getSummoner(gameName, platformId);
+        SummonerReadModel result = summonerService.getSummoner(gameName, platformId);
 
         // then
         assertThat(result.getGameName()).isEqualTo("TestPlayer");
@@ -91,7 +91,7 @@ class SummonerServiceTest {
                 .willReturn(Optional.of(summoner));
 
         // when
-        SummonerResponse result = summonerService.getSummoner(gameName, platformId);
+        SummonerReadModel result = summonerService.getSummoner(gameName, platformId);
 
         // then
         assertThat(result.getGameName()).isEqualTo("NewPlayer");
@@ -137,7 +137,7 @@ class SummonerServiceTest {
         given(summonerPersistencePort.getSummonerAuthComplete(query, platformId)).willReturn(summoners);
 
         // when
-        List<SummonerAutoResponse> result = summonerService.getAllSummonerAutoComplete(query, platformId);
+        List<SummonerAutoReadModel> result = summonerService.getAllSummonerAutoComplete(query, platformId);
 
         // then
         assertThat(result).hasSize(2);
@@ -167,7 +167,7 @@ class SummonerServiceTest {
         given(summonerPersistencePort.getSummonerAuthComplete(query, platformId)).willReturn(List.of(summoner));
 
         // when
-        List<SummonerAutoResponse> result = summonerService.getAllSummonerAutoComplete(query, platformId);
+        List<SummonerAutoReadModel> result = summonerService.getAllSummonerAutoComplete(query, platformId);
 
         // then
         assertThat(result).hasSize(1);
@@ -186,7 +186,7 @@ class SummonerServiceTest {
         given(summonerPersistencePort.getSummonerAuthComplete(query, platformId)).willReturn(Collections.emptyList());
 
         // when
-        List<SummonerAutoResponse> result = summonerService.getAllSummonerAutoComplete(query, platformId);
+        List<SummonerAutoReadModel> result = summonerService.getAllSummonerAutoComplete(query, platformId);
 
         // then
         assertThat(result).isEmpty();
@@ -355,7 +355,7 @@ class SummonerServiceTest {
         given(summonerPersistencePort.findById(puuid)).willReturn(Optional.of(summoner));
 
         // when
-        SummonerResponse result = summonerService.getSummonerByPuuid(platformId, puuid);
+        SummonerReadModel result = summonerService.getSummonerByPuuid(platformId, puuid);
 
         // then
         assertThat(result.getPuuid()).isEqualTo(puuid);
@@ -379,7 +379,7 @@ class SummonerServiceTest {
         given(summonerClientPort.getSummonerByPuuid(platformId, puuid)).willReturn(Optional.of(summoner));
 
         // when
-        SummonerResponse result = summonerService.getSummonerByPuuid(platformId, puuid);
+        SummonerReadModel result = summonerService.getSummonerByPuuid(platformId, puuid);
 
         // then
         assertThat(result.getPuuid()).isEqualTo(puuid);
@@ -416,7 +416,7 @@ class SummonerServiceTest {
         given(summonerCachePort.getRefreshingPuuids()).willReturn(Collections.emptySet());
 
         // when
-        List<SummonerRenewalInfoResponse> result = summonerService.getRefreshingSummoners();
+        List<SummonerRenewalInfoReadModel> result = summonerService.getRefreshingSummoners();
 
         // then
         assertThat(result).isEmpty();
@@ -435,11 +435,11 @@ class SummonerServiceTest {
         given(summonerPersistencePort.findAllByPuuidIn(puuids)).willReturn(List.of(summoner1, summoner2));
 
         // when
-        List<SummonerRenewalInfoResponse> result = summonerService.getRefreshingSummoners();
+        List<SummonerRenewalInfoReadModel> result = summonerService.getRefreshingSummoners();
 
         // then
         assertThat(result).hasSize(2);
-        assertThat(result).extracting(SummonerRenewalInfoResponse::getPuuid)
+        assertThat(result).extracting(SummonerRenewalInfoReadModel::getPuuid)
                 .containsExactlyInAnyOrder("puuid-1", "puuid-2");
         assertThat(result).allSatisfy(r -> assertThat(r.getGameName()).isNotNull());
     }
@@ -454,7 +454,7 @@ class SummonerServiceTest {
         given(summonerPersistencePort.findAllByPuuidIn(puuids)).willReturn(Collections.emptyList());
 
         // when
-        List<SummonerRenewalInfoResponse> result = summonerService.getRefreshingSummoners();
+        List<SummonerRenewalInfoReadModel> result = summonerService.getRefreshingSummoners();
 
         // then
         assertThat(result).hasSize(1);

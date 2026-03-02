@@ -5,9 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,7 +20,4 @@ public class TeamInfoData {
     private int dragonKills;
     private int towerKills;
     private int inhibitorKills;
-
-    private List<Integer> championId = new ArrayList<>();
-    private List<Integer> pickTurn = new ArrayList<>();
 }

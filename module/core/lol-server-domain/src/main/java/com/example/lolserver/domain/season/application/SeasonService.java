@@ -1,6 +1,6 @@
 package com.example.lolserver.domain.season.application;
 
-import com.example.lolserver.domain.season.application.dto.SeasonResponse;
+import com.example.lolserver.domain.season.application.model.SeasonReadModel;
 import com.example.lolserver.domain.season.application.port.out.SeasonPersistencePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,11 +15,11 @@ public class SeasonService {
 
     private final SeasonPersistencePort seasonPersistencePort;
 
-    public List<SeasonResponse> getAllSeasons() {
+    public List<SeasonReadModel> getAllSeasons() {
         return seasonPersistencePort.findAllSeasons();
     }
 
-    public SeasonResponse getSeasonById(Long seasonId) {
+    public SeasonReadModel getSeasonById(Long seasonId) {
         return seasonPersistencePort.findById(seasonId).orElse(null);
     }
 }

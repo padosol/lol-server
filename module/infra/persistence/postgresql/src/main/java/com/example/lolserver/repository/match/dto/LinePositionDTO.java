@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class LinePosition {
+public class LinePositionDTO {
 
     private String position;
     private Long playCount;

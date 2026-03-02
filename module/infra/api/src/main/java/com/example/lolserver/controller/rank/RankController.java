@@ -1,6 +1,6 @@
 package com.example.lolserver.controller.rank;
 
-import com.example.lolserver.domain.rank.application.dto.RankResponse;
+import com.example.lolserver.domain.rank.application.model.RankReadModel;
 import com.example.lolserver.domain.rank.application.dto.RankSearchDto;
 import com.example.lolserver.domain.rank.application.RankService;
 import com.example.lolserver.controller.support.response.ApiResponse;
@@ -22,11 +22,11 @@ public class RankController {
     private final RankService rankService;
 
     @GetMapping("/rank")
-    public ResponseEntity<ApiResponse<PageResponse<RankResponse>>> getSummonerRank(
+    public ResponseEntity<ApiResponse<PageResponse<RankReadModel>>> getSummonerRank(
         @PathVariable("platformId") String platformId,
         RankSearchDto rankSearchDto
     ) {
-        Page<RankResponse> ranks = rankService.getRanks(rankSearchDto, platformId);
+        Page<RankReadModel> ranks = rankService.getRanks(rankSearchDto, platformId);
 
         return new ResponseEntity<>(ApiResponse.success(PageResponse.of(ranks)), HttpStatus.OK);
     }

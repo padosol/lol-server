@@ -2,7 +2,6 @@ package com.example.lolserver.repository.match.timeline;
 
 import com.example.lolserver.repository.config.RepositoryTestBase;
 import com.example.lolserver.repository.match.entity.MatchEntity;
-import com.example.lolserver.repository.match.entity.timeline.TimeLineEventEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.ItemEventsEntity;
 import com.example.lolserver.repository.match.entity.timeline.events.SkillEventsEntity;
 import com.example.lolserver.repository.match.match.MatchRepository;
@@ -31,7 +30,6 @@ class TimelineRepositoryCustomImplTest extends RepositoryTestBase {
 
     @BeforeEach
     void setUp() {
-        // 매치 엔티티 생성
         MatchEntity matchEntity = MatchEntity.builder()
                 .matchId(TEST_MATCH_ID)
                 .queueId(420)
@@ -42,50 +40,32 @@ class TimelineRepositoryCustomImplTest extends RepositoryTestBase {
                 .build();
         matchRepository.save(matchEntity);
 
-        // TimeLineEventEntity 생성 - Builder 사용
-        TimeLineEventEntity timeLineEvent = TimeLineEventEntity.builder()
-                .matchId(TEST_MATCH_ID)
-                .timestamp(60000)
-                .build();
-        entityManager.persist(timeLineEvent);
-
-        // ItemEventsEntity 생성
         ItemEventsEntity itemEvent = new ItemEventsEntity();
-        itemEvent.setTimeLineEvent(timeLineEvent);
+        itemEvent.setMatchId(TEST_MATCH_ID);
         itemEvent.setParticipantId(1);
         itemEvent.setItemId(3006);
         itemEvent.setTimestamp(60000L);
         itemEvent.setType("ITEM_PURCHASED");
         entityManager.persist(itemEvent);
 
-        // SkillEventsEntity 생성
         SkillEventsEntity skillEvent = new SkillEventsEntity();
-        skillEvent.setTimeLineEvent(timeLineEvent);
+        skillEvent.setMatchId(TEST_MATCH_ID);
         skillEvent.setParticipantId(1);
         skillEvent.setSkillSlot(1);
         skillEvent.setTimestamp(30000L);
-        skillEvent.setType("SKILL_LEVEL_UP");
+        skillEvent.setLevelUpType("NORMAL");
         entityManager.persist(skillEvent);
 
         entityManager.flush();
         entityManager.clear();
     }
 
-    @DisplayName("매치 ID로 타임라인 정보를 조회한다")
-    @Test
-    void selectAllTimelineInfo_validMatchId_returnsTimelineEvents() {
-        // when
-        List<TimeLineEventEntity> result = timelineRepositoryCustom.selectAllTimelineInfo(TEST_MATCH_ID);
-
-        // then
-        assertThat(result).isNotEmpty();
-    }
-
     @DisplayName("매치 ID로 아이템 이벤트를 조회한다")
     @Test
     void selectAllItemEventsByMatch_validMatchId_returnsItemEvents() {
         // when
-        List<ItemEventsEntity> result = timelineRepositoryCustom.selectAllItemEventsByMatch(TEST_MATCH_ID);
+        List<ItemEventsEntity> result =
+                timelineRepositoryCustom.selectAllItemEventsByMatch(TEST_MATCH_ID);
 
         // then
         assertThat(result).hasSize(1);
@@ -97,7 +77,8 @@ class TimelineRepositoryCustomImplTest extends RepositoryTestBase {
     @Test
     void selectAllSkillEventsByMatch_validMatchId_returnsSkillEvents() {
         // when
-        List<SkillEventsEntity> result = timelineRepositoryCustom.selectAllSkillEventsByMatch(TEST_MATCH_ID);
+        List<SkillEventsEntity> result =
+                timelineRepositoryCustom.selectAllSkillEventsByMatch(TEST_MATCH_ID);
 
         // then
         assertThat(result).hasSize(1);
@@ -109,7 +90,8 @@ class TimelineRepositoryCustomImplTest extends RepositoryTestBase {
     @Test
     void selectAllItemEventsByMatch_nonExistingMatchId_returnsEmpty() {
         // when
-        List<ItemEventsEntity> result = timelineRepositoryCustom.selectAllItemEventsByMatch("NON_EXISTING_MATCH");
+        List<ItemEventsEntity> result =
+                timelineRepositoryCustom.selectAllItemEventsByMatch("NON_EXISTING_MATCH");
 
         // then
         assertThat(result).isEmpty();
@@ -119,7 +101,8 @@ class TimelineRepositoryCustomImplTest extends RepositoryTestBase {
     @Test
     void selectAllSkillEventsByMatch_nonExistingMatchId_returnsEmpty() {
         // when
-        List<SkillEventsEntity> result = timelineRepositoryCustom.selectAllSkillEventsByMatch("NON_EXISTING_MATCH");
+        List<SkillEventsEntity> result =
+                timelineRepositoryCustom.selectAllSkillEventsByMatch("NON_EXISTING_MATCH");
 
         // then
         assertThat(result).isEmpty();

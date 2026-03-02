@@ -1,7 +1,7 @@
 package com.example.lolserver.repository.match.matchsummoner.dsl;
 
 import com.example.lolserver.repository.match.dto.DailyGameCountDTO;
-import com.example.lolserver.repository.match.dto.LinePosition;
+import com.example.lolserver.repository.match.dto.LinePositionDTO;
 import com.example.lolserver.repository.match.dto.MSChampionDTO;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
 import org.springframework.data.domain.Page;
@@ -21,7 +21,7 @@ public interface MatchSummonerRepositoryCustom {
 
     List<MSChampionDTO> findAllMatchSummonerByPuuidAndSeason(String puuid, Integer season, Integer queueId);
 
-    List<LinePosition> findAllPositionByPuuidAndLimit(String puuid, Long limit);
+    List<LinePositionDTO> findAllPositionByPuuidAndLimit(String puuid, Long limit);
 
     Slice<String> findAllMatchIdsByPuuidWithPage(String puuid, Integer queueId, Pageable pageable);
 

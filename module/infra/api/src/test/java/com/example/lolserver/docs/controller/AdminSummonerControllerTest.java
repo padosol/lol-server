@@ -3,7 +3,7 @@ package com.example.lolserver.docs.controller;
 import com.example.lolserver.controller.admin.AdminSummonerController;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.summoner.application.SummonerService;
-import com.example.lolserver.domain.summoner.application.dto.SummonerRenewalInfoResponse;
+import com.example.lolserver.domain.summoner.application.model.SummonerRenewalInfoReadModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,13 +44,13 @@ class AdminSummonerControllerTest extends RestDocsSupport {
     @DisplayName("갱신 중인 소환사 목록 조회 API")
     void getRefreshingSummoners() throws Exception {
         // given
-        List<SummonerRenewalInfoResponse> responses = List.of(
-                SummonerRenewalInfoResponse.builder()
+        List<SummonerRenewalInfoReadModel> responses = List.of(
+                SummonerRenewalInfoReadModel.builder()
                         .puuid("puuid-1")
                         .gameName("Player1")
                         .tagLine("KR1")
                         .build(),
-                SummonerRenewalInfoResponse.builder()
+                SummonerRenewalInfoReadModel.builder()
                         .puuid("puuid-2")
                         .gameName("Player2")
                         .tagLine("NA1")

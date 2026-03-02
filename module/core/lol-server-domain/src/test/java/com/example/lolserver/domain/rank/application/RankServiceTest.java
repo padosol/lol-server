@@ -1,6 +1,6 @@
 package com.example.lolserver.domain.rank.application;
 
-import com.example.lolserver.domain.rank.application.dto.RankResponse;
+import com.example.lolserver.domain.rank.application.model.RankReadModel;
 import com.example.lolserver.domain.rank.application.dto.RankSearchDto;
 import com.example.lolserver.domain.rank.application.port.out.RankPersistencePort;
 import com.example.lolserver.domain.rank.domain.Rank;
@@ -72,7 +72,7 @@ class RankServiceTest {
         given(rankPersistencePort.getRanks(searchDto, platformId)).willReturn(rankPage);
 
         // when
-        Page<RankResponse> result = rankService.getRanks(searchDto, platformId);
+        Page<RankReadModel> result = rankService.getRanks(searchDto, platformId);
 
         // then
         assertThat(result.getContent()).hasSize(2);
@@ -93,7 +93,7 @@ class RankServiceTest {
         given(rankPersistencePort.getRanks(searchDto, platformId)).willReturn(emptyPage);
 
         // when
-        Page<RankResponse> result = rankService.getRanks(searchDto, platformId);
+        Page<RankReadModel> result = rankService.getRanks(searchDto, platformId);
 
         // then
         assertThat(result.getContent()).isEmpty();
@@ -125,11 +125,11 @@ class RankServiceTest {
         given(rankPersistencePort.getRanks(searchDto, platformId)).willReturn(rankPage);
 
         // when
-        Page<RankResponse> result = rankService.getRanks(searchDto, platformId);
+        Page<RankReadModel> result = rankService.getRanks(searchDto, platformId);
 
         // then
         assertThat(result.getContent()).hasSize(1);
-        RankResponse response = result.getContent().get(0);
+        RankReadModel response = result.getContent().get(0);
         assertThat(response.getPuuid()).isEqualTo("puuid-test");
         assertThat(response.getCurrentRank()).isEqualTo(1);
         assertThat(response.getRankChange()).isEqualTo(2);

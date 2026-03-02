@@ -1,27 +1,27 @@
 package com.example.lolserver.domain.championstats.application.port.out;
 
-import com.example.lolserver.domain.championstats.application.dto.ChampionItemBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionMatchupResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionRuneBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionSkillBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionWinRateResponse;
+import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 
 import java.util.List;
 import java.util.Map;
 
 public interface ChampionStatsQueryPort {
 
-    List<ChampionWinRateResponse> getChampionWinRates(int championId, String patch, String platformId, String tier);
+    List<ChampionWinRateReadModel> getChampionWinRates(int championId, String patch, String platformId, String tier);
 
-    Map<String, List<ChampionMatchupResponse>> getChampionMatchups(
+    Map<String, List<ChampionMatchupReadModel>> getChampionMatchups(
             int championId, String patch, String platformId, String tier);
 
-    Map<String, List<ChampionItemBuildResponse>> getChampionItemBuilds(
+    Map<String, List<ChampionItemBuildReadModel>> getChampionItemBuilds(
             int championId, String patch, String platformId, String tier);
 
-    Map<String, List<ChampionRuneBuildResponse>> getChampionRuneBuilds(
+    Map<String, List<ChampionRuneBuildReadModel>> getChampionRuneBuilds(
             int championId, String patch, String platformId, String tier);
 
-    Map<String, List<ChampionSkillBuildResponse>> getChampionSkillBuilds(
+    Map<String, List<ChampionSkillBuildReadModel>> getChampionSkillBuilds(
             int championId, String patch, String platformId, String tier);
 }

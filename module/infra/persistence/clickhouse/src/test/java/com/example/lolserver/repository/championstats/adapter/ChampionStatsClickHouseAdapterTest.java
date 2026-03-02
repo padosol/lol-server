@@ -1,10 +1,10 @@
 package com.example.lolserver.repository.championstats.adapter;
 
-import com.example.lolserver.domain.championstats.application.dto.ChampionItemBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionMatchupResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionRuneBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionSkillBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionWinRateResponse;
+import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,14 +41,14 @@ class ChampionStatsClickHouseAdapterTest {
     @SuppressWarnings("unchecked")
     void getChampionWinRates() {
         // given
-        List<ChampionWinRateResponse> expected = List.of(
-            new ChampionWinRateResponse("MIDDLE", 1000, 520, 0.52)
+        List<ChampionWinRateReadModel> expected = List.of(
+            new ChampionWinRateReadModel("MIDDLE", 1000, 520, 0.52)
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
             .willReturn(expected);
 
         // when
-        List<ChampionWinRateResponse> result = adapter.getChampionWinRates(13, "16.1", "KR", "EMERALD");
+        List<ChampionWinRateReadModel> result = adapter.getChampionWinRates(13, "16.1", "KR", "EMERALD");
 
         // then
         assertThat(result).hasSize(1);
@@ -61,14 +61,14 @@ class ChampionStatsClickHouseAdapterTest {
     @SuppressWarnings("unchecked")
     void getChampionMatchups() {
         // given
-        List<AbstractMap.SimpleEntry<String, ChampionMatchupResponse>> entries = List.of(
-            new AbstractMap.SimpleEntry<>("MIDDLE", new ChampionMatchupResponse(238, 200, 110, 0.55))
+        List<AbstractMap.SimpleEntry<String, ChampionMatchupReadModel>> entries = List.of(
+            new AbstractMap.SimpleEntry<>("MIDDLE", new ChampionMatchupReadModel(238, 200, 110, 0.55))
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
             .willReturn(entries);
 
         // when
-        Map<String, List<ChampionMatchupResponse>> result = adapter.getChampionMatchups(13, "16.1", "KR", "EMERALD");
+        Map<String, List<ChampionMatchupReadModel>> result = adapter.getChampionMatchups(13, "16.1", "KR", "EMERALD");
 
         // then
         assertThat(result).containsKey("MIDDLE");
@@ -81,14 +81,14 @@ class ChampionStatsClickHouseAdapterTest {
     @SuppressWarnings("unchecked")
     void getChampionItemBuilds() {
         // given
-        List<AbstractMap.SimpleEntry<String, ChampionItemBuildResponse>> entries = List.of(
-            new AbstractMap.SimpleEntry<>("MIDDLE", new ChampionItemBuildResponse("[3089,3157]", 500, 260, 0.52))
+        List<AbstractMap.SimpleEntry<String, ChampionItemBuildReadModel>> entries = List.of(
+            new AbstractMap.SimpleEntry<>("MIDDLE", new ChampionItemBuildReadModel("[3089,3157]", 500, 260, 0.52))
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
             .willReturn(entries);
 
         // when
-        Map<String, List<ChampionItemBuildResponse>> result = adapter.getChampionItemBuilds(13, "16.1", "KR", "EMERALD");
+        Map<String, List<ChampionItemBuildReadModel>> result = adapter.getChampionItemBuilds(13, "16.1", "KR", "EMERALD");
 
         // then
         assertThat(result).containsKey("MIDDLE");
@@ -101,14 +101,14 @@ class ChampionStatsClickHouseAdapterTest {
     @SuppressWarnings("unchecked")
     void getChampionRuneBuilds() {
         // given
-        List<AbstractMap.SimpleEntry<String, ChampionRuneBuildResponse>> entries = List.of(
-            new AbstractMap.SimpleEntry<>("MIDDLE", new ChampionRuneBuildResponse(8100, "[8112,8139]", 8300, "[8304,8345]", 300, 160, 0.5333))
+        List<AbstractMap.SimpleEntry<String, ChampionRuneBuildReadModel>> entries = List.of(
+            new AbstractMap.SimpleEntry<>("MIDDLE", new ChampionRuneBuildReadModel(8100, "[8112,8139]", 8300, "[8304,8345]", 300, 160, 0.5333))
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
             .willReturn(entries);
 
         // when
-        Map<String, List<ChampionRuneBuildResponse>> result = adapter.getChampionRuneBuilds(13, "16.1", "KR", "EMERALD");
+        Map<String, List<ChampionRuneBuildReadModel>> result = adapter.getChampionRuneBuilds(13, "16.1", "KR", "EMERALD");
 
         // then
         assertThat(result).containsKey("MIDDLE");
@@ -121,14 +121,14 @@ class ChampionStatsClickHouseAdapterTest {
     @SuppressWarnings("unchecked")
     void getChampionSkillBuilds() {
         // given
-        List<AbstractMap.SimpleEntry<String, ChampionSkillBuildResponse>> entries = List.of(
-            new AbstractMap.SimpleEntry<>("MIDDLE", new ChampionSkillBuildResponse("QWEQEEREQEQWWWW", 400, 210, 0.525))
+        List<AbstractMap.SimpleEntry<String, ChampionSkillBuildReadModel>> entries = List.of(
+            new AbstractMap.SimpleEntry<>("MIDDLE", new ChampionSkillBuildReadModel("QWEQEEREQEQWWWW", 400, 210, 0.525))
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
             .willReturn(entries);
 
         // when
-        Map<String, List<ChampionSkillBuildResponse>> result = adapter.getChampionSkillBuilds(13, "16.1", "KR", "EMERALD");
+        Map<String, List<ChampionSkillBuildReadModel>> result = adapter.getChampionSkillBuilds(13, "16.1", "KR", "EMERALD");
 
         // then
         assertThat(result).containsKey("MIDDLE");

@@ -70,8 +70,8 @@ module/
 - `domain/` - 순수 도메인 객체 (Write Model)
 - `application/` - 애플리케이션 서비스
 - `application/port/` - 포트 인터페이스 (in/out)
-- `application/dto/` - Response DTO (Read Model)
-- `application/model/` - 명시적 ReadModel 클래스
+- `application/dto/` - Command, SearchDto 등 입력 DTO
+- `application/model/` - ReadModel 클래스 (조회용 DTO)
 
 ### Read Model 패턴
 
@@ -82,8 +82,8 @@ module/
 - 비즈니스 로직 포함
 - 상태 변경 가능
 
-#### Read Model (DTO/Response)
-- 위치: `domain/{도메인}/application/dto/` 또는 `application/model/`
+#### Read Model (ReadModel)
+- 위치: `domain/{도메인}/application/model/`
 - 표현 전용, 비즈니스 로직 없음
 - 불변 (Java Record 권장)
 
@@ -91,15 +91,14 @@ module/
 
 | 계층 | 패키지 | 명명 규칙 | 용도 |
 |------|--------|----------|------|
-| 도메인 | `application/dto/` | `*Response` | 서비스 반환값 |
-| 도메인 | `application/model/` | `*ReadModel` | 외부 API 조회 결과 |
+| 도메인 | `application/model/` | `*ReadModel` | 서비스 반환값, 조회 결과 |
 | API | `controller/*/response/` | `*Response` | API 응답 전용 |
 | 영속성 | `repository/*/dto/` | `*DTO` | QueryDSL 조회 결과 |
 
 #### Read Model 생성 방식
 
-- **팩토리 메서드** (권장): `SummonerResponse.of(Summoner)` - Builder 패턴으로 도메인→DTO 변환
-- **Java Record**: 외부 API 조회 결과용 불변 객체 (예: `CurrentGameInfoReadModel`)
+- **팩토리 메서드** (권장): `SummonerReadModel.of(Summoner)` - Builder 패턴으로 도메인→ReadModel 변환
+- **Java Record**: 조회 결과용 불변 객체 (예: `CurrentGameInfoReadModel`)
 - **QueryDSL Projection**: `@QueryProjection` 생성자로 DB→DTO 직접 매핑
 
 ### 패키지 명명 규칙
@@ -116,8 +115,7 @@ module/
 
 | 계층 | 접미사 | 예시 | 위치 |
 |------|--------|------|------|
-| 도메인 응답 DTO | `*Response` | `GameResponse` | `application/dto/` |
-| 도메인 ReadModel | `*ReadModel` | `CurrentGameInfoReadModel` | `application/model/` |
+| 도메인 ReadModel | `*ReadModel` | `GameReadModel` | `application/model/` |
 | 컨트롤러 응답 | `*Response` | `SliceResponse` | `controller/*/response/` |
 | 영속성 DTO | `*DTO` | `MSChampionDTO` | `repository/*/dto/` |
 | 엔티티 | `*Entity` | `MatchEntity` | `repository/*/entity/` |

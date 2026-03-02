@@ -1,13 +1,13 @@
 package com.example.lolserver.docs.controller;
 
 import com.example.lolserver.controller.summoner.SummonerController;
-import com.example.lolserver.domain.summoner.application.dto.SummonerResponse;
+import com.example.lolserver.domain.summoner.application.model.SummonerReadModel;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.summoner.application.SummonerService;
 import com.example.lolserver.domain.summoner.domain.SummonerRenewal;
 import com.example.lolserver.RenewalStatus;
 
-import com.example.lolserver.domain.summoner.application.dto.SummonerAutoResponse;
+import com.example.lolserver.domain.summoner.application.model.SummonerAutoReadModel;
 import com.example.lolserver.domain.summoner.domain.vo.GameName;
 
 import org.junit.jupiter.api.DisplayName;
@@ -58,7 +58,7 @@ class SummonerControllerTest extends RestDocsSupport {
     void getSummoner() throws Exception {
         // given
         LocalDateTime now = LocalDateTime.now();
-        SummonerResponse response = SummonerResponse.builder()
+        SummonerReadModel response = SummonerReadModel.builder()
                 .puuid("test-puuid")
                 .gameName("hide on bush")
                 .tagLine("KR1")
@@ -103,7 +103,7 @@ class SummonerControllerTest extends RestDocsSupport {
     void getSummonerByPuuid() throws Exception {
         // given
         LocalDateTime now = LocalDateTime.now();
-        SummonerResponse response = SummonerResponse.builder()
+        SummonerReadModel response = SummonerReadModel.builder()
                 .puuid("test-puuid")
                 .gameName("hide on bush")
                 .tagLine("KR1")
@@ -147,9 +147,9 @@ class SummonerControllerTest extends RestDocsSupport {
     @DisplayName("유저명 자동완성 API")
     void autoComplete() throws Exception {
         // given
-        List<SummonerAutoResponse> responses = Arrays.asList(
-                new SummonerAutoResponse("testUser1", "KR1", 123, 100L, "GOLD", "I", 50),
-                new SummonerAutoResponse("testUser2", "KR1", 456, 120L, "SILVER", "II", 25)
+        List<SummonerAutoReadModel> responses = Arrays.asList(
+                new SummonerAutoReadModel("testUser1", "KR1", 123, 100L, "GOLD", "I", 50),
+                new SummonerAutoReadModel("testUser2", "KR1", 456, 120L, "SILVER", "II", 25)
         );
         given(summonerService.getAllSummonerAutoComplete(anyString(), anyString())).willReturn(responses);
 

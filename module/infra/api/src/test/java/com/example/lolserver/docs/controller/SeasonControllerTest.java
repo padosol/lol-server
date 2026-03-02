@@ -3,7 +3,7 @@ package com.example.lolserver.docs.controller;
 import com.example.lolserver.controller.season.SeasonController;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.season.application.SeasonService;
-import com.example.lolserver.domain.season.application.dto.SeasonResponse;
+import com.example.lolserver.domain.season.application.model.SeasonReadModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,9 +39,9 @@ class SeasonControllerTest extends RestDocsSupport {
     @Test
     void getAllSeasons_성공() throws Exception {
         // given
-        List<SeasonResponse> seasons = List.of(
-                new SeasonResponse(15, "2025 Season 1", List.of("25.S1.3", "25.S1.2")),
-                new SeasonResponse(14, "2024 Season 3", List.of("14.24.1"))
+        List<SeasonReadModel> seasons = List.of(
+                new SeasonReadModel(15, "2025 Season 1", List.of("25.S1.3", "25.S1.2")),
+                new SeasonReadModel(14, "2024 Season 3", List.of("14.24.1"))
         );
 
         given(seasonService.getAllSeasons()).willReturn(seasons);
@@ -78,7 +78,7 @@ class SeasonControllerTest extends RestDocsSupport {
     void getSeasonById_시즌존재_성공() throws Exception {
         // given
         Long seasonId = 1L;
-        SeasonResponse season = new SeasonResponse(
+        SeasonReadModel season = new SeasonReadModel(
                 15, "2025 Season 1", List.of("25.S1.3", "25.S1.2")
         );
 

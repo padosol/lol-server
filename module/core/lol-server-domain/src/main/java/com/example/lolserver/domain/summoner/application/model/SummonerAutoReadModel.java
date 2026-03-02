@@ -1,4 +1,4 @@
-package com.example.lolserver.domain.summoner.application.dto;
+package com.example.lolserver.domain.summoner.application.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SummonerAutoResponse {
+public class SummonerAutoReadModel {
     private String gameName;
     private String tagLine;
     private int profileIconId;

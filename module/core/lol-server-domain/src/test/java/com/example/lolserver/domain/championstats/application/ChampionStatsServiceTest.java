@@ -1,12 +1,12 @@
 package com.example.lolserver.domain.championstats.application;
 
-import com.example.lolserver.domain.championstats.application.dto.ChampionItemBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionMatchupResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionPositionStatsResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionRuneBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionSkillBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionStatsResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionWinRateResponse;
+import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionPositionStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -43,22 +43,22 @@ class ChampionStatsServiceTest {
         String platformId = "KR";
         String tier = "EMERALD";
 
-        List<ChampionWinRateResponse> winRates = List.of(
-            new ChampionWinRateResponse("MIDDLE", 1000, 520, 0.52),
-            new ChampionWinRateResponse("TOP", 200, 90, 0.45)
+        List<ChampionWinRateReadModel> winRates = List.of(
+            new ChampionWinRateReadModel("MIDDLE", 1000, 520, 0.52),
+            new ChampionWinRateReadModel("TOP", 200, 90, 0.45)
         );
-        Map<String, List<ChampionMatchupResponse>> matchups = Map.of(
-            "MIDDLE", List.of(new ChampionMatchupResponse(238, 200, 110, 0.55)),
-            "TOP", List.of(new ChampionMatchupResponse(86, 50, 20, 0.40))
+        Map<String, List<ChampionMatchupReadModel>> matchups = Map.of(
+            "MIDDLE", List.of(new ChampionMatchupReadModel(238, 200, 110, 0.55)),
+            "TOP", List.of(new ChampionMatchupReadModel(86, 50, 20, 0.40))
         );
-        Map<String, List<ChampionItemBuildResponse>> itemBuilds = Map.of(
-            "MIDDLE", List.of(new ChampionItemBuildResponse("[3089,3157,3165]", 500, 260, 0.52))
+        Map<String, List<ChampionItemBuildReadModel>> itemBuilds = Map.of(
+            "MIDDLE", List.of(new ChampionItemBuildReadModel("[3089,3157,3165]", 500, 260, 0.52))
         );
-        Map<String, List<ChampionRuneBuildResponse>> runeBuilds = Map.of(
-            "MIDDLE", List.of(new ChampionRuneBuildResponse(8100, "[8112,8139,8143,8135]", 8300, "[8304,8345]", 300, 160, 0.5333))
+        Map<String, List<ChampionRuneBuildReadModel>> runeBuilds = Map.of(
+            "MIDDLE", List.of(new ChampionRuneBuildReadModel(8100, "[8112,8139,8143,8135]", 8300, "[8304,8345]", 300, 160, 0.5333))
         );
-        Map<String, List<ChampionSkillBuildResponse>> skillBuilds = Map.of(
-            "MIDDLE", List.of(new ChampionSkillBuildResponse("QWEQEEREQEQWWWW", 400, 210, 0.525))
+        Map<String, List<ChampionSkillBuildReadModel>> skillBuilds = Map.of(
+            "MIDDLE", List.of(new ChampionSkillBuildReadModel("QWEQEEREQEQWWWW", 400, 210, 0.525))
         );
 
         given(championStatsQueryPort.getChampionWinRates(championId, patch, platformId, tier))
@@ -73,13 +73,13 @@ class ChampionStatsServiceTest {
             .willReturn(skillBuilds);
 
         // when
-        ChampionStatsResponse result = championStatsService.getChampionStats(championId, patch, platformId, tier);
+        ChampionStatsReadModel result = championStatsService.getChampionStats(championId, patch, platformId, tier);
 
         // then
         assertThat(result.tier()).isEqualTo("EMERALD");
         assertThat(result.stats()).hasSize(2);
 
-        ChampionPositionStatsResponse middle = result.stats().get(0);
+        ChampionPositionStatsReadModel middle = result.stats().get(0);
         assertThat(middle.teamPosition()).isEqualTo("MIDDLE");
         assertThat(middle.winRate()).isEqualTo(0.52);
         assertThat(middle.totalCount()).isEqualTo(1000);
@@ -89,7 +89,7 @@ class ChampionStatsServiceTest {
         assertThat(middle.runeBuilds()).hasSize(1);
         assertThat(middle.skillBuilds()).hasSize(1);
 
-        ChampionPositionStatsResponse top = result.stats().get(1);
+        ChampionPositionStatsReadModel top = result.stats().get(1);
         assertThat(top.teamPosition()).isEqualTo("TOP");
         assertThat(top.winRate()).isEqualTo(0.45);
         assertThat(top.totalCount()).isEqualTo(200);
@@ -120,7 +120,7 @@ class ChampionStatsServiceTest {
             .willReturn(Map.of());
 
         // when
-        ChampionStatsResponse result = championStatsService.getChampionStats(championId, patch, platformId, tier);
+        ChampionStatsReadModel result = championStatsService.getChampionStats(championId, patch, platformId, tier);
 
         // then
         assertThat(result.stats()).isEmpty();

@@ -1,9 +1,9 @@
 package com.example.lolserver.repository.match.matchsummoner.dsl.impl;
 
 import com.example.lolserver.repository.match.dto.DailyGameCountDTO;
-import com.example.lolserver.repository.match.dto.LinePosition;
+import com.example.lolserver.repository.match.dto.LinePositionDTO;
 import com.example.lolserver.repository.match.dto.MSChampionDTO;
-import com.example.lolserver.repository.match.dto.QDailyGameCountDTO;
+
 import com.example.lolserver.repository.match.dto.QMSChampionDTO;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
 import com.example.lolserver.repository.match.matchsummoner.dsl.MatchSummonerRepositoryCustom;
@@ -23,7 +23,6 @@ import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -167,11 +166,11 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
     }
 
     @Override
-    public List<LinePosition> findAllPositionByPuuidAndLimit(String puuid, Long limit) {
+    public List<LinePositionDTO> findAllPositionByPuuidAndLimit(String puuid, Long limit) {
 
-        JPAQuery<LinePosition> query = jpaQueryFactory.select(
+        JPAQuery<LinePositionDTO> query = jpaQueryFactory.select(
                         Projections.fields(
-                                LinePosition.class,
+                                LinePositionDTO.class,
                                 matchSummonerEntity.individualPosition.as("position"),
                                 matchSummonerEntity.individualPosition.count().as("playCount")
                         )
@@ -218,11 +217,11 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
     public List<DailyGameCountDTO> findDailyGameCounts(
             String puuid, Integer season, Integer queueId, LocalDateTime startDate) {
 
-        DateTemplate<LocalDate> gameDate = Expressions.dateTemplate(
-                LocalDate.class, "CAST({0} AS DATE)", matchEntity.gameCreateDatetime);
+        DateTemplate<java.sql.Date> gameDate = Expressions.dateTemplate(
+                java.sql.Date.class, "CAST({0} AS DATE)", matchEntity.gameCreateDatetime);
 
         return jpaQueryFactory
-                .select(new QDailyGameCountDTO(gameDate, matchSummonerEntity.count()))
+                .select(gameDate, matchSummonerEntity.count())
                 .from(matchSummonerEntity)
                 .join(matchEntity).on(matchEntity.matchId.eq(matchSummonerEntity.matchId))
                 .where(
@@ -233,7 +232,12 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                 )
                 .groupBy(gameDate)
                 .orderBy(gameDate.asc())
-                .fetch();
+                .fetch()
+                .stream()
+                .map(tuple -> new DailyGameCountDTO(
+                        tuple.get(gameDate).toLocalDate(),
+                        tuple.get(matchSummonerEntity.count())))
+                .toList();
     }
 
     private BooleanExpression queueIdEqOrAll(Integer queueId) {

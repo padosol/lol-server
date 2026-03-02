@@ -13,6 +13,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class MatchCommand {
     private String puuid;
+    private Integer season;
     private Integer queueId;
     private Integer pageNo;
     private String platformId;

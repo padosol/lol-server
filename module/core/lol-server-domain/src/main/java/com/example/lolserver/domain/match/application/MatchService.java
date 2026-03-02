@@ -2,8 +2,8 @@ package com.example.lolserver.domain.match.application;
 
 import com.example.lolserver.domain.match.application.command.MSChampionCommand;
 import com.example.lolserver.domain.match.application.command.MatchCommand;
-import com.example.lolserver.domain.match.application.dto.DailyGameCountResponse;
-import com.example.lolserver.domain.match.application.dto.GameResponse;
+import com.example.lolserver.domain.match.application.model.DailyGameCountReadModel;
+import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.domain.match.application.port.out.MatchPersistencePort;
@@ -28,7 +28,7 @@ public class MatchService {
 
     private final MatchPersistencePort matchPersistencePort;
 
-    public Page<GameResponse> getMatches(MatchCommand matchCommand) {
+    public Page<GameReadModel> getMatches(MatchCommand matchCommand) {
         Pageable pageable = PageRequest.of(
                 matchCommand.getPageNo(), 20, Sort.by(Sort.Direction.DESC, "match"));
 
@@ -39,7 +39,7 @@ public class MatchService {
         return matchPersistencePort.getRankChampions(command.getPuuid(), command.getSeason(), command.getQueueId());
     }
 
-    public GameResponse getGameData(String matchId) {
+    public GameReadModel getGameData(String matchId) {
         return matchPersistencePort.getGameData(matchId)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_MATCH_ID, "존재하지 않는 MatchId 입니다. " + matchId));
     }
@@ -48,11 +48,12 @@ public class MatchService {
         return matchPersistencePort.getTimelineData(matchId);
     }
 
-    public Page<GameResponse> getMatchesBatch(MatchCommand matchCommand) {
+    public Page<GameReadModel> getMatchesBatch(MatchCommand matchCommand) {
         Pageable pageable = PageRequest.of(
                 matchCommand.getPageNo(), 20, Sort.by(Sort.Direction.DESC, "match"));
 
-        return matchPersistencePort.getMatchesBatch(matchCommand.getPuuid(), matchCommand.getQueueId(), pageable);
+        return matchPersistencePort.getMatchesBatch(
+                matchCommand.getPuuid(), matchCommand.getSeason(), matchCommand.getQueueId(), pageable);
     }
 
     public Page<String> findAllMatchIds(MatchCommand matchCommand) {
@@ -64,7 +65,7 @@ public class MatchService {
         return matchPersistencePort.findAllMatchIds(matchCommand.getPuuid(), matchCommand.getQueueId(), pageable);
     }
 
-    public List<DailyGameCountResponse> getDailyGameCounts(
+    public List<DailyGameCountReadModel> getDailyGameCounts(
             String puuid, Integer season, Integer queueId) {
         LocalDateTime startDate = LocalDate.now().minusMonths(3).atStartOfDay();
         return matchPersistencePort.getDailyGameCounts(puuid, season, queueId, startDate);

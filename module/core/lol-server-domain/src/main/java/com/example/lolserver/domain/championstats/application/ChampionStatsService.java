@@ -1,12 +1,12 @@
 package com.example.lolserver.domain.championstats.application;
 
-import com.example.lolserver.domain.championstats.application.dto.ChampionItemBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionMatchupResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionPositionStatsResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionRuneBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionSkillBuildResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionStatsResponse;
-import com.example.lolserver.domain.championstats.application.dto.ChampionWinRateResponse;
+import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionPositionStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,20 +22,20 @@ public class ChampionStatsService {
 
     private final ChampionStatsQueryPort championStatsQueryPort;
 
-    public ChampionStatsResponse getChampionStats(int championId, String patch, String platformId, String tier) {
-        List<ChampionWinRateResponse> winRates =
+    public ChampionStatsReadModel getChampionStats(int championId, String patch, String platformId, String tier) {
+        List<ChampionWinRateReadModel> winRates =
             championStatsQueryPort.getChampionWinRates(championId, patch, platformId, tier);
-        Map<String, List<ChampionMatchupResponse>> matchupsByPos =
+        Map<String, List<ChampionMatchupReadModel>> matchupsByPos =
             championStatsQueryPort.getChampionMatchups(championId, patch, platformId, tier);
-        Map<String, List<ChampionItemBuildResponse>> itemBuildsByPos =
+        Map<String, List<ChampionItemBuildReadModel>> itemBuildsByPos =
             championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tier);
-        Map<String, List<ChampionRuneBuildResponse>> runeBuildsByPos =
+        Map<String, List<ChampionRuneBuildReadModel>> runeBuildsByPos =
             championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tier);
-        Map<String, List<ChampionSkillBuildResponse>> skillBuildsByPos =
+        Map<String, List<ChampionSkillBuildReadModel>> skillBuildsByPos =
             championStatsQueryPort.getChampionSkillBuilds(championId, patch, platformId, tier);
 
-        List<ChampionPositionStatsResponse> stats = winRates.stream()
-            .map(wr -> new ChampionPositionStatsResponse(
+        List<ChampionPositionStatsReadModel> stats = winRates.stream()
+            .map(wr -> new ChampionPositionStatsReadModel(
                 wr.teamPosition(),
                 wr.totalWinRate(),
                 wr.totalGames(),
@@ -46,6 +46,6 @@ public class ChampionStatsService {
             ))
             .toList();
 
-        return new ChampionStatsResponse(tier, stats);
+        return new ChampionStatsReadModel(tier, stats);
     }
 }
