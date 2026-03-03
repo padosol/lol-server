@@ -9,6 +9,8 @@ import com.example.lolserver.domain.championstats.application.model.ChampionPosi
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionTotalGamesReadModel;
+import com.example.lolserver.domain.championstats.application.model.PositionChampionGamesReadModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -146,6 +148,59 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.stats[].skillBuilds[].totalGames").type(JsonFieldType.NUMBER).description("총 게임 수"),
                                 fieldWithPath("data.stats[].skillBuilds[].totalWins").type(JsonFieldType.NUMBER).description("총 승리 수"),
                                 fieldWithPath("data.stats[].skillBuilds[].totalWinRate").type(JsonFieldType.NUMBER).description("승률")
+                        )
+                ));
+    }
+
+    @DisplayName("포지션별 챔피언 총 게임수 조회 API")
+    @Test
+    void getChampionTotalGamesByPosition() throws Exception {
+        // given
+        String platformId = "kr";
+        List<PositionChampionGamesReadModel> response = List.of(
+                new PositionChampionGamesReadModel("TOP", List.of(
+                        new ChampionTotalGamesReadModel(266, 1500),
+                        new ChampionTotalGamesReadModel(122, 1200)
+                )),
+                new PositionChampionGamesReadModel("JUNGLE", List.of(
+                        new ChampionTotalGamesReadModel(64, 2000)
+                ))
+        );
+        given(championStatsService.getChampionTotalGamesByPosition(anyString(), anyString(), anyString()))
+                .willReturn(response);
+
+        // when & then
+        mockMvc.perform(
+                        get("/api/v1/{platformId}/champion-stats/positions", platformId)
+                                .param("patch", "16.1")
+                                .param("tier", "EMERALD")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andDo(document("champion-stats-positions",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)")
+                        ),
+                        queryParameters(
+                                parameterWithName("patch").description("패치 버전 (e.g., 16.1)"),
+                                parameterWithName("tier").description("티어 (e.g., EMERALD)")
+                        ),
+                        responseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지"),
+                                fieldWithPath("data[]").type(JsonFieldType.ARRAY)
+                                        .description("포지션별 챔피언 게임수 목록"),
+                                fieldWithPath("data[].teamPosition").type(JsonFieldType.STRING)
+                                        .description("포지션 (TOP, JUNGLE, MIDDLE, BOTTOM, UTILITY)"),
+                                fieldWithPath("data[].champions[]").type(JsonFieldType.ARRAY)
+                                        .description("해당 포지션의 챔피언 목록"),
+                                fieldWithPath("data[].champions[].championId").type(JsonFieldType.NUMBER)
+                                        .description("챔피언 ID"),
+                                fieldWithPath("data[].champions[].totalGames").type(JsonFieldType.NUMBER)
+                                        .description("총 게임 수")
                         )
                 ));
     }

@@ -45,6 +45,8 @@ include::api/champion/champion-rotate.adoc[]
 
 include::api/championstats/champion-stats-get.adoc[]
 
+include::api/championstats/champion-stats-positions.adoc[]
+
 [[Rank-API]]
 == Rank API
 

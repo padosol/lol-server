@@ -4,6 +4,7 @@ import com.example.lolserver.domain.championstats.application.model.ChampionItem
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionTotalGamesReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -134,5 +135,30 @@ class ChampionStatsClickHouseAdapterTest {
         assertThat(result).containsKey("MIDDLE");
         assertThat(result.get("MIDDLE")).hasSize(1);
         assertThat(result.get("MIDDLE").get(0).skillOrder15()).isEqualTo("QWEQEEREQEQWWWW");
+    }
+
+    @DisplayName("포지션별 챔피언 총 게임수를 Map으로 반환한다")
+    @Test
+    @SuppressWarnings("unchecked")
+    void getChampionTotalGamesByPosition() {
+        // given
+        List<AbstractMap.SimpleEntry<String, ChampionTotalGamesReadModel>> entries = List.of(
+            new AbstractMap.SimpleEntry<>("TOP", new ChampionTotalGamesReadModel(266, 1500)),
+            new AbstractMap.SimpleEntry<>("TOP", new ChampionTotalGamesReadModel(122, 1200)),
+            new AbstractMap.SimpleEntry<>("JUNGLE", new ChampionTotalGamesReadModel(64, 2000))
+        );
+        given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
+            .willReturn(entries);
+
+        // when
+        Map<String, List<ChampionTotalGamesReadModel>> result =
+            adapter.getChampionTotalGamesByPosition("16.1", "KR", "EMERALD");
+
+        // then
+        assertThat(result).containsKeys("TOP", "JUNGLE");
+        assertThat(result.get("TOP")).hasSize(2);
+        assertThat(result.get("TOP").get(0).championId()).isEqualTo(266);
+        assertThat(result.get("JUNGLE")).hasSize(1);
+        assertThat(result.get("JUNGLE").get(0).championId()).isEqualTo(64);
     }
 }
