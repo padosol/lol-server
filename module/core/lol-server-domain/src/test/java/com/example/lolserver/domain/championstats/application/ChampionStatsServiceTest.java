@@ -6,7 +6,9 @@ import com.example.lolserver.domain.championstats.application.model.ChampionPosi
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionTotalGamesReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
+import com.example.lolserver.domain.championstats.application.model.PositionChampionGamesReadModel;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -124,5 +126,55 @@ class ChampionStatsServiceTest {
 
         // then
         assertThat(result.stats()).isEmpty();
+    }
+
+    @DisplayName("포지션별 챔피언 총 게임수를 반환한다")
+    @Test
+    void getChampionTotalGamesByPosition_returnsGroupedByPosition() {
+        // given
+        String patch = "16.1";
+        String platformId = "KR";
+        String tier = "EMERALD";
+
+        Map<String, List<ChampionTotalGamesReadModel>> grouped = Map.of(
+            "TOP", List.of(
+                new ChampionTotalGamesReadModel(266, 1500),
+                new ChampionTotalGamesReadModel(122, 1200)
+            ),
+            "JUNGLE", List.of(
+                new ChampionTotalGamesReadModel(64, 2000)
+            )
+        );
+
+        given(championStatsQueryPort.getChampionTotalGamesByPosition(patch, platformId, tier))
+            .willReturn(grouped);
+
+        // when
+        List<PositionChampionGamesReadModel> result =
+            championStatsService.getChampionTotalGamesByPosition(patch, platformId, tier);
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting(PositionChampionGamesReadModel::teamPosition)
+            .containsExactlyInAnyOrder("TOP", "JUNGLE");
+    }
+
+    @DisplayName("포지션별 챔피언 총 게임수 조회 시 데이터가 없으면 빈 리스트를 반환한다")
+    @Test
+    void getChampionTotalGamesByPosition_returnsEmptyList_whenNoData() {
+        // given
+        String patch = "16.1";
+        String platformId = "KR";
+        String tier = "EMERALD";
+
+        given(championStatsQueryPort.getChampionTotalGamesByPosition(patch, platformId, tier))
+            .willReturn(Map.of());
+
+        // when
+        List<PositionChampionGamesReadModel> result =
+            championStatsService.getChampionTotalGamesByPosition(patch, platformId, tier);
+
+        // then
+        assertThat(result).isEmpty();
     }
 }

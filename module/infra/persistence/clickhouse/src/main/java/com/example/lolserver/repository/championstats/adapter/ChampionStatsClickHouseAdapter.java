@@ -4,6 +4,7 @@ import com.example.lolserver.domain.championstats.application.model.ChampionItem
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionTotalGamesReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
 import lombok.extern.slf4j.Slf4j;
@@ -188,6 +189,31 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                                 rs.getLong("total_games"),
                                 rs.getLong("total_wins"),
                                 rs.getDouble("total_win_rate")
+                        )
+                )).stream()
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey,
+                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())
+                ));
+    }
+
+    @Override
+    public Map<String, List<ChampionTotalGamesReadModel>> getChampionTotalGamesByPosition(
+            String patch, String platformId, String tier) {
+        String sql = """
+                SELECT team_position, champion_id, toInt64(sum(games)) AS total_games
+                FROM champion_stats_local
+                WHERE patch = %s AND platform_id = %s AND tier = %s
+                GROUP BY team_position, champion_id
+                ORDER BY team_position, total_games DESC
+                """.formatted(quote(patch), quote(platformId), quote(tier));
+
+        return clickHouseJdbcTemplate.query(sql,
+                (rs, rowNum) -> new AbstractMap.SimpleEntry<>(
+                        rs.getString("team_position"),
+                        new ChampionTotalGamesReadModel(
+                                rs.getInt("champion_id"),
+                                rs.getLong("total_games")
                         )
                 )).stream()
                 .collect(Collectors.groupingBy(

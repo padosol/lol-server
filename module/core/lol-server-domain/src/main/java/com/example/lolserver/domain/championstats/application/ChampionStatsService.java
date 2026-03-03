@@ -6,7 +6,9 @@ import com.example.lolserver.domain.championstats.application.model.ChampionPosi
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionTotalGamesReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
+import com.example.lolserver.domain.championstats.application.model.PositionChampionGamesReadModel;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,5 +49,15 @@ public class ChampionStatsService {
             .toList();
 
         return new ChampionStatsReadModel(tier, stats);
+    }
+
+    public List<PositionChampionGamesReadModel> getChampionTotalGamesByPosition(
+            String patch, String platformId, String tier) {
+        Map<String, List<ChampionTotalGamesReadModel>> groupedByPosition =
+                championStatsQueryPort.getChampionTotalGamesByPosition(patch, platformId, tier);
+
+        return groupedByPosition.entrySet().stream()
+                .map(entry -> new PositionChampionGamesReadModel(entry.getKey(), entry.getValue()))
+                .toList();
     }
 }

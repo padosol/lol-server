@@ -1,0 +1,11 @@
+[[champion-stats-positions]]
+=== 포지션별 챔피언 게임수 조회
+
+==== HTTP Request
+include::{snippets}/champion-stats-positions/http-request.adoc[]
+include::{snippets}/champion-stats-positions/path-parameters.adoc[]
+include::{snippets}/champion-stats-positions/query-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/champion-stats-positions/http-response.adoc[]
+include::{snippets}/champion-stats-positions/response-fields.adoc[]
