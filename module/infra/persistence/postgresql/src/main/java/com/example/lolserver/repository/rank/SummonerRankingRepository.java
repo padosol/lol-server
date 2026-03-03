@@ -14,5 +14,9 @@ public interface SummonerRankingRepository extends JpaRepository<SummonerRanking
 
     Page<SummonerRankingEntity> findByQueue(String queue, Pageable pageable);
 
+    Page<SummonerRankingEntity> findByQueueAndPlatformId(String queue, String platformId, Pageable pageable);
+
     Page<SummonerRankingEntity> findByQueueAndTier(String queue, String tier, Pageable pageable);
+
+    Page<SummonerRankingEntity> findByQueueAndTierAndPlatformId(String queue, String tier, String platformId, Pageable pageable);
 }

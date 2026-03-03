@@ -40,7 +40,7 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         SummonerRankingEntity flexRank = createRankingEntity("Player2", "RANKED_FLEX_SR", "PLATINUM", "II", 1);
         summonerRankingRepository.saveAll(List.of(soloRank, flexRank));
 
-        String platformId = "kr";
+        String platformId = "KR";
         RankSearchDto searchDto = new RankSearchDto();
         searchDto.setRankType(RankSearchDto.GameType.SOLO);
         searchDto.setPage(1);
@@ -63,7 +63,7 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         SummonerRankingEntity flexRank = createRankingEntity("FlexPlayer", "RANKED_FLEX_SR", "GOLD", "III", 1);
         summonerRankingRepository.saveAll(List.of(soloRank, flexRank));
 
-        String platformId = "kr";
+        String platformId = "KR";
         RankSearchDto searchDto = new RankSearchDto();
         searchDto.setRankType(RankSearchDto.GameType.FLEX);
         searchDto.setPage(1);
@@ -86,7 +86,7 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         SummonerRankingEntity goldPlayer = createRankingEntity("GoldPlayer", "RANKED_SOLO_5x5", "GOLD", "II", 2);
         summonerRankingRepository.saveAll(List.of(diamondPlayer, goldPlayer));
 
-        String platformId = "kr";
+        String platformId = "KR";
         RankSearchDto searchDto = new RankSearchDto();
         searchDto.setRankType(RankSearchDto.GameType.SOLO);
         searchDto.setTier("DIAMOND");
@@ -109,7 +109,7 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         SummonerRankingEntity rank3 = createRankingEntity("Player3", "RANKED_SOLO_5x5", "DIAMOND", "I", 3);
         summonerRankingRepository.saveAll(List.of(rank2, rank1, rank3));
 
-        String platformId = "kr";
+        String platformId = "KR";
         RankSearchDto searchDto = new RankSearchDto();
         searchDto.setRankType(RankSearchDto.GameType.SOLO);
         searchDto.setPage(1);
@@ -124,11 +124,36 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         assertThat(result.getContent().get(2).getCurrentRank()).isEqualTo(3);
     }
 
+    @DisplayName("다른 platformId의 데이터는 조회되지 않는다")
+    @Test
+    void getRanks_differentPlatformId_returnsOnlyMatchingPlatform() {
+        // given
+        SummonerRankingEntity krPlayer = createRankingEntity("KRPlayer", "RANKED_SOLO_5x5", "DIAMOND", "I", 1);
+        SummonerRankingEntity jpPlayer = createRankingEntityWithPlatform("JPPlayer", "RANKED_SOLO_5x5", "DIAMOND", "I", 1, "JP1");
+        summonerRankingRepository.saveAll(List.of(krPlayer, jpPlayer));
+
+        String platformId = "KR";
+        RankSearchDto searchDto = new RankSearchDto();
+        searchDto.setRankType(RankSearchDto.GameType.SOLO);
+        searchDto.setPage(1);
+
+        // when
+        Page<Rank> result = adapter.getRanks(searchDto, platformId);
+
+        // then
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getGameName()).isEqualTo("KRPlayer");
+    }
+
     private SummonerRankingEntity createRankingEntity(String gameName, String queue, String tier, String rank, int currentRank) {
+        return createRankingEntityWithPlatform(gameName, queue, tier, rank, currentRank, "KR");
+    }
+
+    private SummonerRankingEntity createRankingEntityWithPlatform(String gameName, String queue, String tier, String rank, int currentRank, String platformId) {
         return SummonerRankingEntity.builder()
                 .puuid("puuid-" + gameName)
                 .queue(queue)
-                .platformId("KR")
+                .platformId(platformId)
                 .currentRank(currentRank)
                 .rankChange(0)
                 .gameName(gameName)
