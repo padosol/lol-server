@@ -12,7 +12,8 @@ import java.util.List;
 public interface SummonerRankingRepository extends JpaRepository<SummonerRankingEntity, Long> {
     List<SummonerRankingEntity> findByQueue(String queue);
 
-    Page<SummonerRankingEntity> findByQueue(String queue, Pageable pageable);
+    Page<SummonerRankingEntity> findByPlatformIdAndQueue(String platformId, String queue, Pageable pageable);
 
-    Page<SummonerRankingEntity> findByQueueAndTier(String queue, String tier, Pageable pageable);
+    Page<SummonerRankingEntity> findByPlatformIdAndQueueAndTier(
+            String platformId, String queue, String tier, Pageable pageable);
 }

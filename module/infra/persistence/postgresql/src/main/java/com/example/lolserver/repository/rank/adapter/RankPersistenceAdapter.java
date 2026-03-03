@@ -31,11 +31,14 @@ public class RankPersistenceAdapter implements RankPersistencePort {
                 Sort.by("currentRank").ascending()
         );
 
+        String normalizedPlatformId = platformId.toUpperCase();
+
         Page<SummonerRankingEntity> entityPage;
         if (rankSearchDto.getTier() != null && !rankSearchDto.getTier().isEmpty()) {
-            entityPage = summonerRankingRepository.findByQueueAndTier(queue, rankSearchDto.getTier(), pageable);
+            entityPage = summonerRankingRepository.findByPlatformIdAndQueueAndTier(
+                    normalizedPlatformId, queue, rankSearchDto.getTier(), pageable);
         } else {
-            entityPage = summonerRankingRepository.findByQueue(queue, pageable);
+            entityPage = summonerRankingRepository.findByPlatformIdAndQueue(normalizedPlatformId, queue, pageable);
         }
 
         return entityPage.map(rankMapper::entityToDomain);
