@@ -145,6 +145,50 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         assertThat(result.getContent().get(0).getGameName()).isEqualTo("KRPlayer");
     }
 
+    @DisplayName("tier 필터와 platformId 필터가 동시에 적용되면 해당 조건만 반환한다")
+    @Test
+    void getRanks_withTierAndPlatformIdFilter_returnsFilteredRanks() {
+        // given
+        SummonerRankingEntity krDiamond = createRankingEntity("KRDiamond", "RANKED_SOLO_5x5", "DIAMOND", "I", 1);
+        SummonerRankingEntity krGold = createRankingEntity("KRGold", "RANKED_SOLO_5x5", "GOLD", "II", 2);
+        SummonerRankingEntity jpDiamond = createRankingEntityWithPlatform("JPDiamond", "RANKED_SOLO_5x5", "DIAMOND", "I", 1, "JP1");
+        summonerRankingRepository.saveAll(List.of(krDiamond, krGold, jpDiamond));
+
+        String platformId = "KR";
+        RankSearchDto searchDto = new RankSearchDto();
+        searchDto.setRankType(RankSearchDto.GameType.SOLO);
+        searchDto.setTier("DIAMOND");
+        searchDto.setPage(1);
+
+        // when
+        Page<Rank> result = adapter.getRanks(searchDto, platformId);
+
+        // then
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getGameName()).isEqualTo("KRDiamond");
+        assertThat(result.getContent().get(0).getTier()).isEqualTo("DIAMOND");
+    }
+
+    @DisplayName("소문자 platformId를 전달해도 대문자로 정규화되어 조회된다")
+    @Test
+    void getRanks_lowercasePlatformId_normalizedToUpperCase() {
+        // given
+        SummonerRankingEntity krPlayer = createRankingEntity("KRPlayer", "RANKED_SOLO_5x5", "DIAMOND", "I", 1);
+        summonerRankingRepository.save(krPlayer);
+
+        String platformId = "kr";
+        RankSearchDto searchDto = new RankSearchDto();
+        searchDto.setRankType(RankSearchDto.GameType.SOLO);
+        searchDto.setPage(1);
+
+        // when
+        Page<Rank> result = adapter.getRanks(searchDto, platformId);
+
+        // then
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getGameName()).isEqualTo("KRPlayer");
+    }
+
     private SummonerRankingEntity createRankingEntity(String gameName, String queue, String tier, String rank, int currentRank) {
         return createRankingEntityWithPlatform(gameName, queue, tier, rank, currentRank, "KR");
     }
