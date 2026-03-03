@@ -35,7 +35,8 @@ public class RankPersistenceAdapter implements RankPersistencePort {
 
         Page<SummonerRankingEntity> entityPage;
         if (rankSearchDto.getTier() != null && !rankSearchDto.getTier().isEmpty()) {
-            entityPage = summonerRankingRepository.findByPlatformIdAndQueueAndTier(normalizedPlatformId, queue, rankSearchDto.getTier(), pageable);
+            entityPage = summonerRankingRepository.findByPlatformIdAndQueueAndTier(
+                    normalizedPlatformId, queue, rankSearchDto.getTier(), pageable);
         } else {
             entityPage = summonerRankingRepository.findByPlatformIdAndQueue(normalizedPlatformId, queue, pageable);
         }
