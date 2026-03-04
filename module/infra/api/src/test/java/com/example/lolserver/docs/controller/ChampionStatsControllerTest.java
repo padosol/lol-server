@@ -9,8 +9,8 @@ import com.example.lolserver.domain.championstats.application.model.ChampionPosi
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
-import com.example.lolserver.domain.championstats.application.model.ChampionTotalGamesReadModel;
-import com.example.lolserver.domain.championstats.application.model.PositionChampionGamesReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
+import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -152,21 +152,21 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                 ));
     }
 
-    @DisplayName("포지션별 챔피언 총 게임수 조회 API")
+    @DisplayName("포지션별 챔피언 승률/픽률/밴률 조회 API")
     @Test
-    void getChampionTotalGamesByPosition() throws Exception {
+    void getChampionStatsByPosition() throws Exception {
         // given
         String platformId = "kr";
-        List<PositionChampionGamesReadModel> response = List.of(
-                new PositionChampionGamesReadModel("TOP", List.of(
-                        new ChampionTotalGamesReadModel(266, 1500),
-                        new ChampionTotalGamesReadModel(122, 1200)
+        List<PositionChampionStatsReadModel> response = List.of(
+                new PositionChampionStatsReadModel("TOP", List.of(
+                        new ChampionRateReadModel(266, 0.5200, 0.0800, 0.0500),
+                        new ChampionRateReadModel(122, 0.4800, 0.0600, 0.0300)
                 )),
-                new PositionChampionGamesReadModel("JUNGLE", List.of(
-                        new ChampionTotalGamesReadModel(64, 2000)
+                new PositionChampionStatsReadModel("JUNGLE", List.of(
+                        new ChampionRateReadModel(64, 0.5100, 0.1000, 0.0700)
                 ))
         );
-        given(championStatsService.getChampionTotalGamesByPosition(anyString(), anyString(), anyString()))
+        given(championStatsService.getChampionStatsByPosition(anyString(), anyString(), anyString()))
                 .willReturn(response);
 
         // when & then
@@ -192,15 +192,19 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지"),
                                 fieldWithPath("data[]").type(JsonFieldType.ARRAY)
-                                        .description("포지션별 챔피언 게임수 목록"),
+                                        .description("포지션별 챔피언 통계 목록"),
                                 fieldWithPath("data[].teamPosition").type(JsonFieldType.STRING)
                                         .description("포지션 (TOP, JUNGLE, MIDDLE, BOTTOM, UTILITY)"),
                                 fieldWithPath("data[].champions[]").type(JsonFieldType.ARRAY)
                                         .description("해당 포지션의 챔피언 목록"),
                                 fieldWithPath("data[].champions[].championId").type(JsonFieldType.NUMBER)
                                         .description("챔피언 ID"),
-                                fieldWithPath("data[].champions[].totalGames").type(JsonFieldType.NUMBER)
-                                        .description("총 게임 수")
+                                fieldWithPath("data[].champions[].winRate").type(JsonFieldType.NUMBER)
+                                        .description("승률"),
+                                fieldWithPath("data[].champions[].pickRate").type(JsonFieldType.NUMBER)
+                                        .description("픽률"),
+                                fieldWithPath("data[].champions[].banRate").type(JsonFieldType.NUMBER)
+                                        .description("밴률")
                         )
                 ));
     }

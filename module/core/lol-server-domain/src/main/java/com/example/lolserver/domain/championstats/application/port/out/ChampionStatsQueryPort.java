@@ -4,7 +4,7 @@ import com.example.lolserver.domain.championstats.application.model.ChampionItem
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
-import com.example.lolserver.domain.championstats.application.model.ChampionTotalGamesReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 
 import java.util.List;
@@ -26,6 +26,6 @@ public interface ChampionStatsQueryPort {
     Map<String, List<ChampionSkillBuildReadModel>> getChampionSkillBuilds(
             int championId, String patch, String platformId, String tier);
 
-    Map<String, List<ChampionTotalGamesReadModel>> getChampionTotalGamesByPosition(
+    Map<String, List<ChampionRateReadModel>> getChampionStatsByPosition(
             String patch, String platformId, String tier);
 }

@@ -4,7 +4,7 @@ import com.example.lolserver.domain.championstats.application.model.ChampionItem
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
-import com.example.lolserver.domain.championstats.application.model.ChampionTotalGamesReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -137,27 +137,28 @@ class ChampionStatsClickHouseAdapterTest {
         assertThat(result.get("MIDDLE").get(0).skillOrder15()).isEqualTo("QWEQEEREQEQWWWW");
     }
 
-    @DisplayName("포지션별 챔피언 총 게임수를 Map으로 반환한다")
+    @DisplayName("포지션별 챔피언 승률/픽률/밴률을 Map으로 반환한다")
     @Test
     @SuppressWarnings("unchecked")
-    void getChampionTotalGamesByPosition() {
+    void getChampionStatsByPosition() {
         // given
-        List<AbstractMap.SimpleEntry<String, ChampionTotalGamesReadModel>> entries = List.of(
-            new AbstractMap.SimpleEntry<>("TOP", new ChampionTotalGamesReadModel(266, 1500)),
-            new AbstractMap.SimpleEntry<>("TOP", new ChampionTotalGamesReadModel(122, 1200)),
-            new AbstractMap.SimpleEntry<>("JUNGLE", new ChampionTotalGamesReadModel(64, 2000))
+        List<AbstractMap.SimpleEntry<String, ChampionRateReadModel>> entries = List.of(
+            new AbstractMap.SimpleEntry<>("TOP", new ChampionRateReadModel(266, 0.5200, 0.0800, 0.0500)),
+            new AbstractMap.SimpleEntry<>("TOP", new ChampionRateReadModel(122, 0.4800, 0.0600, 0.0300)),
+            new AbstractMap.SimpleEntry<>("JUNGLE", new ChampionRateReadModel(64, 0.5100, 0.1000, 0.0700))
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
             .willReturn(entries);
 
         // when
-        Map<String, List<ChampionTotalGamesReadModel>> result =
-            adapter.getChampionTotalGamesByPosition("16.1", "KR", "EMERALD");
+        Map<String, List<ChampionRateReadModel>> result =
+            adapter.getChampionStatsByPosition("16.1", "KR", "EMERALD");
 
         // then
         assertThat(result).containsKeys("TOP", "JUNGLE");
         assertThat(result.get("TOP")).hasSize(2);
         assertThat(result.get("TOP").get(0).championId()).isEqualTo(266);
+        assertThat(result.get("TOP").get(0).winRate()).isEqualTo(0.5200);
         assertThat(result.get("JUNGLE")).hasSize(1);
         assertThat(result.get("JUNGLE").get(0).championId()).isEqualTo(64);
     }

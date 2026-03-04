@@ -4,7 +4,7 @@ import com.example.lolserver.Platform;
 import com.example.lolserver.controller.support.response.ApiResponse;
 import com.example.lolserver.domain.championstats.application.ChampionStatsService;
 import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
-import com.example.lolserver.domain.championstats.application.model.PositionChampionGamesReadModel;
+import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -38,14 +38,14 @@ public class ChampionStatsController {
     }
 
     @GetMapping("/positions")
-    public ResponseEntity<ApiResponse<List<PositionChampionGamesReadModel>>> getChampionTotalGamesByPosition(
+    public ResponseEntity<ApiResponse<List<PositionChampionStatsReadModel>>> getChampionStatsByPosition(
             @PathVariable("platformId") String platformId,
             @RequestParam("patch") String patch,
             @RequestParam("tier") String tier
     ) {
         String riotPlatformId = Platform.valueOfName(platformId).getPlatformId();
-        List<PositionChampionGamesReadModel> response =
-                championStatsService.getChampionTotalGamesByPosition(patch, riotPlatformId, tier);
+        List<PositionChampionStatsReadModel> response =
+                championStatsService.getChampionStatsByPosition(patch, riotPlatformId, tier);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

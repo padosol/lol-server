@@ -2,7 +2,7 @@ package com.example.lolserver.domain.championstats.application.model;
 
 import java.util.List;
 
-public record PositionChampionGamesReadModel(
+public record PositionChampionStatsReadModel(
         String teamPosition,
-        List<ChampionTotalGamesReadModel> champions
+        List<ChampionRateReadModel> champions
 ) {}

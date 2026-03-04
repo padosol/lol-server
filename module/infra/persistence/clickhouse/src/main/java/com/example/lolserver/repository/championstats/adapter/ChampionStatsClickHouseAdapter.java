@@ -4,7 +4,7 @@ import com.example.lolserver.domain.championstats.application.model.ChampionItem
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
-import com.example.lolserver.domain.championstats.application.model.ChampionTotalGamesReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
 import lombok.extern.slf4j.Slf4j;
@@ -198,22 +198,53 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
     }
 
     @Override
-    public Map<String, List<ChampionTotalGamesReadModel>> getChampionTotalGamesByPosition(
+    public Map<String, List<ChampionRateReadModel>> getChampionStatsByPosition(
             String patch, String platformId, String tier) {
         String sql = """
-                SELECT team_position, champion_id, toInt64(sum(games)) AS total_games
-                FROM champion_stats_local
-                WHERE patch = %s AND platform_id = %s AND tier = %s
-                GROUP BY team_position, champion_id
-                ORDER BY team_position, total_games DESC
+                WITH
+                    stats AS (
+                        SELECT champion_id, team_position,
+                               sum(games) AS games, sum(wins) AS wins
+                        FROM champion_stats_agg
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                        GROUP BY champion_id, team_position
+                    ),
+                    pick_total AS (
+                        SELECT team_position, sum(participant_rows) AS participant_rows
+                        FROM match_count_agg
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                        GROUP BY team_position
+                    ),
+                    ban_stats AS (
+                        SELECT champion_id, sum(bans) AS bans
+                        FROM champion_bans_agg
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                        GROUP BY champion_id
+                    ),
+                    ban_total AS (
+                        SELECT sum(participant_rows) AS total_participants
+                        FROM match_count_agg
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                    )
+                SELECT s.team_position AS team_position, s.champion_id AS champion_id,
+                       coalesce(round(s.wins / nullIf(s.games, 0), 4), 0) AS win_rate,
+                       coalesce(round(s.games / nullIf(pt.participant_rows, 0), 4), 0) AS pick_rate,
+                       coalesce(round(coalesce(b.bans, 0) / nullIf(bt.total_participants, 0), 4), 0) AS ban_rate
+                FROM stats AS s
+                INNER JOIN pick_total AS pt ON s.team_position = pt.team_position
+                LEFT  JOIN ban_stats  AS b  ON s.champion_id   = b.champion_id
+                CROSS JOIN ban_total  AS bt
+                ORDER BY s.team_position, s.games DESC
                 """.formatted(quote(patch), quote(platformId), quote(tier));
 
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new AbstractMap.SimpleEntry<>(
                         rs.getString("team_position"),
-                        new ChampionTotalGamesReadModel(
+                        new ChampionRateReadModel(
                                 rs.getInt("champion_id"),
-                                rs.getLong("total_games")
+                                rs.getDouble("win_rate"),
+                                rs.getDouble("pick_rate"),
+                                rs.getDouble("ban_rate")
                         )
                 )).stream()
                 .collect(Collectors.groupingBy(
