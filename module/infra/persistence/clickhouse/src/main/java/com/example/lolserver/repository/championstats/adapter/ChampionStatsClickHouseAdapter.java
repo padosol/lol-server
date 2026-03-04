@@ -229,7 +229,8 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                 SELECT s.team_position AS team_position, s.champion_id AS champion_id,
                        coalesce(round(s.wins / nullIf(s.games, 0), 4), 0) AS win_rate,
                        coalesce(round(s.games / nullIf(pt.participant_rows, 0), 4), 0) AS pick_rate,
-                       coalesce(round(coalesce(b.bans, 0) / nullIf(bt.total_participants, 0), 4), 0) AS ban_rate
+                       coalesce(round(coalesce(b.bans, 0) / nullIf(bt.total_participants, 0), 4), 0) AS ban_rate,
+                       s.games AS total_games
                 FROM stats AS s
                 INNER JOIN pick_total AS pt ON s.team_position = pt.team_position
                 LEFT  JOIN ban_stats  AS b  ON s.champion_id   = b.champion_id
@@ -244,7 +245,8 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                                 rs.getInt("champion_id"),
                                 rs.getDouble("win_rate"),
                                 rs.getDouble("pick_rate"),
-                                rs.getDouble("ban_rate")
+                                rs.getDouble("ban_rate"),
+                                rs.getLong("total_games")
                         )
                 )).stream()
                 .collect(Collectors.groupingBy(

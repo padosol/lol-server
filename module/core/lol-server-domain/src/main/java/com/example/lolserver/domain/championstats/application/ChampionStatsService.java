@@ -57,7 +57,10 @@ public class ChampionStatsService {
                 championStatsQueryPort.getChampionStatsByPosition(patch, platformId, tier);
 
         return groupedByPosition.entrySet().stream()
-                .map(entry -> new PositionChampionStatsReadModel(entry.getKey(), entry.getValue()))
+                .map(entry -> new PositionChampionStatsReadModel(
+                        entry.getKey(),
+                        ChampionTierCalculator.assignTiers(entry.getValue())
+                ))
                 .toList();
     }
 }

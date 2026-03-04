@@ -138,11 +138,11 @@ class ChampionStatsServiceTest {
 
         Map<String, List<ChampionRateReadModel>> grouped = Map.of(
             "TOP", List.of(
-                new ChampionRateReadModel(266, 0.5200, 0.0800, 0.0500),
-                new ChampionRateReadModel(122, 0.4800, 0.0600, 0.0300)
+                new ChampionRateReadModel(266, 0.5200, 0.0800, 0.0500, 1500),
+                new ChampionRateReadModel(122, 0.4800, 0.0600, 0.0300, 1200)
             ),
             "JUNGLE", List.of(
-                new ChampionRateReadModel(64, 0.5100, 0.1000, 0.0700)
+                new ChampionRateReadModel(64, 0.5100, 0.1000, 0.0700, 2000)
             )
         );
 
@@ -157,6 +157,12 @@ class ChampionStatsServiceTest {
         assertThat(result).hasSize(2);
         assertThat(result).extracting(PositionChampionStatsReadModel::teamPosition)
             .containsExactlyInAnyOrder("TOP", "JUNGLE");
+
+        result.forEach(position ->
+            position.champions().forEach(champion ->
+                assertThat(champion.tier()).isNotNull()
+            )
+        );
     }
 
     @DisplayName("포지션별 챔피언 통계 조회 시 데이터가 없으면 빈 리스트를 반환한다")

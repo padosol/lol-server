@@ -159,11 +159,11 @@ class ChampionStatsControllerTest extends RestDocsSupport {
         String platformId = "kr";
         List<PositionChampionStatsReadModel> response = List.of(
                 new PositionChampionStatsReadModel("TOP", List.of(
-                        new ChampionRateReadModel(266, 0.5200, 0.0800, 0.0500),
-                        new ChampionRateReadModel(122, 0.4800, 0.0600, 0.0300)
+                        new ChampionRateReadModel(266, 0.5200, 0.0800, 0.0500, 1500, "OP"),
+                        new ChampionRateReadModel(122, 0.4800, 0.0600, 0.0300, 1200, "3")
                 )),
                 new PositionChampionStatsReadModel("JUNGLE", List.of(
-                        new ChampionRateReadModel(64, 0.5100, 0.1000, 0.0700)
+                        new ChampionRateReadModel(64, 0.5100, 0.1000, 0.0700, 2000, "1")
                 ))
         );
         given(championStatsService.getChampionStatsByPosition(anyString(), anyString(), anyString()))
@@ -204,7 +204,9 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data[].champions[].pickRate").type(JsonFieldType.NUMBER)
                                         .description("픽률"),
                                 fieldWithPath("data[].champions[].banRate").type(JsonFieldType.NUMBER)
-                                        .description("밴률")
+                                        .description("밴률"),
+                                fieldWithPath("data[].champions[].tier").type(JsonFieldType.STRING)
+                                        .description("METAPICK 티어 (OP, 1, 2, 3, 4, 5)")
                         )
                 ));
     }

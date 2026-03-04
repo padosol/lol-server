@@ -143,9 +143,9 @@ class ChampionStatsClickHouseAdapterTest {
     void getChampionStatsByPosition() {
         // given
         List<AbstractMap.SimpleEntry<String, ChampionRateReadModel>> entries = List.of(
-            new AbstractMap.SimpleEntry<>("TOP", new ChampionRateReadModel(266, 0.5200, 0.0800, 0.0500)),
-            new AbstractMap.SimpleEntry<>("TOP", new ChampionRateReadModel(122, 0.4800, 0.0600, 0.0300)),
-            new AbstractMap.SimpleEntry<>("JUNGLE", new ChampionRateReadModel(64, 0.5100, 0.1000, 0.0700))
+            new AbstractMap.SimpleEntry<>("TOP", new ChampionRateReadModel(266, 0.5200, 0.0800, 0.0500, 1500)),
+            new AbstractMap.SimpleEntry<>("TOP", new ChampionRateReadModel(122, 0.4800, 0.0600, 0.0300, 1200)),
+            new AbstractMap.SimpleEntry<>("JUNGLE", new ChampionRateReadModel(64, 0.5100, 0.1000, 0.0700, 2000))
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
             .willReturn(entries);
