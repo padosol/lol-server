@@ -4,10 +4,13 @@ import com.example.lolserver.controller.championstats.ChampionStatsController;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.championstats.application.ChampionStatsService;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionPositionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionSpellStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionStartItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
 import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
@@ -21,6 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.payload.JsonFieldType;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -60,27 +64,32 @@ class ChampionStatsControllerTest extends RestDocsSupport {
         int championId = 266;
         String patch = "14.24";
 
-        ChampionMatchupReadModel matchup = new ChampionMatchupReadModel(86, 200, 110, 55.0);
-        ChampionItemBuildReadModel itemBuild = new ChampionItemBuildReadModel("3078,3053,3065", 300, 170, 56.67);
+        ChampionMatchupReadModel matchup = new ChampionMatchupReadModel(86, 200, 0.55, 0.4);
         ChampionRuneBuildReadModel runeBuild = new ChampionRuneBuildReadModel(
-                8000, "8010,9111,9104,8299", 8400, "8446,8451", 250, 140, 56.0
+                8000, 8400, 8010, 9111, 9104, 8299, 8446, 8451, 5002, 5008, 5005, 250, 0.56, 0.5
         );
+        ChampionSpellStatsReadModel spellStats = new ChampionSpellStatsReadModel(4, 14, 800, 0.52, 0.8);
         ChampionSkillBuildReadModel skillBuild = new ChampionSkillBuildReadModel(
-                "Q,E,W,Q,Q,R,Q,E,Q,E,R,E,E,W,W", 400, 220, 55.0
+                "Q,E,W,Q,Q,R,Q,E,Q,E,R,E,E,W,W", 400, 0.55, 0.4
         );
+        ChampionStartItemBuildReadModel startItemBuild = new ChampionStartItemBuildReadModel(
+                "1054,2003", 600, 0.51, 0.6
+        );
+        ChampionItemBuildReadModel itemBuild = new ChampionItemBuildReadModel("3078,3053,3065", 300, 0.5667, 0.3);
+        ChampionItemStatsReadModel itemStats = new ChampionItemStatsReadModel(3078, "Trinity Force", 500, 0.55, 0.5);
 
         ChampionPositionStatsReadModel positionStats = new ChampionPositionStatsReadModel(
-                "TOP", 55.0, 1500,
+                "TOP", 0.55, 1500,
                 List.of(matchup),
-                List.of(itemBuild),
                 List.of(runeBuild),
-                List.of(skillBuild)
+                List.of(spellStats),
+                List.of(skillBuild),
+                List.of(startItemBuild),
+                List.of(itemBuild),
+                Map.of(1, List.of(itemStats))
         );
 
-        ChampionStatsReadModel response = new ChampionStatsReadModel(
-                "EMERALD",
-                List.of(positionStats)
-        );
+        ChampionStatsReadModel response = new ChampionStatsReadModel("EMERALD", List.of(positionStats));
 
         given(championStatsService.getChampionStats(anyInt(), anyString(), anyString(), anyString()))
                 .willReturn(response);
@@ -112,42 +121,73 @@ class ChampionStatsControllerTest extends RestDocsSupport {
 
                                 fieldWithPath("data.tier").type(JsonFieldType.STRING).description("티어 (e.g., EMERALD)"),
 
-                                // stats
-                                fieldWithPath("data.stats[]").type(JsonFieldType.ARRAY).description("포지션별 통계 목록"),
-                                fieldWithPath("data.stats[].teamPosition").type(JsonFieldType.STRING).description("포지션"),
-                                fieldWithPath("data.stats[].winRate").type(JsonFieldType.NUMBER).description("승률"),
-                                fieldWithPath("data.stats[].totalCount").type(JsonFieldType.NUMBER).description("총 게임 수"),
+                                // positions (리스트)
+                                fieldWithPath("data.positions[]").type(JsonFieldType.ARRAY).description("포지션별 통계 목록"),
+                                fieldWithPath("data.positions[].teamPosition").type(JsonFieldType.STRING).description("포지션"),
+                                fieldWithPath("data.positions[].winRate").type(JsonFieldType.NUMBER).description("승률"),
+                                fieldWithPath("data.positions[].totalGames").type(JsonFieldType.NUMBER).description("총 게임 수"),
 
                                 // matchups
-                                fieldWithPath("data.stats[].matchups[]").type(JsonFieldType.ARRAY).description("상대 챔피언별 매치업 목록"),
-                                fieldWithPath("data.stats[].matchups[].opponentChampionId").type(JsonFieldType.NUMBER).description("상대 챔피언 ID"),
-                                fieldWithPath("data.stats[].matchups[].totalGames").type(JsonFieldType.NUMBER).description("총 게임 수"),
-                                fieldWithPath("data.stats[].matchups[].totalWins").type(JsonFieldType.NUMBER).description("총 승리 수"),
-                                fieldWithPath("data.stats[].matchups[].totalWinRate").type(JsonFieldType.NUMBER).description("승률"),
-
-                                // itemBuilds
-                                fieldWithPath("data.stats[].itemBuilds[]").type(JsonFieldType.ARRAY).description("아이템 빌드 목록"),
-                                fieldWithPath("data.stats[].itemBuilds[].itemsSorted").type(JsonFieldType.STRING).description("아이템 빌드 (정렬된 ID)"),
-                                fieldWithPath("data.stats[].itemBuilds[].totalGames").type(JsonFieldType.NUMBER).description("총 게임 수"),
-                                fieldWithPath("data.stats[].itemBuilds[].totalWins").type(JsonFieldType.NUMBER).description("총 승리 수"),
-                                fieldWithPath("data.stats[].itemBuilds[].totalWinRate").type(JsonFieldType.NUMBER).description("승률"),
+                                fieldWithPath("data.positions[].matchups[]").type(JsonFieldType.ARRAY).description("상대 챔피언별 매치업 목록"),
+                                fieldWithPath("data.positions[].matchups[].opponentChampionId").type(JsonFieldType.NUMBER).description("상대 챔피언 ID"),
+                                fieldWithPath("data.positions[].matchups[].games").type(JsonFieldType.NUMBER).description("게임 수"),
+                                fieldWithPath("data.positions[].matchups[].winRate").type(JsonFieldType.NUMBER).description("승률"),
+                                fieldWithPath("data.positions[].matchups[].pickRate").type(JsonFieldType.NUMBER).description("대면 비율"),
 
                                 // runeBuilds
-                                fieldWithPath("data.stats[].runeBuilds[]").type(JsonFieldType.ARRAY).description("룬 빌드 목록"),
-                                fieldWithPath("data.stats[].runeBuilds[].primaryStyleId").type(JsonFieldType.NUMBER).description("주 룬 스타일 ID"),
-                                fieldWithPath("data.stats[].runeBuilds[].primaryPerkIds").type(JsonFieldType.STRING).description("주 룬 ID 목록"),
-                                fieldWithPath("data.stats[].runeBuilds[].subStyleId").type(JsonFieldType.NUMBER).description("보조 룬 스타일 ID"),
-                                fieldWithPath("data.stats[].runeBuilds[].subPerkIds").type(JsonFieldType.STRING).description("보조 룬 ID 목록"),
-                                fieldWithPath("data.stats[].runeBuilds[].totalGames").type(JsonFieldType.NUMBER).description("총 게임 수"),
-                                fieldWithPath("data.stats[].runeBuilds[].totalWins").type(JsonFieldType.NUMBER).description("총 승리 수"),
-                                fieldWithPath("data.stats[].runeBuilds[].totalWinRate").type(JsonFieldType.NUMBER).description("승률"),
+                                fieldWithPath("data.positions[].runeBuilds[]").type(JsonFieldType.ARRAY).description("룬 빌드 목록"),
+                                fieldWithPath("data.positions[].runeBuilds[].primaryStyleId").type(JsonFieldType.NUMBER).description("주 룬 스타일 ID"),
+                                fieldWithPath("data.positions[].runeBuilds[].subStyleId").type(JsonFieldType.NUMBER).description("보조 룬 스타일 ID"),
+                                fieldWithPath("data.positions[].runeBuilds[].primaryPerk0").type(JsonFieldType.NUMBER).description("주 룬 키스톤"),
+                                fieldWithPath("data.positions[].runeBuilds[].primaryPerk1").type(JsonFieldType.NUMBER).description("주 룬 슬롯 1"),
+                                fieldWithPath("data.positions[].runeBuilds[].primaryPerk2").type(JsonFieldType.NUMBER).description("주 룬 슬롯 2"),
+                                fieldWithPath("data.positions[].runeBuilds[].primaryPerk3").type(JsonFieldType.NUMBER).description("주 룬 슬롯 3"),
+                                fieldWithPath("data.positions[].runeBuilds[].subPerk0").type(JsonFieldType.NUMBER).description("보조 룬 슬롯 0"),
+                                fieldWithPath("data.positions[].runeBuilds[].subPerk1").type(JsonFieldType.NUMBER).description("보조 룬 슬롯 1"),
+                                fieldWithPath("data.positions[].runeBuilds[].statPerkDefense").type(JsonFieldType.NUMBER).description("방어 스탯 룬"),
+                                fieldWithPath("data.positions[].runeBuilds[].statPerkFlex").type(JsonFieldType.NUMBER).description("유연 스탯 룬"),
+                                fieldWithPath("data.positions[].runeBuilds[].statPerkOffense").type(JsonFieldType.NUMBER).description("공격 스탯 룬"),
+                                fieldWithPath("data.positions[].runeBuilds[].games").type(JsonFieldType.NUMBER).description("게임 수"),
+                                fieldWithPath("data.positions[].runeBuilds[].winRate").type(JsonFieldType.NUMBER).description("승률"),
+                                fieldWithPath("data.positions[].runeBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
+
+                                // spellStats
+                                fieldWithPath("data.positions[].spellStats[]").type(JsonFieldType.ARRAY).description("소환사 주문 조합 목록"),
+                                fieldWithPath("data.positions[].spellStats[].summoner1Id").type(JsonFieldType.NUMBER).description("소환사 주문 1 ID"),
+                                fieldWithPath("data.positions[].spellStats[].summoner2Id").type(JsonFieldType.NUMBER).description("소환사 주문 2 ID"),
+                                fieldWithPath("data.positions[].spellStats[].games").type(JsonFieldType.NUMBER).description("게임 수"),
+                                fieldWithPath("data.positions[].spellStats[].winRate").type(JsonFieldType.NUMBER).description("승률"),
+                                fieldWithPath("data.positions[].spellStats[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
 
                                 // skillBuilds
-                                fieldWithPath("data.stats[].skillBuilds[]").type(JsonFieldType.ARRAY).description("스킬 빌드 목록"),
-                                fieldWithPath("data.stats[].skillBuilds[].skillOrder15").type(JsonFieldType.STRING).description("15레벨까지 스킬 순서"),
-                                fieldWithPath("data.stats[].skillBuilds[].totalGames").type(JsonFieldType.NUMBER).description("총 게임 수"),
-                                fieldWithPath("data.stats[].skillBuilds[].totalWins").type(JsonFieldType.NUMBER).description("총 승리 수"),
-                                fieldWithPath("data.stats[].skillBuilds[].totalWinRate").type(JsonFieldType.NUMBER).description("승률")
+                                fieldWithPath("data.positions[].skillBuilds[]").type(JsonFieldType.ARRAY).description("스킬 빌드 목록"),
+                                fieldWithPath("data.positions[].skillBuilds[].skillBuild").type(JsonFieldType.STRING).description("스킬 빌드 순서"),
+                                fieldWithPath("data.positions[].skillBuilds[].games").type(JsonFieldType.NUMBER).description("게임 수"),
+                                fieldWithPath("data.positions[].skillBuilds[].winRate").type(JsonFieldType.NUMBER).description("승률"),
+                                fieldWithPath("data.positions[].skillBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
+
+                                // startItemBuilds
+                                fieldWithPath("data.positions[].startItemBuilds[]").type(JsonFieldType.ARRAY).description("시작 아이템 빌드 목록"),
+                                fieldWithPath("data.positions[].startItemBuilds[].startItems").type(JsonFieldType.STRING).description("시작 아이템 ID 목록"),
+                                fieldWithPath("data.positions[].startItemBuilds[].games").type(JsonFieldType.NUMBER).description("게임 수"),
+                                fieldWithPath("data.positions[].startItemBuilds[].winRate").type(JsonFieldType.NUMBER).description("승률"),
+                                fieldWithPath("data.positions[].startItemBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
+
+                                // itemBuilds (3코어)
+                                fieldWithPath("data.positions[].itemBuilds[]").type(JsonFieldType.ARRAY).description("3코어 아이템 빌드 목록"),
+                                fieldWithPath("data.positions[].itemBuilds[].itemBuild").type(JsonFieldType.STRING).description("아이템 빌드 순서"),
+                                fieldWithPath("data.positions[].itemBuilds[].games").type(JsonFieldType.NUMBER).description("게임 수"),
+                                fieldWithPath("data.positions[].itemBuilds[].winRate").type(JsonFieldType.NUMBER).description("승률"),
+                                fieldWithPath("data.positions[].itemBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
+
+                                // itemStatsByOrder
+                                fieldWithPath("data.positions[].itemStatsByOrder").type(JsonFieldType.OBJECT).description("코어 순서별 완성 아이템 통계 (키: 1, 2, 3)"),
+                                fieldWithPath("data.positions[].itemStatsByOrder.1[]").type(JsonFieldType.ARRAY).description("1코어 아이템 통계"),
+                                fieldWithPath("data.positions[].itemStatsByOrder.1[].itemId").type(JsonFieldType.NUMBER).description("아이템 ID"),
+                                fieldWithPath("data.positions[].itemStatsByOrder.1[].itemName").type(JsonFieldType.STRING).description("아이템 이름"),
+                                fieldWithPath("data.positions[].itemStatsByOrder.1[].games").type(JsonFieldType.NUMBER).description("게임 수"),
+                                fieldWithPath("data.positions[].itemStatsByOrder.1[].winRate").type(JsonFieldType.NUMBER).description("승률"),
+                                fieldWithPath("data.positions[].itemStatsByOrder.1[].pickRate").type(JsonFieldType.NUMBER).description("픽률")
                         )
                 ));
     }

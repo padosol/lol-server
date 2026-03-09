@@ -1,9 +1,12 @@
 package com.example.lolserver.repository.championstats.adapter;
 
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionSpellStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionStartItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,13 +40,14 @@ class ChampionStatsClickHouseAdapterTest {
         adapter = new ChampionStatsClickHouseAdapter(clickHouseJdbcTemplate);
     }
 
-    @DisplayName("챔피언 승률 통계를 조회한다")
+    @DisplayName("챔피언의 모든 포지션 승률 통계를 조회한다")
     @Test
     @SuppressWarnings("unchecked")
     void getChampionWinRates() {
         // given
         List<ChampionWinRateReadModel> expected = List.of(
-            new ChampionWinRateReadModel("MIDDLE", 1000, 520, 0.52)
+            new ChampionWinRateReadModel("MIDDLE", 1000, 520, 0.52),
+            new ChampionWinRateReadModel("TOP", 200, 110, 0.55)
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
             .willReturn(expected);
@@ -52,89 +56,147 @@ class ChampionStatsClickHouseAdapterTest {
         List<ChampionWinRateReadModel> result = adapter.getChampionWinRates(13, "16.1", "KR", "EMERALD");
 
         // then
-        assertThat(result).hasSize(1);
+        assertThat(result).hasSize(2);
         assertThat(result.get(0).teamPosition()).isEqualTo("MIDDLE");
-        assertThat(result.get(0).totalWinRate()).isEqualTo(0.52);
+        assertThat(result.get(0).totalGames()).isEqualTo(1000);
+        assertThat(result.get(1).teamPosition()).isEqualTo("TOP");
+        assertThat(result.get(1).totalGames()).isEqualTo(200);
     }
 
-    @DisplayName("챔피언 매치업 통계를 포지션별 Map으로 반환한다")
+    @DisplayName("챔피언 매치업 통계를 리스트로 반환한다")
     @Test
     @SuppressWarnings("unchecked")
     void getChampionMatchups() {
         // given
-        List<AbstractMap.SimpleEntry<String, ChampionMatchupReadModel>> entries = List.of(
-            new AbstractMap.SimpleEntry<>("MIDDLE", new ChampionMatchupReadModel(238, 200, 110, 0.55))
+        List<ChampionMatchupReadModel> expected = List.of(
+            new ChampionMatchupReadModel(238, 200, 0.55, 0.4)
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
-            .willReturn(entries);
+            .willReturn(expected);
 
         // when
-        Map<String, List<ChampionMatchupReadModel>> result = adapter.getChampionMatchups(13, "16.1", "KR", "EMERALD");
+        List<ChampionMatchupReadModel> result = adapter.getChampionMatchups(13, "16.1", "KR", "EMERALD", "MIDDLE");
 
         // then
-        assertThat(result).containsKey("MIDDLE");
-        assertThat(result.get("MIDDLE")).hasSize(1);
-        assertThat(result.get("MIDDLE").get(0).opponentChampionId()).isEqualTo(238);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).opponentChampionId()).isEqualTo(238);
     }
 
-    @DisplayName("챔피언 아이템 빌드 통계를 포지션별 Map으로 반환한다")
-    @Test
-    @SuppressWarnings("unchecked")
-    void getChampionItemBuilds() {
-        // given
-        List<AbstractMap.SimpleEntry<String, ChampionItemBuildReadModel>> entries = List.of(
-            new AbstractMap.SimpleEntry<>("MIDDLE", new ChampionItemBuildReadModel("[3089,3157]", 500, 260, 0.52))
-        );
-        given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
-            .willReturn(entries);
-
-        // when
-        Map<String, List<ChampionItemBuildReadModel>> result = adapter.getChampionItemBuilds(13, "16.1", "KR", "EMERALD");
-
-        // then
-        assertThat(result).containsKey("MIDDLE");
-        assertThat(result.get("MIDDLE")).hasSize(1);
-        assertThat(result.get("MIDDLE").get(0).itemsSorted()).isEqualTo("[3089,3157]");
-    }
-
-    @DisplayName("챔피언 룬 빌드 통계를 포지션별 Map으로 반환한다")
+    @DisplayName("챔피언 룬 빌드 통계를 조회한다")
     @Test
     @SuppressWarnings("unchecked")
     void getChampionRuneBuilds() {
         // given
-        List<AbstractMap.SimpleEntry<String, ChampionRuneBuildReadModel>> entries = List.of(
-            new AbstractMap.SimpleEntry<>("MIDDLE", new ChampionRuneBuildReadModel(8100, "[8112,8139]", 8300, "[8304,8345]", 300, 160, 0.5333))
+        List<ChampionRuneBuildReadModel> expected = List.of(
+            new ChampionRuneBuildReadModel(8100, 8300, 8112, 8139, 8143, 8135, 8304, 8345, 5002, 5008, 5005, 300, 0.5333, 0.6)
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
-            .willReturn(entries);
+            .willReturn(expected);
 
         // when
-        Map<String, List<ChampionRuneBuildReadModel>> result = adapter.getChampionRuneBuilds(13, "16.1", "KR", "EMERALD");
+        List<ChampionRuneBuildReadModel> result = adapter.getChampionRuneBuilds(13, "16.1", "KR", "EMERALD", "MIDDLE");
 
         // then
-        assertThat(result).containsKey("MIDDLE");
-        assertThat(result.get("MIDDLE")).hasSize(1);
-        assertThat(result.get("MIDDLE").get(0).primaryStyleId()).isEqualTo(8100);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).primaryStyleId()).isEqualTo(8100);
+        assertThat(result.get(0).primaryPerk0()).isEqualTo(8112);
     }
 
-    @DisplayName("챔피언 스킬 빌드 통계를 포지션별 Map으로 반환한다")
+    @DisplayName("챔피언 소환사 주문 통계를 조회한다")
+    @Test
+    @SuppressWarnings("unchecked")
+    void getChampionSpellStats() {
+        // given
+        List<ChampionSpellStatsReadModel> expected = List.of(
+            new ChampionSpellStatsReadModel(4, 14, 800, 0.52, 0.8)
+        );
+        given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
+            .willReturn(expected);
+
+        // when
+        List<ChampionSpellStatsReadModel> result = adapter.getChampionSpellStats(13, "16.1", "KR", "EMERALD", "MIDDLE");
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).summoner1Id()).isEqualTo(4);
+        assertThat(result.get(0).summoner2Id()).isEqualTo(14);
+    }
+
+    @DisplayName("챔피언 스킬 빌드 통계를 조회한다")
     @Test
     @SuppressWarnings("unchecked")
     void getChampionSkillBuilds() {
         // given
-        List<AbstractMap.SimpleEntry<String, ChampionSkillBuildReadModel>> entries = List.of(
-            new AbstractMap.SimpleEntry<>("MIDDLE", new ChampionSkillBuildReadModel("QWEQEEREQEQWWWW", 400, 210, 0.525))
+        List<ChampionSkillBuildReadModel> expected = List.of(
+            new ChampionSkillBuildReadModel("QWEQEEREQEQWWWW", 400, 0.525, 0.4)
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
-            .willReturn(entries);
+            .willReturn(expected);
 
         // when
-        Map<String, List<ChampionSkillBuildReadModel>> result = adapter.getChampionSkillBuilds(13, "16.1", "KR", "EMERALD");
+        List<ChampionSkillBuildReadModel> result = adapter.getChampionSkillBuilds(13, "16.1", "KR", "EMERALD", "MIDDLE");
 
         // then
-        assertThat(result).containsKey("MIDDLE");
-        assertThat(result.get("MIDDLE")).hasSize(1);
-        assertThat(result.get("MIDDLE").get(0).skillOrder15()).isEqualTo("QWEQEEREQEQWWWW");
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).skillBuild()).isEqualTo("QWEQEEREQEQWWWW");
+    }
+
+    @DisplayName("챔피언 시작 아이템 빌드 통계를 조회한다")
+    @Test
+    @SuppressWarnings("unchecked")
+    void getChampionStartItemBuilds() {
+        // given
+        List<ChampionStartItemBuildReadModel> expected = List.of(
+            new ChampionStartItemBuildReadModel("1056,2003", 600, 0.51, 0.6)
+        );
+        given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
+            .willReturn(expected);
+
+        // when
+        List<ChampionStartItemBuildReadModel> result = adapter.getChampionStartItemBuilds(13, "16.1", "KR", "EMERALD", "MIDDLE");
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).startItems()).isEqualTo("1056,2003");
+    }
+
+    @DisplayName("챔피언 3코어 아이템 빌드 통계를 조회한다")
+    @Test
+    @SuppressWarnings("unchecked")
+    void getChampionItemBuilds() {
+        // given
+        List<ChampionItemBuildReadModel> expected = List.of(
+            new ChampionItemBuildReadModel("3089,3157,3165", 500, 0.52, 0.5)
+        );
+        given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
+            .willReturn(expected);
+
+        // when
+        List<ChampionItemBuildReadModel> result = adapter.getChampionItemBuilds(13, "16.1", "KR", "EMERALD", "MIDDLE");
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).itemBuild()).isEqualTo("3089,3157,3165");
+    }
+
+    @DisplayName("챔피언 완성 아이템 통계를 코어 순서별로 조회한다")
+    @Test
+    @SuppressWarnings("unchecked")
+    void getChampionItemStats() {
+        // given
+        List<ChampionItemStatsReadModel> expected = List.of(
+            new ChampionItemStatsReadModel(3089, "Rabadon's Deathcap", 400, 0.55, 0.4)
+        );
+        given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
+            .willReturn(expected);
+
+        // when
+        List<ChampionItemStatsReadModel> result = adapter.getChampionItemStats(13, "16.1", "KR", "EMERALD", "MIDDLE", 1);
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).itemId()).isEqualTo(3089);
+        assertThat(result.get(0).itemName()).isEqualTo("Rabadon's Deathcap");
     }
 
     @DisplayName("포지션별 챔피언 승률/픽률/밴률을 Map으로 반환한다")

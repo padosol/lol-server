@@ -1,9 +1,12 @@
 package com.example.lolserver.repository.championstats.adapter;
 
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionSpellStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionStartItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
@@ -36,12 +39,12 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
     public List<ChampionWinRateReadModel> getChampionWinRates(
             int championId, String patch, String platformId, String tier) {
         String sql = """
-                SELECT team_position,
-                       toInt64(sum(games)) AS total_games,
-                       toInt64(sum(wins)) AS total_wins,
-                       coalesce(round(sum(wins) / nullIf(sum(games), 0), 4), 0) AS total_win_rate
-                FROM champion_stats_local
-                WHERE champion_id = %d AND patch = %s AND platform_id = %s AND tier = %s
+                SELECT team_position       AS team_position,
+                       toInt64(count(*))   AS total_games,
+                       toInt64(sum(win))   AS total_wins,
+                       coalesce(round(sum(win) / nullIf(count(*), 0), 4), 0) AS total_win_rate
+                FROM match_participant_local
+                WHERE champion_id = %d AND patch_version = %s AND platform_id = %s AND tier = %s
                 GROUP BY team_position
                 ORDER BY total_games DESC
                 """.formatted(championId, quote(patch), quote(platformId), quote(tier));
@@ -56,144 +59,290 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
     }
 
     @Override
-    public Map<String, List<ChampionMatchupReadModel>> getChampionMatchups(
-            int championId, String patch, String platformId, String tier) {
+    public List<ChampionMatchupReadModel> getChampionMatchups(
+            int championId, String patch, String platformId, String tier, String position) {
         String sql = """
-                SELECT team_position, opponent_champion_id,
-                       sum(games) AS total_games,
-                       sum(wins) AS total_wins,
-                       round(sum(wins) / nullIf(sum(games), 0), 4) AS total_win_rate
-                FROM champion_matchup_stats_local
-                WHERE champion_id = %d AND patch = %s AND platform_id = %s AND tier = %s
-                GROUP BY team_position, opponent_champion_id
-                ORDER BY total_win_rate DESC, total_games DESC
-                """.formatted(championId, quote(patch), quote(platformId), quote(tier));
+                WITH
+                    matchup_stats AS (
+                        SELECT
+                            opponent_champion_id,
+                            sum(games) AS games,
+                            sum(wins)  AS wins
+                        FROM champion_matchup_stats_agg
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                              AND champion_id = %4$d AND team_position = %5$s
+                        GROUP BY opponent_champion_id
+                    ),
+                    total AS (
+                        SELECT sum(games) AS total_games FROM matchup_stats
+                    )
+                SELECT
+                    ms.opponent_champion_id,
+                    ms.games,
+                    ms.wins / ms.games       AS win_rate,
+                    ms.games / t.total_games AS pick_rate
+                FROM matchup_stats AS ms
+                CROSS JOIN total AS t
+                ORDER BY ms.games DESC
+                LIMIT 2
+                """.formatted(quote(patch), quote(platformId), quote(tier), championId, quote(position));
 
         return clickHouseJdbcTemplate.query(sql,
-                (rs, rowNum) -> new AbstractMap.SimpleEntry<>(
-                        rs.getString("team_position"),
-                        new ChampionMatchupReadModel(
-                                rs.getInt("opponent_champion_id"),
-                                rs.getLong("total_games"),
-                                rs.getLong("total_wins"),
-                                rs.getDouble("total_win_rate")
-                        )
-                )).stream()
-                .collect(Collectors.groupingBy(
-                        Map.Entry::getKey,
-                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())
+                (rs, rowNum) -> new ChampionMatchupReadModel(
+                        rs.getInt("opponent_champion_id"),
+                        rs.getLong("games"),
+                        rs.getDouble("win_rate"),
+                        rs.getDouble("pick_rate")
                 ));
     }
 
     @Override
-    public Map<String, List<ChampionItemBuildReadModel>> getChampionItemBuilds(
-            int championId, String patch, String platformId, String tier) {
+    public List<ChampionRuneBuildReadModel> getChampionRuneBuilds(
+            int championId, String patch, String platformId, String tier, String position) {
         String sql = """
-                SELECT team_position, items_sorted, total_games, total_wins, total_win_rate
-                FROM (
-                    SELECT team_position, items_sorted,
-                           sum(games) AS total_games,
-                           sum(wins) AS total_wins,
-                           round(sum(wins) / nullIf(sum(games), 0), 4) AS total_win_rate,
-                           ROW_NUMBER() OVER (PARTITION BY team_position ORDER BY sum(games) DESC) AS rn
-                    FROM item_build_stats_local
-                    WHERE champion_id = %d AND patch = %s AND platform_id = %s AND tier = %s
-                    GROUP BY team_position, items_sorted
-                ) sub
-                WHERE rn <= 5
-                ORDER BY team_position, total_games DESC
-                """.formatted(championId, quote(patch), quote(platformId), quote(tier));
+                WITH
+                    rune_stats AS (
+                        SELECT
+                            primary_style_id, sub_style_id,
+                            primary_perk0, primary_perk1, primary_perk2, primary_perk3,
+                            sub_perk0, sub_perk1,
+                            stat_perk_defense, stat_perk_flex, stat_perk_offense,
+                            sum(games) AS games,
+                            sum(wins)  AS wins
+                        FROM champion_rune_stats_agg
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                              AND champion_id = %4$d AND team_position = %5$s
+                        GROUP BY primary_style_id, sub_style_id,
+                                 primary_perk0, primary_perk1, primary_perk2, primary_perk3,
+                                 sub_perk0, sub_perk1,
+                                 stat_perk_defense, stat_perk_flex, stat_perk_offense
+                    ),
+                    total AS (
+                        SELECT sum(games) AS total_games FROM rune_stats
+                    )
+                SELECT
+                    rs.primary_style_id, rs.sub_style_id,
+                    rs.primary_perk0, rs.primary_perk1, rs.primary_perk2, rs.primary_perk3,
+                    rs.sub_perk0, rs.sub_perk1,
+                    rs.stat_perk_defense, rs.stat_perk_flex, rs.stat_perk_offense,
+                    rs.games,
+                    rs.wins / rs.games       AS win_rate,
+                    rs.games / t.total_games AS pick_rate
+                FROM rune_stats AS rs
+                CROSS JOIN total AS t
+                ORDER BY rs.games DESC
+                LIMIT 2
+                """.formatted(quote(patch), quote(platformId), quote(tier), championId, quote(position));
 
         return clickHouseJdbcTemplate.query(sql,
-                (rs, rowNum) -> new AbstractMap.SimpleEntry<>(
-                        rs.getString("team_position"),
-                        new ChampionItemBuildReadModel(
-                                rs.getString("items_sorted"),
-                                rs.getLong("total_games"),
-                                rs.getLong("total_wins"),
-                                rs.getDouble("total_win_rate")
-                        )
-                )).stream()
-                .collect(Collectors.groupingBy(
-                        Map.Entry::getKey,
-                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())
+                (rs, rowNum) -> new ChampionRuneBuildReadModel(
+                        rs.getInt("primary_style_id"),
+                        rs.getInt("sub_style_id"),
+                        rs.getInt("primary_perk0"),
+                        rs.getInt("primary_perk1"),
+                        rs.getInt("primary_perk2"),
+                        rs.getInt("primary_perk3"),
+                        rs.getInt("sub_perk0"),
+                        rs.getInt("sub_perk1"),
+                        rs.getInt("stat_perk_defense"),
+                        rs.getInt("stat_perk_flex"),
+                        rs.getInt("stat_perk_offense"),
+                        rs.getLong("games"),
+                        rs.getDouble("win_rate"),
+                        rs.getDouble("pick_rate")
                 ));
     }
 
     @Override
-    public Map<String, List<ChampionRuneBuildReadModel>> getChampionRuneBuilds(
-            int championId, String patch, String platformId, String tier) {
+    public List<ChampionSpellStatsReadModel> getChampionSpellStats(
+            int championId, String patch, String platformId, String tier, String position) {
         String sql = """
-                SELECT team_position, primary_style_id, primary_perk_ids,
-                       sub_style_id, sub_perk_ids, total_games, total_wins, total_win_rate
-                FROM (
-                    SELECT team_position,
-                           primary_style_id, primary_perk_ids,
-                           sub_style_id, sub_perk_ids,
-                           sum(games) AS total_games,
-                           sum(wins) AS total_wins,
-                           round(sum(wins) / nullIf(sum(games), 0), 4) AS total_win_rate,
-                           ROW_NUMBER() OVER (PARTITION BY team_position ORDER BY sum(games) DESC) AS rn
-                    FROM rune_build_stats_local
-                    WHERE champion_id = %d AND patch = %s AND platform_id = %s AND tier = %s
-                    GROUP BY team_position,
-                             primary_style_id, primary_perk_ids, sub_style_id, sub_perk_ids
-                ) sub
-                WHERE rn <= 5
-                ORDER BY team_position, total_games DESC
-                """.formatted(championId, quote(patch), quote(platformId), quote(tier));
+                WITH
+                    spell_stats AS (
+                        SELECT
+                            summoner1id, summoner2id,
+                            sum(games) AS games,
+                            sum(wins)  AS wins
+                        FROM champion_spell_stats_agg
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                              AND champion_id = %4$d AND team_position = %5$s
+                        GROUP BY summoner1id, summoner2id
+                    ),
+                    total AS (
+                        SELECT sum(games) AS total_games FROM spell_stats
+                    )
+                SELECT
+                    ss.summoner1id,
+                    ss.summoner2id,
+                    ss.games,
+                    ss.wins / ss.games       AS win_rate,
+                    ss.games / t.total_games AS pick_rate
+                FROM spell_stats AS ss
+                CROSS JOIN total AS t
+                ORDER BY ss.games DESC
+                LIMIT 2
+                """.formatted(quote(patch), quote(platformId), quote(tier), championId, quote(position));
 
         return clickHouseJdbcTemplate.query(sql,
-                (rs, rowNum) -> new AbstractMap.SimpleEntry<>(
-                        rs.getString("team_position"),
-                        new ChampionRuneBuildReadModel(
-                                rs.getInt("primary_style_id"),
-                                rs.getString("primary_perk_ids"),
-                                rs.getInt("sub_style_id"),
-                                rs.getString("sub_perk_ids"),
-                                rs.getLong("total_games"),
-                                rs.getLong("total_wins"),
-                                rs.getDouble("total_win_rate")
-                        )
-                )).stream()
-                .collect(Collectors.groupingBy(
-                        Map.Entry::getKey,
-                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())
+                (rs, rowNum) -> new ChampionSpellStatsReadModel(
+                        rs.getInt("summoner1id"),
+                        rs.getInt("summoner2id"),
+                        rs.getLong("games"),
+                        rs.getDouble("win_rate"),
+                        rs.getDouble("pick_rate")
                 ));
     }
 
     @Override
-    public Map<String, List<ChampionSkillBuildReadModel>> getChampionSkillBuilds(
-            int championId, String patch, String platformId, String tier) {
+    public List<ChampionSkillBuildReadModel> getChampionSkillBuilds(
+            int championId, String patch, String platformId, String tier, String position) {
         String sql = """
-                SELECT team_position, skill_order_15, total_games, total_wins, total_win_rate
-                FROM (
-                    SELECT team_position, skill_order_15,
-                           sum(games) AS total_games,
-                           sum(wins) AS total_wins,
-                           round(sum(wins) / nullIf(sum(games), 0), 4) AS total_win_rate,
-                           ROW_NUMBER() OVER (PARTITION BY team_position ORDER BY sum(games) DESC) AS rn
-                    FROM skill_build_stats_local
-                    WHERE champion_id = %d AND patch = %s AND platform_id = %s AND tier = %s
-                    GROUP BY team_position, skill_order_15
-                ) sub
-                WHERE rn <= 5
-                ORDER BY team_position, total_games DESC
-                """.formatted(championId, quote(patch), quote(platformId), quote(tier));
+                WITH
+                    skill_stats AS (
+                        SELECT
+                            skill_build,
+                            sum(games) AS games,
+                            sum(wins)  AS wins
+                        FROM champion_skill_build_stats_agg
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                              AND champion_id = %4$d AND team_position = %5$s
+                        GROUP BY skill_build
+                    ),
+                    total AS (
+                        SELECT sum(games) AS total_games FROM skill_stats
+                    )
+                SELECT
+                    sk.skill_build,
+                    sk.games,
+                    sk.wins / sk.games       AS win_rate,
+                    sk.games / t.total_games AS pick_rate
+                FROM skill_stats AS sk
+                CROSS JOIN total AS t
+                ORDER BY sk.games DESC
+                LIMIT 2
+                """.formatted(quote(patch), quote(platformId), quote(tier), championId, quote(position));
 
         return clickHouseJdbcTemplate.query(sql,
-                (rs, rowNum) -> new AbstractMap.SimpleEntry<>(
-                        rs.getString("team_position"),
-                        new ChampionSkillBuildReadModel(
-                                rs.getString("skill_order_15"),
-                                rs.getLong("total_games"),
-                                rs.getLong("total_wins"),
-                                rs.getDouble("total_win_rate")
-                        )
-                )).stream()
-                .collect(Collectors.groupingBy(
-                        Map.Entry::getKey,
-                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())
+                (rs, rowNum) -> new ChampionSkillBuildReadModel(
+                        rs.getString("skill_build"),
+                        rs.getLong("games"),
+                        rs.getDouble("win_rate"),
+                        rs.getDouble("pick_rate")
+                ));
+    }
+
+    @Override
+    public List<ChampionStartItemBuildReadModel> getChampionStartItemBuilds(
+            int championId, String patch, String platformId, String tier, String position) {
+        String sql = """
+                WITH
+                    item_stats AS (
+                        SELECT
+                            start_items,
+                            sum(games) AS games,
+                            sum(wins)  AS wins
+                        FROM champion_start_item_stats_agg
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                              AND champion_id = %4$d AND team_position = %5$s
+                        GROUP BY start_items
+                    ),
+                    total AS (
+                        SELECT sum(games) AS total_games FROM item_stats
+                    )
+                SELECT
+                    its.start_items,
+                    its.games,
+                    its.wins / its.games       AS win_rate,
+                    its.games / t.total_games  AS pick_rate
+                FROM item_stats AS its
+                CROSS JOIN total AS t
+                ORDER BY its.games DESC
+                LIMIT 2
+                """.formatted(quote(patch), quote(platformId), quote(tier), championId, quote(position));
+
+        return clickHouseJdbcTemplate.query(sql,
+                (rs, rowNum) -> new ChampionStartItemBuildReadModel(
+                        rs.getString("start_items"),
+                        rs.getLong("games"),
+                        rs.getDouble("win_rate"),
+                        rs.getDouble("pick_rate")
+                ));
+    }
+
+    @Override
+    public List<ChampionItemBuildReadModel> getChampionItemBuilds(
+            int championId, String patch, String platformId, String tier, String position) {
+        String sql = """
+                WITH
+                    build_stats AS (
+                        SELECT item_build, sum(games) AS games, sum(wins) AS wins
+                        FROM champion_item_build_stats_agg
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                              AND champion_id = %4$d AND team_position = %5$s
+                        GROUP BY item_build
+                    ),
+                    total AS (
+                        SELECT sum(games) AS total_games FROM build_stats
+                    )
+                SELECT
+                    bs.item_build,
+                    bs.games,
+                    bs.wins / bs.games       AS win_rate,
+                    bs.games / t.total_games AS pick_rate
+                FROM build_stats AS bs
+                CROSS JOIN total AS t
+                ORDER BY bs.games DESC
+                LIMIT 2
+                """.formatted(quote(patch), quote(platformId), quote(tier), championId, quote(position));
+
+        return clickHouseJdbcTemplate.query(sql,
+                (rs, rowNum) -> new ChampionItemBuildReadModel(
+                        rs.getString("item_build"),
+                        rs.getLong("games"),
+                        rs.getDouble("win_rate"),
+                        rs.getDouble("pick_rate")
+                ));
+    }
+
+    @Override
+    public List<ChampionItemStatsReadModel> getChampionItemStats(
+            int championId, String patch, String platformId, String tier, String position, int itemOrder) {
+        String sql = """
+                WITH
+                    item_stats AS (
+                        SELECT item_id, sum(games) AS games, sum(wins) AS wins
+                        FROM champion_item_stats_agg
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                              AND champion_id = %4$d AND team_position = %5$s
+                              AND item_order = %6$d
+                        GROUP BY item_id
+                    ),
+                    total AS (
+                        SELECT sum(games) AS total_games
+                        FROM champion_stats_agg
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                              AND champion_id = %4$d AND team_position = %5$s
+                    )
+                SELECT
+                    its.item_id              AS item_id,
+                    li.item_name             AS item_name,
+                    its.games                AS games,
+                    its.wins / its.games     AS win_rate,
+                    its.games / t.total_games AS pick_rate
+                FROM item_stats AS its
+                INNER JOIN legendary_items AS li USING (item_id)
+                CROSS JOIN total AS t
+                ORDER BY its.games DESC
+                LIMIT 2
+                """.formatted(quote(patch), quote(platformId), quote(tier), championId, quote(position), itemOrder);
+
+        return clickHouseJdbcTemplate.query(sql,
+                (rs, rowNum) -> new ChampionItemStatsReadModel(
+                        rs.getInt("item_id"),
+                        rs.getString("item_name"),
+                        rs.getLong("games"),
+                        rs.getDouble("win_rate"),
+                        rs.getDouble("pick_rate")
                 ));
     }
 
