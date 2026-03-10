@@ -18,11 +18,15 @@ RUN ./gradlew :module:app:application:bootJar -x test --no-daemon
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 
-# 환경변수 선언
+RUN groupadd --system --gid 1001 spring && \
+    useradd --system --uid 1001 --gid spring app
+
+COPY --from=build --chown=app:spring /app/module/app/application/build/libs/*.jar app.jar
+
+USER app
+
+EXPOSE 8080
+
 ENV SPRING_PROFILES_ACTIVE=dev
 
-# JAR 복사
-COPY --from=build /app/module/app/application/build/libs/*.jar app.jar
-
-# 실행
-ENTRYPOINT ["java", "-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE}", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

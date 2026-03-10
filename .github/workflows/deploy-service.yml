@@ -55,17 +55,22 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Trigger CD deployment
-        uses: peter-evans/repository-dispatch@v4
+  notify:
+    name: Slack Notification
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    if: always()
+    steps:
+      - name: Notify Slack
+        uses: slackapi/slack-github-action@v2.1.1
         with:
-          token: ${{ secrets.CD_REPO_TOKEN }}
-          repository: ${{ vars.CD_REPO }}
-          event-type: deploy
-          client-payload: >-
-            {
-              "image": "${{ steps.ecr-login.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:${{ steps.version.outputs.version }}-${{ steps.version.outputs.sha_short }}",
-              "version": "${{ steps.version.outputs.version }}",
-              "sha": "${{ github.event.workflow_run.head_sha }}",
-              "sha_short": "${{ steps.version.outputs.sha_short }}",
-              "tag": "${{ steps.version.outputs.version }}-${{ steps.version.outputs.sha_short }}"
-            }
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            text: "${{ needs.deploy.result == 'success' && '🚀 배포 성공' || '❌ 배포 실패' }}: ${{ github.repository }}"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "${{ needs.deploy.result == 'success' && '🚀 *배포 성공*' || '❌ *배포 실패*' }}\n*Repo:* ${{ github.repository }}\n*Branch:* ${{ github.event.workflow_run.head_branch }}\n*Commit:* <${{ format('{0}/{1}/commit/{2}', github.server_url, github.repository, github.event.workflow_run.head_sha) }}|${{ github.event.workflow_run.head_sha }}>\n*Deploy:* ${{ needs.deploy.result }}"
