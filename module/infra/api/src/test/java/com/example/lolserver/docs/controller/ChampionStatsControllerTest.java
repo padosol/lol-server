@@ -78,9 +78,12 @@ class ChampionStatsControllerTest extends RestDocsSupport {
         ChampionItemBuildReadModel itemBuild = new ChampionItemBuildReadModel("3078,3053,3065", 300, 0.5667, 0.3);
         ChampionItemStatsReadModel itemStats = new ChampionItemStatsReadModel(3078, "Trinity Force", 500, 0.55, 0.5);
 
+        ChampionMatchupReadModel weakMatchup = new ChampionMatchupReadModel(122, 180, 0.45, 0.36);
+
         ChampionPositionStatsReadModel positionStats = new ChampionPositionStatsReadModel(
                 "TOP", 0.55, 1500,
                 List.of(matchup),
+                List.of(weakMatchup),
                 List.of(runeBuild),
                 List.of(spellStats),
                 List.of(skillBuild),
@@ -127,12 +130,19 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.positions[].winRate").type(JsonFieldType.NUMBER).description("승률"),
                                 fieldWithPath("data.positions[].totalGames").type(JsonFieldType.NUMBER).description("총 게임 수"),
 
-                                // matchups
-                                fieldWithPath("data.positions[].matchups[]").type(JsonFieldType.ARRAY).description("상대 챔피언별 매치업 목록"),
-                                fieldWithPath("data.positions[].matchups[].opponentChampionId").type(JsonFieldType.NUMBER).description("상대 챔피언 ID"),
-                                fieldWithPath("data.positions[].matchups[].games").type(JsonFieldType.NUMBER).description("게임 수"),
-                                fieldWithPath("data.positions[].matchups[].winRate").type(JsonFieldType.NUMBER).description("승률"),
-                                fieldWithPath("data.positions[].matchups[].pickRate").type(JsonFieldType.NUMBER).description("대면 비율"),
+                                // strongMatchups
+                                fieldWithPath("data.positions[].strongMatchups[]").type(JsonFieldType.ARRAY).description("유리한 상대 매치업 목록 (승률 높은 순)"),
+                                fieldWithPath("data.positions[].strongMatchups[].opponentChampionId").type(JsonFieldType.NUMBER).description("상대 챔피언 ID"),
+                                fieldWithPath("data.positions[].strongMatchups[].games").type(JsonFieldType.NUMBER).description("게임 수"),
+                                fieldWithPath("data.positions[].strongMatchups[].winRate").type(JsonFieldType.NUMBER).description("승률"),
+                                fieldWithPath("data.positions[].strongMatchups[].pickRate").type(JsonFieldType.NUMBER).description("대면 비율"),
+
+                                // weakMatchups
+                                fieldWithPath("data.positions[].weakMatchups[]").type(JsonFieldType.ARRAY).description("불리한 상대 매치업 목록 (승률 낮은 순)"),
+                                fieldWithPath("data.positions[].weakMatchups[].opponentChampionId").type(JsonFieldType.NUMBER).description("상대 챔피언 ID"),
+                                fieldWithPath("data.positions[].weakMatchups[].games").type(JsonFieldType.NUMBER).description("게임 수"),
+                                fieldWithPath("data.positions[].weakMatchups[].winRate").type(JsonFieldType.NUMBER).description("승률"),
+                                fieldWithPath("data.positions[].weakMatchups[].pickRate").type(JsonFieldType.NUMBER).description("대면 비율"),
 
                                 // runeBuilds
                                 fieldWithPath("data.positions[].runeBuilds[]").type(JsonFieldType.ARRAY).description("룬 빌드 목록"),

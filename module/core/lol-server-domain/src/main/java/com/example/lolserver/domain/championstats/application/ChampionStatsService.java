@@ -2,6 +2,7 @@ package com.example.lolserver.domain.championstats.application;
 
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionPositionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
@@ -56,6 +57,11 @@ public class ChampionStatsService {
         List<ChampionItemBuildReadModel> itemBuilds =
             championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tier, position);
 
+        List<ChampionMatchupReadModel> strongMatchups =
+            championStatsQueryPort.getStrongMatchups(championId, patch, platformId, tier, position);
+        List<ChampionMatchupReadModel> weakMatchups =
+            championStatsQueryPort.getWeakMatchups(championId, patch, platformId, tier, position);
+
         Map<Integer, List<ChampionItemStatsReadModel>> itemStatsByOrder = new LinkedHashMap<>();
         for (int order = 1; order <= 3; order++) {
             itemStatsByOrder.put(order,
@@ -66,7 +72,7 @@ public class ChampionStatsService {
             position,
             winRate.totalWinRate(),
             winRate.totalGames(),
-            null, runeBuilds, spellStats, skillBuilds,
+            strongMatchups, weakMatchups, runeBuilds, spellStats, skillBuilds,
             startItemBuilds, itemBuilds, itemStatsByOrder
         );
     }

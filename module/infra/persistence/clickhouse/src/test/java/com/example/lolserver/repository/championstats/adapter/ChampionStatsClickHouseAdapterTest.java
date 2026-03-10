@@ -63,23 +63,48 @@ class ChampionStatsClickHouseAdapterTest {
         assertThat(result.get(1).totalGames()).isEqualTo(200);
     }
 
-    @DisplayName("챔피언 매치업 통계를 리스트로 반환한다")
+    @DisplayName("유리한 매치업 통계를 승률 높은 순으로 반환한다")
     @Test
     @SuppressWarnings("unchecked")
-    void getChampionMatchups() {
+    void getStrongMatchups() {
         // given
         List<ChampionMatchupReadModel> expected = List.of(
-            new ChampionMatchupReadModel(238, 200, 0.55, 0.4)
+            new ChampionMatchupReadModel(7, 120, 0.5417, 0.12),
+            new ChampionMatchupReadModel(103, 100, 0.5300, 0.10),
+            new ChampionMatchupReadModel(4, 80, 0.5250, 0.08)
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
             .willReturn(expected);
 
         // when
-        List<ChampionMatchupReadModel> result = adapter.getChampionMatchups(13, "16.1", "KR", "EMERALD", "MIDDLE");
+        List<ChampionMatchupReadModel> result = adapter.getStrongMatchups(13, "16.1", "KR", "EMERALD", "MIDDLE");
 
         // then
-        assertThat(result).hasSize(1);
+        assertThat(result).hasSize(3);
+        assertThat(result.get(0).opponentChampionId()).isEqualTo(7);
+        assertThat(result.get(0).winRate()).isEqualTo(0.5417);
+    }
+
+    @DisplayName("불리한 매치업 통계를 승률 낮은 순으로 반환한다")
+    @Test
+    @SuppressWarnings("unchecked")
+    void getWeakMatchups() {
+        // given
+        List<ChampionMatchupReadModel> expected = List.of(
+            new ChampionMatchupReadModel(238, 150, 0.4667, 0.15),
+            new ChampionMatchupReadModel(91, 130, 0.4692, 0.13),
+            new ChampionMatchupReadModel(55, 90, 0.4778, 0.09)
+        );
+        given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
+            .willReturn(expected);
+
+        // when
+        List<ChampionMatchupReadModel> result = adapter.getWeakMatchups(13, "16.1", "KR", "EMERALD", "MIDDLE");
+
+        // then
+        assertThat(result).hasSize(3);
         assertThat(result.get(0).opponentChampionId()).isEqualTo(238);
+        assertThat(result.get(0).winRate()).isEqualTo(0.4667);
     }
 
     @DisplayName("챔피언 룬 빌드 통계를 조회한다")

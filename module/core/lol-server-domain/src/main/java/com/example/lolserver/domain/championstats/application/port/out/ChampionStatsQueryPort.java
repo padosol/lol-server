@@ -21,7 +21,10 @@ public interface ChampionStatsQueryPort {
     List<ChampionWinRateReadModel> getChampionWinRates(
             int championId, String patch, String platformId, String tier);
 
-    List<ChampionMatchupReadModel> getChampionMatchups(
+    List<ChampionMatchupReadModel> getStrongMatchups(
+            int championId, String patch, String platformId, String tier, String position);
+
+    List<ChampionMatchupReadModel> getWeakMatchups(
             int championId, String patch, String platformId, String tier, String position);
 
     List<ChampionRuneBuildReadModel> getChampionRuneBuilds(

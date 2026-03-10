@@ -2,6 +2,7 @@ package com.example.lolserver.domain.championstats.application;
 
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionPositionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
@@ -79,6 +80,21 @@ class ChampionStatsServiceTest {
             new ChampionItemStatsReadModel(3165, "Morellonomicon", 200, 0.50, 0.2)
         );
 
+        List<ChampionMatchupReadModel> middleStrongMatchups = List.of(
+            new ChampionMatchupReadModel(7, 120, 0.5417, 0.12),
+            new ChampionMatchupReadModel(103, 100, 0.5300, 0.10),
+            new ChampionMatchupReadModel(4, 80, 0.5250, 0.08)
+        );
+        List<ChampionMatchupReadModel> middleWeakMatchups = List.of(
+            new ChampionMatchupReadModel(238, 150, 0.4667, 0.15),
+            new ChampionMatchupReadModel(91, 130, 0.4692, 0.13),
+            new ChampionMatchupReadModel(55, 90, 0.4778, 0.09)
+        );
+
+        given(championStatsQueryPort.getStrongMatchups(championId, patch, platformId, tier, "MIDDLE"))
+            .willReturn(middleStrongMatchups);
+        given(championStatsQueryPort.getWeakMatchups(championId, patch, platformId, tier, "MIDDLE"))
+            .willReturn(middleWeakMatchups);
         given(championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tier, "MIDDLE"))
             .willReturn(middleRuneBuilds);
         given(championStatsQueryPort.getChampionSpellStats(championId, patch, platformId, tier, "MIDDLE"))
@@ -97,6 +113,10 @@ class ChampionStatsServiceTest {
             .willReturn(middleItemStats3);
 
         // TOP 포지션 상세 통계
+        given(championStatsQueryPort.getStrongMatchups(championId, patch, platformId, tier, "TOP"))
+            .willReturn(List.of());
+        given(championStatsQueryPort.getWeakMatchups(championId, patch, platformId, tier, "TOP"))
+            .willReturn(List.of());
         given(championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tier, "TOP"))
             .willReturn(List.of());
         given(championStatsQueryPort.getChampionSpellStats(championId, patch, platformId, tier, "TOP"))
@@ -126,7 +146,12 @@ class ChampionStatsServiceTest {
         assertThat(middleStats.teamPosition()).isEqualTo("MIDDLE");
         assertThat(middleStats.winRate()).isEqualTo(0.52);
         assertThat(middleStats.totalGames()).isEqualTo(1000);
-        assertThat(middleStats.matchups()).isNull();
+        assertThat(middleStats.strongMatchups()).hasSize(3);
+        assertThat(middleStats.strongMatchups().get(0).opponentChampionId()).isEqualTo(7);
+        assertThat(middleStats.strongMatchups().get(0).winRate()).isEqualTo(0.5417);
+        assertThat(middleStats.weakMatchups()).hasSize(3);
+        assertThat(middleStats.weakMatchups().get(0).opponentChampionId()).isEqualTo(238);
+        assertThat(middleStats.weakMatchups().get(0).winRate()).isEqualTo(0.4667);
         assertThat(middleStats.runeBuilds()).hasSize(1);
         assertThat(middleStats.spellStats()).hasSize(1);
         assertThat(middleStats.spellStats().get(0).summoner1Id()).isEqualTo(4);

@@ -59,8 +59,19 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
     }
 
     @Override
-    public List<ChampionMatchupReadModel> getChampionMatchups(
+    public List<ChampionMatchupReadModel> getStrongMatchups(
             int championId, String patch, String platformId, String tier, String position) {
+        return queryMatchups(championId, patch, platformId, tier, position, "DESC");
+    }
+
+    @Override
+    public List<ChampionMatchupReadModel> getWeakMatchups(
+            int championId, String patch, String platformId, String tier, String position) {
+        return queryMatchups(championId, patch, platformId, tier, position, "ASC");
+    }
+
+    private List<ChampionMatchupReadModel> queryMatchups(
+            int championId, String patch, String platformId, String tier, String position, String orderDirection) {
         String sql = """
                 WITH
                     matchup_stats AS (
@@ -72,6 +83,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                         WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
                               AND champion_id = %4$d AND team_position = %5$s
                         GROUP BY opponent_champion_id
+                        HAVING games >= 50
                     ),
                     total AS (
                         SELECT sum(games) AS total_games FROM matchup_stats
@@ -83,9 +95,9 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                     ms.games / t.total_games AS pick_rate
                 FROM matchup_stats AS ms
                 CROSS JOIN total AS t
-                ORDER BY ms.games DESC
-                LIMIT 2
-                """.formatted(quote(patch), quote(platformId), quote(tier), championId, quote(position));
+                ORDER BY win_rate %6$s
+                LIMIT 3
+                """.formatted(quote(patch), quote(platformId), quote(tier), championId, quote(position), orderDirection);
 
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new ChampionMatchupReadModel(
