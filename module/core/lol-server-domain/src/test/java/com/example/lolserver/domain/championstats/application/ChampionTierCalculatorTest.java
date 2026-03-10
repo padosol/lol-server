@@ -67,12 +67,12 @@ class ChampionTierCalculatorTest {
         Map<String, Long> tierCounts = result.stream()
                 .collect(Collectors.groupingBy(ChampionRateReadModel::tier, Collectors.counting()));
 
-        assertThat(tierCounts.getOrDefault("OP", 0L)).isEqualTo(3);
-        assertThat(tierCounts.getOrDefault("1", 0L)).isEqualTo(7);
-        assertThat(tierCounts.getOrDefault("2", 0L)).isEqualTo(10);
-        assertThat(tierCounts.getOrDefault("3", 0L)).isEqualTo(15);
-        assertThat(tierCounts.getOrDefault("4", 0L)).isEqualTo(15);
-        assertThat(tierCounts.getOrDefault("5", 0L)).isEqualTo(50);
+        assertThat(tierCounts.getOrDefault("OP", 0L)).isEqualTo(3);   // < 3%
+        assertThat(tierCounts.getOrDefault("1", 0L)).isEqualTo(7);   // 3% ~ 10%
+        assertThat(tierCounts.getOrDefault("2", 0L)).isEqualTo(15);  // 10% ~ 25%
+        assertThat(tierCounts.getOrDefault("3", 0L)).isEqualTo(25);  // 25% ~ 50%
+        assertThat(tierCounts.getOrDefault("4", 0L)).isEqualTo(25);  // 50% ~ 75%
+        assertThat(tierCounts.getOrDefault("5", 0L)).isEqualTo(25);  // 75% ~
     }
 
     @DisplayName("승률과 픽률이 높은 챔피언이 더 높은 tier를 받는다")

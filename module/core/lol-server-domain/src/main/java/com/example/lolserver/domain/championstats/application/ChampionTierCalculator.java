@@ -3,7 +3,6 @@ package com.example.lolserver.domain.championstats.application;
 import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 public final class ChampionTierCalculator {
@@ -22,15 +21,55 @@ public final class ChampionTierCalculator {
             return champions;
         }
 
-        double avgWinRate = computeWeightedAvgWinRate(champions);
+        double[] adjustedWinRates = computeAdjustedWinRates(champions);
+        double[] scores = computeScores(champions, adjustedWinRates);
 
+        int total = champions.size();
+        Integer[] indices = new Integer[total];
+        for (int i = 0; i < total; i++) {
+            indices[i] = i;
+        }
+        java.util.Arrays.sort(indices, (a, b) -> Double.compare(scores[b], scores[a]));
+
+        String[] tiers = new String[total];
+        for (int rank = 0; rank < total; rank++) {
+            int idx = indices[rank];
+            if (champions.get(idx).totalGames() < MIN_GAMES) {
+                tiers[idx] = "5";
+            } else {
+                double percentile = (double) rank / total;
+                tiers[idx] = tierFromPercentile(percentile);
+            }
+        }
+
+        java.util.Arrays.sort(indices, (a, b) -> {
+            int tierCmp = tierOrder(tiers[a]) - tierOrder(tiers[b]);
+            if (tierCmp != 0) {
+                return tierCmp;
+            }
+            return Long.compare(champions.get(b).totalGames(), champions.get(a).totalGames());
+        });
+
+        List<ChampionRateReadModel> result = new ArrayList<>(total);
+        for (int rank = 0; rank < total; rank++) {
+            int idx = indices[rank];
+            result.add(champions.get(idx).withTier(tiers[idx]));
+        }
+        return result;
+    }
+
+    private static double[] computeAdjustedWinRates(List<ChampionRateReadModel> champions) {
+        double avgWinRate = computeWeightedAvgWinRate(champions);
         double[] adjustedWinRates = new double[champions.size()];
         for (int i = 0; i < champions.size(); i++) {
             ChampionRateReadModel c = champions.get(i);
             adjustedWinRates[i] = (c.totalGames() * c.winRate() + K * avgWinRate)
                     / (c.totalGames() + K);
         }
+        return adjustedWinRates;
+    }
 
+    private static double[] computeScores(List<ChampionRateReadModel> champions, double[] adjustedWinRates) {
         double minAWR = Double.MAX_VALUE, maxAWR = -Double.MAX_VALUE;
         double minPR = Double.MAX_VALUE, maxPR = -Double.MAX_VALUE;
         double minBR = Double.MAX_VALUE, maxBR = -Double.MAX_VALUE;
@@ -53,37 +92,7 @@ public final class ChampionTierCalculator {
             double normBR = normalize(c.banRate(), minBR, maxBR);
             scores[i] = W_WIN_RATE * normWR + W_PICK_RATE * normPR + W_BAN_RATE * normBR;
         }
-
-        int total = champions.size();
-        Integer[] indices = new Integer[total];
-        for (int i = 0; i < total; i++) {
-            indices[i] = i;
-        }
-        java.util.Arrays.sort(indices, (a, b) -> Double.compare(scores[b], scores[a]));
-
-        String[] tiers = new String[total];
-        for (int rank = 0; rank < total; rank++) {
-            int idx = indices[rank];
-            if (champions.get(idx).totalGames() < MIN_GAMES) {
-                tiers[idx] = "5";
-            } else {
-                double percentile = (double) rank / total;
-                tiers[idx] = tierFromPercentile(percentile);
-            }
-        }
-
-        java.util.Arrays.sort(indices, (a, b) -> {
-            int tierCmp = tierOrder(tiers[a]) - tierOrder(tiers[b]);
-            if (tierCmp != 0) return tierCmp;
-            return Long.compare(champions.get(b).totalGames(), champions.get(a).totalGames());
-        });
-
-        List<ChampionRateReadModel> result = new ArrayList<>(total);
-        for (int rank = 0; rank < total; rank++) {
-            int idx = indices[rank];
-            result.add(champions.get(idx).withTier(tiers[idx]));
-        }
-        return result;
+        return scores;
     }
 
     private static double computeWeightedAvgWinRate(List<ChampionRateReadModel> champions) {
@@ -116,11 +125,17 @@ public final class ChampionTierCalculator {
     }
 
     private static String tierFromPercentile(double percentile) {
-        if (percentile < 0.03) return "OP";
-        if (percentile < 0.10) return "1";
-        if (percentile < 0.25) return "2";
-        if (percentile < 0.50) return "3";
-        if (percentile < 0.75) return "4";
+        if (percentile < 0.03) {
+            return "OP";
+        } else if (percentile < 0.10) {
+            return "1";
+        } else if (percentile < 0.25) {
+            return "2";
+        } else if (percentile < 0.50) {
+            return "3";
+        } else if (percentile < 0.75) {
+            return "4";
+        }
         return "5";
     }
 }

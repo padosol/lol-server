@@ -97,7 +97,9 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                 CROSS JOIN total AS t
                 ORDER BY win_rate %6$s
                 LIMIT 3
-                """.formatted(quote(patch), quote(platformId), quote(tier), championId, quote(position), orderDirection);
+                """.formatted(
+                        quote(patch), quote(platformId), quote(tier),
+                        championId, quote(position), orderDirection);
 
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new ChampionMatchupReadModel(
