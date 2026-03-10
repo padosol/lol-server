@@ -1,14 +1,17 @@
 package com.example.lolserver.domain.championstats.application;
 
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionPositionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionSpellStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionStartItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
-import com.example.lolserver.domain.championstats.application.model.ChampionTotalGamesReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
-import com.example.lolserver.domain.championstats.application.model.PositionChampionGamesReadModel;
+import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,74 +39,137 @@ class ChampionStatsServiceTest {
         championStatsService = new ChampionStatsService(championStatsQueryPort);
     }
 
-    @DisplayName("포지션별로 그룹화된 챔피언 통계를 반환한다")
+    @DisplayName("모든 포지션의 챔피언 상세 통계를 그룹핑하여 반환한다")
     @Test
-    void getChampionStats_returnsGroupedByPosition() {
+    void getChampionStats_returnsAllPositionStats() {
         // given
         int championId = 13;
         String patch = "16.1";
         String platformId = "KR";
         String tier = "EMERALD";
 
-        List<ChampionWinRateReadModel> winRates = List.of(
-            new ChampionWinRateReadModel("MIDDLE", 1000, 520, 0.52),
-            new ChampionWinRateReadModel("TOP", 200, 90, 0.45)
-        );
-        Map<String, List<ChampionMatchupReadModel>> matchups = Map.of(
-            "MIDDLE", List.of(new ChampionMatchupReadModel(238, 200, 110, 0.55)),
-            "TOP", List.of(new ChampionMatchupReadModel(86, 50, 20, 0.40))
-        );
-        Map<String, List<ChampionItemBuildReadModel>> itemBuilds = Map.of(
-            "MIDDLE", List.of(new ChampionItemBuildReadModel("[3089,3157,3165]", 500, 260, 0.52))
-        );
-        Map<String, List<ChampionRuneBuildReadModel>> runeBuilds = Map.of(
-            "MIDDLE", List.of(new ChampionRuneBuildReadModel(8100, "[8112,8139,8143,8135]", 8300, "[8304,8345]", 300, 160, 0.5333))
-        );
-        Map<String, List<ChampionSkillBuildReadModel>> skillBuilds = Map.of(
-            "MIDDLE", List.of(new ChampionSkillBuildReadModel("QWEQEEREQEQWWWW", 400, 210, 0.525))
-        );
+        ChampionWinRateReadModel middleWinRate = new ChampionWinRateReadModel("MIDDLE", 1000, 520, 0.52);
+        ChampionWinRateReadModel topWinRate = new ChampionWinRateReadModel("TOP", 200, 110, 0.55);
 
         given(championStatsQueryPort.getChampionWinRates(championId, patch, platformId, tier))
-            .willReturn(winRates);
-        given(championStatsQueryPort.getChampionMatchups(championId, patch, platformId, tier))
-            .willReturn(matchups);
-        given(championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tier))
-            .willReturn(itemBuilds);
-        given(championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tier))
-            .willReturn(runeBuilds);
-        given(championStatsQueryPort.getChampionSkillBuilds(championId, patch, platformId, tier))
-            .willReturn(skillBuilds);
+            .willReturn(List.of(middleWinRate, topWinRate));
+
+        // MIDDLE 포지션 상세 통계
+        List<ChampionRuneBuildReadModel> middleRuneBuilds = List.of(
+            new ChampionRuneBuildReadModel(8100, 8300, 8112, 8139, 8143, 8135, 8304, 8345, 5002, 5008, 5005, 300, 0.5333, 0.6)
+        );
+        List<ChampionSpellStatsReadModel> middleSpellStats = List.of(
+            new ChampionSpellStatsReadModel(4, 14, 800, 0.52, 0.8)
+        );
+        List<ChampionSkillBuildReadModel> middleSkillBuilds = List.of(
+            new ChampionSkillBuildReadModel("QWEQEEREQEQWWWW", 400, 0.525, 0.4)
+        );
+        List<ChampionStartItemBuildReadModel> middleStartItemBuilds = List.of(
+            new ChampionStartItemBuildReadModel("1056,2003", 600, 0.51, 0.6)
+        );
+        List<ChampionItemBuildReadModel> middleItemBuilds = List.of(
+            new ChampionItemBuildReadModel("3089,3157,3165", 500, 0.52, 0.5)
+        );
+        List<ChampionItemStatsReadModel> middleItemStats1 = List.of(
+            new ChampionItemStatsReadModel(3089, "Rabadon's Deathcap", 400, 0.55, 0.4)
+        );
+        List<ChampionItemStatsReadModel> middleItemStats2 = List.of(
+            new ChampionItemStatsReadModel(3157, "Zhonya's Hourglass", 350, 0.53, 0.35)
+        );
+        List<ChampionItemStatsReadModel> middleItemStats3 = List.of(
+            new ChampionItemStatsReadModel(3165, "Morellonomicon", 200, 0.50, 0.2)
+        );
+
+        List<ChampionMatchupReadModel> middleStrongMatchups = List.of(
+            new ChampionMatchupReadModel(7, 120, 0.5417, 0.12),
+            new ChampionMatchupReadModel(103, 100, 0.5300, 0.10),
+            new ChampionMatchupReadModel(4, 80, 0.5250, 0.08)
+        );
+        List<ChampionMatchupReadModel> middleWeakMatchups = List.of(
+            new ChampionMatchupReadModel(238, 150, 0.4667, 0.15),
+            new ChampionMatchupReadModel(91, 130, 0.4692, 0.13),
+            new ChampionMatchupReadModel(55, 90, 0.4778, 0.09)
+        );
+
+        given(championStatsQueryPort.getStrongMatchups(championId, patch, platformId, tier, "MIDDLE"))
+            .willReturn(middleStrongMatchups);
+        given(championStatsQueryPort.getWeakMatchups(championId, patch, platformId, tier, "MIDDLE"))
+            .willReturn(middleWeakMatchups);
+        given(championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tier, "MIDDLE"))
+            .willReturn(middleRuneBuilds);
+        given(championStatsQueryPort.getChampionSpellStats(championId, patch, platformId, tier, "MIDDLE"))
+            .willReturn(middleSpellStats);
+        given(championStatsQueryPort.getChampionSkillBuilds(championId, patch, platformId, tier, "MIDDLE"))
+            .willReturn(middleSkillBuilds);
+        given(championStatsQueryPort.getChampionStartItemBuilds(championId, patch, platformId, tier, "MIDDLE"))
+            .willReturn(middleStartItemBuilds);
+        given(championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tier, "MIDDLE"))
+            .willReturn(middleItemBuilds);
+        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tier, "MIDDLE", 1))
+            .willReturn(middleItemStats1);
+        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tier, "MIDDLE", 2))
+            .willReturn(middleItemStats2);
+        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tier, "MIDDLE", 3))
+            .willReturn(middleItemStats3);
+
+        // TOP 포지션 상세 통계
+        given(championStatsQueryPort.getStrongMatchups(championId, patch, platformId, tier, "TOP"))
+            .willReturn(List.of());
+        given(championStatsQueryPort.getWeakMatchups(championId, patch, platformId, tier, "TOP"))
+            .willReturn(List.of());
+        given(championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tier, "TOP"))
+            .willReturn(List.of());
+        given(championStatsQueryPort.getChampionSpellStats(championId, patch, platformId, tier, "TOP"))
+            .willReturn(List.of());
+        given(championStatsQueryPort.getChampionSkillBuilds(championId, patch, platformId, tier, "TOP"))
+            .willReturn(List.of());
+        given(championStatsQueryPort.getChampionStartItemBuilds(championId, patch, platformId, tier, "TOP"))
+            .willReturn(List.of());
+        given(championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tier, "TOP"))
+            .willReturn(List.of());
+        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tier, "TOP", 1))
+            .willReturn(List.of());
+        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tier, "TOP", 2))
+            .willReturn(List.of());
+        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tier, "TOP", 3))
+            .willReturn(List.of());
 
         // when
-        ChampionStatsReadModel result = championStatsService.getChampionStats(championId, patch, platformId, tier);
+        ChampionStatsReadModel result = championStatsService.getChampionStats(
+            championId, patch, platformId, tier);
 
         // then
         assertThat(result.tier()).isEqualTo("EMERALD");
-        assertThat(result.stats()).hasSize(2);
+        assertThat(result.positions()).hasSize(2);
 
-        ChampionPositionStatsReadModel middle = result.stats().get(0);
-        assertThat(middle.teamPosition()).isEqualTo("MIDDLE");
-        assertThat(middle.winRate()).isEqualTo(0.52);
-        assertThat(middle.totalCount()).isEqualTo(1000);
-        assertThat(middle.matchups()).hasSize(1);
-        assertThat(middle.matchups().get(0).opponentChampionId()).isEqualTo(238);
-        assertThat(middle.itemBuilds()).hasSize(1);
-        assertThat(middle.runeBuilds()).hasSize(1);
-        assertThat(middle.skillBuilds()).hasSize(1);
+        ChampionPositionStatsReadModel middleStats = result.positions().get(0);
+        assertThat(middleStats.teamPosition()).isEqualTo("MIDDLE");
+        assertThat(middleStats.winRate()).isEqualTo(0.52);
+        assertThat(middleStats.totalGames()).isEqualTo(1000);
+        assertThat(middleStats.strongMatchups()).hasSize(3);
+        assertThat(middleStats.strongMatchups().get(0).opponentChampionId()).isEqualTo(7);
+        assertThat(middleStats.strongMatchups().get(0).winRate()).isEqualTo(0.5417);
+        assertThat(middleStats.weakMatchups()).hasSize(3);
+        assertThat(middleStats.weakMatchups().get(0).opponentChampionId()).isEqualTo(238);
+        assertThat(middleStats.weakMatchups().get(0).winRate()).isEqualTo(0.4667);
+        assertThat(middleStats.runeBuilds()).hasSize(1);
+        assertThat(middleStats.spellStats()).hasSize(1);
+        assertThat(middleStats.spellStats().get(0).summoner1Id()).isEqualTo(4);
+        assertThat(middleStats.skillBuilds()).hasSize(1);
+        assertThat(middleStats.startItemBuilds()).hasSize(1);
+        assertThat(middleStats.startItemBuilds().get(0).startItems()).isEqualTo("1056,2003");
+        assertThat(middleStats.itemBuilds()).hasSize(1);
+        assertThat(middleStats.itemStatsByOrder()).hasSize(3);
 
-        ChampionPositionStatsReadModel top = result.stats().get(1);
-        assertThat(top.teamPosition()).isEqualTo("TOP");
-        assertThat(top.winRate()).isEqualTo(0.45);
-        assertThat(top.totalCount()).isEqualTo(200);
-        assertThat(top.matchups()).hasSize(1);
-        assertThat(top.itemBuilds()).isEmpty();
-        assertThat(top.runeBuilds()).isEmpty();
-        assertThat(top.skillBuilds()).isEmpty();
+        ChampionPositionStatsReadModel topStats = result.positions().get(1);
+        assertThat(topStats.teamPosition()).isEqualTo("TOP");
+        assertThat(topStats.winRate()).isEqualTo(0.55);
+        assertThat(topStats.totalGames()).isEqualTo(200);
     }
 
-    @DisplayName("통계 데이터가 없으면 빈 stats 배열을 반환한다")
+    @DisplayName("승률 데이터가 없으면 빈 포지션 리스트를 반환한다")
     @Test
-    void getChampionStats_returnsEmptyStats_whenNoData() {
+    void getChampionStats_returnsEmptyPositions_whenNoWinRateData() {
         // given
         int championId = 999;
         String patch = "16.1";
@@ -112,67 +178,67 @@ class ChampionStatsServiceTest {
 
         given(championStatsQueryPort.getChampionWinRates(championId, patch, platformId, tier))
             .willReturn(List.of());
-        given(championStatsQueryPort.getChampionMatchups(championId, patch, platformId, tier))
-            .willReturn(Map.of());
-        given(championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tier))
-            .willReturn(Map.of());
-        given(championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tier))
-            .willReturn(Map.of());
-        given(championStatsQueryPort.getChampionSkillBuilds(championId, patch, platformId, tier))
-            .willReturn(Map.of());
 
         // when
-        ChampionStatsReadModel result = championStatsService.getChampionStats(championId, patch, platformId, tier);
+        ChampionStatsReadModel result = championStatsService.getChampionStats(
+            championId, patch, platformId, tier);
 
         // then
-        assertThat(result.stats()).isEmpty();
+        assertThat(result.tier()).isEqualTo("EMERALD");
+        assertThat(result.positions()).isEmpty();
     }
 
-    @DisplayName("포지션별 챔피언 총 게임수를 반환한다")
+    @DisplayName("포지션별 챔피언 승률/픽률/밴률을 반환한다")
     @Test
-    void getChampionTotalGamesByPosition_returnsGroupedByPosition() {
+    void getChampionStatsByPosition_returnsGroupedByPosition() {
         // given
         String patch = "16.1";
         String platformId = "KR";
         String tier = "EMERALD";
 
-        Map<String, List<ChampionTotalGamesReadModel>> grouped = Map.of(
+        Map<String, List<ChampionRateReadModel>> grouped = Map.of(
             "TOP", List.of(
-                new ChampionTotalGamesReadModel(266, 1500),
-                new ChampionTotalGamesReadModel(122, 1200)
+                new ChampionRateReadModel(266, 0.5200, 0.0800, 0.0500, 1500),
+                new ChampionRateReadModel(122, 0.4800, 0.0600, 0.0300, 1200)
             ),
             "JUNGLE", List.of(
-                new ChampionTotalGamesReadModel(64, 2000)
+                new ChampionRateReadModel(64, 0.5100, 0.1000, 0.0700, 2000)
             )
         );
 
-        given(championStatsQueryPort.getChampionTotalGamesByPosition(patch, platformId, tier))
+        given(championStatsQueryPort.getChampionStatsByPosition(patch, platformId, tier))
             .willReturn(grouped);
 
         // when
-        List<PositionChampionGamesReadModel> result =
-            championStatsService.getChampionTotalGamesByPosition(patch, platformId, tier);
+        List<PositionChampionStatsReadModel> result =
+            championStatsService.getChampionStatsByPosition(patch, platformId, tier);
 
         // then
         assertThat(result).hasSize(2);
-        assertThat(result).extracting(PositionChampionGamesReadModel::teamPosition)
+        assertThat(result).extracting(PositionChampionStatsReadModel::teamPosition)
             .containsExactlyInAnyOrder("TOP", "JUNGLE");
+
+        result.forEach(position ->
+            position.champions().forEach(champion ->
+                assertThat(champion.tier()).isNotNull()
+            )
+        );
     }
 
-    @DisplayName("포지션별 챔피언 총 게임수 조회 시 데이터가 없으면 빈 리스트를 반환한다")
+    @DisplayName("포지션별 챔피언 통계 조회 시 데이터가 없으면 빈 리스트를 반환한다")
     @Test
-    void getChampionTotalGamesByPosition_returnsEmptyList_whenNoData() {
+    void getChampionStatsByPosition_returnsEmptyList_whenNoData() {
         // given
         String patch = "16.1";
         String platformId = "KR";
         String tier = "EMERALD";
 
-        given(championStatsQueryPort.getChampionTotalGamesByPosition(patch, platformId, tier))
+        given(championStatsQueryPort.getChampionStatsByPosition(patch, platformId, tier))
             .willReturn(Map.of());
 
         // when
-        List<PositionChampionGamesReadModel> result =
-            championStatsService.getChampionTotalGamesByPosition(patch, platformId, tier);
+        List<PositionChampionStatsReadModel> result =
+            championStatsService.getChampionStatsByPosition(patch, platformId, tier);
 
         // then
         assertThat(result).isEmpty();

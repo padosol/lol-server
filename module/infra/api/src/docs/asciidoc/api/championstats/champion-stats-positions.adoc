@@ -1,5 +1,5 @@
 [[champion-stats-positions]]
-=== 포지션별 챔피언 게임수 조회
+=== 포지션별 챔피언 승률/픽률/밴률 조회
 
 ==== HTTP Request
 include::{snippets}/champion-stats-positions/http-request.adoc[]

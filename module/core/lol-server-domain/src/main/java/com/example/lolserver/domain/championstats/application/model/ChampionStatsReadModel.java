@@ -4,5 +4,5 @@ import java.util.List;
 
 public record ChampionStatsReadModel(
     String tier,
-    List<ChampionPositionStatsReadModel> stats
+    List<ChampionPositionStatsReadModel> positions
 ) {}
