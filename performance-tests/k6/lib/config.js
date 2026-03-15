@@ -33,6 +33,19 @@ export const ENDPOINTS = {
         getById: (matchId) => `/api/v1/matches/${matchId}`,
         getMatchIds: (platformId, puuid, page = 0, size = 10) => `/api/v1/${platformId}/matches/matchIds?puuid=${puuid}&page=${page}&size=${size}`,
         getMatches: (platformId, puuid, page = 0, size = 10) => `/api/v1/${platformId}/matches?puuid=${puuid}&page=${page}&size=${size}`,
+        getMatchesByPuuid: (platformId, puuid, season, queueId, pageNo = 1) => {
+            const params = new URLSearchParams({ pageNo: String(pageNo) });
+
+            if (season !== undefined && season !== null && season !== '') {
+                params.set('season', String(season));
+            }
+
+            if (queueId !== undefined && queueId !== null && queueId !== '') {
+                params.set('queueId', String(queueId));
+            }
+
+            return `/api/v1/${platformId}/summoners/${puuid}/matches?${params.toString()}`;
+        },
         timeline: (matchId) => `/api/v1/match/timeline/${matchId}`,
     },
 
