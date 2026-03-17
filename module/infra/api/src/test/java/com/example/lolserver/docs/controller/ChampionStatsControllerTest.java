@@ -26,6 +26,9 @@ import org.springframework.restdocs.payload.JsonFieldType;
 import java.util.List;
 import java.util.Map;
 
+import com.example.lolserver.TierFilter;
+
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -94,7 +97,7 @@ class ChampionStatsControllerTest extends RestDocsSupport {
 
         ChampionStatsReadModel response = new ChampionStatsReadModel("EMERALD", List.of(positionStats));
 
-        given(championStatsService.getChampionStats(anyInt(), anyString(), anyString(), anyString()))
+        given(championStatsService.getChampionStats(anyInt(), anyString(), anyString(), any(TierFilter.class)))
                 .willReturn(response);
 
         // when & then
@@ -116,7 +119,7 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                         queryParameters(
                                 parameterWithName("championId").description("챔피언 ID (e.g., 266)"),
                                 parameterWithName("patch").description("패치 버전 (e.g., 14.24)"),
-                                parameterWithName("tier").description("티어 (e.g., EMERALD)")
+                                parameterWithName("tier").description("티어 필터. 단일 티어(e.g., EMERALD) 또는 범위 티어(e.g., MASTER+)를 지원합니다.")
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과"),
@@ -216,7 +219,7 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                         new ChampionRateReadModel(64, 0.5100, 0.1000, 0.0700, 2000, "1")
                 ))
         );
-        given(championStatsService.getChampionStatsByPosition(anyString(), anyString(), anyString()))
+        given(championStatsService.getChampionStatsByPosition(anyString(), anyString(), any(TierFilter.class)))
                 .willReturn(response);
 
         // when & then
@@ -236,7 +239,7 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                         ),
                         queryParameters(
                                 parameterWithName("patch").description("패치 버전 (e.g., 16.1)"),
-                                parameterWithName("tier").description("티어 (e.g., EMERALD)")
+                                parameterWithName("tier").description("티어 필터. 단일 티어(e.g., EMERALD) 또는 범위 티어(e.g., MASTER+)를 지원합니다.")
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과"),

@@ -43,8 +43,15 @@ out/
 ### VS Code ###
 .vscode/
 
+### Environment ###
+.env
+.env.local
+
 ### Claude Code ###
 .claude/settings.local.json
+
+### Checkstyle CLI ###
+config/checkstyle/checkstyle-*-all.jar
 
 ### Performance Tests ###
 performance-tests/results/*.json

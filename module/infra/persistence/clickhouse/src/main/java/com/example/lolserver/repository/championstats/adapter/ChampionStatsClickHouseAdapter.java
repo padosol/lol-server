@@ -1,5 +1,6 @@
 package com.example.lolserver.repository.championstats.adapter;
 
+import com.example.lolserver.TierFilter;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
@@ -35,19 +36,33 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
         return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'";
     }
 
+    /**
+     * TierFilter의 티어 이름들을 SQL IN 절로 변환합니다.
+     *
+     * <p>SQL Injection 안전성: TierFilter.of()가 Tier.valueOf()로 검증하므로
+     * tierNames에는 Tier enum에 정의된 값만 포함됩니다.
+     * ClickHouse JDBC는 IN 절의 PreparedStatement 바인딩을 지원하지 않아
+     * 문자열 삽입 방식을 사용하되, quote()로 이스케이프합니다.
+     */
+    private static String tierInClause(TierFilter tierFilter) {
+        return tierFilter.getTierNames().stream()
+                .map(ChampionStatsClickHouseAdapter::quote)
+                .collect(Collectors.joining(", ", "tier IN (", ")"));
+    }
+
     @Override
     public List<ChampionWinRateReadModel> getChampionWinRates(
-            int championId, String patch, String platformId, String tier) {
+            int championId, String patch, String platformId, TierFilter tierFilter) {
         String sql = """
                 SELECT team_position       AS team_position,
                        toInt64(count(*))   AS total_games,
                        toInt64(sum(win))   AS total_wins,
                        coalesce(round(sum(win) / nullIf(count(*), 0), 4), 0) AS total_win_rate
                 FROM match_participant_local
-                WHERE champion_id = %d AND patch_version = %s AND platform_id = %s AND tier = %s
+                WHERE champion_id = %d AND patch_version = %s AND platform_id = %s AND %s
                 GROUP BY team_position
                 ORDER BY total_games DESC
-                """.formatted(championId, quote(patch), quote(platformId), quote(tier));
+                """.formatted(championId, quote(patch), quote(platformId), tierInClause(tierFilter));
 
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new ChampionWinRateReadModel(
@@ -60,18 +75,19 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
 
     @Override
     public List<ChampionMatchupReadModel> getStrongMatchups(
-            int championId, String patch, String platformId, String tier, String position) {
-        return queryMatchups(championId, patch, platformId, tier, position, "DESC");
+            int championId, String patch, String platformId, TierFilter tierFilter, String position) {
+        return queryMatchups(championId, patch, platformId, tierFilter, position, "DESC");
     }
 
     @Override
     public List<ChampionMatchupReadModel> getWeakMatchups(
-            int championId, String patch, String platformId, String tier, String position) {
-        return queryMatchups(championId, patch, platformId, tier, position, "ASC");
+            int championId, String patch, String platformId, TierFilter tierFilter, String position) {
+        return queryMatchups(championId, patch, platformId, tierFilter, position, "ASC");
     }
 
     private List<ChampionMatchupReadModel> queryMatchups(
-            int championId, String patch, String platformId, String tier, String position, String orderDirection) {
+            int championId, String patch, String platformId,
+            TierFilter tierFilter, String position, String orderDirection) {
         String sql = """
                 WITH
                     matchup_stats AS (
@@ -80,7 +96,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                             sum(games) AS games,
                             sum(wins)  AS wins
                         FROM champion_matchup_stats_agg
-                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND %3$s
                               AND champion_id = %4$d AND team_position = %5$s
                         GROUP BY opponent_champion_id
                         HAVING games >= 50
@@ -98,7 +114,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                 ORDER BY win_rate %6$s
                 LIMIT 3
                 """.formatted(
-                        quote(patch), quote(platformId), quote(tier),
+                        quote(patch), quote(platformId), tierInClause(tierFilter),
                         championId, quote(position), orderDirection);
 
         return clickHouseJdbcTemplate.query(sql,
@@ -112,7 +128,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
 
     @Override
     public List<ChampionRuneBuildReadModel> getChampionRuneBuilds(
-            int championId, String patch, String platformId, String tier, String position) {
+            int championId, String patch, String platformId, TierFilter tierFilter, String position) {
         String sql = """
                 WITH
                     rune_stats AS (
@@ -124,7 +140,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                             sum(games) AS games,
                             sum(wins)  AS wins
                         FROM champion_rune_stats_agg
-                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND %3$s
                               AND champion_id = %4$d AND team_position = %5$s
                         GROUP BY primary_style_id, sub_style_id,
                                  primary_perk0, primary_perk1, primary_perk2, primary_perk3,
@@ -146,7 +162,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                 CROSS JOIN total AS t
                 ORDER BY rs.games DESC
                 LIMIT 2
-                """.formatted(quote(patch), quote(platformId), quote(tier), championId, quote(position));
+                """.formatted(quote(patch), quote(platformId), tierInClause(tierFilter), championId, quote(position));
 
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new ChampionRuneBuildReadModel(
@@ -169,7 +185,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
 
     @Override
     public List<ChampionSpellStatsReadModel> getChampionSpellStats(
-            int championId, String patch, String platformId, String tier, String position) {
+            int championId, String patch, String platformId, TierFilter tierFilter, String position) {
         String sql = """
                 WITH
                     spell_stats AS (
@@ -178,7 +194,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                             sum(games) AS games,
                             sum(wins)  AS wins
                         FROM champion_spell_stats_agg
-                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND %3$s
                               AND champion_id = %4$d AND team_position = %5$s
                         GROUP BY summoner1id, summoner2id
                     ),
@@ -195,7 +211,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                 CROSS JOIN total AS t
                 ORDER BY ss.games DESC
                 LIMIT 2
-                """.formatted(quote(patch), quote(platformId), quote(tier), championId, quote(position));
+                """.formatted(quote(patch), quote(platformId), tierInClause(tierFilter), championId, quote(position));
 
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new ChampionSpellStatsReadModel(
@@ -209,7 +225,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
 
     @Override
     public List<ChampionSkillBuildReadModel> getChampionSkillBuilds(
-            int championId, String patch, String platformId, String tier, String position) {
+            int championId, String patch, String platformId, TierFilter tierFilter, String position) {
         String sql = """
                 WITH
                     skill_stats AS (
@@ -218,7 +234,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                             sum(games) AS games,
                             sum(wins)  AS wins
                         FROM champion_skill_build_stats_agg
-                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND %3$s
                               AND champion_id = %4$d AND team_position = %5$s
                         GROUP BY skill_build
                     ),
@@ -234,7 +250,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                 CROSS JOIN total AS t
                 ORDER BY sk.games DESC
                 LIMIT 2
-                """.formatted(quote(patch), quote(platformId), quote(tier), championId, quote(position));
+                """.formatted(quote(patch), quote(platformId), tierInClause(tierFilter), championId, quote(position));
 
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new ChampionSkillBuildReadModel(
@@ -247,7 +263,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
 
     @Override
     public List<ChampionStartItemBuildReadModel> getChampionStartItemBuilds(
-            int championId, String patch, String platformId, String tier, String position) {
+            int championId, String patch, String platformId, TierFilter tierFilter, String position) {
         String sql = """
                 WITH
                     item_stats AS (
@@ -256,7 +272,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                             sum(games) AS games,
                             sum(wins)  AS wins
                         FROM champion_start_item_stats_agg
-                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND %3$s
                               AND champion_id = %4$d AND team_position = %5$s
                         GROUP BY start_items
                     ),
@@ -272,7 +288,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                 CROSS JOIN total AS t
                 ORDER BY its.games DESC
                 LIMIT 2
-                """.formatted(quote(patch), quote(platformId), quote(tier), championId, quote(position));
+                """.formatted(quote(patch), quote(platformId), tierInClause(tierFilter), championId, quote(position));
 
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new ChampionStartItemBuildReadModel(
@@ -285,13 +301,13 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
 
     @Override
     public List<ChampionItemBuildReadModel> getChampionItemBuilds(
-            int championId, String patch, String platformId, String tier, String position) {
+            int championId, String patch, String platformId, TierFilter tierFilter, String position) {
         String sql = """
                 WITH
                     build_stats AS (
                         SELECT item_build, sum(games) AS games, sum(wins) AS wins
                         FROM champion_item_build_stats_agg
-                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND %3$s
                               AND champion_id = %4$d AND team_position = %5$s
                         GROUP BY item_build
                     ),
@@ -307,7 +323,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                 CROSS JOIN total AS t
                 ORDER BY bs.games DESC
                 LIMIT 2
-                """.formatted(quote(patch), quote(platformId), quote(tier), championId, quote(position));
+                """.formatted(quote(patch), quote(platformId), tierInClause(tierFilter), championId, quote(position));
 
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new ChampionItemBuildReadModel(
@@ -320,13 +336,14 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
 
     @Override
     public List<ChampionItemStatsReadModel> getChampionItemStats(
-            int championId, String patch, String platformId, String tier, String position, int itemOrder) {
+            int championId, String patch, String platformId, TierFilter tierFilter, String position, int itemOrder) {
+        String tierIn = tierInClause(tierFilter);
         String sql = """
                 WITH
                     item_stats AS (
                         SELECT item_id, sum(games) AS games, sum(wins) AS wins
                         FROM champion_item_stats_agg
-                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND %3$s
                               AND champion_id = %4$d AND team_position = %5$s
                               AND item_order = %6$d
                         GROUP BY item_id
@@ -334,7 +351,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                     total AS (
                         SELECT sum(games) AS total_games
                         FROM champion_stats_agg
-                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND %3$s
                               AND champion_id = %4$d AND team_position = %5$s
                     )
                 SELECT
@@ -348,7 +365,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                 CROSS JOIN total AS t
                 ORDER BY its.games DESC
                 LIMIT 2
-                """.formatted(quote(patch), quote(platformId), quote(tier), championId, quote(position), itemOrder);
+                """.formatted(quote(patch), quote(platformId), tierIn, championId, quote(position), itemOrder);
 
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new ChampionItemStatsReadModel(
@@ -362,32 +379,33 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
 
     @Override
     public Map<String, List<ChampionRateReadModel>> getChampionStatsByPosition(
-            String patch, String platformId, String tier) {
+            String patch, String platformId, TierFilter tierFilter) {
+        String tierIn = tierInClause(tierFilter);
         String sql = """
                 WITH
                     stats AS (
                         SELECT champion_id, team_position,
                                sum(games) AS games, sum(wins) AS wins
                         FROM champion_stats_agg
-                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND %3$s
                         GROUP BY champion_id, team_position
                     ),
                     pick_total AS (
                         SELECT team_position, sum(participant_rows) AS participant_rows
                         FROM match_count_agg
-                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND %3$s
                         GROUP BY team_position
                     ),
                     ban_stats AS (
                         SELECT champion_id, sum(bans) AS bans
                         FROM champion_bans_agg
-                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND %3$s
                         GROUP BY champion_id
                     ),
                     ban_total AS (
                         SELECT sum(participant_rows) AS total_participants
                         FROM match_count_agg
-                        WHERE patch_version = %1$s AND platform_id = %2$s AND tier = %3$s
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND %3$s
                     )
                 SELECT s.team_position AS team_position, s.champion_id AS champion_id,
                        coalesce(round(s.wins / nullIf(s.games, 0), 4), 0) AS win_rate,
@@ -399,7 +417,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                 LEFT  JOIN ban_stats  AS b  ON s.champion_id   = b.champion_id
                 CROSS JOIN ban_total  AS bt
                 ORDER BY s.team_position, s.games DESC
-                """.formatted(quote(patch), quote(platformId), quote(tier));
+                """.formatted(quote(patch), quote(platformId), tierIn);
 
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new AbstractMap.SimpleEntry<>(

@@ -68,6 +68,25 @@ subprojects {
         exclude '**/*ClientMapperImpl.java'
     }
 
+    if (project.hasProperty('checkstyleDiff')) {
+        def baseRef = project.findProperty('checkstyleBaseRef') ?: 'origin/main'
+        def result = providers.exec {
+            commandLine 'git', 'diff', '--name-only', '--diff-filter=ACMR', baseRef
+        }
+        def changedJavaFiles = result.standardOutput.asText.get().trim().split('\n')
+            .findAll { it.endsWith('.java') }
+            .collect { it as String }
+            .toSet()
+
+        tasks.withType(Checkstyle).configureEach { task ->
+            task.source = task.source.filter { file ->
+                def rel = rootProject.projectDir.toPath()
+                    .relativize(file.toPath()).toString()
+                changedJavaFiles.contains(rel)
+            }
+        }
+    }
+
     java {
         toolchain {
             languageVersion = JavaLanguageVersion.of(17)

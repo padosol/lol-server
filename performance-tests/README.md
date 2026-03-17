@@ -109,6 +109,15 @@ k6 run --env BASE_URL=http://localhost:8100 k6/scenarios/smoke-test.js
 
 # Load Test
 k6 run --env BASE_URL=http://localhost:8100 k6/scenarios/summoner-search-flow.js
+
+# PUUID Match Lookup Test
+k6 run \
+  --env BASE_URL=http://localhost:8100 \
+  --env PLATFORM_ID=kr \
+  --env PAGE_NO=1 \
+  --env RATE=50 \
+  --env DURATION=1m \
+  k6/scenarios/puuid-match-test.js
 ```
 
 ## 테스트 시나리오
@@ -159,6 +168,13 @@ k6 run --env BASE_URL=http://localhost:8100 k6/scenarios/summoner-search-flow.js
 | `BASE_URL` | `http://localhost:8100` | 테스트 대상 서버 URL |
 | `DURATION` | `1m` | Smoke Test 실행 시간 |
 | `VUS` | `5` | Smoke Test 가상 사용자 수 |
+| `PLATFORM_ID` | `kr` | 매치 조회 대상 플랫폼 |
+| `PAGE_NO` | `1` | 매치 조회 페이지 번호 |
+| `SEASON` | 없음 | 매치 조회 시즌 필터 |
+| `QUEUE_ID` | 없음 | 매치 조회 큐 필터 |
+| `RATE` | `50` | 초당 요청 수 (`puuid-match-test`) |
+| `PRE_ALLOCATED_VUS` | `50` | 선할당 VU 수 (`puuid-match-test`) |
+| `MAX_VUS` | `100` | 최대 VU 수 (`puuid-match-test`) |
 
 ## 결과 분석
 
@@ -206,6 +222,7 @@ Warning: Server may not be reachable at http://localhost:8100
 - 서버 로그 확인
 - 데이터베이스 연결 풀 확인
 - 외부 API (Riot API) 응답 시간 확인
+- `puuid-match-test` 실행 중이면 `jconsole`에서 Hikari `ActiveConnections`, `ThreadsAwaitingConnection` 확인
 
 ### 높은 에러율
 

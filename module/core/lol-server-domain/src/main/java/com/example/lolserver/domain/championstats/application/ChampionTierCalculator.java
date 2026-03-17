@@ -3,15 +3,17 @@ package com.example.lolserver.domain.championstats.application;
 import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public final class ChampionTierCalculator {
 
     private static final int K = 30;
-    private static final long MIN_GAMES = 50;
-    private static final double W_WIN_RATE = 0.45;
-    private static final double W_PICK_RATE = 0.35;
-    private static final double W_BAN_RATE = 0.20;
+    private static final double CONFIDENCE_GAMES = 80.0;
+    private static final double W_WIN_RATE = 0.55;
+    private static final double W_PICK_RATE = 0.30;
+    private static final double W_BAN_RATE = 0.15;
+    private static final double NEUTRAL_SCORE = 50.0;
 
     private ChampionTierCalculator() {
     }
@@ -21,31 +23,26 @@ public final class ChampionTierCalculator {
             return champions;
         }
 
-        double[] adjustedWinRates = computeAdjustedWinRates(champions);
-        double[] scores = computeScores(champions, adjustedWinRates);
+        double[] scores = computeRatingScores(champions);
 
         int total = champions.size();
+        String[] tiers = new String[total];
+        for (int i = 0; i < total; i++) {
+            tiers[i] = tierFromScore(scores[i]);
+        }
+
         Integer[] indices = new Integer[total];
         for (int i = 0; i < total; i++) {
             indices[i] = i;
         }
-        java.util.Arrays.sort(indices, (a, b) -> Double.compare(scores[b], scores[a]));
-
-        String[] tiers = new String[total];
-        for (int rank = 0; rank < total; rank++) {
-            int idx = indices[rank];
-            if (champions.get(idx).totalGames() < MIN_GAMES) {
-                tiers[idx] = "5";
-            } else {
-                double percentile = (double) rank / total;
-                tiers[idx] = tierFromPercentile(percentile);
-            }
-        }
-
-        java.util.Arrays.sort(indices, (a, b) -> {
+        Arrays.sort(indices, (a, b) -> {
             int tierCmp = tierOrder(tiers[a]) - tierOrder(tiers[b]);
             if (tierCmp != 0) {
                 return tierCmp;
+            }
+            int scoreCmp = Double.compare(scores[b], scores[a]);
+            if (scoreCmp != 0) {
+                return scoreCmp;
             }
             return Long.compare(champions.get(b).totalGames(), champions.get(a).totalGames());
         });
@@ -58,39 +55,26 @@ public final class ChampionTierCalculator {
         return result;
     }
 
-    private static double[] computeAdjustedWinRates(List<ChampionRateReadModel> champions) {
+    private static double[] computeRatingScores(List<ChampionRateReadModel> champions) {
         double avgWinRate = computeWeightedAvgWinRate(champions);
-        double[] adjustedWinRates = new double[champions.size()];
-        for (int i = 0; i < champions.size(); i++) {
-            ChampionRateReadModel c = champions.get(i);
-            adjustedWinRates[i] = (c.totalGames() * c.winRate() + K * avgWinRate)
-                    / (c.totalGames() + K);
-        }
-        return adjustedWinRates;
-    }
-
-    private static double[] computeScores(List<ChampionRateReadModel> champions, double[] adjustedWinRates) {
-        double minAWR = Double.MAX_VALUE, maxAWR = -Double.MAX_VALUE;
-        double minPR = Double.MAX_VALUE, maxPR = -Double.MAX_VALUE;
-        double minBR = Double.MAX_VALUE, maxBR = -Double.MAX_VALUE;
-
-        for (int i = 0; i < champions.size(); i++) {
-            ChampionRateReadModel c = champions.get(i);
-            minAWR = Math.min(minAWR, adjustedWinRates[i]);
-            maxAWR = Math.max(maxAWR, adjustedWinRates[i]);
-            minPR = Math.min(minPR, c.pickRate());
-            maxPR = Math.max(maxPR, c.pickRate());
-            minBR = Math.min(minBR, c.banRate());
-            maxBR = Math.max(maxBR, c.banRate());
-        }
-
         double[] scores = new double[champions.size()];
+
         for (int i = 0; i < champions.size(); i++) {
             ChampionRateReadModel c = champions.get(i);
-            double normWR = normalize(adjustedWinRates[i], minAWR, maxAWR);
-            double normPR = normalize(c.pickRate(), minPR, maxPR);
-            double normBR = normalize(c.banRate(), minBR, maxBR);
-            scores[i] = W_WIN_RATE * normWR + W_PICK_RATE * normPR + W_BAN_RATE * normBR;
+
+            double adjustedWinRate = (c.totalGames() * c.winRate() + K * avgWinRate)
+                    / (c.totalGames() + K);
+
+            double winRateScore = 100.0 / (1.0 + Math.exp(-40.0 * (adjustedWinRate - 0.50)));
+            double pickRateScore = 100.0 * (1.0 - Math.exp(-30.0 * c.pickRate()));
+            double banRateScore = 100.0 * (1.0 - Math.exp(-15.0 * c.banRate()));
+
+            double baseScore = W_WIN_RATE * winRateScore
+                    + W_PICK_RATE * pickRateScore
+                    + W_BAN_RATE * banRateScore;
+
+            double confidence = confidence(c.totalGames());
+            scores[i] = baseScore * confidence + NEUTRAL_SCORE * (1.0 - confidence);
         }
         return scores;
     }
@@ -105,11 +89,8 @@ public final class ChampionTierCalculator {
         return sumGames == 0 ? 0.5 : sumWeighted / sumGames;
     }
 
-    private static double normalize(double value, double min, double max) {
-        if (max == min) {
-            return 0.0;
-        }
-        return (value - min) / (max - min);
+    private static double confidence(long totalGames) {
+        return totalGames / (totalGames + CONFIDENCE_GAMES);
     }
 
     private static int tierOrder(String tier) {
@@ -124,16 +105,16 @@ public final class ChampionTierCalculator {
         };
     }
 
-    private static String tierFromPercentile(double percentile) {
-        if (percentile < 0.03) {
+    private static String tierFromScore(double score) {
+        if (score >= 80.0) {
             return "OP";
-        } else if (percentile < 0.10) {
+        } else if (score >= 65.0) {
             return "1";
-        } else if (percentile < 0.25) {
+        } else if (score >= 53.0) {
             return "2";
-        } else if (percentile < 0.50) {
+        } else if (score >= 47.0) {
             return "3";
-        } else if (percentile < 0.75) {
+        } else if (score >= 35.0) {
             return "4";
         }
         return "5";

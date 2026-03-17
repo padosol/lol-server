@@ -1,5 +1,6 @@
 package com.example.lolserver.repository.championstats.adapter;
 
+import com.example.lolserver.TierFilter;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
@@ -45,6 +46,7 @@ class ChampionStatsClickHouseAdapterTest {
     @SuppressWarnings("unchecked")
     void getChampionWinRates() {
         // given
+        TierFilter tierFilter = TierFilter.of("EMERALD");
         List<ChampionWinRateReadModel> expected = List.of(
             new ChampionWinRateReadModel("MIDDLE", 1000, 520, 0.52),
             new ChampionWinRateReadModel("TOP", 200, 110, 0.55)
@@ -53,7 +55,7 @@ class ChampionStatsClickHouseAdapterTest {
             .willReturn(expected);
 
         // when
-        List<ChampionWinRateReadModel> result = adapter.getChampionWinRates(13, "16.1", "KR", "EMERALD");
+        List<ChampionWinRateReadModel> result = adapter.getChampionWinRates(13, "16.1", "KR", tierFilter);
 
         // then
         assertThat(result).hasSize(2);
@@ -68,6 +70,7 @@ class ChampionStatsClickHouseAdapterTest {
     @SuppressWarnings("unchecked")
     void getStrongMatchups() {
         // given
+        TierFilter tierFilter = TierFilter.of("EMERALD");
         List<ChampionMatchupReadModel> expected = List.of(
             new ChampionMatchupReadModel(7, 120, 0.5417, 0.12),
             new ChampionMatchupReadModel(103, 100, 0.5300, 0.10),
@@ -77,7 +80,7 @@ class ChampionStatsClickHouseAdapterTest {
             .willReturn(expected);
 
         // when
-        List<ChampionMatchupReadModel> result = adapter.getStrongMatchups(13, "16.1", "KR", "EMERALD", "MIDDLE");
+        List<ChampionMatchupReadModel> result = adapter.getStrongMatchups(13, "16.1", "KR", tierFilter, "MIDDLE");
 
         // then
         assertThat(result).hasSize(3);
@@ -90,6 +93,7 @@ class ChampionStatsClickHouseAdapterTest {
     @SuppressWarnings("unchecked")
     void getWeakMatchups() {
         // given
+        TierFilter tierFilter = TierFilter.of("EMERALD");
         List<ChampionMatchupReadModel> expected = List.of(
             new ChampionMatchupReadModel(238, 150, 0.4667, 0.15),
             new ChampionMatchupReadModel(91, 130, 0.4692, 0.13),
@@ -99,7 +103,7 @@ class ChampionStatsClickHouseAdapterTest {
             .willReturn(expected);
 
         // when
-        List<ChampionMatchupReadModel> result = adapter.getWeakMatchups(13, "16.1", "KR", "EMERALD", "MIDDLE");
+        List<ChampionMatchupReadModel> result = adapter.getWeakMatchups(13, "16.1", "KR", tierFilter, "MIDDLE");
 
         // then
         assertThat(result).hasSize(3);
@@ -112,6 +116,7 @@ class ChampionStatsClickHouseAdapterTest {
     @SuppressWarnings("unchecked")
     void getChampionRuneBuilds() {
         // given
+        TierFilter tierFilter = TierFilter.of("EMERALD");
         List<ChampionRuneBuildReadModel> expected = List.of(
             new ChampionRuneBuildReadModel(8100, 8300, 8112, 8139, 8143, 8135, 8304, 8345, 5002, 5008, 5005, 300, 0.5333, 0.6)
         );
@@ -119,7 +124,7 @@ class ChampionStatsClickHouseAdapterTest {
             .willReturn(expected);
 
         // when
-        List<ChampionRuneBuildReadModel> result = adapter.getChampionRuneBuilds(13, "16.1", "KR", "EMERALD", "MIDDLE");
+        List<ChampionRuneBuildReadModel> result = adapter.getChampionRuneBuilds(13, "16.1", "KR", tierFilter, "MIDDLE");
 
         // then
         assertThat(result).hasSize(1);
@@ -132,6 +137,7 @@ class ChampionStatsClickHouseAdapterTest {
     @SuppressWarnings("unchecked")
     void getChampionSpellStats() {
         // given
+        TierFilter tierFilter = TierFilter.of("EMERALD");
         List<ChampionSpellStatsReadModel> expected = List.of(
             new ChampionSpellStatsReadModel(4, 14, 800, 0.52, 0.8)
         );
@@ -139,7 +145,7 @@ class ChampionStatsClickHouseAdapterTest {
             .willReturn(expected);
 
         // when
-        List<ChampionSpellStatsReadModel> result = adapter.getChampionSpellStats(13, "16.1", "KR", "EMERALD", "MIDDLE");
+        List<ChampionSpellStatsReadModel> result = adapter.getChampionSpellStats(13, "16.1", "KR", tierFilter, "MIDDLE");
 
         // then
         assertThat(result).hasSize(1);
@@ -152,6 +158,7 @@ class ChampionStatsClickHouseAdapterTest {
     @SuppressWarnings("unchecked")
     void getChampionSkillBuilds() {
         // given
+        TierFilter tierFilter = TierFilter.of("EMERALD");
         List<ChampionSkillBuildReadModel> expected = List.of(
             new ChampionSkillBuildReadModel("QWEQEEREQEQWWWW", 400, 0.525, 0.4)
         );
@@ -159,7 +166,7 @@ class ChampionStatsClickHouseAdapterTest {
             .willReturn(expected);
 
         // when
-        List<ChampionSkillBuildReadModel> result = adapter.getChampionSkillBuilds(13, "16.1", "KR", "EMERALD", "MIDDLE");
+        List<ChampionSkillBuildReadModel> result = adapter.getChampionSkillBuilds(13, "16.1", "KR", tierFilter, "MIDDLE");
 
         // then
         assertThat(result).hasSize(1);
@@ -171,6 +178,7 @@ class ChampionStatsClickHouseAdapterTest {
     @SuppressWarnings("unchecked")
     void getChampionStartItemBuilds() {
         // given
+        TierFilter tierFilter = TierFilter.of("EMERALD");
         List<ChampionStartItemBuildReadModel> expected = List.of(
             new ChampionStartItemBuildReadModel("1056,2003", 600, 0.51, 0.6)
         );
@@ -178,7 +186,7 @@ class ChampionStatsClickHouseAdapterTest {
             .willReturn(expected);
 
         // when
-        List<ChampionStartItemBuildReadModel> result = adapter.getChampionStartItemBuilds(13, "16.1", "KR", "EMERALD", "MIDDLE");
+        List<ChampionStartItemBuildReadModel> result = adapter.getChampionStartItemBuilds(13, "16.1", "KR", tierFilter, "MIDDLE");
 
         // then
         assertThat(result).hasSize(1);
@@ -190,6 +198,7 @@ class ChampionStatsClickHouseAdapterTest {
     @SuppressWarnings("unchecked")
     void getChampionItemBuilds() {
         // given
+        TierFilter tierFilter = TierFilter.of("EMERALD");
         List<ChampionItemBuildReadModel> expected = List.of(
             new ChampionItemBuildReadModel("3089,3157,3165", 500, 0.52, 0.5)
         );
@@ -197,7 +206,7 @@ class ChampionStatsClickHouseAdapterTest {
             .willReturn(expected);
 
         // when
-        List<ChampionItemBuildReadModel> result = adapter.getChampionItemBuilds(13, "16.1", "KR", "EMERALD", "MIDDLE");
+        List<ChampionItemBuildReadModel> result = adapter.getChampionItemBuilds(13, "16.1", "KR", tierFilter, "MIDDLE");
 
         // then
         assertThat(result).hasSize(1);
@@ -209,6 +218,7 @@ class ChampionStatsClickHouseAdapterTest {
     @SuppressWarnings("unchecked")
     void getChampionItemStats() {
         // given
+        TierFilter tierFilter = TierFilter.of("EMERALD");
         List<ChampionItemStatsReadModel> expected = List.of(
             new ChampionItemStatsReadModel(3089, "Rabadon's Deathcap", 400, 0.55, 0.4)
         );
@@ -216,7 +226,7 @@ class ChampionStatsClickHouseAdapterTest {
             .willReturn(expected);
 
         // when
-        List<ChampionItemStatsReadModel> result = adapter.getChampionItemStats(13, "16.1", "KR", "EMERALD", "MIDDLE", 1);
+        List<ChampionItemStatsReadModel> result = adapter.getChampionItemStats(13, "16.1", "KR", tierFilter, "MIDDLE", 1);
 
         // then
         assertThat(result).hasSize(1);
@@ -229,6 +239,7 @@ class ChampionStatsClickHouseAdapterTest {
     @SuppressWarnings("unchecked")
     void getChampionStatsByPosition() {
         // given
+        TierFilter tierFilter = TierFilter.of("EMERALD");
         List<AbstractMap.SimpleEntry<String, ChampionRateReadModel>> entries = List.of(
             new AbstractMap.SimpleEntry<>("TOP", new ChampionRateReadModel(266, 0.5200, 0.0800, 0.0500, 1500)),
             new AbstractMap.SimpleEntry<>("TOP", new ChampionRateReadModel(122, 0.4800, 0.0600, 0.0300, 1200)),
@@ -239,7 +250,7 @@ class ChampionStatsClickHouseAdapterTest {
 
         // when
         Map<String, List<ChampionRateReadModel>> result =
-            adapter.getChampionStatsByPosition("16.1", "KR", "EMERALD");
+            adapter.getChampionStatsByPosition("16.1", "KR", tierFilter);
 
         // then
         assertThat(result).containsKeys("TOP", "JUNGLE");
