@@ -50,6 +50,9 @@ out/
 ### Claude Code ###
 .claude/settings.local.json
 
+### Checkstyle CLI ###
+config/checkstyle/checkstyle-*-all.jar
+
 ### Performance Tests ###
 performance-tests/results/*.json
 !performance-tests/results/.gitkeep

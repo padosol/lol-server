@@ -1,5 +1,17 @@
 {
   "enabledPlugins": {},
-  "hooks": {},
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/checkstyle-check.sh"
+          }
+        ]
+      }
+    ]
+  },
   "plansDirectory": "./plans"
 }
