@@ -16,7 +16,7 @@ import { BASE_URL, ENDPOINTS, HEADERS, DEFAULT_PLATFORM_ID } from '../lib/config
  */
 
 const puuids = new SharedArray('master_puuids', function () {
-    const data = JSON.parse(open('../../data/grand_master_summoner.json'));
+    const data = JSON.parse(open('../../data/challenger_summoner.json'));
     return data.entries.map(entry => entry.puuid);
 });
 

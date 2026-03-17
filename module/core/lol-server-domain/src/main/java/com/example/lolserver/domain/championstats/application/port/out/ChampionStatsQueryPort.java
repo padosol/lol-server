@@ -1,5 +1,6 @@
 package com.example.lolserver.domain.championstats.application.port.out;
 
+import com.example.lolserver.TierFilter;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
@@ -16,32 +17,32 @@ import java.util.Map;
 public interface ChampionStatsQueryPort {
 
     Map<String, List<ChampionRateReadModel>> getChampionStatsByPosition(
-            String patch, String platformId, String tier);
+            String patch, String platformId, TierFilter tierFilter);
 
     List<ChampionWinRateReadModel> getChampionWinRates(
-            int championId, String patch, String platformId, String tier);
+            int championId, String patch, String platformId, TierFilter tierFilter);
 
     List<ChampionMatchupReadModel> getStrongMatchups(
-            int championId, String patch, String platformId, String tier, String position);
+            int championId, String patch, String platformId, TierFilter tierFilter, String position);
 
     List<ChampionMatchupReadModel> getWeakMatchups(
-            int championId, String patch, String platformId, String tier, String position);
+            int championId, String patch, String platformId, TierFilter tierFilter, String position);
 
     List<ChampionRuneBuildReadModel> getChampionRuneBuilds(
-            int championId, String patch, String platformId, String tier, String position);
+            int championId, String patch, String platformId, TierFilter tierFilter, String position);
 
     List<ChampionSpellStatsReadModel> getChampionSpellStats(
-            int championId, String patch, String platformId, String tier, String position);
+            int championId, String patch, String platformId, TierFilter tierFilter, String position);
 
     List<ChampionSkillBuildReadModel> getChampionSkillBuilds(
-            int championId, String patch, String platformId, String tier, String position);
+            int championId, String patch, String platformId, TierFilter tierFilter, String position);
 
     List<ChampionStartItemBuildReadModel> getChampionStartItemBuilds(
-            int championId, String patch, String platformId, String tier, String position);
+            int championId, String patch, String platformId, TierFilter tierFilter, String position);
 
     List<ChampionItemBuildReadModel> getChampionItemBuilds(
-            int championId, String patch, String platformId, String tier, String position);
+            int championId, String patch, String platformId, TierFilter tierFilter, String position);
 
     List<ChampionItemStatsReadModel> getChampionItemStats(
-            int championId, String patch, String platformId, String tier, String position, int itemOrder);
+            int championId, String patch, String platformId, TierFilter tierFilter, String position, int itemOrder);
 }

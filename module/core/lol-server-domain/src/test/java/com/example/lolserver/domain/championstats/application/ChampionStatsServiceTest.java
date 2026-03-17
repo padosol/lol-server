@@ -1,5 +1,6 @@
 package com.example.lolserver.domain.championstats.application;
 
+import com.example.lolserver.TierFilter;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
@@ -46,12 +47,12 @@ class ChampionStatsServiceTest {
         int championId = 13;
         String patch = "16.1";
         String platformId = "KR";
-        String tier = "EMERALD";
+        TierFilter tierFilter = TierFilter.of("EMERALD");
 
         ChampionWinRateReadModel middleWinRate = new ChampionWinRateReadModel("MIDDLE", 1000, 520, 0.52);
         ChampionWinRateReadModel topWinRate = new ChampionWinRateReadModel("TOP", 200, 110, 0.55);
 
-        given(championStatsQueryPort.getChampionWinRates(championId, patch, platformId, tier))
+        given(championStatsQueryPort.getChampionWinRates(championId, patch, platformId, tierFilter))
             .willReturn(List.of(middleWinRate, topWinRate));
 
         // MIDDLE 포지션 상세 통계
@@ -91,52 +92,52 @@ class ChampionStatsServiceTest {
             new ChampionMatchupReadModel(55, 90, 0.4778, 0.09)
         );
 
-        given(championStatsQueryPort.getStrongMatchups(championId, patch, platformId, tier, "MIDDLE"))
+        given(championStatsQueryPort.getStrongMatchups(championId, patch, platformId, tierFilter, "MIDDLE"))
             .willReturn(middleStrongMatchups);
-        given(championStatsQueryPort.getWeakMatchups(championId, patch, platformId, tier, "MIDDLE"))
+        given(championStatsQueryPort.getWeakMatchups(championId, patch, platformId, tierFilter, "MIDDLE"))
             .willReturn(middleWeakMatchups);
-        given(championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tier, "MIDDLE"))
+        given(championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tierFilter, "MIDDLE"))
             .willReturn(middleRuneBuilds);
-        given(championStatsQueryPort.getChampionSpellStats(championId, patch, platformId, tier, "MIDDLE"))
+        given(championStatsQueryPort.getChampionSpellStats(championId, patch, platformId, tierFilter, "MIDDLE"))
             .willReturn(middleSpellStats);
-        given(championStatsQueryPort.getChampionSkillBuilds(championId, patch, platformId, tier, "MIDDLE"))
+        given(championStatsQueryPort.getChampionSkillBuilds(championId, patch, platformId, tierFilter, "MIDDLE"))
             .willReturn(middleSkillBuilds);
-        given(championStatsQueryPort.getChampionStartItemBuilds(championId, patch, platformId, tier, "MIDDLE"))
+        given(championStatsQueryPort.getChampionStartItemBuilds(championId, patch, platformId, tierFilter, "MIDDLE"))
             .willReturn(middleStartItemBuilds);
-        given(championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tier, "MIDDLE"))
+        given(championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tierFilter, "MIDDLE"))
             .willReturn(middleItemBuilds);
-        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tier, "MIDDLE", 1))
+        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tierFilter, "MIDDLE", 1))
             .willReturn(middleItemStats1);
-        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tier, "MIDDLE", 2))
+        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tierFilter, "MIDDLE", 2))
             .willReturn(middleItemStats2);
-        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tier, "MIDDLE", 3))
+        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tierFilter, "MIDDLE", 3))
             .willReturn(middleItemStats3);
 
         // TOP 포지션 상세 통계
-        given(championStatsQueryPort.getStrongMatchups(championId, patch, platformId, tier, "TOP"))
+        given(championStatsQueryPort.getStrongMatchups(championId, patch, platformId, tierFilter, "TOP"))
             .willReturn(List.of());
-        given(championStatsQueryPort.getWeakMatchups(championId, patch, platformId, tier, "TOP"))
+        given(championStatsQueryPort.getWeakMatchups(championId, patch, platformId, tierFilter, "TOP"))
             .willReturn(List.of());
-        given(championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tier, "TOP"))
+        given(championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tierFilter, "TOP"))
             .willReturn(List.of());
-        given(championStatsQueryPort.getChampionSpellStats(championId, patch, platformId, tier, "TOP"))
+        given(championStatsQueryPort.getChampionSpellStats(championId, patch, platformId, tierFilter, "TOP"))
             .willReturn(List.of());
-        given(championStatsQueryPort.getChampionSkillBuilds(championId, patch, platformId, tier, "TOP"))
+        given(championStatsQueryPort.getChampionSkillBuilds(championId, patch, platformId, tierFilter, "TOP"))
             .willReturn(List.of());
-        given(championStatsQueryPort.getChampionStartItemBuilds(championId, patch, platformId, tier, "TOP"))
+        given(championStatsQueryPort.getChampionStartItemBuilds(championId, patch, platformId, tierFilter, "TOP"))
             .willReturn(List.of());
-        given(championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tier, "TOP"))
+        given(championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tierFilter, "TOP"))
             .willReturn(List.of());
-        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tier, "TOP", 1))
+        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tierFilter, "TOP", 1))
             .willReturn(List.of());
-        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tier, "TOP", 2))
+        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tierFilter, "TOP", 2))
             .willReturn(List.of());
-        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tier, "TOP", 3))
+        given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tierFilter, "TOP", 3))
             .willReturn(List.of());
 
         // when
         ChampionStatsReadModel result = championStatsService.getChampionStats(
-            championId, patch, platformId, tier);
+            championId, patch, platformId, tierFilter);
 
         // then
         assertThat(result.tier()).isEqualTo("EMERALD");
@@ -174,14 +175,14 @@ class ChampionStatsServiceTest {
         int championId = 999;
         String patch = "16.1";
         String platformId = "KR";
-        String tier = "EMERALD";
+        TierFilter tierFilter = TierFilter.of("EMERALD");
 
-        given(championStatsQueryPort.getChampionWinRates(championId, patch, platformId, tier))
+        given(championStatsQueryPort.getChampionWinRates(championId, patch, platformId, tierFilter))
             .willReturn(List.of());
 
         // when
         ChampionStatsReadModel result = championStatsService.getChampionStats(
-            championId, patch, platformId, tier);
+            championId, patch, platformId, tierFilter);
 
         // then
         assertThat(result.tier()).isEqualTo("EMERALD");
@@ -194,7 +195,7 @@ class ChampionStatsServiceTest {
         // given
         String patch = "16.1";
         String platformId = "KR";
-        String tier = "EMERALD";
+        TierFilter tierFilter = TierFilter.of("EMERALD");
 
         Map<String, List<ChampionRateReadModel>> grouped = Map.of(
             "TOP", List.of(
@@ -206,12 +207,12 @@ class ChampionStatsServiceTest {
             )
         );
 
-        given(championStatsQueryPort.getChampionStatsByPosition(patch, platformId, tier))
+        given(championStatsQueryPort.getChampionStatsByPosition(patch, platformId, tierFilter))
             .willReturn(grouped);
 
         // when
         List<PositionChampionStatsReadModel> result =
-            championStatsService.getChampionStatsByPosition(patch, platformId, tier);
+            championStatsService.getChampionStatsByPosition(patch, platformId, tierFilter);
 
         // then
         assertThat(result).hasSize(2);
@@ -231,14 +232,14 @@ class ChampionStatsServiceTest {
         // given
         String patch = "16.1";
         String platformId = "KR";
-        String tier = "EMERALD";
+        TierFilter tierFilter = TierFilter.of("EMERALD");
 
-        given(championStatsQueryPort.getChampionStatsByPosition(patch, platformId, tier))
+        given(championStatsQueryPort.getChampionStatsByPosition(patch, platformId, tierFilter))
             .willReturn(Map.of());
 
         // when
         List<PositionChampionStatsReadModel> result =
-            championStatsService.getChampionStatsByPosition(patch, platformId, tier);
+            championStatsService.getChampionStatsByPosition(patch, platformId, tierFilter);
 
         // then
         assertThat(result).isEmpty();
