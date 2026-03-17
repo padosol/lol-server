@@ -66,7 +66,8 @@ public class ChampionStatsService {
         Map<Integer, List<ChampionItemStatsReadModel>> itemStatsByOrder = new LinkedHashMap<>();
         for (int order = 1; order <= 3; order++) {
             itemStatsByOrder.put(order,
-                championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tierFilter, position, order));
+                championStatsQueryPort.getChampionItemStats(
+                    championId, patch, platformId, tierFilter, position, order));
         }
 
         return new ChampionPositionStatsReadModel(

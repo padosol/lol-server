@@ -86,7 +86,8 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
     }
 
     private List<ChampionMatchupReadModel> queryMatchups(
-            int championId, String patch, String platformId, TierFilter tierFilter, String position, String orderDirection) {
+            int championId, String patch, String platformId,
+            TierFilter tierFilter, String position, String orderDirection) {
         String sql = """
                 WITH
                     matchup_stats AS (
