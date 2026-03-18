@@ -8,6 +8,7 @@ import com.example.lolserver.controller.support.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -22,6 +23,14 @@ public class CoreExceptionAdvice {
         return ResponseEntity
                 .status(e.getErrorType().getHttpStatus())
                 .body(ApiResponse.error(e.getErrorType()));
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ApiResponse<ErrorMessage>> validationException(
+            MethodArgumentNotValidException e) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ErrorType.INVALID_INPUT));
     }
 
     @ExceptionHandler

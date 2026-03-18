@@ -17,11 +17,22 @@ public enum ErrorType {
 
     INVALID_TIER_FILTER(400, ErrorCode.E400, "유효하지 않은 티어 필터입니다."),
 
-    LOCK_ACQUISITION_FAILED(503, ErrorCode.E503, "잠시 후 다시 시도해주세요.");
+    LOCK_ACQUISITION_FAILED(503, ErrorCode.E503, "잠시 후 다시 시도해주세요."),
 
-    private int httpStatus;
-    private ErrorCode errorCode;
-    private String message;
+    INVALID_INPUT(400, ErrorCode.E400, "잘못된 입력값입니다."),
+
+    UNAUTHORIZED(401, ErrorCode.E401, "인증이 필요합니다."),
+    INVALID_TOKEN(401, ErrorCode.E401, "유효하지 않은 토큰입니다."),
+    EXPIRED_TOKEN(401, ErrorCode.E401, "만료된 토큰입니다."),
+    OAUTH_LOGIN_FAILED(400, ErrorCode.E400, "OAuth 로그인에 실패했습니다."),
+    RIOT_ACCOUNT_ALREADY_LINKED(409, ErrorCode.E409, "이미 연동된 Riot 계정입니다."),
+    RIOT_LINK_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 Riot 계정 연동입니다."),
+    MEMBER_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 회원입니다."),
+    INVALID_OAUTH_STATE(400, ErrorCode.E400, "유효하지 않은 OAuth state 입니다.");
+
+    private final int httpStatus;
+    private final ErrorCode errorCode;
+    private final String message;
 
     ErrorType(int httpStatus, ErrorCode errorCode, String message) {
         this.httpStatus = httpStatus;

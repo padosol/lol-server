@@ -9,6 +9,28 @@ endif::[]
 :toclevels: 2
 :sectlinks:
 
+[[Auth-API]]
+== Auth API
+
+include::api/auth/auth-google-redirect.adoc[]
+
+include::api/auth/auth-google-callback.adoc[]
+
+include::api/auth/auth-refresh.adoc[]
+
+include::api/auth/auth-logout.adoc[]
+
+[[Member-API]]
+== Member API
+
+include::api/member/member-profile.adoc[]
+
+include::api/member/member-riot-link.adoc[]
+
+include::api/member/member-riot-accounts.adoc[]
+
+include::api/member/member-riot-unlink.adoc[]
+
 [[Summoner-API]]
 == Summoner API
 

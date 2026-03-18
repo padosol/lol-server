@@ -6,6 +6,7 @@ spring:
       - core-local.yml
       - api-local.yml
       - client-repository-local.yml
+      - oauth-local.yml
       - rabbitmq-local.yml
       - postgresql-local.yml
       - redis-local.yml

@@ -10,6 +10,8 @@ import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.test.web.servlet.setup.StandaloneMockMvcBuilder;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 
@@ -25,11 +27,21 @@ public abstract class RestDocsSupport {
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        this.mockMvc = MockMvcBuilders.standaloneSetup(initController())
+        StandaloneMockMvcBuilder builder = MockMvcBuilders.standaloneSetup(initController())
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
-                .apply(documentationConfiguration(provider))
-                .build();
+                .apply(documentationConfiguration(provider));
+
+        HandlerMethodArgumentResolver[] resolvers = customArgumentResolvers();
+        if (resolvers.length > 0) {
+            builder.setCustomArgumentResolvers(resolvers);
+        }
+
+        this.mockMvc = builder.build();
     }
 
     protected abstract Object initController();
+
+    protected HandlerMethodArgumentResolver[] customArgumentResolvers() {
+        return new HandlerMethodArgumentResolver[0];
+    }
 }

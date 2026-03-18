@@ -6,6 +6,7 @@ include(
         "module:core:enum",
 //        "module:web",
         "module:infra:client:lol-repository",
+        "module:infra:client:oauth",
         "module:infra:api",
         "module:infra:message:rabbitmq",
         "module:infra:persistence:postgresql",

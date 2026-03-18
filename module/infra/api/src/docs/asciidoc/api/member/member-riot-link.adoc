@@ -1,0 +1,10 @@
+[[member-riot-link]]
+=== Riot 계정 연동
+
+==== HTTP Request
+include::{snippets}/member-riot-link/http-request.adoc[]
+include::{snippets}/member-riot-link/request-fields.adoc[]
+
+==== HTTP Response
+include::{snippets}/member-riot-link/http-response.adoc[]
+include::{snippets}/member-riot-link/response-fields.adoc[]

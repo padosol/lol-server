@@ -1,2 +1,10 @@
 server:
   port: 8100
+
+jwt:
+  secret-key: ${JWT_SECRET_KEY:local-dev-secret-key-must-be-at-least-256-bits-long-for-hs256}
+  access-token-expiry: 1800
+  refresh-token-expiry: 1209600
+
+app:
+  frontend-callback-url: http://localhost:3000/auth/callback
