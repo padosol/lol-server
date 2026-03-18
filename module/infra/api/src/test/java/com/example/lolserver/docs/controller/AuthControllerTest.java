@@ -60,7 +60,7 @@ class AuthControllerTest extends RestDocsSupport {
     @Test
     void redirectToGoogle() throws Exception {
         // given
-        String authUrl = "https://accounts.google.com/o/oauth2/v2/auth?client_id=test&redirect_uri=http://localhost:8100/api/auth/google/callback&response_type=code&scope=openid+email+profile&state=random-state&access_type=offline";
+        String authUrl = "https://accounts.google.com/o/oauth2/v2/auth?client_id=DUMMY_CLIENT_ID&redirect_uri=http://localhost:8100/api/auth/google/callback&response_type=code&scope=openid+email+profile&state=random-state&access_type=offline";
         given(memberAuthUseCase.getOAuthAuthorizationUrl(OAuthProvider.GOOGLE)).willReturn(authUrl);
 
         // when & then
@@ -84,8 +84,8 @@ class AuthControllerTest extends RestDocsSupport {
     void googleCallback() throws Exception {
         // given
         AuthTokenReadModel tokenReadModel = new AuthTokenReadModel(
-                "test-access-token",
-                "test-refresh-token",
+                "dummy-access-value",
+                "dummy-refresh-value",
                 3600
         );
 
@@ -118,14 +118,14 @@ class AuthControllerTest extends RestDocsSupport {
     void refreshToken() throws Exception {
         // given
         AuthTokenReadModel tokenReadModel = new AuthTokenReadModel(
-                "test-new-access-token",
-                "test-new-refresh-token",
+                "dummy-new-access-value",
+                "dummy-new-refresh-value",
                 3600
         );
 
         given(memberAuthUseCase.refreshToken(any())).willReturn(tokenReadModel);
 
-        TokenRefreshRequest request = new TokenRefreshRequest("test-refresh-token");
+        TokenRefreshRequest request = new TokenRefreshRequest("dummy-refresh-value");
 
         // when & then
         mockMvc.perform(

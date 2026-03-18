@@ -56,3 +56,6 @@ config/checkstyle/checkstyle-*-all.jar
 ### Performance Tests ###
 performance-tests/results/*.json
 !performance-tests/results/.gitkeep
+
+### Docs ###
+/docs/
