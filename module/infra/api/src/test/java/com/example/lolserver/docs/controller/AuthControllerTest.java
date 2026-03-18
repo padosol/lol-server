@@ -60,7 +60,7 @@ class AuthControllerTest extends RestDocsSupport {
     @Test
     void redirectToGoogle() throws Exception {
         // given
-        String authUrl = "https://accounts.google.com/o/oauth2/v2/auth?client_id=DUMMY_CLIENT_ID&redirect_uri=http://localhost:8100/api/auth/google/callback&response_type=code&scope=openid+email+profile&state=random-state&access_type=offline";
+        String authUrl = "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&scope=openid+email+profile&state=random-state";
         given(memberAuthUseCase.getOAuthAuthorizationUrl(OAuthProvider.GOOGLE)).willReturn(authUrl);
 
         // when & then
