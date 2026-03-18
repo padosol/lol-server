@@ -1,14 +1,15 @@
 package com.example.lolserver.domain.member.domain;
 
+import com.example.lolserver.domain.member.application.model.OAuthUserInfo;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class RiotAccountLink {
@@ -20,4 +21,15 @@ public class RiotAccountLink {
     private String tagLine;
     private String platformId;
     private LocalDateTime linkedAt;
+
+    public static RiotAccountLink create(Long memberId, OAuthUserInfo riotInfo, String platformId) {
+        return RiotAccountLink.builder()
+                .memberId(memberId)
+                .puuid(riotInfo.getPuuid())
+                .gameName(riotInfo.getGameName())
+                .tagLine(riotInfo.getTagLine())
+                .platformId(platformId)
+                .linkedAt(LocalDateTime.now())
+                .build();
+    }
 }

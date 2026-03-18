@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -85,11 +84,14 @@ public class MemberService implements MemberAuthUseCase, RiotAccountLinkUseCase 
     public AuthTokenReadModel refreshToken(TokenRefreshCommand command) {
         String refreshToken = command.getRefreshToken();
 
-        if (!tokenPort.validateToken(refreshToken)) {
+        TokenPort.TokenInfo tokenInfo;
+        try {
+            tokenInfo = tokenPort.parseToken(refreshToken);
+        } catch (Exception e) {
             throw new CoreException(ErrorType.INVALID_TOKEN);
         }
 
-        Long memberId = tokenPort.getMemberIdFromToken(refreshToken);
+        Long memberId = tokenInfo.memberId();
 
         String savedToken = refreshTokenPort.find(memberId)
                 .orElseThrow(() -> new CoreException(ErrorType.EXPIRED_TOKEN));
@@ -121,13 +123,7 @@ public class MemberService implements MemberAuthUseCase, RiotAccountLinkUseCase 
                     throw new CoreException(ErrorType.RIOT_ACCOUNT_ALREADY_LINKED);
                 });
 
-        RiotAccountLink link = new RiotAccountLink();
-        link.setMemberId(memberId);
-        link.setPuuid(riotInfo.getPuuid());
-        link.setGameName(riotInfo.getGameName());
-        link.setTagLine(riotInfo.getTagLine());
-        link.setPlatformId(command.getPlatformId());
-        link.setLinkedAt(LocalDateTime.now());
+        RiotAccountLink link = RiotAccountLink.create(memberId, riotInfo, command.getPlatformId());
 
         RiotAccountLink saved = riotAccountLinkPersistencePort.save(link);
         return RiotAccountLinkReadModel.of(saved);
@@ -161,15 +157,7 @@ public class MemberService implements MemberAuthUseCase, RiotAccountLinkUseCase 
     }
 
     private Member createMember(OAuthUserInfo userInfo) {
-        Member member = new Member();
-        member.setEmail(userInfo.getEmail());
-        member.setNickname(userInfo.getNickname());
-        member.setProfileImageUrl(userInfo.getProfileImageUrl());
-        member.setOauthProvider(userInfo.getProvider());
-        member.setOauthProviderId(userInfo.getProviderId());
-        member.setRole("USER");
-        member.setCreatedAt(LocalDateTime.now());
-        member.setLastLoginAt(LocalDateTime.now());
+        Member member = Member.create(userInfo);
         return memberPersistencePort.save(member);
     }
 

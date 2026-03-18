@@ -154,8 +154,8 @@ class MemberServiceTest {
         Member member = new Member(1L, "test@gmail.com", "테스터", null,
                 "GOOGLE", "google-123", "USER", LocalDateTime.now(), null);
 
-        given(tokenPort.validateToken("valid-refresh-token")).willReturn(true);
-        given(tokenPort.getMemberIdFromToken("valid-refresh-token")).willReturn(1L);
+        given(tokenPort.parseToken("valid-refresh-token"))
+                .willReturn(new TokenPort.TokenInfo(1L, "USER"));
         given(refreshTokenPort.find(1L)).willReturn(Optional.of("valid-refresh-token"));
         given(memberPersistencePort.findById(1L)).willReturn(Optional.of(member));
         given(tokenPort.generateAccessToken(1L, "USER")).willReturn("new-access-token");
@@ -179,7 +179,8 @@ class MemberServiceTest {
                 .refreshToken("invalid-token")
                 .build();
 
-        given(tokenPort.validateToken("invalid-token")).willReturn(false);
+        given(tokenPort.parseToken("invalid-token"))
+                .willThrow(new RuntimeException("Invalid token"));
 
         // when & then
         assertThatThrownBy(() -> memberService.refreshToken(command))
@@ -196,8 +197,8 @@ class MemberServiceTest {
                 .refreshToken("mismatched-token")
                 .build();
 
-        given(tokenPort.validateToken("mismatched-token")).willReturn(true);
-        given(tokenPort.getMemberIdFromToken("mismatched-token")).willReturn(1L);
+        given(tokenPort.parseToken("mismatched-token"))
+                .willReturn(new TokenPort.TokenInfo(1L, "USER"));
         given(refreshTokenPort.find(1L)).willReturn(Optional.of("different-token"));
 
         // when & then

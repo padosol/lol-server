@@ -84,8 +84,8 @@ class AuthControllerTest extends RestDocsSupport {
     void googleCallback() throws Exception {
         // given
         AuthTokenReadModel tokenReadModel = new AuthTokenReadModel(
-                "eyJhbGciOiJIUzI1NiJ9.access-token",
-                "eyJhbGciOiJIUzI1NiJ9.refresh-token",
+                "test-access-token",
+                "test-refresh-token",
                 3600
         );
 
@@ -118,14 +118,14 @@ class AuthControllerTest extends RestDocsSupport {
     void refreshToken() throws Exception {
         // given
         AuthTokenReadModel tokenReadModel = new AuthTokenReadModel(
-                "eyJhbGciOiJIUzI1NiJ9.new-access-token",
-                "eyJhbGciOiJIUzI1NiJ9.new-refresh-token",
+                "test-new-access-token",
+                "test-new-refresh-token",
                 3600
         );
 
         given(memberAuthUseCase.refreshToken(any())).willReturn(tokenReadModel);
 
-        TokenRefreshRequest request = new TokenRefreshRequest("eyJhbGciOiJIUzI1NiJ9.refresh-token");
+        TokenRefreshRequest request = new TokenRefreshRequest("test-refresh-token");
 
         // when & then
         mockMvc.perform(
