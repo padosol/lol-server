@@ -6,7 +6,7 @@ import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.docs.TestAuthenticatedMemberResolver;
 import com.example.lolserver.domain.member.application.model.MemberReadModel;
 import com.example.lolserver.domain.member.application.model.RiotAccountLinkReadModel;
-import com.example.lolserver.domain.member.application.port.in.MemberAuthUseCase;
+import com.example.lolserver.domain.member.application.port.in.MemberQueryUseCase;
 import com.example.lolserver.domain.member.application.port.in.RiotAccountLinkUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class MemberControllerTest extends RestDocsSupport {
 
     @Mock
-    private MemberAuthUseCase memberAuthUseCase;
+    private MemberQueryUseCase memberQueryUseCase;
 
     @Mock
     private RiotAccountLinkUseCase riotAccountLinkUseCase;
@@ -47,7 +47,7 @@ class MemberControllerTest extends RestDocsSupport {
 
     @Override
     protected Object initController() {
-        return new MemberController(riotAccountLinkUseCase, memberAuthUseCase);
+        return new MemberController(riotAccountLinkUseCase, memberQueryUseCase);
     }
 
     @Override
@@ -67,7 +67,7 @@ class MemberControllerTest extends RestDocsSupport {
                 .oauthProvider("GOOGLE")
                 .build();
 
-        given(memberAuthUseCase.getMyProfile(eq(1L))).willReturn(readModel);
+        given(memberQueryUseCase.getMyProfile(eq(1L))).willReturn(readModel);
 
         // when & then
         mockMvc.perform(

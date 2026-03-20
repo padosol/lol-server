@@ -5,6 +5,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class SecurityConfigTest {
@@ -21,8 +23,13 @@ class SecurityConfigTest {
         JwtTokenAdapter jwtTokenAdapter = new JwtTokenAdapter(jwtProperties);
         jwtTokenAdapter.init();
 
+        CorsProperties corsProperties = new CorsProperties();
+        corsProperties.setAllowedOrigins(List.of(
+                "http://localhost:3000", "http://localhost:8080",
+                "http://lol-ui:3000", "https://metapick.me"));
+
         JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtTokenAdapter);
-        securityConfig = new SecurityConfig(filter);
+        securityConfig = new SecurityConfig(filter, corsProperties);
     }
 
     @DisplayName("CORS 설정 소스가 정상적으로 생성된다")

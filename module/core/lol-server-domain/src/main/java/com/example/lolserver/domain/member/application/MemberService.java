@@ -8,6 +8,7 @@ import com.example.lolserver.domain.member.application.model.MemberReadModel;
 import com.example.lolserver.domain.member.application.model.OAuthUserInfo;
 import com.example.lolserver.domain.member.application.model.RiotAccountLinkReadModel;
 import com.example.lolserver.domain.member.application.port.in.MemberAuthUseCase;
+import com.example.lolserver.domain.member.application.port.in.MemberQueryUseCase;
 import com.example.lolserver.domain.member.application.port.in.RiotAccountLinkUseCase;
 import com.example.lolserver.domain.member.application.port.out.MemberPersistencePort;
 import com.example.lolserver.domain.member.application.port.out.OAuthAuthorizationPort;
@@ -33,7 +34,7 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class MemberService implements MemberAuthUseCase, RiotAccountLinkUseCase {
+public class MemberService implements MemberAuthUseCase, MemberQueryUseCase, RiotAccountLinkUseCase {
 
     private final MemberPersistencePort memberPersistencePort;
     private final RiotAccountLinkPersistencePort riotAccountLinkPersistencePort;

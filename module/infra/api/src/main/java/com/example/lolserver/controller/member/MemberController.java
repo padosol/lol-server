@@ -8,7 +8,7 @@ import com.example.lolserver.controller.support.response.ApiResponse;
 import com.example.lolserver.domain.member.application.dto.RiotLinkCommand;
 import com.example.lolserver.domain.member.application.model.MemberReadModel;
 import com.example.lolserver.domain.member.application.model.RiotAccountLinkReadModel;
-import com.example.lolserver.domain.member.application.port.in.MemberAuthUseCase;
+import com.example.lolserver.domain.member.application.port.in.MemberQueryUseCase;
 import com.example.lolserver.domain.member.application.port.in.RiotAccountLinkUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,12 +29,12 @@ import java.util.List;
 public class MemberController {
 
     private final RiotAccountLinkUseCase riotAccountLinkUseCase;
-    private final MemberAuthUseCase memberAuthUseCase;
+    private final MemberQueryUseCase memberQueryUseCase;
 
     @GetMapping("/me")
     public ApiResponse<MemberResponse> getMyProfile(
             @AuthenticationPrincipal AuthenticatedMember member) {
-        MemberReadModel readModel = memberAuthUseCase.getMyProfile(member.memberId());
+        MemberReadModel readModel = memberQueryUseCase.getMyProfile(member.memberId());
         return ApiResponse.success(MemberResponse.from(readModel));
     }
 
