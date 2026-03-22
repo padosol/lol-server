@@ -150,6 +150,22 @@ module/
 - 커맨드: `@Builder @Getter @Setter @NoArgsConstructor @AllArgsConstructor`
 - 트랜잭션: 조회 `@Transactional(readOnly = true)`, 변경 `@Transactional`
 
+### Git 워크플로우
+
+**브랜치 전략**: Git Flow 변형 (`main` / `develop` / feature 브랜치)
+
+| 브랜치 | 용도 |
+|--------|------|
+| `main` | 프로덕션 릴리스 |
+| `develop` | 개발 통합 브랜치 |
+| `feature/*` | 새 기능 개발 |
+| `fix/*` | 버그 수정 |
+| `refactor/*` | 리팩토링 |
+| `hotfix/*` | 프로덕션 긴급 수정 |
+
+**기본 플로우**: `feature/* → develop → main`
+**Hotfix 플로우**: `hotfix/* → main → develop 역반영`
+
 ### 커밋 메시지 컨벤션
 
 - 형식: `<type>: <한글 설명>`

@@ -1,6 +1,7 @@
 package com.example.lolserver.adapter.oauth;
 
 import com.example.lolserver.adapter.oauth.config.OAuthProperties;
+import com.example.lolserver.adapter.oauth.dto.OAuthTokenResponse;
 import com.example.lolserver.domain.member.application.model.OAuthUserInfo;
 import com.example.lolserver.domain.member.domain.vo.OAuthProvider;
 import com.example.lolserver.support.error.CoreException;
@@ -24,8 +25,8 @@ public class GoogleOAuthClient {
     public OAuthUserInfo getUserInfo(String code, String redirectUri) {
         OAuthProperties.ProviderConfig config = oAuthProperties.getGoogle();
 
-        String accessToken = tokenExchanger.exchange(code, redirectUri, config, "Google");
-        return fetchUserInfo(accessToken, config);
+        OAuthTokenResponse tokenResponse = tokenExchanger.exchange(code, redirectUri, config, OAuthProvider.GOOGLE);
+        return fetchUserInfo(tokenResponse.getAccessToken(), config);
     }
 
     @SuppressWarnings("unchecked")

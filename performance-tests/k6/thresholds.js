@@ -57,6 +57,20 @@ export const thresholds = {
     ],
     rank_champions_success_rate: ['rate>0.995'],
 
+    // Champion Stats Detail API - ClickHouse 쿼리 다수
+    champion_stats_detail_response_time: [
+        'p(95)<500',    // p95 500ms 미만
+        'avg<300',      // 평균 300ms 미만
+    ],
+    champion_stats_detail_success_rate: ['rate>0.995'],
+
+    // Champion Stats Positions API - ClickHouse 집계 쿼리
+    champion_stats_positions_response_time: [
+        'p(95)<500',    // p95 500ms 미만
+        'avg<300',      // 평균 300ms 미만
+    ],
+    champion_stats_positions_success_rate: ['rate>0.995'],
+
     // 커스텀 에러 카운터
     custom_errors: ['count<10'],  // 커스텀 에러 10회 미만
 };

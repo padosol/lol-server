@@ -17,14 +17,18 @@ public class OAuthAuthorizationAdapter implements OAuthAuthorizationPort {
     public String buildAuthorizationUrl(OAuthProvider provider, String state) {
         OAuthProperties.ProviderConfig config = getConfig(provider);
 
-        return UriComponentsBuilder.fromUriString(config.getAuthorizationUri())
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(config.getAuthorizationUri())
                 .queryParam("client_id", config.getClientId())
                 .queryParam("redirect_uri", config.getCallbackUri())
                 .queryParam("response_type", "code")
                 .queryParam("scope", config.getScope())
-                .queryParam("state", state)
-                .queryParam("access_type", "offline")
-                .encode()
+                .queryParam("state", state);
+
+        if (provider == OAuthProvider.GOOGLE) {
+            builder.queryParam("access_type", "offline");
+        }
+
+        return builder.encode()
                 .build()
                 .toUriString();
     }
