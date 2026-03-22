@@ -13,9 +13,10 @@ import com.example.lolserver.domain.championstats.application.model.ChampionStat
 import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
+import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsCachePort;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedHashMap;
@@ -24,13 +25,34 @@ import java.util.Map;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ChampionStatsService {
 
     private final ChampionStatsQueryPort championStatsQueryPort;
+    private final ChampionStatsCachePort championStatsCachePort;
+    private final boolean cacheEnabled;
+
+    public ChampionStatsService(
+            ChampionStatsQueryPort championStatsQueryPort,
+            ChampionStatsCachePort championStatsCachePort,
+            @Value("${champion-stats.cache.enabled:true}") boolean cacheEnabled) {
+        this.championStatsQueryPort = championStatsQueryPort;
+        this.championStatsCachePort = championStatsCachePort;
+        this.cacheEnabled = cacheEnabled;
+    }
 
     public ChampionStatsReadModel getChampionStats(
             int championId, String patch, String platformId, TierFilter tierFilter) {
+
+        String tierDisplay = tierFilter.toDisplayString();
+
+        if (cacheEnabled) {
+            ChampionStatsReadModel cached = championStatsCachePort
+                    .findChampionStats(championId, patch, platformId, tierDisplay);
+            if (cached != null) {
+                log.debug("캐시 히트 - championId: {}, patch: {}, tier: {}", championId, patch, tierDisplay);
+                return cached;
+            }
+        }
 
         List<ChampionWinRateReadModel> winRates =
             championStatsQueryPort.getChampionWinRates(championId, patch, platformId, tierFilter);
@@ -39,7 +61,13 @@ public class ChampionStatsService {
             .map(wr -> buildPositionStats(championId, patch, platformId, tierFilter, wr))
             .toList();
 
-        return new ChampionStatsReadModel(tierFilter.toDisplayString(), positions);
+        ChampionStatsReadModel result = new ChampionStatsReadModel(tierDisplay, positions);
+
+        if (cacheEnabled) {
+            championStatsCachePort.saveChampionStats(championId, patch, platformId, tierDisplay, result);
+        }
+
+        return result;
     }
 
     private ChampionPositionStatsReadModel buildPositionStats(
@@ -81,14 +109,32 @@ public class ChampionStatsService {
 
     public List<PositionChampionStatsReadModel> getChampionStatsByPosition(
             String patch, String platformId, TierFilter tierFilter) {
+
+        String tierDisplay = tierFilter.toDisplayString();
+
+        if (cacheEnabled) {
+            List<PositionChampionStatsReadModel> cached = championStatsCachePort
+                    .findChampionStatsByPosition(patch, platformId, tierDisplay);
+            if (cached != null) {
+                log.debug("캐시 히트 - positions, patch: {}, tier: {}", patch, tierDisplay);
+                return cached;
+            }
+        }
+
         Map<String, List<ChampionRateReadModel>> groupedByPosition =
                 championStatsQueryPort.getChampionStatsByPosition(patch, platformId, tierFilter);
 
-        return groupedByPosition.entrySet().stream()
+        List<PositionChampionStatsReadModel> result = groupedByPosition.entrySet().stream()
                 .map(entry -> new PositionChampionStatsReadModel(
                         entry.getKey(),
                         ChampionTierCalculator.assignTiers(entry.getValue())
                 ))
                 .toList();
+
+        if (cacheEnabled) {
+            championStatsCachePort.saveChampionStatsByPosition(patch, platformId, tierDisplay, result);
+        }
+
+        return result;
     }
 }

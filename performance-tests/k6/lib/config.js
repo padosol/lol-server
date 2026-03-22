@@ -59,6 +59,14 @@ export const ENDPOINTS = {
         getByPuuid: (puuid) => `/api/v1/leagues/by-puuid/${puuid}`,
     },
 
+    // Champion Stats API
+    championStats: {
+        getDetail: (platformId, championId, patch, tier) =>
+            `/api/v1/${platformId}/champion-stats?championId=${championId}&patch=${encodeURIComponent(patch)}&tier=${encodeURIComponent(tier)}`,
+        getPositions: (platformId, patch, tier) =>
+            `/api/v1/${platformId}/champion-stats/positions?patch=${encodeURIComponent(patch)}&tier=${encodeURIComponent(tier)}`,
+    },
+
     // Rank API
     rank: {
         champions: (puuid, queueId = 420) => `/api/v1/rank/champions?puuid=${puuid}&queueId=${queueId}`,

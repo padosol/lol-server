@@ -10,6 +10,7 @@ logs/
 !.github/workflows/*.yml
 !**/src/main/resources/*.yml
 !**/src/test/resources/*.yml
+!performance-tests/docker-compose.yml
 docker/
 
 ### STS ###
@@ -55,4 +56,5 @@ config/checkstyle/checkstyle-*-all.jar
 
 ### Performance Tests ###
 performance-tests/results/*.json
+performance-tests/results/*.txt
 !performance-tests/results/.gitkeep

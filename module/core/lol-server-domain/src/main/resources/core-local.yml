@@ -11,6 +11,10 @@
 #    prometheus:
 #      enabled: true
 
+champion-stats:
+  cache:
+    enabled: ${CHAMPION_STATS_CACHE_ENABLED:true}
+
 logging:
   level:
     com.example.lolserver.domain.summoner: DEBUG
