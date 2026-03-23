@@ -232,14 +232,14 @@ class PostServiceTest {
     }
 
     private Post createPost(Long postId, Long memberId) {
-        Post post = new Post();
-        post.setId(postId);
-        post.setMemberId(memberId);
-        post.setTitle("테스트 제목");
-        post.setContent("테스트 내용");
-        post.setCategory("GENERAL");
-        post.setCreatedAt(LocalDateTime.now());
-        post.setUpdatedAt(LocalDateTime.now());
-        return post;
+        return Post.builder()
+                .id(postId)
+                .memberId(memberId)
+                .title("테스트 제목")
+                .content("테스트 내용")
+                .category("GENERAL")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
     }
 }

@@ -218,14 +218,14 @@ class CommentServiceTest {
     }
 
     private Post createPost(Long postId) {
-        Post post = new Post();
-        post.setId(postId);
-        post.setMemberId(1L);
-        post.setTitle("제목");
-        post.setContent("내용");
-        post.setCategory("GENERAL");
-        post.setCreatedAt(LocalDateTime.now());
-        return post;
+        return Post.builder()
+                .id(postId)
+                .memberId(1L)
+                .title("제목")
+                .content("내용")
+                .category("GENERAL")
+                .createdAt(LocalDateTime.now())
+                .build();
     }
 
     private Member createMember(Long memberId) {
@@ -237,15 +237,15 @@ class CommentServiceTest {
     private Comment createComment(Long id, Long postId,
                                   Long memberId, Long parentId,
                                   int depth) {
-        Comment comment = new Comment();
-        comment.setId(id);
-        comment.setPostId(postId);
-        comment.setMemberId(memberId);
-        comment.setParentCommentId(parentId);
-        comment.setContent("댓글 내용");
-        comment.setDepth(depth);
-        comment.setCreatedAt(LocalDateTime.now());
-        comment.setUpdatedAt(LocalDateTime.now());
-        return comment;
+        return Comment.builder()
+                .id(id)
+                .postId(postId)
+                .memberId(memberId)
+                .parentCommentId(parentId)
+                .content("댓글 내용")
+                .depth(depth)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
     }
 }

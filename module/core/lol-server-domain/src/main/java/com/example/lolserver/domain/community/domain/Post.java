@@ -1,17 +1,16 @@
 package com.example.lolserver.domain.community.domain;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Post {
 
     private Long id;
@@ -28,6 +27,19 @@ public class Post {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    public static Post create(Long memberId, String title, String content, String category) {
+        Post post = Post.builder()
+                .memberId(memberId)
+                .title(title)
+                .content(content)
+                .category(category)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+        post.calculateHotScore();
+        return post;
+    }
+
     public boolean isOwner(Long memberId) {
         return this.memberId.equals(memberId);
     }
@@ -42,6 +54,16 @@ public class Post {
         this.content = content;
         this.category = category;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void incrementViewCount() {
+        this.viewCount++;
+    }
+
+    public void applyVoteCounts(int upvoteCount, int downvoteCount) {
+        this.upvoteCount = upvoteCount;
+        this.downvoteCount = downvoteCount;
+        calculateHotScore();
     }
 
     public double calculateHotScore() {

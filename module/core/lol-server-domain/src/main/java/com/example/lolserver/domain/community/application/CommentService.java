@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,14 +54,8 @@ public class CommentService implements CommentUseCase, CommentQueryUseCase {
             }
         }
 
-        Comment comment = new Comment();
-        comment.setPostId(postId);
-        comment.setMemberId(memberId);
-        comment.setParentCommentId(command.getParentCommentId());
-        comment.setContent(command.getContent());
-        comment.setDepth(depth);
-        comment.setCreatedAt(LocalDateTime.now());
-        comment.setUpdatedAt(LocalDateTime.now());
+        Comment comment = Comment.create(postId, memberId, command.getContent(),
+                command.getParentCommentId(), depth);
 
         Comment saved = commentPersistencePort.save(comment);
 
