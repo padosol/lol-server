@@ -4,7 +4,7 @@ import com.example.lolserver.domain.match.application.command.MSChampionCommand;
 import com.example.lolserver.domain.match.application.command.MatchCommand;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.application.MatchService;
-import com.example.lolserver.domain.match.application.model.DailyGameCountReadModel;
+import com.example.lolserver.domain.match.application.model.DailyGameCountSummaryReadModel;
 import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.controller.support.response.ApiResponse;
@@ -92,12 +92,12 @@ public class MatchController {
     }
 
     @GetMapping("/{platformId}/summoners/{puuid}/matches/daily-count")
-    public ResponseEntity<ApiResponse<List<DailyGameCountReadModel>>> getDailyGameCounts(
+    public ResponseEntity<ApiResponse<DailyGameCountSummaryReadModel>> getDailyGameCounts(
             @PathVariable("platformId") String platformId,
             @PathVariable("puuid") String puuid,
             @RequestParam Integer season,
             @RequestParam(required = false) Integer queueId) {
-        List<DailyGameCountReadModel> result =
+        DailyGameCountSummaryReadModel result =
                 matchService.getDailyGameCounts(puuid, season, queueId);
         return ResponseEntity.ok(ApiResponse.success(result));
     }

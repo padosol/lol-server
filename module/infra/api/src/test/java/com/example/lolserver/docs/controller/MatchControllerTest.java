@@ -17,6 +17,7 @@ import com.example.lolserver.domain.match.domain.gamedata.value.Style;
 import com.example.lolserver.domain.match.domain.TeamData;
 import com.example.lolserver.domain.match.application.MatchService;
 import com.example.lolserver.domain.match.application.model.DailyGameCountReadModel;
+import com.example.lolserver.domain.match.application.model.DailyGameCountSummaryReadModel;
 import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.support.Page;
@@ -519,11 +520,13 @@ class MatchControllerTest extends RestDocsSupport {
     void getDailyGameCounts() throws Exception {
         // given
         String puuid = "puuid-1234";
-        List<DailyGameCountReadModel> response = List.of(
+        List<DailyGameCountReadModel> dailyCounts = List.of(
                 new DailyGameCountReadModel(LocalDate.of(2025, 1, 15), 3L),
                 new DailyGameCountReadModel(LocalDate.of(2025, 1, 14), 5L),
                 new DailyGameCountReadModel(LocalDate.of(2025, 1, 13), 2L)
         );
+        DailyGameCountSummaryReadModel response =
+                new DailyGameCountSummaryReadModel(dailyCounts, 2L, 5L);
 
         given(matchService.getDailyGameCounts(anyString(), anyInt(), any())).willReturn(response);
 
@@ -550,8 +553,10 @@ class MatchControllerTest extends RestDocsSupport {
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
-                                fieldWithPath("data[].gameDate").type(JsonFieldType.STRING).description("게임 날짜 (yyyy-MM-dd)"),
-                                fieldWithPath("data[].gameCount").type(JsonFieldType.NUMBER).description("해당 날짜의 게임 수")
+                                fieldWithPath("data.dailyCounts[].gameDate").type(JsonFieldType.STRING).description("게임 날짜 (yyyy-MM-dd)"),
+                                fieldWithPath("data.dailyCounts[].gameCount").type(JsonFieldType.NUMBER).description("해당 날짜의 게임 수"),
+                                fieldWithPath("data.minCount").type(JsonFieldType.NUMBER).description("기간 내 일별 최소 게임 수"),
+                                fieldWithPath("data.maxCount").type(JsonFieldType.NUMBER).description("기간 내 일별 최대 게임 수")
                         )
                 ));
     }
