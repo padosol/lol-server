@@ -3,6 +3,7 @@ package com.example.lolserver.domain.match.application;
 import com.example.lolserver.domain.match.application.command.MSChampionCommand;
 import com.example.lolserver.domain.match.application.command.MatchCommand;
 import com.example.lolserver.domain.match.application.model.DailyGameCountReadModel;
+import com.example.lolserver.domain.match.application.model.DailyGameCountSummaryReadModel;
 import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.TimelineData;
@@ -65,9 +66,17 @@ public class MatchService {
         return matchPersistencePort.findAllMatchIds(matchCommand.getPuuid(), matchCommand.getQueueId(), pageable);
     }
 
-    public List<DailyGameCountReadModel> getDailyGameCounts(
+    public DailyGameCountSummaryReadModel getDailyGameCounts(
             String puuid, Integer season, Integer queueId) {
         LocalDateTime startDate = LocalDate.now().minusMonths(3).atStartOfDay();
-        return matchPersistencePort.getDailyGameCounts(puuid, season, queueId, startDate);
+        List<DailyGameCountReadModel> dailyCounts =
+                matchPersistencePort.getDailyGameCounts(puuid, season, queueId, startDate);
+
+        long minCount = dailyCounts.stream()
+                .mapToLong(DailyGameCountReadModel::gameCount).min().orElse(0L);
+        long maxCount = dailyCounts.stream()
+                .mapToLong(DailyGameCountReadModel::gameCount).max().orElse(0L);
+
+        return new DailyGameCountSummaryReadModel(dailyCounts, minCount, maxCount);
     }
 }
