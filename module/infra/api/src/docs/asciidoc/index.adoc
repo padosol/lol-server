@@ -103,3 +103,32 @@ include::api/tiercutoff/tiercutoff-detail.adoc[]
 include::api/season/season-list.adoc[]
 
 include::api/season/season-detail.adoc[]
+
+[[Community-API]]
+== Community API
+
+include::api/community/community-post-create.adoc[]
+
+include::api/community/community-post-list.adoc[]
+
+include::api/community/community-post-detail.adoc[]
+
+include::api/community/community-post-update.adoc[]
+
+include::api/community/community-post-delete.adoc[]
+
+include::api/community/community-post-search.adoc[]
+
+include::api/community/community-post-my-list.adoc[]
+
+include::api/community/community-comment-create.adoc[]
+
+include::api/community/community-comment-list.adoc[]
+
+include::api/community/community-comment-update.adoc[]
+
+include::api/community/community-comment-delete.adoc[]
+
+include::api/community/community-vote.adoc[]
+
+include::api/community/community-vote-remove.adoc[]

@@ -1,0 +1,11 @@
+[[community-comment-create]]
+=== 댓글 작성
+
+==== HTTP Request
+include::{snippets}/community-comment-create/http-request.adoc[]
+include::{snippets}/community-comment-create/path-parameters.adoc[]
+include::{snippets}/community-comment-create/request-fields.adoc[]
+
+==== HTTP Response
+include::{snippets}/community-comment-create/http-response.adoc[]
+include::{snippets}/community-comment-create/response-fields.adoc[]

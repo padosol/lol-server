@@ -1,0 +1,10 @@
+[[community-vote-remove]]
+=== 투표 취소
+
+==== HTTP Request
+include::{snippets}/community-vote-remove/http-request.adoc[]
+include::{snippets}/community-vote-remove/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/community-vote-remove/http-response.adoc[]
+include::{snippets}/community-vote-remove/response-fields.adoc[]

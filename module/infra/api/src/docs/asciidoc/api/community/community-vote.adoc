@@ -1,0 +1,10 @@
+[[community-vote]]
+=== 투표
+
+==== HTTP Request
+include::{snippets}/community-vote/http-request.adoc[]
+include::{snippets}/community-vote/request-fields.adoc[]
+
+==== HTTP Response
+include::{snippets}/community-vote/http-response.adoc[]
+include::{snippets}/community-vote/response-fields.adoc[]
