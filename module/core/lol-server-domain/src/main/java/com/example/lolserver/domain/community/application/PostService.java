@@ -24,8 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -43,14 +41,8 @@ public class PostService implements PostUseCase, PostQueryUseCase {
         Member member = memberPersistencePort.findById(memberId)
                 .orElseThrow(() -> new CoreException(ErrorType.MEMBER_NOT_FOUND));
 
-        Post post = new Post();
-        post.setMemberId(memberId);
-        post.setTitle(command.getTitle());
-        post.setContent(command.getContent());
-        post.setCategory(command.getCategory());
-        post.setCreatedAt(LocalDateTime.now());
-        post.setUpdatedAt(LocalDateTime.now());
-        post.calculateHotScore();
+        Post post = Post.create(memberId, command.getTitle(),
+                command.getContent(), command.getCategory());
 
         Post saved = postPersistencePort.save(post);
 
@@ -103,7 +95,7 @@ public class PostService implements PostUseCase, PostQueryUseCase {
         }
 
         postPersistencePort.incrementViewCount(postId);
-        post.setViewCount(post.getViewCount() + 1);
+        post.incrementViewCount();
 
         Member member = memberPersistencePort.findById(post.getMemberId())
                 .orElseThrow(() -> new CoreException(ErrorType.MEMBER_NOT_FOUND));

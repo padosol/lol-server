@@ -1,16 +1,15 @@
 package com.example.lolserver.domain.community.domain;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Comment {
 
     private Long id;
@@ -24,6 +23,19 @@ public class Comment {
     private boolean deleted;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    public static Comment create(Long postId, Long memberId, String content,
+                                  Long parentCommentId, int depth) {
+        return Comment.builder()
+                .postId(postId)
+                .memberId(memberId)
+                .content(content)
+                .parentCommentId(parentCommentId)
+                .depth(depth)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
 
     public boolean isOwner(Long memberId) {
         return this.memberId.equals(memberId);

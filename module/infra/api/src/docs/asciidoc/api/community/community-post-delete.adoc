@@ -1,0 +1,10 @@
+[[community-post-delete]]
+=== 게시글 삭제
+
+==== HTTP Request
+include::{snippets}/community-post-delete/http-request.adoc[]
+include::{snippets}/community-post-delete/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/community-post-delete/http-response.adoc[]
+include::{snippets}/community-post-delete/response-fields.adoc[]

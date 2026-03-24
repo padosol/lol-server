@@ -62,7 +62,7 @@ class VoteServiceTest {
                         memberId, VoteTargetType.POST, 1L))
                 .willReturn(Optional.empty());
         given(votePersistencePort.save(any(Vote.class)))
-                .willReturn(new Vote());
+                .willReturn(Vote.builder().build());
         given(votePersistencePort
                 .countByTargetTypeAndTargetIdAndVoteType(
                         VoteTargetType.POST, 1L, VoteType.UPVOTE))
@@ -92,9 +92,10 @@ class VoteServiceTest {
                 .build();
 
         Post post = createPost(1L);
-        Vote existingVote = new Vote(
-                1L, memberId, VoteTargetType.POST, 1L,
-                VoteType.UPVOTE, LocalDateTime.now());
+        Vote existingVote = Vote.builder()
+                .id(1L).memberId(memberId).targetType(VoteTargetType.POST)
+                .targetId(1L).voteType(VoteType.UPVOTE)
+                .createdAt(LocalDateTime.now()).build();
 
         given(postPersistencePort.findById(1L))
                 .willReturn(Optional.of(post));
@@ -132,9 +133,10 @@ class VoteServiceTest {
                 .build();
 
         Post post = createPost(1L);
-        Vote existingVote = new Vote(
-                1L, memberId, VoteTargetType.POST, 1L,
-                VoteType.UPVOTE, LocalDateTime.now());
+        Vote existingVote = Vote.builder()
+                .id(1L).memberId(memberId).targetType(VoteTargetType.POST)
+                .targetId(1L).voteType(VoteType.UPVOTE)
+                .createdAt(LocalDateTime.now()).build();
 
         given(postPersistencePort.findById(1L))
                 .willReturn(Optional.of(post));
@@ -166,9 +168,10 @@ class VoteServiceTest {
     void removeVote_success() {
         // given
         Long memberId = 1L;
-        Vote vote = new Vote(
-                1L, memberId, VoteTargetType.POST, 1L,
-                VoteType.UPVOTE, LocalDateTime.now());
+        Vote vote = Vote.builder()
+                .id(1L).memberId(memberId).targetType(VoteTargetType.POST)
+                .targetId(1L).voteType(VoteType.UPVOTE)
+                .createdAt(LocalDateTime.now()).build();
 
         given(votePersistencePort
                 .findByMemberIdAndTargetTypeAndTargetId(
@@ -233,14 +236,14 @@ class VoteServiceTest {
     }
 
     private Post createPost(Long postId) {
-        Post post = new Post();
-        post.setId(postId);
-        post.setMemberId(1L);
-        post.setTitle("제목");
-        post.setContent("내용");
-        post.setCategory("GENERAL");
-        post.setCreatedAt(LocalDateTime.now());
-        post.setUpdatedAt(LocalDateTime.now());
-        return post;
+        return Post.builder()
+                .id(postId)
+                .memberId(1L)
+                .title("제목")
+                .content("내용")
+                .category("GENERAL")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
     }
 }

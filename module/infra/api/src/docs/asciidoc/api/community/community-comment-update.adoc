@@ -1,0 +1,11 @@
+[[community-comment-update]]
+=== 댓글 수정
+
+==== HTTP Request
+include::{snippets}/community-comment-update/http-request.adoc[]
+include::{snippets}/community-comment-update/path-parameters.adoc[]
+include::{snippets}/community-comment-update/request-fields.adoc[]
+
+==== HTTP Response
+include::{snippets}/community-comment-update/http-response.adoc[]
+include::{snippets}/community-comment-update/response-fields.adoc[]

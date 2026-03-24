@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Slf4j
@@ -46,15 +45,11 @@ public class VoteService implements VoteUseCase {
                         command.getTargetId(),
                         command.getVoteType());
             }
-            vote.setVoteType(command.getVoteType());
+            vote.changeVoteType(command.getVoteType());
             votePersistencePort.save(vote);
         } else {
-            Vote vote = new Vote();
-            vote.setMemberId(memberId);
-            vote.setTargetType(command.getTargetType());
-            vote.setTargetId(command.getTargetId());
-            vote.setVoteType(command.getVoteType());
-            vote.setCreatedAt(LocalDateTime.now());
+            Vote vote = Vote.create(memberId, command.getTargetType(),
+                    command.getTargetId(), command.getVoteType());
             votePersistencePort.save(vote);
         }
 
@@ -133,10 +128,8 @@ public class VoteService implements VoteUseCase {
     private void updateHotScore(
             Long postId, int upvoteCount, int downvoteCount) {
         postPersistencePort.findById(postId).ifPresent(post -> {
-            post.setUpvoteCount(upvoteCount);
-            post.setDownvoteCount(downvoteCount);
-            double hotScore = post.calculateHotScore();
-            postPersistencePort.updateHotScore(postId, hotScore);
+            post.applyVoteCounts(upvoteCount, downvoteCount);
+            postPersistencePort.updateHotScore(postId, post.getHotScore());
         });
     }
 }

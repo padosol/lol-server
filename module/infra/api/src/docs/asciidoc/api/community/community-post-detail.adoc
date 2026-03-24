@@ -1,0 +1,10 @@
+[[community-post-detail]]
+=== 게시글 상세 조회
+
+==== HTTP Request
+include::{snippets}/community-post-detail/http-request.adoc[]
+include::{snippets}/community-post-detail/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/community-post-detail/http-response.adoc[]
+include::{snippets}/community-post-detail/response-fields.adoc[]
