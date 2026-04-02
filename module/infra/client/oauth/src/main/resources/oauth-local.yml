@@ -8,4 +8,3 @@ oauth:
       account-uri: https://americas.api.riotgames.com/riot/account/v1/accounts/me
       authorization-uri: https://auth.riotgames.com/authorize
       scope: openid cpid
-      callback-uri: http://localhost:8100/api/auth/riot/callback

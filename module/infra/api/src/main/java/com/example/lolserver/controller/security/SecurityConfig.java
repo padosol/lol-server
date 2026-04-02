@@ -1,6 +1,8 @@
 package com.example.lolserver.controller.security;
 
 import com.example.lolserver.controller.security.oauth2.CustomOidcUserService;
+import com.nimbusds.jose.JOSEObjectType;
+import com.nimbusds.jose.proc.DefaultJOSEObjectTypeVerifier;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +12,12 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.oidc.authentication.OidcIdTokenValidator;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.jwt.JwtDecoderFactory;
+import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -77,6 +85,31 @@ public class SecurityConfig {
                         UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public JwtDecoderFactory<ClientRegistration> idTokenDecoderFactory() {
+        return clientRegistration -> {
+            String jwkSetUri = clientRegistration.getProviderDetails()
+                    .getJwkSetUri();
+
+            NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder
+                    .withJwkSetUri(jwkSetUri)
+                    .jwtProcessorCustomizer(processor ->
+                            processor.setJWSTypeVerifier(
+                                    new DefaultJOSEObjectTypeVerifier<>(
+                                            JOSEObjectType.JWT,
+                                            new JOSEObjectType("id_token+jwt"),
+                                            null)))
+                    .build();
+
+            jwtDecoder.setJwtValidator(
+                    new DelegatingOAuth2TokenValidator<>(
+                            new JwtTimestampValidator(),
+                            new OidcIdTokenValidator(clientRegistration)));
+
+            return jwtDecoder;
+        };
     }
 
     @Bean

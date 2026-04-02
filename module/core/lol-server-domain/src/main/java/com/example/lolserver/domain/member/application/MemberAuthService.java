@@ -51,13 +51,9 @@ public class MemberAuthService implements MemberAuthUseCase {
             }
         }
 
-        String redirectUri = command.getRedirectUri() != null
-                ? command.getRedirectUri()
-                : oAuthAuthorizationPort.getCallbackUri(
-                        command.getProvider());
-
         OAuthUserInfo userInfo = oAuthClientPort.getUserInfo(
-                command.getProvider(), command.getCode(), redirectUri);
+                command.getProvider(), command.getCode(),
+                command.getRedirectUri());
 
         return findOrCreateMemberAndGenerateTokens(userInfo);
     }

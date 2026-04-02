@@ -15,7 +15,7 @@ spring:
             client-id: ${RIOT_RSO_CLIENT_ID:}
             client-secret: ${RIOT_RSO_CLIENT_SECRET:}
             scope: openid, cpid
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "http://local.metapick.me/login/oauth2/code/riot"
             client-authentication-method: client_secret_basic
             authorization-grant-type: authorization_code
         provider:
@@ -25,7 +25,10 @@ spring:
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: sub
           riot:
-            issuer-uri: https://auth.riotgames.com
+            authorization-uri: https://auth.riotgames.com/authorize
+            token-uri: https://auth.riotgames.com/token
+            jwk-set-uri: https://auth.riotgames.com/jwks.json
+            user-info-uri: https://auth.riotgames.com/userinfo
             user-name-attribute: sub
 
 riot:
@@ -38,6 +41,16 @@ jwt:
 
 app:
   frontend-callback-url: http://localhost:3000/auth/callback
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: TRACE
+    org.springframework.security.oauth2.client: TRACE
+    org.springframework.web.client.RestTemplate: DEBUG
+    org.springframework.web.client.RestClient: DEBUG
+    org.springframework.http.client: DEBUG
+    com.example.lolserver.controller.security: DEBUG
 
 cors:
   allowed-origins:

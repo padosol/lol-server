@@ -38,6 +38,5 @@ public class OAuthProperties {
         private String accountUri;
         private String authorizationUri;
         private String scope;
-        private String callbackUri;
     }
 }

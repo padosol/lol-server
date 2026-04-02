@@ -30,8 +30,6 @@ class OAuthAuthorizationAdapterTest {
         riotConfig.setClientId("riot-client-id");
         riotConfig.setAuthorizationUri(
                 "https://auth.riotgames.com/authorize");
-        riotConfig.setCallbackUri(
-                "http://localhost:8100/api/auth/riot/callback");
         riotConfig.setScope("openid cpid");
     }
 
@@ -54,18 +52,4 @@ class OAuthAuthorizationAdapterTest {
                 "https://auth.riotgames.com/authorize");
     }
 
-    @Test
-    @DisplayName("Riot callbackUri 반환")
-    void getCallbackUri_returnsRiotCallbackUri() {
-        // given
-        given(oAuthProperties.getProviderConfig("RIOT")).willReturn(riotConfig);
-
-        // when
-        String callbackUri = authorizationAdapter.getCallbackUri(
-                OAuthProvider.RIOT);
-
-        // then
-        assertThat(callbackUri).isEqualTo(
-                "http://localhost:8100/api/auth/riot/callback");
-    }
 }

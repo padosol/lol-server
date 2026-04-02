@@ -305,6 +305,7 @@ class MemberAuthServiceTest {
                 .provider(OAuthProvider.GOOGLE)
                 .code("auth-code")
                 .state("valid-state")
+                .redirectUri("http://localhost:3000/callback")
                 .build();
 
         OAuthUserInfo userInfo = OAuthUserInfo.builder()
@@ -318,10 +319,8 @@ class MemberAuthServiceTest {
                 "GOOGLE", "google-123", "USER", LocalDateTime.now(), null);
 
         given(oAuthStatePort.validateAndDelete("valid-state")).willReturn(true);
-        given(oAuthAuthorizationPort.getCallbackUri(OAuthProvider.GOOGLE))
-                .willReturn("http://localhost:8100/api/auth/google/callback");
         given(oAuthClientPort.getUserInfo(OAuthProvider.GOOGLE, "auth-code",
-                "http://localhost:8100/api/auth/google/callback"))
+                "http://localhost:3000/callback"))
                 .willReturn(userInfo);
         given(memberPersistencePort.findByOAuthProviderAndProviderId("GOOGLE", "google-123"))
                 .willReturn(Optional.of(existingMember));

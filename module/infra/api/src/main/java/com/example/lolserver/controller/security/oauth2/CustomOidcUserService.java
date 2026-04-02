@@ -31,20 +31,34 @@ public class CustomOidcUserService extends OidcUserService {
     @Override
     public OidcUser loadUser(OidcUserRequest userRequest)
             throws OAuth2AuthenticationException {
+        String registrationId = userRequest.getClientRegistration()
+                .getRegistrationId();
+        log.debug("[OIDC] loadUser 시작 - provider: {}, accessToken 존재: {}",
+                registrationId,
+                userRequest.getAccessToken() != null);
+        log.debug("[OIDC] tokenUri: {}, userInfoUri: {}",
+                userRequest.getClientRegistration().getProviderDetails()
+                        .getTokenUri(),
+                userRequest.getClientRegistration().getProviderDetails()
+                        .getUserInfoEndpoint().getUri());
+
         OidcUser oidcUser;
         try {
             oidcUser = super.loadUser(userRequest);
+            log.debug("[OIDC] super.loadUser 성공 - sub: {}, claims: {}",
+                    oidcUser.getSubject(),
+                    oidcUser.getClaims() != null
+                            ? oidcUser.getClaims().keySet() : "null");
         } catch (OAuth2AuthenticationException e) {
+            log.error("[OIDC] OAuth2AuthenticationException: errorCode={}, message={}",
+                    e.getError().getErrorCode(), e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("OIDC 사용자 정보 로드 실패: {}", e.getMessage());
+            log.error("OIDC 사용자 정보 로드 실패: {}", e.getMessage(), e);
             throw new OAuth2AuthenticationException(
                     new OAuth2Error("oidc_user_load_error"),
                     "OIDC 사용자 정보 로드에 실패했습니다.", e);
         }
-
-        String registrationId = userRequest.getClientRegistration()
-                .getRegistrationId();
 
         if (!"riot".equals(registrationId)) {
             return oidcUser;

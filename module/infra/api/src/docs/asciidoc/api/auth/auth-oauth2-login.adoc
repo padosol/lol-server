@@ -11,18 +11,21 @@ OAuth2 소셜 로그인은 Spring Security OAuth2 Client가 처리합니다.
 
 | Google
 | `GET /oauth2/authorize/google`
+
+| Riot (RSO)
+| `GET /oauth2/authorize/riot`
 |===
 
 ==== 로그인 흐름
 
 [source]
 ----
-1. 프론트엔드 → GET /oauth2/authorize/google
-   └─ 브라우저가 Google 로그인 페이지로 리다이렉트됨
+1. 프론트엔드 → GET /oauth2/authorize/{provider}
+   └─ 브라우저가 프로바이더 로그인 페이지로 리다이렉트됨
 
-2. 사용자가 Google 계정으로 로그인
+2. 사용자가 프로바이더 계정으로 로그인
 
-3. Google → GET /login/oauth2/code/google?code={code}&state={state}
+3. 프로바이더 → GET /login/oauth2/code/{provider}?code={code}&state={state}
    └─ Spring Security가 자동으로 콜백을 처리
 
 4. 서버 → 프론트엔드 콜백 URL로 리다이렉트
@@ -61,4 +64,3 @@ OAuth2 소셜 로그인은 Spring Security OAuth2 Client가 처리합니다.
 | String
 | 에러 코드 (예: `OAUTH_LOGIN_FAILED`)
 |===
-

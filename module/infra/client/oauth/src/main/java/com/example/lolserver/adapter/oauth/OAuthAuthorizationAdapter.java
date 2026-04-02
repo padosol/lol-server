@@ -24,18 +24,12 @@ public class OAuthAuthorizationAdapter implements OAuthAuthorizationPort {
         return UriComponentsBuilder
                 .fromUriString(config.getAuthorizationUri())
                 .queryParam("client_id", config.getClientId())
-                .queryParam("redirect_uri", config.getCallbackUri())
                 .queryParam("response_type", "code")
                 .queryParam("scope", config.getScope())
                 .queryParam("state", state)
                 .encode()
                 .build()
                 .toUriString();
-    }
-
-    @Override
-    public String getCallbackUri(OAuthProvider provider) {
-        return getConfig(provider).getCallbackUri();
     }
 
     private OAuthProperties.ProviderConfig getConfig(
