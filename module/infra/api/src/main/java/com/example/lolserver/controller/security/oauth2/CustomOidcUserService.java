@@ -31,7 +31,17 @@ public class CustomOidcUserService extends OidcUserService {
     @Override
     public OidcUser loadUser(OidcUserRequest userRequest)
             throws OAuth2AuthenticationException {
-        OidcUser oidcUser = super.loadUser(userRequest);
+        OidcUser oidcUser;
+        try {
+            oidcUser = super.loadUser(userRequest);
+        } catch (OAuth2AuthenticationException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("OIDC 사용자 정보 로드 실패: {}", e.getMessage());
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error("oidc_user_load_error"),
+                    "OIDC 사용자 정보 로드에 실패했습니다.", e);
+        }
 
         String registrationId = userRequest.getClientRegistration()
                 .getRegistrationId();

@@ -20,7 +20,7 @@ public class GoogleOAuth2UserInfoExtractor
         Map<String, Object> attributes = oauth2User.getAttributes();
         return OAuthUserInfo.builder()
                 .provider("GOOGLE")
-                .providerId((String) attributes.get("id"))
+                .providerId((String) attributes.get("sub"))
                 .email((String) attributes.get("email"))
                 .nickname((String) attributes.get("name"))
                 .profileImageUrl((String) attributes.get("picture"))

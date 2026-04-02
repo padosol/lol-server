@@ -46,7 +46,7 @@ public class CookieOAuth2AuthorizationRequestRepository
         Cookie cookie = new Cookie(COOKIE_NAME, serialized);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
-        cookie.setSecure(true);
+        cookie.setSecure(request.isSecure());
         cookie.setAttribute("SameSite", "Lax");
         cookie.setMaxAge(COOKIE_EXPIRE_SECONDS);
         response.addCookie(cookie);
