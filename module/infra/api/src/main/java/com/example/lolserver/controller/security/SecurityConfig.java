@@ -1,5 +1,6 @@
 package com.example.lolserver.controller.security;
 
+import com.example.lolserver.controller.security.oauth2.CustomOidcUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +30,7 @@ public class SecurityConfig {
     private final OAuth2AuthenticationFailureHandler oAuth2FailureHandler;
     private final CookieOAuth2AuthorizationRequestRepository
             cookieAuthorizationRequestRepository;
+    private final CustomOidcUserService customOidcUserService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
@@ -66,6 +68,8 @@ public class SecurityConfig {
                                 .baseUri("/oauth2/authorize")
                                 .authorizationRequestRepository(
                                         cookieAuthorizationRequestRepository))
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .oidcUserService(customOidcUserService))
                         .successHandler(oAuth2SuccessHandler)
                         .failureHandler(oAuth2FailureHandler)
                 )

@@ -28,81 +28,78 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MatchController {
 
-        private final MatchService matchService;
+    private final MatchService matchService;
 
-        @GetMapping("/matches/{matchId}")
-        public ResponseEntity<ApiResponse<GameReadModel>> fetchMatchResponse(
-                        @PathVariable("matchId") String matchId) {
-                GameReadModel gameData = matchService.getGameData(matchId);
+    @GetMapping("/matches/{matchId}")
+    public ResponseEntity<ApiResponse<GameReadModel>> fetchMatchResponse(
+            @PathVariable("matchId") String matchId) {
+        GameReadModel gameData = matchService.getGameData(matchId);
 
-                return ResponseEntity.ok(ApiResponse.success(gameData));
-        }
+        return ResponseEntity.ok(ApiResponse.success(gameData));
+    }
 
-        @GetMapping("/{platformId}/matches/matchIds")
-        public ResponseEntity<ApiResponse<SliceResponse<String>>> findAllMatchIds(
-                        @PathVariable("platformId") String platformId,
-                        @ModelAttribute MatchCommand matchCommand) {
-                matchCommand.setPlatformId(platformId);
-                Page<String> allMatchIds = matchService.findAllMatchIds(matchCommand);
+    @GetMapping("/{platformId}/matches/matchIds")
+    public ResponseEntity<ApiResponse<SliceResponse<String>>> findAllMatchIds(
+            @PathVariable("platformId") String platformId,
+            @ModelAttribute MatchCommand matchCommand) {
+        matchCommand.setPlatformId(platformId);
+        Page<String> allMatchIds = matchService.findAllMatchIds(matchCommand);
 
-                return ResponseEntity.ok(ApiResponse.success(SliceResponse.of(allMatchIds)));
-        }
+        return ResponseEntity.ok(ApiResponse.success(SliceResponse.of(allMatchIds)));
+    }
 
-        @GetMapping("/{platformId}/matches")
-        public ResponseEntity<ApiResponse<SliceResponse<GameReadModel>>> fetchGameReadModel(
-                        @PathVariable("platformId") String platformId,
-                        @ModelAttribute MatchCommand matchCommand) {
-                matchCommand.setPlatformId(platformId);
-                Page<GameReadModel> matches = matchService.getMatches(matchCommand);
+    @GetMapping("/{platformId}/matches")
+    public ResponseEntity<ApiResponse<SliceResponse<GameReadModel>>> fetchGameReadModel(
+            @PathVariable("platformId") String platformId,
+            @ModelAttribute MatchCommand matchCommand) {
+        matchCommand.setPlatformId(platformId);
+        Page<GameReadModel> matches = matchService.getMatches(matchCommand);
 
-                return ResponseEntity.ok(ApiResponse.success(SliceResponse.of(matches)));
-        }
+        return ResponseEntity.ok(ApiResponse.success(SliceResponse.of(matches)));
+    }
 
-        @GetMapping("/rank/champions")
-        public ResponseEntity<ApiResponse<List<MSChampion>>> getRankChampions(
-                        @ModelAttribute MSChampionCommand request) {
+    @GetMapping("/rank/champions")
+    public ResponseEntity<ApiResponse<List<MSChampion>>> getRankChampions(
+            @ModelAttribute MSChampionCommand request) {
+        List<MSChampion> result = matchService.getRankChampions(request);
 
-                List<MSChampion> result = matchService.getRankChampions(request);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
 
-                return ResponseEntity.ok(
-                                ApiResponse.success(
-                                                result));
-        }
+    @GetMapping("/{platformId}/summoners/{puuid}/matches")
+    public ResponseEntity<ApiResponse<SliceResponse<GameReadModel>>> fetchMatchesBySummoner(
+            @PathVariable("platformId") String platformId,
+            @PathVariable("puuid") String puuid,
+            @RequestParam(required = false) Integer season,
+            @RequestParam(required = false) Integer queueId,
+            @RequestParam(required = false) Integer pageNo) {
+        MatchCommand matchCommand = MatchCommand.builder()
+                .puuid(puuid)
+                .season(season)
+                .queueId(queueId)
+                .pageNo(pageNo != null ? pageNo : 1)
+                .platformId(platformId)
+                .build();
+        Page<GameReadModel> matches = matchService.getMatchesBatch(matchCommand);
+        return ResponseEntity.ok(ApiResponse.success(SliceResponse.of(matches)));
+    }
 
-        @GetMapping("/{platformId}/summoners/{puuid}/matches")
-        public ResponseEntity<ApiResponse<SliceResponse<GameReadModel>>> fetchMatchesBySummoner(
-                        @PathVariable("platformId") String platformId,
-                        @PathVariable("puuid") String puuid,
-                        @RequestParam(required = false) Integer season,
-                        @RequestParam(required = false) Integer queueId,
-                        @RequestParam(required = false) Integer pageNo) {
-                MatchCommand matchCommand = MatchCommand.builder()
-                                .puuid(puuid)
-                                .season(season)
-                                .queueId(queueId)
-                                .pageNo(pageNo != null ? pageNo : 1)
-                                .platformId(platformId)
-                                .build();
-                Page<GameReadModel> matches = matchService.getMatchesBatch(matchCommand);
-                return ResponseEntity.ok(ApiResponse.success(SliceResponse.of(matches)));
-        }
+    @GetMapping("/{platformId}/summoners/{puuid}/matches/daily-count")
+    public ResponseEntity<ApiResponse<DailyGameCountSummaryReadModel>> getDailyGameCounts(
+            @PathVariable("platformId") String platformId,
+            @PathVariable("puuid") String puuid,
+            @RequestParam Integer season,
+            @RequestParam(required = false) Integer queueId) {
+        DailyGameCountSummaryReadModel result = matchService.getDailyGameCounts(puuid, season, queueId);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
 
-        @GetMapping("/{platformId}/summoners/{puuid}/matches/daily-count")
-        public ResponseEntity<ApiResponse<DailyGameCountSummaryReadModel>> getDailyGameCounts(
-                        @PathVariable("platformId") String platformId,
-                        @PathVariable("puuid") String puuid,
-                        @RequestParam Integer season,
-                        @RequestParam(required = false) Integer queueId) {
-                DailyGameCountSummaryReadModel result = matchService.getDailyGameCounts(puuid, season, queueId);
-                return ResponseEntity.ok(ApiResponse.success(result));
-        }
+    @GetMapping("/match/timeline/{matchId}")
+    public ResponseEntity<ApiResponse<TimelineData>> getTimeline(
+            @PathVariable("matchId") String matchId) {
+        TimelineData timelineData = matchService.getTimelineData(matchId);
 
-        @GetMapping("/match/timeline/{matchId}")
-        public ResponseEntity<ApiResponse<TimelineData>> getTimeline(@PathVariable("matchId") String matchId) {
-
-                TimelineData timelineData = matchService.getTimelineData(matchId);
-
-                return ResponseEntity.ok(ApiResponse.success(timelineData));
-        }
+        return ResponseEntity.ok(ApiResponse.success(timelineData));
+    }
 
 }

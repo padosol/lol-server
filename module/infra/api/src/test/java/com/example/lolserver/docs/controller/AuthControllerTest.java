@@ -44,7 +44,7 @@ class AuthControllerTest extends RestDocsSupport {
     @Override
     protected HandlerMethodArgumentResolver[] customArgumentResolvers() {
         return new HandlerMethodArgumentResolver[]{
-                new TestAuthenticatedMemberResolver()};
+            new TestAuthenticatedMemberResolver()};
     }
 
     @DisplayName("토큰 갱신 API")

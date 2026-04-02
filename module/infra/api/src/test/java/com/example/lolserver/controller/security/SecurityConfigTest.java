@@ -1,5 +1,6 @@
 package com.example.lolserver.controller.security;
 
+import com.example.lolserver.controller.security.oauth2.CustomOidcUserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,9 @@ class SecurityConfigTest {
     @Mock
     private CookieOAuth2AuthorizationRequestRepository
             cookieAuthorizationRequestRepository;
+
+    @Mock
+    private CustomOidcUserService customOidcUserService;
 
     private SecurityConfig securityConfig;
 
@@ -52,7 +56,8 @@ class SecurityConfigTest {
                 filter, corsProperties,
                 oAuth2SuccessHandler,
                 oAuth2FailureHandler,
-                cookieAuthorizationRequestRepository);
+                cookieAuthorizationRequestRepository,
+                customOidcUserService);
     }
 
     @DisplayName("CORS 설정 소스가 정상적으로 생성된다")
