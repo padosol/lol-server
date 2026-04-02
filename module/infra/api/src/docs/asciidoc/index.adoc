@@ -12,6 +12,8 @@ endif::[]
 [[Auth-API]]
 == Auth API
 
+include::api/auth/auth-oauth2-login.adoc[]
+
 include::api/auth/auth-refresh.adoc[]
 
 include::api/auth/auth-logout.adoc[]

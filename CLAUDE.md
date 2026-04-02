@@ -141,6 +141,7 @@ module/
 - **RestDocs 테스트**: `RestDocsSupport` 상속 (Standalone MockMvc)
 - **어댑터 테스트**: Mock 기반 단위 테스트 (통합 테스트 아님)
 - `@DisplayName("한글 설명")`, AssertJ `assertThat` 사용
+- RestDocs 관련 파일(`.adoc`, RestDocs 테스트) 수정 시 반드시 `./gradlew :module:infra:api:asciidoctor` 실행하여 문서 재생성할 것
 
 ### 코드 컨벤션
 
