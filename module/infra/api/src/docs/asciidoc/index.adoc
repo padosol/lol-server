@@ -12,10 +12,6 @@ endif::[]
 [[Auth-API]]
 == Auth API
 
-include::api/auth/auth-google-redirect.adoc[]
-
-include::api/auth/auth-google-callback.adoc[]
-
 include::api/auth/auth-refresh.adoc[]
 
 include::api/auth/auth-logout.adoc[]
@@ -24,6 +20,8 @@ include::api/auth/auth-logout.adoc[]
 == Member API
 
 include::api/member/member-profile.adoc[]
+
+include::api/member/member-nickname-update.adoc[]
 
 include::api/member/member-riot-link.adoc[]
 

@@ -3,6 +3,7 @@ package com.example.lolserver.adapter.oauth;
 import com.example.lolserver.adapter.oauth.config.OAuthProperties;
 import com.example.lolserver.adapter.oauth.dto.OAuthTokenResponse;
 import com.example.lolserver.domain.member.application.model.OAuthUserInfo;
+import com.example.lolserver.domain.member.application.port.out.OAuthProviderClient;
 import com.example.lolserver.domain.member.domain.vo.OAuthProvider;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
@@ -16,16 +17,24 @@ import java.util.Map;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class RiotRsoClient {
+public class RiotRsoClient implements OAuthProviderClient {
 
     private final RestClient oauthRestClient;
     private final OAuthProperties oAuthProperties;
     private final OAuthTokenExchanger tokenExchanger;
 
-    public OAuthUserInfo getUserInfo(String code, String redirectUri) {
-        OAuthProperties.ProviderConfig config = oAuthProperties.getRiot();
+    @Override
+    public OAuthProvider getProvider() {
+        return OAuthProvider.RIOT;
+    }
 
-        OAuthTokenResponse tokenResponse = tokenExchanger.exchange(code, redirectUri, config, OAuthProvider.RIOT);
+    @Override
+    public OAuthUserInfo getUserInfo(String code, String redirectUri) {
+        OAuthProperties.ProviderConfig config =
+                oAuthProperties.getProviderConfig("riot");
+
+        OAuthTokenResponse tokenResponse = tokenExchanger.exchange(
+                code, redirectUri, config, OAuthProvider.RIOT);
         String accessToken = tokenResponse.getAccessToken();
 
         String sub = fetchUserInfoSub(accessToken, config);
@@ -33,7 +42,9 @@ public class RiotRsoClient {
     }
 
     @SuppressWarnings("unchecked")
-    private String fetchUserInfoSub(String accessToken, OAuthProperties.ProviderConfig config) {
+    private String fetchUserInfoSub(
+            String accessToken,
+            OAuthProperties.ProviderConfig config) {
         try {
             Map<String, Object> response = oauthRestClient.get()
                     .uri(config.getUserInfoUri())
@@ -57,9 +68,9 @@ public class RiotRsoClient {
     }
 
     @SuppressWarnings("unchecked")
-    private OAuthUserInfo fetchAccountInfo(String accessToken,
-                                           OAuthProperties.ProviderConfig config,
-                                           String sub) {
+    private OAuthUserInfo fetchAccountInfo(
+            String accessToken,
+            OAuthProperties.ProviderConfig config, String sub) {
         try {
             Map<String, Object> response = oauthRestClient.get()
                     .uri(config.getAccountUri())

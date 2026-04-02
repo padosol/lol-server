@@ -1,11 +1,13 @@
 package com.example.lolserver.docs.controller;
 
 import com.example.lolserver.controller.member.MemberController;
+import com.example.lolserver.controller.member.request.NicknameUpdateRequest;
 import com.example.lolserver.controller.member.request.RiotLinkRequest;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.docs.TestAuthenticatedMemberResolver;
 import com.example.lolserver.domain.member.application.model.MemberReadModel;
 import com.example.lolserver.domain.member.application.model.RiotAccountLinkReadModel;
+import com.example.lolserver.domain.member.application.port.in.MemberCommandUseCase;
 import com.example.lolserver.domain.member.application.port.in.MemberQueryUseCase;
 import com.example.lolserver.domain.member.application.port.in.RiotAccountLinkUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,6 +40,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class MemberControllerTest extends RestDocsSupport {
 
     @Mock
+    private MemberCommandUseCase memberCommandUseCase;
+
+    @Mock
     private MemberQueryUseCase memberQueryUseCase;
 
     @Mock
@@ -47,7 +52,7 @@ class MemberControllerTest extends RestDocsSupport {
 
     @Override
     protected Object initController() {
-        return new MemberController(riotAccountLinkUseCase, memberQueryUseCase);
+        return new MemberController(riotAccountLinkUseCase, memberCommandUseCase, memberQueryUseCase);
     }
 
     @Override
@@ -90,6 +95,56 @@ class MemberControllerTest extends RestDocsSupport {
                                         .description("이메일"),
                                 fieldWithPath("data.nickname").type(JsonFieldType.STRING)
                                         .description("닉네임"),
+                                fieldWithPath("data.profileImageUrl").type(JsonFieldType.STRING)
+                                        .description("프로필 이미지 URL"),
+                                fieldWithPath("data.oauthProvider").type(JsonFieldType.STRING)
+                                        .description("OAuth 제공자 (GOOGLE, RIOT)")
+                        )
+                ));
+    }
+
+    @DisplayName("회원 닉네임 변경 API")
+    @Test
+    void updateNickname() throws Exception {
+        // given
+        MemberReadModel readModel = MemberReadModel.builder()
+                .id(1L)
+                .email("user@example.com")
+                .nickname("새닉네임")
+                .profileImageUrl("https://example.com/profile.jpg")
+                .oauthProvider("GOOGLE")
+                .build();
+
+        given(memberCommandUseCase.updateNickname(eq(1L), any())).willReturn(readModel);
+
+        NicknameUpdateRequest request = new NicknameUpdateRequest("새닉네임");
+
+        // when & then
+        mockMvc.perform(
+                        patch("/api/members/me/nickname")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request))
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andDo(document("member-nickname-update",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        requestFields(
+                                fieldWithPath("nickname").type(JsonFieldType.STRING)
+                                        .description("변경할 닉네임 (2~20자)")
+                        ),
+                        responseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING)
+                                        .description("API 응답 결과 (SUCCESS, ERROR)"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL)
+                                        .description("에러 메시지 (정상 응답 시 null)"),
+                                fieldWithPath("data.id").type(JsonFieldType.NUMBER)
+                                        .description("회원 ID"),
+                                fieldWithPath("data.email").type(JsonFieldType.STRING)
+                                        .description("이메일"),
+                                fieldWithPath("data.nickname").type(JsonFieldType.STRING)
+                                        .description("변경된 닉네임"),
                                 fieldWithPath("data.profileImageUrl").type(JsonFieldType.STRING)
                                         .description("프로필 이미지 URL"),
                                 fieldWithPath("data.oauthProvider").type(JsonFieldType.STRING)

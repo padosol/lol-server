@@ -60,7 +60,7 @@ class RiotRsoClientTest {
     @DisplayName("RSO userinfo와 Account API를 순차 호출하여 OAuthUserInfo 생성")
     void getUserInfo_callsUserInfoAndAccountApi() {
         // given
-        given(oAuthProperties.getRiot()).willReturn(config);
+        given(oAuthProperties.getProviderConfig("riot")).willReturn(config);
         given(tokenExchanger.exchange("code", "redirect", config, OAuthProvider.RIOT))
                 .willReturn(OAuthTokenResponse.builder()
                         .accessToken("riot-access-token")
@@ -108,7 +108,7 @@ class RiotRsoClientTest {
     @DisplayName("userinfo에서 sub가 null이면 예외 발생")
     void getUserInfo_throwsWhenSubIsNull() {
         // given
-        given(oAuthProperties.getRiot()).willReturn(config);
+        given(oAuthProperties.getProviderConfig("riot")).willReturn(config);
         given(tokenExchanger.exchange("code", "redirect", config, OAuthProvider.RIOT))
                 .willReturn(OAuthTokenResponse.builder()
                         .accessToken("riot-access-token")

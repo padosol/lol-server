@@ -1,18 +1,11 @@
 oauth:
-  google:
-    client-id: ${GOOGLE_CLIENT_ID:}
-    client-secret: ${GOOGLE_CLIENT_SECRET:}
-    token-uri: https://oauth2.googleapis.com/token
-    user-info-uri: https://www.googleapis.com/oauth2/v2/userinfo
-    authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
-    scope: openid email profile
-    callback-uri: http://localhost:8100/api/auth/google/callback
-  riot:
-    client-id: ${RIOT_RSO_CLIENT_ID:}
-    client-secret: ${RIOT_RSO_CLIENT_SECRET:}
-    token-uri: https://auth.riotgames.com/token
-    user-info-uri: https://auth.riotgames.com/userinfo
-    account-uri: https://americas.api.riotgames.com/riot/account/v1/accounts/me
-    authorization-uri: https://auth.riotgames.com/authorize
-    scope: openid cpid
-    callback-uri: http://localhost:8100/api/auth/riot/callback
+  providers:
+    riot:
+      client-id: ${RIOT_RSO_CLIENT_ID:}
+      client-secret: ${RIOT_RSO_CLIENT_SECRET:}
+      token-uri: https://auth.riotgames.com/token
+      user-info-uri: https://auth.riotgames.com/userinfo
+      account-uri: https://americas.api.riotgames.com/riot/account/v1/accounts/me
+      authorization-uri: https://auth.riotgames.com/authorize
+      scope: openid cpid
+      callback-uri: http://localhost:8100/api/auth/riot/callback
