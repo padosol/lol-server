@@ -29,7 +29,7 @@ import com.example.lolserver.repository.match.matchsummoner.dsl.MatchSummonerRep
 import com.example.lolserver.repository.match.matchteam.MatchTeamRepository;
 import com.example.lolserver.repository.match.timeline.TimelineRepositoryCustom;
 import com.example.lolserver.support.Page;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
@@ -42,10 +42,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 @Component
-@RequiredArgsConstructor
 public class MatchPersistenceAdapter implements MatchPersistencePort {
 
     private final MatchSummonerRepositoryCustom matchSummonerRepositoryCustom;
@@ -55,6 +55,27 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     private final MatchRepository matchRepository;
     private final MatchTeamRepository matchTeamRepository;
     private final MatchMapper matchMapper;
+    private final Executor queryExecutor;
+
+    public MatchPersistenceAdapter(
+            MatchSummonerRepositoryCustom matchSummonerRepositoryCustom,
+            MatchSummonerRepository matchSummonerRepository,
+            MatchRepositoryCustom matchRepositoryCustom,
+            TimelineRepositoryCustom timelineRepositoryCustom,
+            MatchRepository matchRepository,
+            MatchTeamRepository matchTeamRepository,
+            MatchMapper matchMapper,
+            @Qualifier("queryExecutor") Executor queryExecutor
+    ) {
+        this.matchSummonerRepositoryCustom = matchSummonerRepositoryCustom;
+        this.matchSummonerRepository = matchSummonerRepository;
+        this.matchRepositoryCustom = matchRepositoryCustom;
+        this.timelineRepositoryCustom = timelineRepositoryCustom;
+        this.matchRepository = matchRepository;
+        this.matchTeamRepository = matchTeamRepository;
+        this.matchMapper = matchMapper;
+        this.queryExecutor = queryExecutor;
+    }
 
     @Override
     public Page<GameReadModel> getMatches(String puuid, Integer queueId, Pageable pageable) {
@@ -117,20 +138,21 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                 .map(MatchDTO::getMatchId)
                 .toList();
 
-        // 배치 쿼리: 병렬 실행으로 네트워크 라운드트립 최소화
         CompletableFuture<Map<String, List<MatchSummonerDTO>>> summonersFuture =
                 CompletableFuture.supplyAsync(() ->
                         matchRepositoryCustom.getMatchSummoners(matchIds)
                                 .stream()
                                 .collect(Collectors.groupingBy(
-                                        MatchSummonerDTO::getMatchId)));
+                                        MatchSummonerDTO::getMatchId)),
+                        queryExecutor);
 
         CompletableFuture<Map<String, List<MatchTeamDTO>>> teamsFuture =
                 CompletableFuture.supplyAsync(() ->
                         matchRepositoryCustom.getMatchTeams(matchIds)
                                 .stream()
                                 .collect(Collectors.groupingBy(
-                                        MatchTeamDTO::getMatchId)));
+                                        MatchTeamDTO::getMatchId)),
+                        queryExecutor);
 
         CompletableFuture<Map<String, List<ItemEventDTO>>> itemsFuture =
                 CompletableFuture.supplyAsync(() ->
@@ -138,7 +160,8 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                                 .selectItemEventsByMatchIds(matchIds)
                                 .stream()
                                 .collect(Collectors.groupingBy(
-                                        ItemEventDTO::getMatchId)));
+                                        ItemEventDTO::getMatchId)),
+                        queryExecutor);
 
         CompletableFuture<Map<String, List<SkillEventDTO>>> skillsFuture =
                 CompletableFuture.supplyAsync(() ->
@@ -146,7 +169,8 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                                 .selectSkillEventsByMatchIds(matchIds)
                                 .stream()
                                 .collect(Collectors.groupingBy(
-                                        SkillEventDTO::getMatchId)));
+                                        SkillEventDTO::getMatchId)),
+                        queryExecutor);
 
         CompletableFuture.allOf(
                 summonersFuture, teamsFuture, itemsFuture, skillsFuture

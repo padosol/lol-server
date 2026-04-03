@@ -77,7 +77,8 @@ class MatchPersistenceAdapterTest {
                 timelineRepositoryCustom,
                 matchRepository,
                 matchTeamRepository,
-                matchMapper
+                matchMapper,
+                Runnable::run
         );
     }
 

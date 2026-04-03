@@ -16,6 +16,8 @@ dependencies {
     implementation project(":module:infra:persistence:clickhouse")
 
     implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 
     // PostgreSQL 드라이버 (runtimeOnly는 모듈간 전이되지 않으므로 직접 추가)
     runtimeOnly 'org.postgresql:postgresql'
