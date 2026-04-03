@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "message.broker", havingValue = "rabbitmq", matchIfMissing = true)
 public class SummonerMessageAdapter implements SummonerMessagePort {
 
     @Value("${rabbitmq.exchange.name}")
@@ -23,10 +25,9 @@ public class SummonerMessageAdapter implements SummonerMessagePort {
     private final RabbitTemplate rabbitTemplate;
 
     @Override
-    public void sendMessage(String platformId, String puuid, LocalDateTime revisionDatea) {
+    public void sendMessage(String platformId, String puuid, LocalDateTime revisionDate) {
         SummonerMessage summonerMessage = new SummonerMessage(
-                platformId, puuid, revisionDatea
-        );
+                platformId, puuid, revisionDate);
 
         rabbitTemplate.convertAndSend(exchangeName, routingKey, summonerMessage);
     }

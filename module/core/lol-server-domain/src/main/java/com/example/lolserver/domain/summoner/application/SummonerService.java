@@ -102,10 +102,10 @@ public class SummonerService {
      *   <li>클릭 쿨다운(10초) 확인 (연타 방지)</li>
      *   <li>DB에서 소환사 조회</li>
      *   <li>마지막 Riot API 호출로부터 2분 경과 여부 확인</li>
-     *   <li>조건 충족 시 쿨다운 설정, 갱신 세션 생성, RabbitMQ 메시지 발행</li>
+     *   <li>조건 충족 시 쿨다운 설정, 갱신 세션 생성, 메시지 브로커로 메시지 발행</li>
      * </ol>
      *
-     * <p>실제 갱신은 RabbitMQ 컨슈머에서 비동기로 처리되며,
+     * <p>실제 갱신은 메시지 컨슈머에서 비동기로 처리되며,
      * 클라이언트는 {@link #renewalSummonerStatus(String)}를 폴링하여 완료 여부를 확인한다.
      *
      * @param platformId 플랫폼 코드 (예: "kr")
@@ -139,7 +139,7 @@ public class SummonerService {
         LocalDateTime clickDateTime = LocalDateTime.now();
         if (summoner.isRevision(clickDateTime)) {
             summonerCachePort.createSummonerRenewal(puuid);      // Redis에 갱신 세션 마커를 생성한다 (진행 상태 추적용)
-            // RabbitMQ로 갱신 메시지를 발행하여 비동기 처리를 시작한다
+            // 메시지 브로커로 갱신 메시지를 발행하여 비동기 처리를 시작한다
             summonerMessagePort.sendMessage(
                     platformId, puuid, summoner.getRevisionDate());
             log.debug("갱신 메시지 발행 완료 - platformId: {}, puuid: {}, revisionDate: {}",

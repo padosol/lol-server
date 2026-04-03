@@ -10,6 +10,7 @@ dependencies {
     implementation project(":module:infra:client:lol-repository")
     implementation project(":module:infra:client:oauth")
     implementation project(":module:infra:message:rabbitmq")
+    implementation project(":module:infra:message:kafka")
     implementation project(":module:infra:persistence:postgresql")
     implementation project(":module:infra:persistence:redis")
     implementation project(":module:infra:persistence:clickhouse")

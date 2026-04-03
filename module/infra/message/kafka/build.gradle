@@ -1,0 +1,8 @@
+dependencies {
+    implementation(project(":module:core:lol-server-domain"))
+
+    implementation 'org.springframework.boot:spring-boot-starter'
+
+    // kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+}
