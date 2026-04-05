@@ -1,5 +1,6 @@
 package com.example.lolserver.repository.match.timeline;
 
+import com.example.lolserver.support.logging.LogExecutionTime;
 import com.example.lolserver.repository.match.dto.ItemEventDTO;
 import com.example.lolserver.repository.match.dto.QItemEventDTO;
 import com.example.lolserver.repository.match.dto.QSkillEventDTO;
@@ -51,6 +52,7 @@ public class TimelineRepositoryCustomImpl implements TimelineRepositoryCustom {
                 .fetch();
     }
 
+    @LogExecutionTime
     @Override
     public List<ItemEventDTO> selectItemEventsByMatchIds(
             List<String> matchIds
@@ -68,6 +70,7 @@ public class TimelineRepositoryCustomImpl implements TimelineRepositoryCustom {
                 .fetch();
     }
 
+    @LogExecutionTime
     @Override
     public List<SkillEventDTO> selectSkillEventsByMatchIds(
             List<String> matchIds

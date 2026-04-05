@@ -9,6 +9,7 @@ import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.domain.match.application.port.out.MatchPersistencePort;
 import com.example.lolserver.support.Page;
+import com.example.lolserver.support.logging.LogExecutionTime;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +50,7 @@ public class MatchService {
         return matchPersistencePort.getTimelineData(matchId);
     }
 
+    @LogExecutionTime
     public Page<GameReadModel> getMatchesBatch(MatchCommand matchCommand) {
         Pageable pageable = PageRequest.of(
                 matchCommand.getPageNo(), 20, Sort.by(Sort.Direction.DESC, "match"));

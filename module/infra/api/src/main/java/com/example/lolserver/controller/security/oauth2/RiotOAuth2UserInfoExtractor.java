@@ -25,8 +25,7 @@ public class RiotOAuth2UserInfoExtractor
 
         return OAuthUserInfo.builder()
                 .provider("RIOT")
-                .providerId((String) attributes.get("sub"))
-                .puuid((String) attributes.get("puuid"))
+                .providerId((String) attributes.get("puuid"))
                 .gameName(gameName)
                 .tagLine(tagLine)
                 .nickname(nickname)
