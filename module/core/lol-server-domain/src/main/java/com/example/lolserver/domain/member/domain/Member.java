@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Random;
+import java.util.UUID;
 
 @Getter
 @Builder
@@ -15,29 +17,40 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Member {
 
+    private static final String[] ADJECTIVES = {
+        "용감한", "빛나는", "신비한", "강력한", "민첩한",
+        "현명한", "고요한", "열정적인", "화려한", "당당한"
+    };
+    private static final String[] NOUNS = {
+        "소환사", "전사", "마법사", "수호자", "탐험가",
+        "챔피언", "사냥꾼", "기사", "영웅", "도전자"
+    };
+    private static final Random RANDOM = new Random();
+
     private Long id;
+    private String uuid;
     private String email;
     private String nickname;
     private String profileImageUrl;
-    private String oauthProvider;
-    private String oauthProviderId;
     private String role;
     private LocalDateTime createdAt;
     private LocalDateTime lastLoginAt;
 
-    public static Member createFromOAuth(String email, String nickname,
-            String profileImageUrl, String oauthProvider,
-            String oauthProviderId) {
+    public static Member createNew() {
         return Member.builder()
-                .email(email)
-                .nickname(nickname)
-                .profileImageUrl(profileImageUrl)
-                .oauthProvider(oauthProvider)
-                .oauthProviderId(oauthProviderId)
+                .uuid(UUID.randomUUID().toString())
+                .nickname(generateRandomNickname())
                 .role("USER")
                 .createdAt(LocalDateTime.now())
                 .lastLoginAt(LocalDateTime.now())
                 .build();
+    }
+
+    private static String generateRandomNickname() {
+        String adjective = ADJECTIVES[RANDOM.nextInt(ADJECTIVES.length)];
+        String noun = NOUNS[RANDOM.nextInt(NOUNS.length)];
+        int number = RANDOM.nextInt(10000);
+        return adjective + noun + number;
     }
 
     public void updateLastLogin() {

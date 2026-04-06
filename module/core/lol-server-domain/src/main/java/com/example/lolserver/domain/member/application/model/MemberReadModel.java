@@ -9,19 +9,19 @@ import lombok.Getter;
 public class MemberReadModel {
 
     private Long id;
+    private String uuid;
     private String email;
     private String nickname;
     private String profileImageUrl;
-    private String oauthProvider;
     private String role;
 
     public static MemberReadModel of(Member member) {
         return MemberReadModel.builder()
                 .id(member.getId())
+                .uuid(member.getUuid())
                 .email(member.getEmail())
                 .nickname(member.getNickname())
                 .profileImageUrl(member.getProfileImageUrl())
-                .oauthProvider(member.getOauthProvider())
                 .role(member.getRole())
                 .build();
     }

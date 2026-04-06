@@ -9,8 +9,10 @@ import com.example.lolserver.domain.member.application.port.out.OAuthAuthorizati
 import com.example.lolserver.domain.member.application.port.out.OAuthClientPort;
 import com.example.lolserver.domain.member.application.port.out.OAuthStatePort;
 import com.example.lolserver.domain.member.application.port.out.RefreshTokenPort;
+import com.example.lolserver.domain.member.application.port.out.SocialAccountPersistencePort;
 import com.example.lolserver.domain.member.application.port.out.TokenPort;
 import com.example.lolserver.domain.member.domain.Member;
+import com.example.lolserver.domain.member.domain.SocialAccount;
 import com.example.lolserver.domain.member.domain.vo.OAuthProvider;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
@@ -38,6 +40,9 @@ class MemberAuthServiceTest {
 
     @Mock
     private MemberPersistencePort memberPersistencePort;
+
+    @Mock
+    private SocialAccountPersistencePort socialAccountPersistencePort;
 
     @Mock
     private OAuthClientPort oAuthClientPort;
@@ -74,12 +79,23 @@ class MemberAuthServiceTest {
                 .nickname("테스터")
                 .build();
 
-        Member existingMember = new Member(1L, "test@gmail.com", "테스터", null,
-                "GOOGLE", "google-123", "USER", LocalDateTime.now(), null);
+        SocialAccount existingSocialAccount = SocialAccount.builder()
+                .id(1L)
+                .memberId(1L)
+                .provider("GOOGLE")
+                .providerId("google-123")
+                .build();
+
+        Member existingMember = Member.builder()
+                .id(1L).uuid("test-uuid").email("test@gmail.com")
+                .nickname("테스터").role("USER")
+                .createdAt(LocalDateTime.now()).build();
 
         given(oAuthClientPort.getUserInfo(OAuthProvider.GOOGLE, "auth-code", "http://localhost:3000/callback"))
                 .willReturn(userInfo);
-        given(memberPersistencePort.findByOAuthProviderAndProviderId("GOOGLE", "google-123"))
+        given(socialAccountPersistencePort.findByProviderAndProviderId("GOOGLE", "google-123"))
+                .willReturn(Optional.of(existingSocialAccount));
+        given(memberPersistencePort.findById(1L))
                 .willReturn(Optional.of(existingMember));
         given(memberPersistencePort.save(any(Member.class))).willReturn(existingMember);
         given(tokenPort.generateAccessToken(1L, "USER")).willReturn("access-token");
@@ -113,14 +129,18 @@ class MemberAuthServiceTest {
                 .nickname("신규유저")
                 .build();
 
-        Member savedMember = new Member(2L, "new@gmail.com", "신규유저", null,
-                "GOOGLE", "google-new", "USER", LocalDateTime.now(), null);
+        Member savedMember = Member.builder()
+                .id(2L).uuid("new-uuid").email("new@gmail.com")
+                .nickname("용감한소환사1234").role("USER")
+                .createdAt(LocalDateTime.now()).build();
 
         given(oAuthClientPort.getUserInfo(OAuthProvider.GOOGLE, "auth-code", "http://localhost:3000/callback"))
                 .willReturn(userInfo);
-        given(memberPersistencePort.findByOAuthProviderAndProviderId("GOOGLE", "google-new"))
+        given(socialAccountPersistencePort.findByProviderAndProviderId("GOOGLE", "google-new"))
                 .willReturn(Optional.empty());
         given(memberPersistencePort.save(any(Member.class))).willReturn(savedMember);
+        given(socialAccountPersistencePort.save(any(SocialAccount.class)))
+                .willReturn(SocialAccount.builder().id(1L).build());
         given(tokenPort.generateAccessToken(2L, "USER")).willReturn("access-token");
         given(tokenPort.generateRefreshToken(2L, "USER")).willReturn("refresh-token");
         given(tokenPort.getAccessTokenExpiry()).willReturn(1800L);
@@ -132,6 +152,7 @@ class MemberAuthServiceTest {
         // then
         assertThat(result.accessToken()).isEqualTo("access-token");
         then(memberPersistencePort).should(times(1)).save(any(Member.class));
+        then(socialAccountPersistencePort).should(times(1)).save(any(SocialAccount.class));
     }
 
     @DisplayName("Spring Security OAuth2로 기존 회원 로그인 시 토큰을 반환한다")
@@ -146,12 +167,17 @@ class MemberAuthServiceTest {
                 .profileImageUrl("https://example.com/photo.jpg")
                 .build();
 
-        Member existingMember = new Member(1L, "test@gmail.com", "테스터",
-                null, "GOOGLE", "google-123", "USER",
-                LocalDateTime.now(), null);
+        SocialAccount existingSocialAccount = SocialAccount.builder()
+                .id(1L).memberId(1L).provider("GOOGLE").providerId("google-123").build();
 
-        given(memberPersistencePort.findByOAuthProviderAndProviderId(
-                "GOOGLE", "google-123"))
+        Member existingMember = Member.builder()
+                .id(1L).uuid("test-uuid").email("test@gmail.com")
+                .nickname("테스터").role("USER")
+                .createdAt(LocalDateTime.now()).build();
+
+        given(socialAccountPersistencePort.findByProviderAndProviderId("GOOGLE", "google-123"))
+                .willReturn(Optional.of(existingSocialAccount));
+        given(memberPersistencePort.findById(1L))
                 .willReturn(Optional.of(existingMember));
         given(memberPersistencePort.save(any(Member.class)))
                 .willReturn(existingMember);
@@ -183,15 +209,17 @@ class MemberAuthServiceTest {
                 .nickname("신규유저")
                 .build();
 
-        Member savedMember = new Member(2L, "new@gmail.com", "신규유저",
-                null, "GOOGLE", "google-new", "USER",
-                LocalDateTime.now(), null);
+        Member savedMember = Member.builder()
+                .id(2L).uuid("new-uuid").email("new@gmail.com")
+                .nickname("빛나는전사5678").role("USER")
+                .createdAt(LocalDateTime.now()).build();
 
-        given(memberPersistencePort.findByOAuthProviderAndProviderId(
-                "GOOGLE", "google-new"))
+        given(socialAccountPersistencePort.findByProviderAndProviderId("GOOGLE", "google-new"))
                 .willReturn(Optional.empty());
         given(memberPersistencePort.save(any(Member.class)))
                 .willReturn(savedMember);
+        given(socialAccountPersistencePort.save(any(SocialAccount.class)))
+                .willReturn(SocialAccount.builder().id(1L).build());
         given(tokenPort.generateAccessToken(2L, "USER"))
                 .willReturn("access-token");
         given(tokenPort.generateRefreshToken(2L, "USER"))
@@ -206,6 +234,7 @@ class MemberAuthServiceTest {
         // then
         assertThat(result.accessToken()).isEqualTo("access-token");
         then(memberPersistencePort).should().save(any(Member.class));
+        then(socialAccountPersistencePort).should().save(any(SocialAccount.class));
     }
 
     @DisplayName("유효한 리프레시 토큰으로 갱신하면 새 토큰을 반환한다")
@@ -216,8 +245,10 @@ class MemberAuthServiceTest {
                 .refreshToken("valid-refresh-token")
                 .build();
 
-        Member member = new Member(1L, "test@gmail.com", "테스터", null,
-                "GOOGLE", "google-123", "USER", LocalDateTime.now(), null);
+        Member member = Member.builder()
+                .id(1L).uuid("test-uuid").email("test@gmail.com")
+                .nickname("테스터").role("USER")
+                .createdAt(LocalDateTime.now()).build();
 
         given(tokenPort.validateToken("valid-refresh-token")).willReturn(true);
         given(tokenPort.getMemberIdFromToken("valid-refresh-token")).willReturn(1L);
@@ -315,14 +346,21 @@ class MemberAuthServiceTest {
                 .nickname("테스터")
                 .build();
 
-        Member existingMember = new Member(1L, "test@gmail.com", "테스터", null,
-                "GOOGLE", "google-123", "USER", LocalDateTime.now(), null);
+        SocialAccount existingSocialAccount = SocialAccount.builder()
+                .id(1L).memberId(1L).provider("GOOGLE").providerId("google-123").build();
+
+        Member existingMember = Member.builder()
+                .id(1L).uuid("test-uuid").email("test@gmail.com")
+                .nickname("테스터").role("USER")
+                .createdAt(LocalDateTime.now()).build();
 
         given(oAuthStatePort.validateAndDelete("valid-state")).willReturn(true);
         given(oAuthClientPort.getUserInfo(OAuthProvider.GOOGLE, "auth-code",
                 "http://localhost:3000/callback"))
                 .willReturn(userInfo);
-        given(memberPersistencePort.findByOAuthProviderAndProviderId("GOOGLE", "google-123"))
+        given(socialAccountPersistencePort.findByProviderAndProviderId("GOOGLE", "google-123"))
+                .willReturn(Optional.of(existingSocialAccount));
+        given(memberPersistencePort.findById(1L))
                 .willReturn(Optional.of(existingMember));
         given(memberPersistencePort.save(any(Member.class))).willReturn(existingMember);
         given(tokenPort.generateAccessToken(1L, "USER")).willReturn("access-token");

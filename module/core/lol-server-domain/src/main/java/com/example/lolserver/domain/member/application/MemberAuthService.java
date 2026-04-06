@@ -10,8 +10,10 @@ import com.example.lolserver.domain.member.application.port.out.OAuthAuthorizati
 import com.example.lolserver.domain.member.application.port.out.OAuthClientPort;
 import com.example.lolserver.domain.member.application.port.out.OAuthStatePort;
 import com.example.lolserver.domain.member.application.port.out.RefreshTokenPort;
+import com.example.lolserver.domain.member.application.port.out.SocialAccountPersistencePort;
 import com.example.lolserver.domain.member.application.port.out.TokenPort;
 import com.example.lolserver.domain.member.domain.Member;
+import com.example.lolserver.domain.member.domain.SocialAccount;
 import com.example.lolserver.domain.member.domain.vo.OAuthProvider;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
@@ -28,6 +30,7 @@ import java.util.UUID;
 public class MemberAuthService implements MemberAuthUseCase {
 
     private final MemberPersistencePort memberPersistencePort;
+    private final SocialAccountPersistencePort socialAccountPersistencePort;
     private final OAuthClientPort oAuthClientPort;
     private final TokenPort tokenPort;
     private final RefreshTokenPort refreshTokenPort;
@@ -100,29 +103,34 @@ public class MemberAuthService implements MemberAuthUseCase {
 
     private AuthTokenReadModel findOrCreateMemberAndGenerateTokens(
             OAuthUserInfo userInfo) {
-        Member member = memberPersistencePort
-                .findByOAuthProviderAndProviderId(
+        SocialAccount socialAccount = socialAccountPersistencePort
+                .findByProviderAndProviderId(
                         userInfo.getProvider(), userInfo.getProviderId())
                 .orElse(null);
 
-        if (member == null) {
-            member = createMember(userInfo);
-        } else {
+        Member member;
+        if (socialAccount != null) {
+            member = memberPersistencePort.findById(
+                    socialAccount.getMemberId())
+                    .orElseThrow(() -> new CoreException(
+                            ErrorType.MEMBER_NOT_FOUND));
             member.updateLastLogin();
             memberPersistencePort.save(member);
+        } else {
+            member = Member.createNew();
+            member = memberPersistencePort.save(member);
+
+            SocialAccount newSocialAccount = SocialAccount.create(
+                    member.getId(),
+                    userInfo.getProvider(),
+                    userInfo.getProviderId(),
+                    userInfo.getEmail(),
+                    userInfo.getNickname(),
+                    userInfo.getProfileImageUrl());
+            socialAccountPersistencePort.save(newSocialAccount);
         }
 
         return generateTokens(member);
-    }
-
-    private Member createMember(OAuthUserInfo userInfo) {
-        Member member = Member.createFromOAuth(
-                userInfo.getEmail(),
-                userInfo.getNickname(),
-                userInfo.getProfileImageUrl(),
-                userInfo.getProvider(),
-                userInfo.getProviderId());
-        return memberPersistencePort.save(member);
     }
 
     private AuthTokenReadModel generateTokens(Member member) {

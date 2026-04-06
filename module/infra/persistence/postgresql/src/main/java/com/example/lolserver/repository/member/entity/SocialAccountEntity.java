@@ -15,13 +15,13 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "riot_account_link")
+@Table(name = "social_account")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RiotAccountLinkEntity {
+public class SocialAccountEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,17 +30,18 @@ public class RiotAccountLinkEntity {
     @Column(name = "member_id", nullable = false)
     private Long memberId;
 
-    @Column(nullable = false)
-    private String puuid;
+    @Column(nullable = false, length = 50)
+    private String provider;
 
-    @Column(name = "game_name")
-    private String gameName;
+    @Column(name = "provider_id", nullable = false)
+    private String providerId;
 
-    @Column(name = "tag_line")
-    private String tagLine;
+    private String email;
 
-    @Column(name = "platform_id")
-    private String platformId;
+    private String nickname;
+
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
 
     @Column(name = "linked_at", nullable = false)
     private LocalDateTime linkedAt;

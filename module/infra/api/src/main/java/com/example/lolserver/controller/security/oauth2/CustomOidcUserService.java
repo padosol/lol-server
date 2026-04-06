@@ -19,93 +19,94 @@ import java.util.Map;
 @Component
 public class CustomOidcUserService extends OidcUserService {
 
-        private final RestClient restClient;
-        private final String riotAccountUri;
+    private final RestClient restClient;
+    private final String riotAccountUri;
 
-        public CustomOidcUserService(
-                        @Value("${riot.account-uri:}") String riotAccountUri) {
-                this.restClient = RestClient.create();
-                this.riotAccountUri = riotAccountUri;
+    public CustomOidcUserService(
+            @Value("${riot.account-uri:}") String riotAccountUri) {
+        this.restClient = RestClient.create();
+        this.riotAccountUri = riotAccountUri;
+    }
+
+    @Override
+    public OidcUser loadUser(OidcUserRequest userRequest)
+            throws OAuth2AuthenticationException {
+        String registrationId = userRequest.getClientRegistration()
+                .getRegistrationId();
+        log.info("[OIDC] loadUser 시작 - provider: {}, accessToken 존재: {}",
+                registrationId,
+                userRequest.getAccessToken() != null);
+        log.info("[OIDC] tokenUri: {}, userInfoUri: {}",
+                userRequest.getClientRegistration().getProviderDetails()
+                        .getTokenUri(),
+                userRequest.getClientRegistration().getProviderDetails()
+                        .getUserInfoEndpoint().getUri());
+
+        OidcUser oidcUser;
+        try {
+            oidcUser = super.loadUser(userRequest);
+            log.info("[OIDC] super.loadUser 성공 - sub: {}, claims: {}",
+                    oidcUser.getSubject(),
+                    oidcUser.getClaims() != null
+                            ? oidcUser.getClaims().keySet()
+                            : "null");
+        } catch (OAuth2AuthenticationException e) {
+            log.error("[OIDC] OAuth2AuthenticationException: errorCode={}, message={}",
+                    e.getError().getErrorCode(), e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("OIDC 사용자 정보 로드 실패: {}", e.getMessage(), e);
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error("oidc_user_load_error"),
+                    "OIDC 사용자 정보 로드에 실패했습니다.", e);
         }
 
-        @Override
-        public OidcUser loadUser(OidcUserRequest userRequest)
-                        throws OAuth2AuthenticationException {
-                String registrationId = userRequest.getClientRegistration()
-                                .getRegistrationId();
-                log.info("[OIDC] loadUser 시작 - provider: {}, accessToken 존재: {}",
-                                registrationId,
-                                userRequest.getAccessToken() != null);
-                log.info("[OIDC] tokenUri: {}, userInfoUri: {}",
-                                userRequest.getClientRegistration().getProviderDetails()
-                                                .getTokenUri(),
-                                userRequest.getClientRegistration().getProviderDetails()
-                                                .getUserInfoEndpoint().getUri());
-
-                OidcUser oidcUser;
-                try {
-                        oidcUser = super.loadUser(userRequest);
-                        log.info("[OIDC] super.loadUser 성공 - sub: {}, claims: {}",
-                                        oidcUser.getSubject(),
-                                        oidcUser.getClaims() != null
-                                                        ? oidcUser.getClaims().keySet()
-                                                        : "null");
-                } catch (OAuth2AuthenticationException e) {
-                        log.error("[OIDC] OAuth2AuthenticationException: errorCode={}, message={}",
-                                        e.getError().getErrorCode(), e.getMessage());
-                        throw e;
-                } catch (Exception e) {
-                        log.error("OIDC 사용자 정보 로드 실패: {}", e.getMessage(), e);
-                        throw new OAuth2AuthenticationException(
-                                        new OAuth2Error("oidc_user_load_error"),
-                                        "OIDC 사용자 정보 로드에 실패했습니다.", e);
-                }
-
-                if (!"riot".equals(registrationId)) {
-                        return oidcUser;
-                }
-
-                return enrichWithRiotAccountInfo(userRequest, oidcUser);
+        if (!"riot".equals(registrationId)) {
+            return oidcUser;
         }
 
-        @SuppressWarnings("unchecked")
-        private OidcUser enrichWithRiotAccountInfo(
-                        OidcUserRequest userRequest, OidcUser oidcUser) {
-                String accessToken = userRequest.getAccessToken().getTokenValue();
-                log.info("accessToken: {}", accessToken);
+        return enrichWithRiotAccountInfo(userRequest, oidcUser);
+    }
 
-                try {
-                        Map<String, Object> accountInfo = restClient.get()
-                                        .uri(riotAccountUri)
-                                        .header("Authorization", "Bearer " + accessToken)
-                                        .retrieve()
-                                        .body(Map.class);
+    @SuppressWarnings("unchecked")
+    private OidcUser enrichWithRiotAccountInfo(
+            OidcUserRequest userRequest, OidcUser oidcUser) {
+        String accessToken = userRequest.getAccessToken().getTokenValue();
+        log.info("accessToken: {}", accessToken);
 
-                        log.info("accountInfo: {}", accountInfo);
+        try {
+            Map<String, Object> accountInfo = restClient.get()
+                    .uri(riotAccountUri)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .retrieve()
+                    .body(Map.class);
 
-                        if (accountInfo == null) {
-                                throw new OAuth2AuthenticationException(
-                                                new OAuth2Error("riot_account_error"),
-                                                "Riot 계정 정보 조회에 실패했습니다.");
-                        }
+            log.info("accountInfo: {}", accountInfo);
 
-                        Map<String, Object> mergedAttributes = new HashMap<>(oidcUser.getAttributes());
-                        mergedAttributes.put("puuid", accountInfo.get("puuid"));
-                        mergedAttributes.put("gameName", accountInfo.get("gameName"));
-                        mergedAttributes.put("tagLine", accountInfo.get("tagLine"));
+            if (accountInfo == null) {
+                throw new OAuth2AuthenticationException(
+                        new OAuth2Error("riot_account_error"),
+                        "Riot 계정 정보 조회에 실패했습니다.");
+            }
 
-                        return new DefaultOidcUser(
-                                        oidcUser.getAuthorities(),
-                                        oidcUser.getIdToken(),
-                                        new OidcUserInfo(mergedAttributes),
-                                        "sub");
-                } catch (OAuth2AuthenticationException e) {
-                        throw e;
-                } catch (Exception e) {
-                        log.error("Riot Account API 호출 실패: {}", e.getMessage());
-                        throw new OAuth2AuthenticationException(
-                                        new OAuth2Error("riot_account_error"),
-                                        "Riot 계정 정보 조회에 실패했습니다.");
-                }
+            Map<String, Object> mergedAttributes =
+                    new HashMap<>(oidcUser.getAttributes());
+            mergedAttributes.put("puuid", accountInfo.get("puuid"));
+            mergedAttributes.put("gameName", accountInfo.get("gameName"));
+            mergedAttributes.put("tagLine", accountInfo.get("tagLine"));
+
+            return new DefaultOidcUser(
+                    oidcUser.getAuthorities(),
+                    oidcUser.getIdToken(),
+                    new OidcUserInfo(mergedAttributes),
+                    "sub");
+        } catch (OAuth2AuthenticationException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Riot Account API 호출 실패: {}", e.getMessage());
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error("riot_account_error"),
+                    "Riot 계정 정보 조회에 실패했습니다.");
         }
+    }
 }

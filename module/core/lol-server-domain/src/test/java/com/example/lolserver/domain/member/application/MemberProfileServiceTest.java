@@ -33,8 +33,10 @@ class MemberProfileServiceTest {
     void getMyProfile() {
         // given
         Long memberId = 1L;
-        Member member = new Member(1L, "test@gmail.com", "테스터", null,
-                "GOOGLE", "google-123", "USER", LocalDateTime.now(), null);
+        Member member = Member.builder()
+                .id(1L).uuid("test-uuid").email("test@gmail.com")
+                .nickname("테스터").role("USER")
+                .createdAt(LocalDateTime.now()).build();
 
         given(memberPersistencePort.findById(memberId)).willReturn(Optional.of(member));
 
