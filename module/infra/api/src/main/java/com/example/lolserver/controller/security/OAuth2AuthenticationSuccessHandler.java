@@ -1,5 +1,6 @@
 package com.example.lolserver.controller.security;
 
+import com.example.lolserver.controller.auth.config.AuthCookieManager;
 import com.example.lolserver.controller.auth.config.OAuthCallbackProperties;
 import com.example.lolserver.controller.security.oauth2.OAuth2UserInfoExtractor;
 import com.example.lolserver.domain.member.application.model.AuthTokenReadModel;
@@ -35,13 +36,15 @@ public class OAuth2AuthenticationSuccessHandler
     private final CookieOAuth2AuthorizationRequestRepository
             authorizationRequestRepository;
     private final Map<String, OAuth2UserInfoExtractor> extractors;
+    private final AuthCookieManager authCookieManager;
 
     public OAuth2AuthenticationSuccessHandler(
             MemberAuthUseCase memberAuthUseCase,
             OAuthCallbackProperties oAuthCallbackProperties,
             CookieOAuth2AuthorizationRequestRepository
                     authorizationRequestRepository,
-            List<OAuth2UserInfoExtractor> extractorList) {
+            List<OAuth2UserInfoExtractor> extractorList,
+            AuthCookieManager authCookieManager) {
         this.memberAuthUseCase = memberAuthUseCase;
         this.oAuthCallbackProperties = oAuthCallbackProperties;
         this.authorizationRequestRepository =
@@ -50,6 +53,7 @@ public class OAuth2AuthenticationSuccessHandler
                 .collect(Collectors.toMap(
                         OAuth2UserInfoExtractor::getRegistrationId,
                         Function.identity()));
+        this.authCookieManager = authCookieManager;
     }
 
     @Override
@@ -85,7 +89,9 @@ public class OAuth2AuthenticationSuccessHandler
             } else {
                 AuthTokenReadModel result =
                         memberAuthUseCase.loginWithOAuthUserInfo(userInfo);
-                response.sendRedirect(buildTokenRedirectUrl(result));
+                authCookieManager.addAuthCookies(response, result);
+                response.sendRedirect(
+                        oAuthCallbackProperties.getFrontendCallbackUrl());
             }
         } catch (CoreException e) {
             log.error("OAuth2 처리 중 오류: {}", e.getMessage());
@@ -115,16 +121,6 @@ public class OAuth2AuthenticationSuccessHandler
             return null;
         }
         return Long.valueOf(memberId.toString());
-    }
-
-    private String buildTokenRedirectUrl(AuthTokenReadModel result) {
-        return UriComponentsBuilder
-                .fromUriString(
-                        oAuthCallbackProperties.getFrontendCallbackUrl())
-                .fragment("accessToken=" + result.accessToken()
-                        + "&refreshToken=" + result.refreshToken()
-                        + "&expiresIn=" + result.expiresIn())
-                .build().toUriString();
     }
 
     private String buildLinkSuccessRedirectUrl() {

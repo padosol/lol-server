@@ -58,3 +58,7 @@ cors:
     - http://localhost:8080
     - http://lol-ui:3000
     - https://metapick.me
+
+cookie:
+  secure: false
+  same-site: Lax
