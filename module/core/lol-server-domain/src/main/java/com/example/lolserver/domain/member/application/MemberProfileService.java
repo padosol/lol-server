@@ -5,13 +5,17 @@ import com.example.lolserver.domain.member.application.model.MemberReadModel;
 import com.example.lolserver.domain.member.application.port.in.MemberCommandUseCase;
 import com.example.lolserver.domain.member.application.port.in.MemberQueryUseCase;
 import com.example.lolserver.domain.member.application.port.out.MemberPersistencePort;
+import com.example.lolserver.domain.member.application.port.out.SocialAccountPersistencePort;
 import com.example.lolserver.domain.member.domain.Member;
+import com.example.lolserver.domain.member.domain.SocialAccount;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -20,6 +24,7 @@ public class MemberProfileService
         implements MemberCommandUseCase, MemberQueryUseCase {
 
     private final MemberPersistencePort memberPersistencePort;
+    private final SocialAccountPersistencePort socialAccountPersistencePort;
 
     @Override
     @Transactional
@@ -32,7 +37,9 @@ public class MemberProfileService
         member.updateNickname(command.getNickname());
         memberPersistencePort.save(member);
 
-        return MemberReadModel.of(member);
+        List<SocialAccount> socialAccounts =
+                socialAccountPersistencePort.findByMemberId(memberId);
+        return MemberReadModel.of(member, socialAccounts);
     }
 
     @Override
@@ -42,6 +49,8 @@ public class MemberProfileService
                 .orElseThrow(() -> new CoreException(
                         ErrorType.MEMBER_NOT_FOUND));
 
-        return MemberReadModel.of(member);
+        List<SocialAccount> socialAccounts =
+                socialAccountPersistencePort.findByMemberId(memberId);
+        return MemberReadModel.of(member, socialAccounts);
     }
 }

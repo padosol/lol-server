@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 
 import java.util.List;
 
@@ -28,6 +29,12 @@ class SecurityConfigTest {
 
     @Mock
     private CustomOidcUserService customOidcUserService;
+
+    @Mock
+    private ClientRegistrationRepository clientRegistrationRepository;
+
+    private final SocialAccountLinkTokenStore socialAccountLinkTokenStore =
+            new SocialAccountLinkTokenStore();
 
     private SecurityConfig securityConfig;
 
@@ -57,7 +64,9 @@ class SecurityConfigTest {
                 oAuth2SuccessHandler,
                 oAuth2FailureHandler,
                 cookieAuthorizationRequestRepository,
-                customOidcUserService);
+                customOidcUserService,
+                clientRegistrationRepository,
+                socialAccountLinkTokenStore);
     }
 
     @DisplayName("CORS 설정 소스가 정상적으로 생성된다")

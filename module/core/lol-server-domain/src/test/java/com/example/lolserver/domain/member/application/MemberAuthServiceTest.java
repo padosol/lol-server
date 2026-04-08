@@ -394,4 +394,111 @@ class MemberAuthServiceTest {
                 .extracting(e -> ((CoreException) e).getErrorType())
                 .isEqualTo(ErrorType.INVALID_OAUTH_STATE);
     }
+
+    @DisplayName("소셜 계정을 연동하면 새 소셜 계정이 저장된다")
+    @Test
+    void linkSocialAccount_success() {
+        // given
+        Long memberId = 1L;
+        OAuthUserInfo userInfo = OAuthUserInfo.builder()
+                .provider("RIOT")
+                .providerId("riot-puuid")
+                .build();
+
+        Member member = Member.builder()
+                .id(memberId).uuid("test-uuid")
+                .nickname("테스터").role("USER")
+                .createdAt(LocalDateTime.now()).build();
+
+        given(memberPersistencePort.findById(memberId))
+                .willReturn(Optional.of(member));
+        given(socialAccountPersistencePort
+                .findByProviderAndProviderId("RIOT", "riot-puuid"))
+                .willReturn(Optional.empty());
+
+        // when
+        memberAuthService.linkSocialAccount(memberId, userInfo);
+
+        // then
+        then(socialAccountPersistencePort).should()
+                .save(any(SocialAccount.class));
+    }
+
+    @DisplayName("이미 연동된 소셜 계정을 연동하면 예외가 발생한다")
+    @Test
+    void linkSocialAccount_alreadyLinked() {
+        // given
+        Long memberId = 1L;
+        OAuthUserInfo userInfo = OAuthUserInfo.builder()
+                .provider("RIOT")
+                .providerId("riot-puuid")
+                .build();
+
+        Member member = Member.builder()
+                .id(memberId).uuid("test-uuid")
+                .nickname("테스터").role("USER")
+                .createdAt(LocalDateTime.now()).build();
+
+        SocialAccount existing = SocialAccount.builder()
+                .id(1L).memberId(2L)
+                .provider("RIOT").providerId("riot-puuid")
+                .build();
+
+        given(memberPersistencePort.findById(memberId))
+                .willReturn(Optional.of(member));
+        given(socialAccountPersistencePort
+                .findByProviderAndProviderId("RIOT", "riot-puuid"))
+                .willReturn(Optional.of(existing));
+
+        // when & then
+        assertThatThrownBy(() ->
+                memberAuthService.linkSocialAccount(memberId, userInfo))
+                .isInstanceOf(CoreException.class)
+                .extracting(e -> ((CoreException) e).getErrorType())
+                .isEqualTo(ErrorType.SOCIAL_ACCOUNT_ALREADY_LINKED);
+    }
+
+    @DisplayName("본인의 소셜 계정을 연동 해제하면 삭제된다")
+    @Test
+    void unlinkSocialAccount_success() {
+        // given
+        Long memberId = 1L;
+        Long socialAccountId = 1L;
+        SocialAccount account = SocialAccount.builder()
+                .id(socialAccountId).memberId(memberId)
+                .provider("GOOGLE").providerId("google-123")
+                .build();
+
+        given(socialAccountPersistencePort.findById(socialAccountId))
+                .willReturn(Optional.of(account));
+
+        // when
+        memberAuthService.unlinkSocialAccount(memberId, socialAccountId);
+
+        // then
+        then(socialAccountPersistencePort).should().delete(account);
+    }
+
+    @DisplayName("다른 회원의 소셜 계정을 연동 해제하면 예외가 발생한다")
+    @Test
+    void unlinkSocialAccount_forbidden() {
+        // given
+        Long memberId = 1L;
+        Long socialAccountId = 1L;
+        SocialAccount account = SocialAccount.builder()
+                .id(socialAccountId).memberId(2L)
+                .provider("GOOGLE").providerId("google-123")
+                .build();
+
+        given(socialAccountPersistencePort.findById(socialAccountId))
+                .willReturn(Optional.of(account));
+
+        // when & then
+        assertThatThrownBy(() ->
+                memberAuthService.unlinkSocialAccount(
+                        memberId, socialAccountId))
+                .isInstanceOf(CoreException.class)
+                .extracting(e -> ((CoreException) e).getErrorType())
+                .isEqualTo(ErrorType.FORBIDDEN);
+    }
 }

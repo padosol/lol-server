@@ -26,6 +26,7 @@ public enum ErrorType {
     EXPIRED_TOKEN(401, ErrorCode.E401, "만료된 토큰입니다."),
     OAUTH_LOGIN_FAILED(400, ErrorCode.E400, "OAuth 로그인에 실패했습니다."),
     SOCIAL_ACCOUNT_ALREADY_LINKED(409, ErrorCode.E409, "이미 연동된 소셜 계정입니다."),
+    SOCIAL_ACCOUNT_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 소셜 계정입니다."),
     MEMBER_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 회원입니다."),
     INVALID_OAUTH_STATE(400, ErrorCode.E400, "유효하지 않은 OAuth state 입니다."),
 

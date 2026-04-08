@@ -19,6 +19,12 @@ public class SocialAccountPersistenceAdapter implements SocialAccountPersistence
     private final SocialAccountMapper socialAccountMapper;
 
     @Override
+    public Optional<SocialAccount> findById(Long id) {
+        return socialAccountJpaRepository.findById(id)
+                .map(socialAccountMapper::toDomain);
+    }
+
+    @Override
     public Optional<SocialAccount> findByProviderAndProviderId(
             String provider, String providerId) {
         return socialAccountJpaRepository

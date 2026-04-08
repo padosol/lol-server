@@ -2,9 +2,12 @@ package com.example.lolserver.docs.controller;
 
 import com.example.lolserver.controller.member.MemberController;
 import com.example.lolserver.controller.member.request.NicknameUpdateRequest;
+import com.example.lolserver.controller.security.SocialAccountLinkTokenStore;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.docs.TestAuthenticatedMemberResolver;
 import com.example.lolserver.domain.member.application.model.MemberReadModel;
+import com.example.lolserver.domain.member.application.model.SocialAccountReadModel;
+import com.example.lolserver.domain.member.application.port.in.MemberAuthUseCase;
 import com.example.lolserver.domain.member.application.port.in.MemberCommandUseCase;
 import com.example.lolserver.domain.member.application.port.in.MemberQueryUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,12 +20,19 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.delete;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.patch;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -38,11 +48,19 @@ class MemberControllerTest extends RestDocsSupport {
     @Mock
     private MemberQueryUseCase memberQueryUseCase;
 
+    @Mock
+    private MemberAuthUseCase memberAuthUseCase;
+
+    private final SocialAccountLinkTokenStore socialAccountLinkTokenStore =
+            new SocialAccountLinkTokenStore();
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     protected Object initController() {
-        return new MemberController(memberCommandUseCase, memberQueryUseCase);
+        return new MemberController(
+                memberCommandUseCase, memberQueryUseCase,
+                memberAuthUseCase, socialAccountLinkTokenStore);
     }
 
     @Override
@@ -60,6 +78,16 @@ class MemberControllerTest extends RestDocsSupport {
                 .email("user@example.com")
                 .nickname("테스트유저")
                 .profileImageUrl("https://example.com/profile.jpg")
+                .socialAccounts(List.of(
+                        SocialAccountReadModel.builder()
+                                .id(1L)
+                                .provider("GOOGLE")
+                                .providerId("google-123")
+                                .email("user@example.com")
+                                .nickname("Test User")
+                                .linkedAt(LocalDateTime.of(2026, 1, 1, 0, 0))
+                                .build()
+                ))
                 .build();
 
         given(memberQueryUseCase.getMyProfile(eq(1L))).willReturn(readModel);
@@ -88,7 +116,21 @@ class MemberControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.nickname").type(JsonFieldType.STRING)
                                         .description("닉네임"),
                                 fieldWithPath("data.profileImageUrl").type(JsonFieldType.STRING)
-                                        .description("프로필 이미지 URL")
+                                        .description("프로필 이미지 URL"),
+                                fieldWithPath("data.socialAccounts").type(JsonFieldType.ARRAY)
+                                        .description("연결된 소셜 계정 목록"),
+                                fieldWithPath("data.socialAccounts[].id").type(JsonFieldType.NUMBER)
+                                        .description("소셜 계정 ID"),
+                                fieldWithPath("data.socialAccounts[].provider").type(JsonFieldType.STRING)
+                                        .description("소셜 프로바이더 (GOOGLE, RIOT)"),
+                                fieldWithPath("data.socialAccounts[].providerId").type(JsonFieldType.STRING)
+                                        .description("프로바이더 고유 ID"),
+                                fieldWithPath("data.socialAccounts[].email").type(JsonFieldType.STRING)
+                                        .description("소셜 계정 이메일"),
+                                fieldWithPath("data.socialAccounts[].nickname").type(JsonFieldType.STRING)
+                                        .description("소셜 계정 닉네임"),
+                                fieldWithPath("data.socialAccounts[].linkedAt").type(JsonFieldType.STRING)
+                                        .description("연결 일시")
                         )
                 ));
     }
@@ -103,6 +145,16 @@ class MemberControllerTest extends RestDocsSupport {
                 .email("user@example.com")
                 .nickname("새닉네임")
                 .profileImageUrl("https://example.com/profile.jpg")
+                .socialAccounts(List.of(
+                        SocialAccountReadModel.builder()
+                                .id(1L)
+                                .provider("GOOGLE")
+                                .providerId("google-123")
+                                .email("user@example.com")
+                                .nickname("Test User")
+                                .linkedAt(LocalDateTime.of(2026, 1, 1, 0, 0))
+                                .build()
+                ))
                 .build();
 
         given(memberCommandUseCase.updateNickname(eq(1L), any())).willReturn(readModel);
@@ -138,8 +190,80 @@ class MemberControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.nickname").type(JsonFieldType.STRING)
                                         .description("변경된 닉네임"),
                                 fieldWithPath("data.profileImageUrl").type(JsonFieldType.STRING)
-                                        .description("프로필 이미지 URL")
+                                        .description("프로필 이미지 URL"),
+                                fieldWithPath("data.socialAccounts").type(JsonFieldType.ARRAY)
+                                        .description("연결된 소셜 계정 목록"),
+                                fieldWithPath("data.socialAccounts[].id").type(JsonFieldType.NUMBER)
+                                        .description("소셜 계정 ID"),
+                                fieldWithPath("data.socialAccounts[].provider").type(JsonFieldType.STRING)
+                                        .description("소셜 프로바이더 (GOOGLE, RIOT)"),
+                                fieldWithPath("data.socialAccounts[].providerId").type(JsonFieldType.STRING)
+                                        .description("프로바이더 고유 ID"),
+                                fieldWithPath("data.socialAccounts[].email").type(JsonFieldType.STRING)
+                                        .description("소셜 계정 이메일"),
+                                fieldWithPath("data.socialAccounts[].nickname").type(JsonFieldType.STRING)
+                                        .description("소셜 계정 닉네임"),
+                                fieldWithPath("data.socialAccounts[].linkedAt").type(JsonFieldType.STRING)
+                                        .description("연결 일시")
                         )
                 ));
+    }
+
+    @DisplayName("소셜 계정 연동 시작 API")
+    @Test
+    void initSocialAccountLink() throws Exception {
+        // when & then
+        mockMvc.perform(
+                        get("/api/members/me/social-accounts/link/{provider}", "google")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andDo(document("member-link-social-account",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("provider")
+                                        .description("소셜 프로바이더 (google, riot)")
+                        ),
+                        responseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING)
+                                        .description("API 응답 결과 (SUCCESS, ERROR)"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL)
+                                        .description("에러 메시지 (정상 응답 시 null)"),
+                                fieldWithPath("data.redirectUrl").type(JsonFieldType.STRING)
+                                        .description("OAuth 인가 페이지 리다이렉트 URL")
+                        )
+                ));
+    }
+
+    @DisplayName("소셜 계정 연동 해제 API")
+    @Test
+    void unlinkSocialAccount() throws Exception {
+        // when & then
+        mockMvc.perform(
+                        delete("/api/members/me/social-accounts/{socialAccountId}", 1L)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andDo(document("member-unlink-social-account",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("socialAccountId")
+                                        .description("연동 해제할 소셜 계정 ID")
+                        ),
+                        responseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING)
+                                        .description("API 응답 결과 (SUCCESS, ERROR)"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL)
+                                        .description("에러 메시지 (정상 응답 시 null)"),
+                                fieldWithPath("data").type(JsonFieldType.NULL)
+                                        .description("응답 데이터 (null)")
+                        )
+                ));
+
+        then(memberAuthUseCase).should().unlinkSocialAccount(1L, 1L);
     }
 }

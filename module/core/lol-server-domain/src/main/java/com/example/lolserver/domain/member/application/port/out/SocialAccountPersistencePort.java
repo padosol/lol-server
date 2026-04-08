@@ -7,6 +7,8 @@ import java.util.Optional;
 
 public interface SocialAccountPersistencePort {
 
+    Optional<SocialAccount> findById(Long id);
+
     Optional<SocialAccount> findByProviderAndProviderId(
             String provider, String providerId);
 

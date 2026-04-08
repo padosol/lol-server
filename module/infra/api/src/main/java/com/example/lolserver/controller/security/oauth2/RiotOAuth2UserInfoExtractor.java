@@ -18,27 +18,9 @@ public class RiotOAuth2UserInfoExtractor
     @Override
     public OAuthUserInfo extract(OAuth2User oauth2User) {
         Map<String, Object> attributes = oauth2User.getAttributes();
-
-        String gameName = (String) attributes.get("gameName");
-        String tagLine = (String) attributes.get("tagLine");
-        String nickname = buildNickname(gameName, tagLine);
-
         return OAuthUserInfo.builder()
                 .provider("RIOT")
-                .providerId((String) attributes.get("puuid"))
-                .gameName(gameName)
-                .tagLine(tagLine)
-                .nickname(nickname)
+                .providerId((String) attributes.get("sub"))
                 .build();
-    }
-
-    private String buildNickname(String gameName, String tagLine) {
-        if (gameName == null) {
-            return "Riot User";
-        }
-        if (tagLine == null) {
-            return gameName;
-        }
-        return gameName + "#" + tagLine;
     }
 }

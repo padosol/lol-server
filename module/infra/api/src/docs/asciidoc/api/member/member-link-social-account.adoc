@@ -1,0 +1,10 @@
+[[member-link-social-account]]
+=== 소셜 계정 연동 시작
+
+==== HTTP Request
+include::{snippets}/member-link-social-account/http-request.adoc[]
+include::{snippets}/member-link-social-account/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/member-link-social-account/http-response.adoc[]
+include::{snippets}/member-link-social-account/response-fields.adoc[]

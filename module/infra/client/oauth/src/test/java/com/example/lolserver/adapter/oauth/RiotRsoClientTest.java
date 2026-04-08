@@ -85,9 +85,6 @@ class RiotRsoClientTest {
         // then
         assertThat(userInfo.getProvider()).isEqualTo("RIOT");
         assertThat(userInfo.getProviderId()).isEqualTo("test-puuid-123");
-        assertThat(userInfo.getPuuid()).isEqualTo("test-puuid-123");
-        assertThat(userInfo.getGameName()).isEqualTo("TestPlayer");
-        assertThat(userInfo.getTagLine()).isEqualTo("KR1");
     }
 
     @Test

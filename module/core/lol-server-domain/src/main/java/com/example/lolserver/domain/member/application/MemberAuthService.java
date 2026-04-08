@@ -97,6 +97,46 @@ public class MemberAuthService implements MemberAuthUseCase {
 
     @Override
     @Transactional
+    public void linkSocialAccount(Long memberId, OAuthUserInfo userInfo) {
+        memberPersistencePort.findById(memberId)
+                .orElseThrow(() -> new CoreException(
+                        ErrorType.MEMBER_NOT_FOUND));
+
+        socialAccountPersistencePort
+                .findByProviderAndProviderId(
+                        userInfo.getProvider(), userInfo.getProviderId())
+                .ifPresent(existing -> {
+                    throw new CoreException(
+                            ErrorType.SOCIAL_ACCOUNT_ALREADY_LINKED);
+                });
+
+        SocialAccount newAccount = SocialAccount.create(
+                memberId,
+                userInfo.getProvider(),
+                userInfo.getProviderId(),
+                userInfo.getEmail(),
+                userInfo.getNickname(),
+                userInfo.getProfileImageUrl());
+        socialAccountPersistencePort.save(newAccount);
+    }
+
+    @Override
+    @Transactional
+    public void unlinkSocialAccount(Long memberId, Long socialAccountId) {
+        SocialAccount account = socialAccountPersistencePort
+                .findById(socialAccountId)
+                .orElseThrow(() -> new CoreException(
+                        ErrorType.SOCIAL_ACCOUNT_NOT_FOUND));
+
+        if (!account.getMemberId().equals(memberId)) {
+            throw new CoreException(ErrorType.FORBIDDEN);
+        }
+
+        socialAccountPersistencePort.delete(account);
+    }
+
+    @Override
+    @Transactional
     public void logout(Long memberId) {
         refreshTokenPort.delete(memberId);
     }

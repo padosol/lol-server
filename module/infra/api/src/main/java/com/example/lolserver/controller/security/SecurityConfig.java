@@ -2,6 +2,7 @@ package com.example.lolserver.controller.security;
 
 import com.example.lolserver.controller.security.oauth2.CustomOidcUserService;
 import com.nimbusds.jose.JOSEObjectType;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import com.nimbusds.jose.proc.DefaultJOSEObjectTypeVerifier;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -39,6 +40,8 @@ public class SecurityConfig {
     private final CookieOAuth2AuthorizationRequestRepository
             cookieAuthorizationRequestRepository;
     private final CustomOidcUserService customOidcUserService;
+    private final ClientRegistrationRepository clientRegistrationRepository;
+    private final SocialAccountLinkTokenStore socialAccountLinkTokenStore;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
@@ -76,7 +79,12 @@ public class SecurityConfig {
                         .authorizationEndpoint(authorization -> authorization
                                 .baseUri("/oauth2/authorize")
                                 .authorizationRequestRepository(
-                                        cookieAuthorizationRequestRepository))
+                                        cookieAuthorizationRequestRepository)
+                                .authorizationRequestResolver(
+                                        new LinkOAuth2AuthorizationRequestResolver(
+                                                clientRegistrationRepository,
+                                                "/oauth2/authorize",
+                                                socialAccountLinkTokenStore)))
                         .userInfoEndpoint(userInfo -> userInfo
                                 .oidcUserService(customOidcUserService))
                         .successHandler(oAuth2SuccessHandler)

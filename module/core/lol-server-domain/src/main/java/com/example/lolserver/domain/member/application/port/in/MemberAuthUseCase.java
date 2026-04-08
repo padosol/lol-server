@@ -14,6 +14,10 @@ public interface MemberAuthUseCase {
 
     AuthTokenReadModel loginWithOAuthUserInfo(OAuthUserInfo userInfo);
 
+    void linkSocialAccount(Long memberId, OAuthUserInfo userInfo);
+
+    void unlinkSocialAccount(Long memberId, Long socialAccountId);
+
     AuthTokenReadModel refreshToken(TokenRefreshCommand command);
 
     void logout(Long memberId);

@@ -66,9 +66,6 @@ public class RiotRsoClient implements OAuthProviderClient {
             return OAuthUserInfo.builder()
                     .provider(OAuthProvider.RIOT.name())
                     .providerId(puuid)
-                    .puuid(puuid)
-                    .gameName((String) response.get("gameName"))
-                    .tagLine((String) response.get("tagLine"))
                     .build();
         } catch (CoreException e) {
             throw e;

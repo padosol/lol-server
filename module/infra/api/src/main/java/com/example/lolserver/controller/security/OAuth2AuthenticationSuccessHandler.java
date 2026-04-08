@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -26,6 +27,8 @@ import java.util.stream.Collectors;
 @Component
 public class OAuth2AuthenticationSuccessHandler
         implements AuthenticationSuccessHandler {
+
+    private static final String LINK_MEMBER_ID_ATTR = "link_member_id";
 
     private final MemberAuthUseCase memberAuthUseCase;
     private final OAuthCallbackProperties oAuthCallbackProperties;
@@ -73,18 +76,45 @@ public class OAuth2AuthenticationSuccessHandler
             }
 
             OAuthUserInfo userInfo = extractor.extract(oauth2User);
-            AuthTokenReadModel result =
-                    memberAuthUseCase.loginWithOAuthUserInfo(userInfo);
 
-            response.sendRedirect(buildTokenRedirectUrl(result));
+            Long linkMemberId = extractLinkMemberId(request);
+            if (linkMemberId != null) {
+                memberAuthUseCase.linkSocialAccount(
+                        linkMemberId, userInfo);
+                response.sendRedirect(buildLinkSuccessRedirectUrl());
+            } else {
+                AuthTokenReadModel result =
+                        memberAuthUseCase.loginWithOAuthUserInfo(userInfo);
+                response.sendRedirect(buildTokenRedirectUrl(result));
+            }
         } catch (CoreException e) {
-            log.error("OAuth2 로그인 처리 중 오류: {}", e.getMessage());
+            log.error("OAuth2 처리 중 오류: {}", e.getMessage());
             response.sendRedirect(
                     buildErrorRedirectUrl(e.getErrorType().name()));
         } finally {
             authorizationRequestRepository
                     .removeAuthorizationRequest(request, response);
         }
+    }
+
+    private Long extractLinkMemberId(HttpServletRequest request) {
+        String state = request.getParameter("state");
+        if (state == null) {
+            return null;
+        }
+        OAuth2AuthorizationRequest authRequest =
+                authorizationRequestRepository
+                        .loadAuthorizationRequest(request);
+        if (authRequest == null) {
+            return null;
+        }
+        Map<String, Object> attrs =
+                authRequest.getAttributes();
+        Object memberId = attrs.get(LINK_MEMBER_ID_ATTR);
+        if (memberId == null) {
+            return null;
+        }
+        return Long.valueOf(memberId.toString());
     }
 
     private String buildTokenRedirectUrl(AuthTokenReadModel result) {
@@ -94,6 +124,14 @@ public class OAuth2AuthenticationSuccessHandler
                 .fragment("accessToken=" + result.accessToken()
                         + "&refreshToken=" + result.refreshToken()
                         + "&expiresIn=" + result.expiresIn())
+                .build().toUriString();
+    }
+
+    private String buildLinkSuccessRedirectUrl() {
+        return UriComponentsBuilder
+                .fromUriString(
+                        oAuthCallbackProperties.getFrontendCallbackUrl())
+                .fragment("linkSuccess=true")
                 .build().toUriString();
     }
 
