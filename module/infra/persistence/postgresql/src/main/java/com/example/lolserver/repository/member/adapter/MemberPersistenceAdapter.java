@@ -18,13 +18,6 @@ public class MemberPersistenceAdapter implements MemberPersistencePort {
     private final MemberMapper memberMapper;
 
     @Override
-    public Optional<Member> findByOAuthProviderAndProviderId(String provider, String providerId) {
-        return memberJpaRepository
-                .findByOauthProviderAndOauthProviderId(provider, providerId)
-                .map(memberMapper::toDomain);
-    }
-
-    @Override
     public Optional<Member> findById(Long id) {
         return memberJpaRepository.findById(id)
                 .map(memberMapper::toDomain);

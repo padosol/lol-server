@@ -1,6 +1,39 @@
 server:
   port: 8100
 
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
+            scope: openid, email, profile
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+          riot:
+            client-id: ${RIOT_RSO_CLIENT_ID:}
+            client-secret: ${RIOT_RSO_CLIENT_SECRET:}
+            scope: openid, cpid
+            redirect-uri: "http://local.metapick.me/login/oauth2/code/riot"
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: authorization_code
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+          riot:
+            authorization-uri: https://auth.riotgames.com/authorize
+            token-uri: https://auth.riotgames.com/token
+            jwk-set-uri: https://auth.riotgames.com/jwks.json
+            user-info-uri: https://auth.riotgames.com/userinfo
+            user-name-attribute: sub
+
+riot:
+  account-uri: https://americas.api.riotgames.com/riot/account/v1/accounts/me
+
 jwt:
   secret-key: ${JWT_SECRET_KEY:local-dev-secret-key-must-be-at-least-256-bits-long-for-hs256}
   access-token-expiry: 1800
@@ -8,6 +41,16 @@ jwt:
 
 app:
   frontend-callback-url: http://localhost:3000/auth/callback
+
+# logging:
+#   level:
+#     org.springframework.security: DEBUG
+#     org.springframework.security.oauth2: TRACE
+#     org.springframework.security.oauth2.client: TRACE
+#     org.springframework.web.client.RestTemplate: DEBUG
+#     org.springframework.web.client.RestClient: DEBUG
+#     org.springframework.http.client: DEBUG
+#     com.example.lolserver.controller.security: DEBUG
 
 cors:
   allowed-origins:

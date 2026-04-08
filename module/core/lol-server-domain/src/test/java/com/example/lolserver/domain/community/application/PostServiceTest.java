@@ -226,9 +226,10 @@ class PostServiceTest {
     }
 
     private Member createMember(Long memberId) {
-        return new Member(memberId, "test@gmail.com", "테스터",
-                null, "GOOGLE", "google-123", "USER",
-                LocalDateTime.now(), null);
+        return Member.builder()
+                .id(memberId).uuid("test-uuid").email("test@gmail.com")
+                .nickname("테스터").role("USER")
+                .createdAt(LocalDateTime.now()).build();
     }
 
     private Post createPost(Long postId, Long memberId) {

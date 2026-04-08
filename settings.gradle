@@ -9,6 +9,7 @@ include(
         "module:infra:client:oauth",
         "module:infra:api",
         "module:infra:message:rabbitmq",
+        "module:infra:message:kafka",
         "module:infra:persistence:postgresql",
         "module:infra:persistence:redis",
         "module:infra:persistence:clickhouse",

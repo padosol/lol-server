@@ -1,9 +1,0 @@
-[[auth-google-redirect]]
-=== Google OAuth 리다이렉트
-
-==== HTTP Request
-include::{snippets}/auth-google-redirect/http-request.adoc[]
-
-==== HTTP Response
-include::{snippets}/auth-google-redirect/http-response.adoc[]
-include::{snippets}/auth-google-redirect/response-headers.adoc[]

@@ -1,13 +1,15 @@
 package com.example.lolserver.docs.controller;
 
 import com.example.lolserver.controller.member.MemberController;
-import com.example.lolserver.controller.member.request.RiotLinkRequest;
+import com.example.lolserver.controller.member.request.NicknameUpdateRequest;
+import com.example.lolserver.controller.security.SocialAccountLinkTokenStore;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.docs.TestAuthenticatedMemberResolver;
 import com.example.lolserver.domain.member.application.model.MemberReadModel;
-import com.example.lolserver.domain.member.application.model.RiotAccountLinkReadModel;
+import com.example.lolserver.domain.member.application.model.SocialAccountReadModel;
+import com.example.lolserver.domain.member.application.port.in.MemberAuthUseCase;
+import com.example.lolserver.domain.member.application.port.in.MemberCommandUseCase;
 import com.example.lolserver.domain.member.application.port.in.MemberQueryUseCase;
-import com.example.lolserver.domain.member.application.port.in.RiotAccountLinkUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,12 +26,15 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.BDDMockito.then;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.delete;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.patch;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
-import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -38,16 +43,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class MemberControllerTest extends RestDocsSupport {
 
     @Mock
+    private MemberCommandUseCase memberCommandUseCase;
+
+    @Mock
     private MemberQueryUseCase memberQueryUseCase;
 
     @Mock
-    private RiotAccountLinkUseCase riotAccountLinkUseCase;
+    private MemberAuthUseCase memberAuthUseCase;
+
+    private final SocialAccountLinkTokenStore socialAccountLinkTokenStore =
+            new SocialAccountLinkTokenStore();
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     protected Object initController() {
-        return new MemberController(riotAccountLinkUseCase, memberQueryUseCase);
+        return new MemberController(
+                memberCommandUseCase, memberQueryUseCase,
+                memberAuthUseCase, socialAccountLinkTokenStore);
     }
 
     @Override
@@ -61,10 +74,20 @@ class MemberControllerTest extends RestDocsSupport {
         // given
         MemberReadModel readModel = MemberReadModel.builder()
                 .id(1L)
+                .uuid("550e8400-e29b-41d4-a716-446655440000")
                 .email("user@example.com")
                 .nickname("테스트유저")
                 .profileImageUrl("https://example.com/profile.jpg")
-                .oauthProvider("GOOGLE")
+                .socialAccounts(List.of(
+                        SocialAccountReadModel.builder()
+                                .id(1L)
+                                .provider("GOOGLE")
+                                .providerId("google-123")
+                                .email("user@example.com")
+                                .nickname("Test User")
+                                .linkedAt(LocalDateTime.of(2026, 1, 1, 0, 0))
+                                .build()
+                ))
                 .build();
 
         given(memberQueryUseCase.getMyProfile(eq(1L))).willReturn(readModel);
@@ -86,53 +109,72 @@ class MemberControllerTest extends RestDocsSupport {
                                         .description("에러 메시지 (정상 응답 시 null)"),
                                 fieldWithPath("data.id").type(JsonFieldType.NUMBER)
                                         .description("회원 ID"),
+                                fieldWithPath("data.uuid").type(JsonFieldType.STRING)
+                                        .description("회원 UUID"),
                                 fieldWithPath("data.email").type(JsonFieldType.STRING)
                                         .description("이메일"),
                                 fieldWithPath("data.nickname").type(JsonFieldType.STRING)
                                         .description("닉네임"),
                                 fieldWithPath("data.profileImageUrl").type(JsonFieldType.STRING)
                                         .description("프로필 이미지 URL"),
-                                fieldWithPath("data.oauthProvider").type(JsonFieldType.STRING)
-                                        .description("OAuth 제공자 (GOOGLE, RIOT)")
+                                fieldWithPath("data.socialAccounts").type(JsonFieldType.ARRAY)
+                                        .description("연결된 소셜 계정 목록"),
+                                fieldWithPath("data.socialAccounts[].id").type(JsonFieldType.NUMBER)
+                                        .description("소셜 계정 ID"),
+                                fieldWithPath("data.socialAccounts[].provider").type(JsonFieldType.STRING)
+                                        .description("소셜 프로바이더 (GOOGLE, RIOT)"),
+                                fieldWithPath("data.socialAccounts[].providerId").type(JsonFieldType.STRING)
+                                        .description("프로바이더 고유 ID"),
+                                fieldWithPath("data.socialAccounts[].email").type(JsonFieldType.STRING)
+                                        .description("소셜 계정 이메일"),
+                                fieldWithPath("data.socialAccounts[].nickname").type(JsonFieldType.STRING)
+                                        .description("소셜 계정 닉네임"),
+                                fieldWithPath("data.socialAccounts[].linkedAt").type(JsonFieldType.STRING)
+                                        .description("연결 일시")
                         )
                 ));
     }
 
-    @DisplayName("Riot 계정 연동 API")
+    @DisplayName("회원 닉네임 변경 API")
     @Test
-    void linkRiotAccount() throws Exception {
+    void updateNickname() throws Exception {
         // given
-        RiotAccountLinkReadModel readModel = RiotAccountLinkReadModel.builder()
+        MemberReadModel readModel = MemberReadModel.builder()
                 .id(1L)
-                .puuid("test-puuid-1234")
-                .gameName("Hide on bush")
-                .tagLine("KR1")
-                .platformId("kr")
-                .linkedAt(LocalDateTime.of(2026, 3, 18, 12, 0, 0))
+                .uuid("550e8400-e29b-41d4-a716-446655440000")
+                .email("user@example.com")
+                .nickname("새닉네임")
+                .profileImageUrl("https://example.com/profile.jpg")
+                .socialAccounts(List.of(
+                        SocialAccountReadModel.builder()
+                                .id(1L)
+                                .provider("GOOGLE")
+                                .providerId("google-123")
+                                .email("user@example.com")
+                                .nickname("Test User")
+                                .linkedAt(LocalDateTime.of(2026, 1, 1, 0, 0))
+                                .build()
+                ))
                 .build();
 
-        given(riotAccountLinkUseCase.linkRiotAccount(eq(1L), any())).willReturn(readModel);
+        given(memberCommandUseCase.updateNickname(eq(1L), any())).willReturn(readModel);
 
-        RiotLinkRequest request = new RiotLinkRequest("riot-auth-code", "http://localhost:3000/callback", "kr");
+        NicknameUpdateRequest request = new NicknameUpdateRequest("새닉네임");
 
         // when & then
         mockMvc.perform(
-                        post("/api/members/me/riot-accounts")
+                        patch("/api/members/me/nickname")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andDo(document("member-riot-link",
+                .andDo(document("member-nickname-update",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         requestFields(
-                                fieldWithPath("code").type(JsonFieldType.STRING)
-                                        .description("Riot OAuth 인가 코드"),
-                                fieldWithPath("redirectUri").type(JsonFieldType.STRING)
-                                        .description("OAuth 리다이렉트 URI"),
-                                fieldWithPath("platformId").type(JsonFieldType.STRING)
-                                        .description("플랫폼 ID (e.g., kr)")
+                                fieldWithPath("nickname").type(JsonFieldType.STRING)
+                                        .description("변경할 닉네임 (2~20자)")
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING)
@@ -140,97 +182,77 @@ class MemberControllerTest extends RestDocsSupport {
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL)
                                         .description("에러 메시지 (정상 응답 시 null)"),
                                 fieldWithPath("data.id").type(JsonFieldType.NUMBER)
-                                        .description("연동 ID"),
-                                fieldWithPath("data.puuid").type(JsonFieldType.STRING)
-                                        .description("Riot PUUID"),
-                                fieldWithPath("data.gameName").type(JsonFieldType.STRING)
-                                        .description("게임 닉네임"),
-                                fieldWithPath("data.tagLine").type(JsonFieldType.STRING)
-                                        .description("태그라인"),
-                                fieldWithPath("data.platformId").type(JsonFieldType.STRING)
-                                        .description("플랫폼 ID"),
-                                fieldWithPath("data.linkedAt").type(JsonFieldType.STRING)
-                                        .description("연동 일시")
+                                        .description("회원 ID"),
+                                fieldWithPath("data.uuid").type(JsonFieldType.STRING)
+                                        .description("회원 UUID"),
+                                fieldWithPath("data.email").type(JsonFieldType.STRING)
+                                        .description("이메일"),
+                                fieldWithPath("data.nickname").type(JsonFieldType.STRING)
+                                        .description("변경된 닉네임"),
+                                fieldWithPath("data.profileImageUrl").type(JsonFieldType.STRING)
+                                        .description("프로필 이미지 URL"),
+                                fieldWithPath("data.socialAccounts").type(JsonFieldType.ARRAY)
+                                        .description("연결된 소셜 계정 목록"),
+                                fieldWithPath("data.socialAccounts[].id").type(JsonFieldType.NUMBER)
+                                        .description("소셜 계정 ID"),
+                                fieldWithPath("data.socialAccounts[].provider").type(JsonFieldType.STRING)
+                                        .description("소셜 프로바이더 (GOOGLE, RIOT)"),
+                                fieldWithPath("data.socialAccounts[].providerId").type(JsonFieldType.STRING)
+                                        .description("프로바이더 고유 ID"),
+                                fieldWithPath("data.socialAccounts[].email").type(JsonFieldType.STRING)
+                                        .description("소셜 계정 이메일"),
+                                fieldWithPath("data.socialAccounts[].nickname").type(JsonFieldType.STRING)
+                                        .description("소셜 계정 닉네임"),
+                                fieldWithPath("data.socialAccounts[].linkedAt").type(JsonFieldType.STRING)
+                                        .description("연결 일시")
                         )
                 ));
     }
 
-    @DisplayName("연동 계정 목록 조회 API")
+    @DisplayName("소셜 계정 연동 시작 API")
     @Test
-    void getLinkedAccounts() throws Exception {
-        // given
-        List<RiotAccountLinkReadModel> readModels = List.of(
-                RiotAccountLinkReadModel.builder()
-                        .id(1L)
-                        .puuid("test-puuid-1234")
-                        .gameName("Hide on bush")
-                        .tagLine("KR1")
-                        .platformId("kr")
-                        .linkedAt(LocalDateTime.of(2026, 3, 18, 12, 0, 0))
-                        .build(),
-                RiotAccountLinkReadModel.builder()
-                        .id(2L)
-                        .puuid("test-puuid-5678")
-                        .gameName("Faker")
-                        .tagLine("KR1")
-                        .platformId("kr")
-                        .linkedAt(LocalDateTime.of(2026, 3, 17, 10, 0, 0))
-                        .build()
-        );
-
-        given(riotAccountLinkUseCase.getLinkedAccounts(eq(1L))).willReturn(readModels);
-
+    void initSocialAccountLink() throws Exception {
         // when & then
         mockMvc.perform(
-                        get("/api/members/me/riot-accounts")
+                        get("/api/members/me/social-accounts/link/{provider}", "google")
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andDo(document("member-riot-accounts",
+                .andDo(document("member-link-social-account",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("provider")
+                                        .description("소셜 프로바이더 (google, riot)")
+                        ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING)
                                         .description("API 응답 결과 (SUCCESS, ERROR)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL)
                                         .description("에러 메시지 (정상 응답 시 null)"),
-                                fieldWithPath("data[]").type(JsonFieldType.ARRAY)
-                                        .description("연동 계정 목록"),
-                                fieldWithPath("data[].id").type(JsonFieldType.NUMBER)
-                                        .description("연동 ID"),
-                                fieldWithPath("data[].puuid").type(JsonFieldType.STRING)
-                                        .description("Riot PUUID"),
-                                fieldWithPath("data[].gameName").type(JsonFieldType.STRING)
-                                        .description("게임 닉네임"),
-                                fieldWithPath("data[].tagLine").type(JsonFieldType.STRING)
-                                        .description("태그라인"),
-                                fieldWithPath("data[].platformId").type(JsonFieldType.STRING)
-                                        .description("플랫폼 ID"),
-                                fieldWithPath("data[].linkedAt").type(JsonFieldType.STRING)
-                                        .description("연동 일시")
+                                fieldWithPath("data.redirectUrl").type(JsonFieldType.STRING)
+                                        .description("OAuth 인가 페이지 리다이렉트 URL")
                         )
                 ));
     }
 
-    @DisplayName("Riot 계정 연동 해제 API")
+    @DisplayName("소셜 계정 연동 해제 API")
     @Test
-    void unlinkRiotAccount() throws Exception {
-        // given
-        willDoNothing().given(riotAccountLinkUseCase).unlinkRiotAccount(eq(1L), eq(1L));
-
+    void unlinkSocialAccount() throws Exception {
         // when & then
         mockMvc.perform(
-                        delete("/api/members/me/riot-accounts/{linkId}", 1L)
+                        delete("/api/members/me/social-accounts/{socialAccountId}", 1L)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andDo(document("member-riot-unlink",
+                .andDo(document("member-unlink-social-account",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("linkId").description("해제할 연동 ID")
+                                parameterWithName("socialAccountId")
+                                        .description("연동 해제할 소셜 계정 ID")
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING)
@@ -238,8 +260,10 @@ class MemberControllerTest extends RestDocsSupport {
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL)
                                         .description("에러 메시지 (정상 응답 시 null)"),
                                 fieldWithPath("data").type(JsonFieldType.NULL)
-                                        .description("데이터 없음")
+                                        .description("응답 데이터 (null)")
                         )
                 ));
+
+        then(memberAuthUseCase).should().unlinkSocialAccount(1L, 1L);
     }
 }

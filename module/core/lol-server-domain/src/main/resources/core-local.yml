@@ -1,15 +1,16 @@
-#spring:
-#  jackson:
-#    time-zone: Asia/Seoul
-#
-#management:
-#  endpoints:
-#    web:
-#      exposure:
-#        include: "health, info, metrics, prometheus"
-#  endpoint:
-#    prometheus:
-#      enabled: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,metrics,prometheus"
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: lol-server
 
 champion-stats:
   cache:

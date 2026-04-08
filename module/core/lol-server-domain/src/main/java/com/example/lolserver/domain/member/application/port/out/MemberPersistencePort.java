@@ -6,8 +6,6 @@ import java.util.Optional;
 
 public interface MemberPersistencePort {
 
-    Optional<Member> findByOAuthProviderAndProviderId(String provider, String providerId);
-
     Optional<Member> findById(Long id);
 
     Member save(Member member);

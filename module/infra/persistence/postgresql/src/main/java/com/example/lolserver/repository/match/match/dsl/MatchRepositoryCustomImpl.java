@@ -12,6 +12,7 @@ import com.example.lolserver.repository.match.entity.value.matchsummoner.PerkSty
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.example.lolserver.support.logging.LogExecutionTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -77,6 +78,7 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
         return season != null ? matchEntity.season.eq(season) : null;
     }
 
+    @LogExecutionTime
     @Override
     public Slice<MatchDTO> getMatchDTOs(
             String puuid, Integer season, Integer queueId, Pageable pageable
@@ -123,6 +125,7 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
         return new SliceImpl<>(content, pageable, hasNext);
     }
 
+    @LogExecutionTime
     @Override
     public List<MatchSummonerDTO> getMatchSummoners(
             List<String> matchIds
@@ -221,6 +224,7 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
         ).as("perkStyle");
     }
 
+    @LogExecutionTime
     @Override
     public List<MatchTeamDTO> getMatchTeams(List<String> matchIds) {
         return jpaQueryFactory

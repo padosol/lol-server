@@ -1,0 +1,7 @@
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+
+kafka:
+  topic:
+    summoner-renewal: mmrtr.summoner.renewal

@@ -27,6 +27,9 @@ public class MemberEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 36)
+    private String uuid;
+
     private String email;
 
     @Column(nullable = false)
@@ -34,12 +37,6 @@ public class MemberEntity {
 
     @Column(name = "profile_image_url")
     private String profileImageUrl;
-
-    @Column(name = "oauth_provider", nullable = false)
-    private String oauthProvider;
-
-    @Column(name = "oauth_provider_id", nullable = false)
-    private String oauthProviderId;
 
     @Column(nullable = false)
     private String role;
