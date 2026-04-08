@@ -36,6 +36,7 @@ import static org.springframework.restdocs.request.RequestDocumentation.pathPara
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DisplayName("MemberController 테스트")
@@ -215,24 +216,16 @@ class MemberControllerTest extends RestDocsSupport {
         // when & then
         mockMvc.perform(
                         get("/api/members/me/social-accounts/link/{provider}", "google")
-                                .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("/oauth2/authorize/google?link_token=*"))
                 .andDo(document("member-link-social-account",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
                                 parameterWithName("provider")
                                         .description("소셜 프로바이더 (google, riot)")
-                        ),
-                        responseFields(
-                                fieldWithPath("result").type(JsonFieldType.STRING)
-                                        .description("API 응답 결과 (SUCCESS, ERROR)"),
-                                fieldWithPath("errorMessage").type(JsonFieldType.NULL)
-                                        .description("에러 메시지 (정상 응답 시 null)"),
-                                fieldWithPath("data.redirectUrl").type(JsonFieldType.STRING)
-                                        .description("OAuth 인가 페이지 리다이렉트 URL")
                         )
                 ));
     }

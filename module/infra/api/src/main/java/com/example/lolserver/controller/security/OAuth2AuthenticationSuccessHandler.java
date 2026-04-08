@@ -80,6 +80,7 @@ public class OAuth2AuthenticationSuccessHandler
             }
 
             OAuthUserInfo userInfo = extractor.extract(oauth2User);
+            log.info("userInfo: {}", userInfo);
 
             Long linkMemberId = extractLinkMemberId(request);
             if (linkMemberId != null) {
