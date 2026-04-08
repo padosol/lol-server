@@ -172,10 +172,6 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                                         SkillEventDTO::getMatchId)),
                         queryExecutor);
 
-        CompletableFuture.allOf(
-                summonersFuture, teamsFuture, itemsFuture, skillsFuture
-        ).join();
-
         Map<String, List<MatchSummonerDTO>> participantsByMatch =
                 summonersFuture.join();
         Map<String, List<MatchTeamDTO>> teamsByMatch =
