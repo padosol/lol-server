@@ -31,7 +31,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Java 21, Spring Boot 3.3.6, Gradle 8.5
 - PostgreSQL (영속성), Redis/Redisson (캐싱), RabbitMQ (메시징)
 - QueryDSL 5.1.0, MapStruct 1.5.5, Bucket4j (Rate Limiting)
-- Spring RestDocs (API 문서화)/
+- Spring RestDocs (API 문서화)
 
 ## 아키텍처
 
@@ -71,60 +71,24 @@ module/
 
 ### 도메인 컨텍스트
 
-각 도메인 (champion, championstats, community, league, match, member, patchnote, queue_type, rank, season, spectator, summoner, tiercutoff, version)은 다음 구조를 따릅니다:
-- `domain/` - 순수 도메인 객체 (Write Model)
+각 도메인(`module/core/lol-server-domain/.../domain/` 하위)은 다음 구조를 따릅니다:
+- `domain/` - 순수 도메인 객체 (Write Model, 비즈니스 로직 포함)
 - `application/` - 애플리케이션 서비스
 - `application/port/` - 포트 인터페이스 (in/out)
 - `application/dto/` - Command, SearchDto 등 입력 DTO
-- `application/model/` - ReadModel 클래스 (조회용 DTO)
+- `application/model/` - ReadModel (불변, Java Record, 팩토리 메서드 `*.of()` 변환)
 
-### Read Model 패턴
+### 클래스 명명 규칙
 
-이 프로젝트는 **Write Model과 Read Model을 명확히 분리**합니다.
-
-#### Write Model (도메인 엔티티)
-- 위치: `domain/{도메인}/domain/`
-- 비즈니스 로직 포함
-- 상태 변경 가능
-
-#### Read Model (ReadModel)
-- 위치: `domain/{도메인}/application/model/`
-- 표현 전용, 비즈니스 로직 없음
-- 불변 (Java Record 권장)
-
-#### 계층별 Read Model
-
-| 계층 | 패키지 | 명명 규칙 | 용도 |
-|------|--------|----------|------|
-| 도메인 | `application/model/` | `*ReadModel` | 서비스 반환값, 조회 결과 |
-| API | `controller/*/response/` | `*Response` | API 응답 전용 |
-| 영속성 | `repository/*/dto/` | `*DTO` | QueryDSL 조회 결과 |
-
-#### Read Model 생성 방식
-
-- **팩토리 메서드** (권장): `SummonerReadModel.of(Summoner)` - Builder 패턴으로 도메인→ReadModel 변환
-- **Java Record**: 조회 결과용 불변 객체 (예: `CurrentGameInfoReadModel`)
-- **QueryDSL Projection**: `@QueryProjection` 생성자로 DB→DTO 직접 매핑
-
-### 패키지 명명 규칙
-
-- 도메인: `com.example.lolserver.domain.{domainName}`
-- 도메인 포트: `com.example.lolserver.domain.{domainName}.application.port`
-- 인프라 어댑터: `com.example.lolserver.repository.{domainName}.adapter`
-- 인프라 매퍼: `com.example.lolserver.repository.{domainName}.mapper`
-- 컨트롤러: `com.example.lolserver.controller.{domainName}`
-- 컨트롤러 응답: `com.example.lolserver.controller.{domainName}.response`
-- 컨트롤러 매퍼: `com.example.lolserver.controller.{domainName}.mapper`
-
-### 클래스 작성요령
-
-| 계층 | 접미사 | 예시 | 위치 |
-|------|--------|------|------|
-| 도메인 ReadModel | `*ReadModel` | `GameReadModel` | `application/model/` |
-| 컨트롤러 응답 | `*Response` | `SliceResponse` | `controller/*/response/` |
-| 영속성 DTO | `*DTO` | `MSChampionDTO` | `repository/*/dto/` |
-| 엔티티 | `*Entity` | `MatchEntity` | `repository/*/entity/` |
-| 커맨드 | `*Command` | `MatchCommand` | `application/command/` |
+| 계층 | 접미사 | 예시 | 패키지 |
+|------|--------|------|--------|
+| 도메인 ReadModel | `*ReadModel` | `GameReadModel` | `domain.{name}.application.model` |
+| 컨트롤러 응답 | `*Response` | `SliceResponse` | `controller.{name}.response` |
+| 영속성 DTO | `*DTO` | `MSChampionDTO` | `repository.{name}.dto` |
+| 엔티티 | `*Entity` | `MatchEntity` | `repository.{name}.entity` |
+| 어댑터 | `*Adapter` | `MatchPersistenceAdapter` | `repository.{name}.adapter` |
+| 매퍼 | `*Mapper` | `MatchMapper` | `repository.{name}.mapper` |
+| 커맨드 | `*Command` | `MatchCommand` | `domain.{name}.application.command` |
 
 ### API 응답 래퍼 패턴
 
@@ -158,25 +122,13 @@ module/
 
 ### 비동기 쿼리 실행 패턴
 
-- `AsyncQueryConfig`에서 `Executors.newVirtualThreadPerTaskExecutor()` 빈 등록 (`@Qualifier("queryExecutor")`)
-- 대용량 데이터 조합 시 `CompletableFuture.supplyAsync()`로 병렬 쿼리 실행 후 `allOf().join()`
-- `@LogExecutionTime` AOP 어노테이션으로 메서드 실행 시간 로깅 가능
+- Virtual Thread 기반 병렬 쿼리 실행 (`CompletableFuture.supplyAsync()` + `queryExecutor` 빈)
+- `@LogExecutionTime` AOP 어노테이션으로 메서드 실행 시간 로깅
 
 ### Git 워크플로우
 
-**브랜치 전략**: Git Flow 변형 (`main` / `develop` / feature 브랜치)
-
-| 브랜치 | 용도 |
-|--------|------|
-| `main` | 프로덕션 릴리스 |
-| `develop` | 개발 통합 브랜치 |
-| `feature/*` | 새 기능 개발 |
-| `fix/*` | 버그 수정 |
-| `refactor/*` | 리팩토링 |
-| `hotfix/*` | 프로덕션 긴급 수정 |
-
-**기본 플로우**: `feature/* → develop → main`
-**Hotfix 플로우**: `hotfix/* → main → develop 역반영`
+**브랜치 전략**: Git Flow 변형 — `feature/*`, `fix/*`, `refactor/*` → `develop` → `main`
+**Hotfix 플로우**: `hotfix/*` → `main` → `develop` 역반영
 
 ### 커밋 메시지 컨벤션
 
@@ -194,7 +146,4 @@ Riot API 키 설정: `riot.api.key` 속성
 
 ### 참조 문서
 
-TDD 진행 시 다음 스킬을 참조하여 패턴 준수:
-- `.claude/skills/test-driven-development/SKILL.md` - TDD 워크플로우 및 패턴
-- `.claude/skills/test-driven-development/testing-anti-patterns.md` - 테스트 안티패턴
 - `.claude/skills/build-validator/SKILL.md` - 빌드 오류 분석
