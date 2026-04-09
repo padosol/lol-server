@@ -20,7 +20,7 @@ public class RiotOAuth2UserInfoExtractor
         Map<String, Object> attributes = oauth2User.getAttributes();
         return OAuthUserInfo.builder()
                 .provider("RIOT")
-                .providerId((String) attributes.get("puuid"))
+                .providerId((String) attributes.get("sub"))
                 .build();
     }
 }

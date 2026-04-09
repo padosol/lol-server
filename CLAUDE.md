@@ -28,10 +28,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 기술 스택
 
-- Java 17, Spring Boot 3.3.6, Gradle 8.5
+- Java 21, Spring Boot 3.3.6, Gradle 8.5
 - PostgreSQL (영속성), Redis/Redisson (캐싱), RabbitMQ (메시징)
 - QueryDSL 5.1.0, MapStruct 1.5.5, Bucket4j (Rate Limiting)
-- Spring RestDocs (API 문서화)
+- Spring RestDocs (API 문서화)/
 
 ## 아키텍처
 
@@ -47,11 +47,16 @@ module/
 │   └── enum/                     # 공유 enum 타입
 ├── infra/
 │   ├── api/                      # REST 컨트롤러 (구동 어댑터)
-│   ├── client/lol-repository/    # Riot API 클라이언트 (피동 어댑터)
-│   ├── message/rabbitmq/         # 메시지 생산자/소비자
+│   ├── client/
+│   │   ├── lol-repository/       # Riot API 클라이언트 (피동 어댑터)
+│   │   └── oauth/                # OAuth2 클라이언트 (토큰 교환, RSO)
+│   ├── message/
+│   │   ├── rabbitmq/             # RabbitMQ 메시지 생산자/소비자
+│   │   └── kafka/                # Kafka 메시지 브로커 어댑터
 │   └── persistence/
 │       ├── postgresql/           # JPA 엔티티, 리포지토리, 어댑터
-│       └── redis/                # 캐싱 설정
+│       ├── redis/                # 캐싱, RefreshToken, OAuth State 저장
+│       └── clickhouse/           # 분석용 데이터 저장소
 └── support/logging/              # 횡단 관심사 유틸리티
 ```
 
@@ -66,7 +71,7 @@ module/
 
 ### 도메인 컨텍스트
 
-각 도메인 (champion, league, match, patchnote, queue_type, rank, spectator, summoner, tiercutoff, version)은 다음 구조를 따릅니다:
+각 도메인 (champion, championstats, community, league, match, member, patchnote, queue_type, rank, season, spectator, summoner, tiercutoff, version)은 다음 구조를 따릅니다:
 - `domain/` - 순수 도메인 객체 (Write Model)
 - `application/` - 애플리케이션 서비스
 - `application/port/` - 포트 인터페이스 (in/out)
@@ -148,8 +153,14 @@ module/
 - DI: `@RequiredArgsConstructor` + `private final` 필드 (생성자 주입)
 - 로깅: `@Slf4j`
 - 컨트롤러 응답 DTO: Java `record` (불변)
-- 커맨드: `@Builder @Getter @Setter @NoArgsConstructor @AllArgsConstructor`
+- 커맨드: `@Builder @Getter @NoArgsConstructor @AllArgsConstructor` (도메인 객체에 `@Setter` 사용 금지 — 팩토리 메서드/Builder 사용)
 - 트랜잭션: 조회 `@Transactional(readOnly = true)`, 변경 `@Transactional`
+
+### 비동기 쿼리 실행 패턴
+
+- `AsyncQueryConfig`에서 `Executors.newVirtualThreadPerTaskExecutor()` 빈 등록 (`@Qualifier("queryExecutor")`)
+- 대용량 데이터 조합 시 `CompletableFuture.supplyAsync()`로 병렬 쿼리 실행 후 `allOf().join()`
+- `@LogExecutionTime` AOP 어노테이션으로 메서드 실행 시간 로깅 가능
 
 ### Git 워크플로우
 
