@@ -1,12 +1,12 @@
 package com.example.lolserver.docs.controller;
 
 import com.example.lolserver.controller.auth.AuthController;
-import com.example.lolserver.controller.auth.request.TokenRefreshRequest;
+import com.example.lolserver.controller.auth.config.AuthCookieManager;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.docs.TestAuthenticatedMemberResolver;
 import com.example.lolserver.domain.member.application.model.AuthTokenReadModel;
 import com.example.lolserver.domain.member.application.port.in.MemberAuthUseCase;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,11 +34,12 @@ class AuthControllerTest extends RestDocsSupport {
     @Mock
     private MemberAuthUseCase memberAuthUseCase;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Mock
+    private AuthCookieManager authCookieManager;
 
     @Override
     protected Object initController() {
-        return new AuthController(memberAuthUseCase);
+        return new AuthController(memberAuthUseCase, authCookieManager);
     }
 
     @Override
@@ -52,32 +53,26 @@ class AuthControllerTest extends RestDocsSupport {
     void refreshToken() throws Exception {
         // given
         AuthTokenReadModel tokenReadModel = new AuthTokenReadModel(
-                "eyJhbGciOiJIUzI1NiJ9.new-access-token",
-                "eyJhbGciOiJIUzI1NiJ9.new-refresh-token",
+                "test-access-token",
+                "test-refresh-token",
                 3600
         );
 
+        given(authCookieManager.extractRefreshToken(any()))
+                .willReturn("test-refresh-token");
         given(memberAuthUseCase.refreshToken(any())).willReturn(tokenReadModel);
-
-        TokenRefreshRequest request = new TokenRefreshRequest(
-                "eyJhbGciOiJIUzI1NiJ9.refresh-token");
 
         // when & then
         mockMvc.perform(
                         post("/api/auth/refresh")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request))
+                                .cookie(new Cookie("refreshToken", "test-refresh-token"))
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andDo(document("auth-refresh",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        requestFields(
-                                fieldWithPath("refreshToken")
-                                        .type(JsonFieldType.STRING)
-                                        .description("갱신할 리프레시 토큰")
-                        ),
                         responseFields(
                                 fieldWithPath("result")
                                         .type(JsonFieldType.STRING)
@@ -87,18 +82,9 @@ class AuthControllerTest extends RestDocsSupport {
                                         .type(JsonFieldType.NULL)
                                         .description(
                                                 "에러 메시지 (정상 응답 시 null)"),
-                                fieldWithPath("data.accessToken")
-                                        .type(JsonFieldType.STRING)
-                                        .description(
-                                                "새로 발급된 JWT 액세스 토큰"),
-                                fieldWithPath("data.refreshToken")
-                                        .type(JsonFieldType.STRING)
-                                        .description(
-                                                "새로 발급된 JWT 리프레시 토큰"),
-                                fieldWithPath("data.expiresIn")
-                                        .type(JsonFieldType.NUMBER)
-                                        .description(
-                                                "액세스 토큰 만료 시간 (초)")
+                                fieldWithPath("data")
+                                        .type(JsonFieldType.NULL)
+                                        .description("데이터 없음")
                         )
                 ));
     }
@@ -108,6 +94,7 @@ class AuthControllerTest extends RestDocsSupport {
     void logout() throws Exception {
         // given
         willDoNothing().given(memberAuthUseCase).logout(eq(1L));
+        willDoNothing().given(authCookieManager).clearAuthCookies(any());
 
         // when & then
         mockMvc.perform(

@@ -2,7 +2,6 @@ package com.example.lolserver.controller.member;
 
 import com.example.lolserver.controller.member.request.NicknameUpdateRequest;
 import com.example.lolserver.controller.member.response.MemberResponse;
-import com.example.lolserver.controller.member.response.SocialAccountLinkResponse;
 import com.example.lolserver.controller.security.AuthenticatedMember;
 import com.example.lolserver.controller.security.SocialAccountLinkTokenStore;
 import com.example.lolserver.controller.support.response.ApiResponse;
@@ -13,8 +12,10 @@ import com.example.lolserver.domain.member.application.port.in.MemberCommandUseC
 import com.example.lolserver.domain.member.application.port.in.MemberQueryUseCase;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,8 +25,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.util.Set;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/members")
 @RequiredArgsConstructor
@@ -62,9 +65,10 @@ public class MemberController {
     }
 
     @GetMapping("/me/social-accounts/link/{provider}")
-    public ApiResponse<SocialAccountLinkResponse> initSocialAccountLink(
+    public void initSocialAccountLink(
             @AuthenticationPrincipal AuthenticatedMember member,
-            @PathVariable String provider) {
+            @PathVariable String provider,
+            HttpServletResponse response) throws IOException {
         String registrationId = provider.toLowerCase();
         if (!SUPPORTED_PROVIDERS.contains(registrationId)) {
             throw new CoreException(ErrorType.OAUTH_LOGIN_FAILED);
@@ -75,8 +79,7 @@ public class MemberController {
         String redirectUrl = "/oauth2/authorize/" + registrationId
                 + "?link_token=" + linkToken;
 
-        return ApiResponse.success(
-                new SocialAccountLinkResponse(redirectUrl));
+        response.sendRedirect(redirectUrl);
     }
 
     @DeleteMapping("/me/social-accounts/{socialAccountId}")

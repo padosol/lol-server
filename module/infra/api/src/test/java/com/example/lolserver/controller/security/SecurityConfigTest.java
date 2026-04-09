@@ -1,5 +1,7 @@
 package com.example.lolserver.controller.security;
 
+import com.example.lolserver.controller.auth.config.AuthCookieManager;
+import com.example.lolserver.controller.auth.config.CookieProperties;
 import com.example.lolserver.controller.security.oauth2.CustomOidcUserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -56,8 +58,12 @@ class SecurityConfigTest {
                 "http://localhost:3000", "http://localhost:8080",
                 "http://lol-ui:3000", "https://metapick.me"));
 
+        CookieProperties cookieProperties = new CookieProperties();
+        AuthCookieManager authCookieManager =
+                new AuthCookieManager(jwtProperties, cookieProperties);
+
         JwtAuthenticationFilter filter =
-                new JwtAuthenticationFilter(jwtTokenAdapter);
+                new JwtAuthenticationFilter(jwtTokenAdapter, authCookieManager);
 
         securityConfig = new SecurityConfig(
                 filter, corsProperties,

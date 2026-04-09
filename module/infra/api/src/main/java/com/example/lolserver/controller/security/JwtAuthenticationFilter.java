@@ -1,5 +1,6 @@
 package com.example.lolserver.controller.security;
 
+import com.example.lolserver.controller.auth.config.AuthCookieManager;
 import com.example.lolserver.domain.member.application.port.out.TokenPort;
 import com.example.lolserver.domain.member.application.port.out.TokenPort.TokenInfo;
 import jakarta.servlet.FilterChain;
@@ -33,6 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     );
 
     private final TokenPort tokenPort;
+    private final AuthCookieManager authCookieManager;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -76,6 +78,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
             return bearerToken.substring(BEARER_PREFIX.length());
         }
-        return null;
+        return authCookieManager.extractAccessToken(request);
     }
 }
