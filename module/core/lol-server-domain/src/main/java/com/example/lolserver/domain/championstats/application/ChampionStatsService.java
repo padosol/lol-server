@@ -13,6 +13,7 @@ import com.example.lolserver.domain.championstats.application.model.ChampionStat
 import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
+import com.example.lolserver.domain.championstats.application.port.in.ChampionStatsQueryUseCase;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsCachePort;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @Transactional(readOnly = true)
-public class ChampionStatsService {
+public class ChampionStatsService implements ChampionStatsQueryUseCase {
 
     private final ChampionStatsQueryPort championStatsQueryPort;
     private final ChampionStatsCachePort championStatsCachePort;

@@ -6,11 +6,11 @@ import com.example.lolserver.repository.config.RepositoryTestBase;
 import com.example.lolserver.repository.rank.SummonerRankingRepository;
 import com.example.lolserver.repository.rank.entity.SummonerRankingEntity;
 import com.example.lolserver.repository.rank.mapper.RankMapper;
+import com.example.lolserver.support.PageResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -46,13 +46,13 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         searchDto.setPage(1);
 
         // when
-        Page<Rank> result = adapter.getRanks(searchDto, platformId);
+        PageResult<Rank> result = adapter.getRanks(searchDto, platformId);
 
         // then
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getGameName()).isEqualTo("Player1");
-        assertThat(result.getContent().get(0).getTier()).isEqualTo("DIAMOND");
-        assertThat(result.getContent().get(0).getRank()).isEqualTo("I");
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).getGameName()).isEqualTo("Player1");
+        assertThat(result.content().get(0).getTier()).isEqualTo("DIAMOND");
+        assertThat(result.content().get(0).getRank()).isEqualTo("I");
     }
 
     @DisplayName("FLEX 타입으로 랭크를 조회하면 자유랭크 도메인 객체를 페이지로 반환한다")
@@ -69,13 +69,13 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         searchDto.setPage(1);
 
         // when
-        Page<Rank> result = adapter.getRanks(searchDto, platformId);
+        PageResult<Rank> result = adapter.getRanks(searchDto, platformId);
 
         // then
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getGameName()).isEqualTo("FlexPlayer");
-        assertThat(result.getContent().get(0).getTier()).isEqualTo("GOLD");
-        assertThat(result.getContent().get(0).getRank()).isEqualTo("III");
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).getGameName()).isEqualTo("FlexPlayer");
+        assertThat(result.content().get(0).getTier()).isEqualTo("GOLD");
+        assertThat(result.content().get(0).getRank()).isEqualTo("III");
     }
 
     @DisplayName("tier 필터링을 적용하면 해당 티어만 반환한다")
@@ -93,11 +93,11 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         searchDto.setPage(1);
 
         // when
-        Page<Rank> result = adapter.getRanks(searchDto, platformId);
+        PageResult<Rank> result = adapter.getRanks(searchDto, platformId);
 
         // then
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getTier()).isEqualTo("DIAMOND");
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).getTier()).isEqualTo("DIAMOND");
     }
 
     @DisplayName("페이징이 currentRank 기준으로 정렬된다")
@@ -115,13 +115,13 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         searchDto.setPage(1);
 
         // when
-        Page<Rank> result = adapter.getRanks(searchDto, platformId);
+        PageResult<Rank> result = adapter.getRanks(searchDto, platformId);
 
         // then
-        assertThat(result.getContent()).hasSize(3);
-        assertThat(result.getContent().get(0).getCurrentRank()).isEqualTo(1);
-        assertThat(result.getContent().get(1).getCurrentRank()).isEqualTo(2);
-        assertThat(result.getContent().get(2).getCurrentRank()).isEqualTo(3);
+        assertThat(result.content()).hasSize(3);
+        assertThat(result.content().get(0).getCurrentRank()).isEqualTo(1);
+        assertThat(result.content().get(1).getCurrentRank()).isEqualTo(2);
+        assertThat(result.content().get(2).getCurrentRank()).isEqualTo(3);
     }
 
     @DisplayName("다른 platformId의 데이터는 조회되지 않는다")
@@ -138,11 +138,11 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         searchDto.setPage(1);
 
         // when
-        Page<Rank> result = adapter.getRanks(searchDto, platformId);
+        PageResult<Rank> result = adapter.getRanks(searchDto, platformId);
 
         // then
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getGameName()).isEqualTo("KRPlayer");
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).getGameName()).isEqualTo("KRPlayer");
     }
 
     @DisplayName("tier 필터와 platformId 필터가 동시에 적용되면 해당 조건만 반환한다")
@@ -161,12 +161,12 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         searchDto.setPage(1);
 
         // when
-        Page<Rank> result = adapter.getRanks(searchDto, platformId);
+        PageResult<Rank> result = adapter.getRanks(searchDto, platformId);
 
         // then
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getGameName()).isEqualTo("KRDiamond");
-        assertThat(result.getContent().get(0).getTier()).isEqualTo("DIAMOND");
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).getGameName()).isEqualTo("KRDiamond");
+        assertThat(result.content().get(0).getTier()).isEqualTo("DIAMOND");
     }
 
     @DisplayName("소문자 platformId를 전달해도 대문자로 정규화되어 조회된다")
@@ -182,11 +182,11 @@ class RankPersistenceAdapterTest extends RepositoryTestBase {
         searchDto.setPage(1);
 
         // when
-        Page<Rank> result = adapter.getRanks(searchDto, platformId);
+        PageResult<Rank> result = adapter.getRanks(searchDto, platformId);
 
         // then
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getGameName()).isEqualTo("KRPlayer");
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).getGameName()).isEqualTo("KRPlayer");
     }
 
     private SummonerRankingEntity createRankingEntity(String gameName, String queue, String tier, String rank, int currentRank) {

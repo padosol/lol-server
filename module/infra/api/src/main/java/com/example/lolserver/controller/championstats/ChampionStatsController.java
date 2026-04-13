@@ -3,7 +3,7 @@ package com.example.lolserver.controller.championstats;
 import com.example.lolserver.Platform;
 import com.example.lolserver.TierFilter;
 import com.example.lolserver.controller.support.response.ApiResponse;
-import com.example.lolserver.domain.championstats.application.ChampionStatsService;
+import com.example.lolserver.domain.championstats.application.port.in.ChampionStatsQueryUseCase;
 import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
 import com.example.lolserver.support.error.CoreException;
@@ -25,7 +25,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChampionStatsController {
 
-    private final ChampionStatsService championStatsService;
+    private final ChampionStatsQueryUseCase championStatsService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<ChampionStatsReadModel>> getChampionStats(

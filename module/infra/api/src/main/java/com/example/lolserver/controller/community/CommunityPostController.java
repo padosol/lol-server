@@ -16,7 +16,7 @@ import com.example.lolserver.domain.community.application.port.in.PostQueryUseCa
 import com.example.lolserver.domain.community.application.port.in.PostUseCase;
 import com.example.lolserver.domain.community.domain.vo.SortType;
 import com.example.lolserver.domain.community.domain.vo.TimePeriod;
-import com.example.lolserver.support.Page;
+import com.example.lolserver.support.SliceResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -128,7 +128,7 @@ public class CommunityPostController {
     }
 
     private SliceResponse<PostListResponse> toSlice(
-            Page<PostListReadModel> result) {
+            SliceResult<PostListReadModel> result) {
         return new SliceResponse<>(
                 result.getContent().stream()
                         .map(PostListResponse::from).toList(),

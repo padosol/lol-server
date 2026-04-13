@@ -28,10 +28,13 @@ import com.example.lolserver.repository.match.matchsummoner.MatchSummonerReposit
 import com.example.lolserver.repository.match.matchsummoner.dsl.MatchSummonerRepositoryCustom;
 import com.example.lolserver.repository.match.matchteam.MatchTeamRepository;
 import com.example.lolserver.repository.match.timeline.TimelineRepositoryCustom;
-import com.example.lolserver.support.Page;
+import com.example.lolserver.support.PaginationRequest;
+import com.example.lolserver.support.SliceResult;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -78,7 +81,8 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     }
 
     @Override
-    public Page<GameReadModel> getMatches(String puuid, Integer queueId, Pageable pageable) {
+    public SliceResult<GameReadModel> getMatches(String puuid, Integer queueId, PaginationRequest paginationRequest) {
+        Pageable pageable = toPageable(paginationRequest);
         Slice<MatchEntity> matchesSlice =
                 matchRepositoryCustom.getMatches(puuid, queueId, pageable);
 
@@ -86,7 +90,7 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                 .map(matchEntity -> convertToGameData(matchEntity, puuid))
                 .toList();
 
-        return new Page<>(gameDataList, matchesSlice.hasNext());
+        return new SliceResult<>(gameDataList, matchesSlice.hasNext());
     }
 
     @Override
@@ -115,23 +119,25 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     }
 
     @Override
-    public Page<String> findAllMatchIds(String puuid, Integer queueId, Pageable pageable) {
+    public SliceResult<String> findAllMatchIds(String puuid, Integer queueId, PaginationRequest paginationRequest) {
+        Pageable pageable = toPageable(paginationRequest);
         Slice<String> matchIdsSlice = matchSummonerRepositoryCustom
                 .findAllMatchIdsByPuuidWithPage(puuid, queueId, pageable);
-        return new Page<>(matchIdsSlice.getContent(), matchIdsSlice.hasNext());
+        return new SliceResult<>(matchIdsSlice.getContent(), matchIdsSlice.hasNext());
     }
 
 
     @Override
-    public Page<GameReadModel> getMatchesBatch(
-            String puuid, Integer season, Integer queueId, Pageable pageable
+    public SliceResult<GameReadModel> getMatchesBatch(
+            String puuid, Integer season, Integer queueId, PaginationRequest paginationRequest
     ) {
+        Pageable pageable = toPageable(paginationRequest);
         Slice<MatchDTO> matchesSlice =
                 matchRepositoryCustom.getMatchDTOs(puuid, season, queueId, pageable);
         List<MatchDTO> matchDTOs = matchesSlice.getContent();
 
         if (matchDTOs.isEmpty()) {
-            return new Page<>(Collections.emptyList(), false);
+            return new SliceResult<>(Collections.emptyList(), false);
         }
 
         List<String> matchIds = matchDTOs.stream()
@@ -199,7 +205,7 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                 ))
                 .toList();
 
-        return new Page<>(gameDataList, matchesSlice.hasNext());
+        return new SliceResult<>(gameDataList, matchesSlice.hasNext());
     }
 
     private GameReadModel assembleGameDataFromDTO(
@@ -273,6 +279,12 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                 .stream()
                 .map(dto -> new DailyGameCountReadModel(dto.getGameDate(), dto.getGameCount()))
                 .toList();
+    }
+
+    private Pageable toPageable(PaginationRequest request) {
+        Sort.Direction direction = request.direction() == PaginationRequest.SortDirection.ASC
+                ? Sort.Direction.ASC : Sort.Direction.DESC;
+        return PageRequest.of(request.page(), request.size(), Sort.by(direction, request.sortBy()));
     }
 
     private GameReadModel convertToGameData(MatchEntity matchEntity, String puuid) {

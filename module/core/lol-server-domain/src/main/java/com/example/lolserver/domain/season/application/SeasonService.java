@@ -1,6 +1,7 @@
 package com.example.lolserver.domain.season.application;
 
 import com.example.lolserver.domain.season.application.model.SeasonReadModel;
+import com.example.lolserver.domain.season.application.port.in.SeasonQueryUseCase;
 import com.example.lolserver.domain.season.application.port.out.SeasonPersistencePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,7 +12,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class SeasonService {
+public class SeasonService implements SeasonQueryUseCase {
 
     private final SeasonPersistencePort seasonPersistencePort;
 

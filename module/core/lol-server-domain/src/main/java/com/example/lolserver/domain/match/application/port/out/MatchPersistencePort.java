@@ -4,15 +4,15 @@ import com.example.lolserver.domain.match.application.model.DailyGameCountReadMo
 import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.TimelineData;
-import com.example.lolserver.support.Page;
-import org.springframework.data.domain.Pageable;
+import com.example.lolserver.support.PaginationRequest;
+import com.example.lolserver.support.SliceResult;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 public interface MatchPersistencePort {
-    Page<GameReadModel> getMatches(String puuid, Integer queueId, Pageable pageable);
+    SliceResult<GameReadModel> getMatches(String puuid, Integer queueId, PaginationRequest paginationRequest);
 
     List<MSChampion> getRankChampions(String puuid, Integer season, Integer queueId);
 
@@ -20,9 +20,9 @@ public interface MatchPersistencePort {
 
     TimelineData getTimelineData(String matchId);
 
-    Page<String> findAllMatchIds(String puuid, Integer queueId, Pageable pageable);
+    SliceResult<String> findAllMatchIds(String puuid, Integer queueId, PaginationRequest paginationRequest);
 
-    Page<GameReadModel> getMatchesBatch(String puuid, Integer season, Integer queueId, Pageable pageable);
+    SliceResult<GameReadModel> getMatchesBatch(String puuid, Integer season, Integer queueId, PaginationRequest paginationRequest);
 
     List<DailyGameCountReadModel> getDailyGameCounts(
         String puuid, Integer season, Integer queueId, LocalDateTime startDate);

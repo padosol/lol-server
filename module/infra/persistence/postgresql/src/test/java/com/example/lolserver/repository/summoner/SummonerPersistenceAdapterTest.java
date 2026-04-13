@@ -141,18 +141,17 @@ class SummonerPersistenceAdapterTest extends RepositoryTestBase {
     @Test
     void save_validSummoner_returnsSavedDomain() {
         // given
-        Summoner summoner = new Summoner(
-                "save-test-puuid",
-                100L,
-                1234,
-                "SaveTestPlayer",
-                "KR1",
-                "kr",
-                "savetestplayer",
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                null
-        );
+        Summoner summoner = Summoner.builder()
+                .puuid("save-test-puuid")
+                .summonerLevel(100L)
+                .profileIconId(1234)
+                .gameName("SaveTestPlayer")
+                .tagLine("KR1")
+                .platformId("kr")
+                .searchName("savetestplayer")
+                .revisionDate(LocalDateTime.now())
+                .lastRiotCallDate(LocalDateTime.now())
+                .build();
 
         // when
         Summoner result = adapter.save(summoner);

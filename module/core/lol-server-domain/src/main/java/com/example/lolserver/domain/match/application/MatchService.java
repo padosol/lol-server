@@ -7,16 +7,15 @@ import com.example.lolserver.domain.match.application.model.DailyGameCountSummar
 import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.TimelineData;
+import com.example.lolserver.domain.match.application.port.in.MatchQueryUseCase;
 import com.example.lolserver.domain.match.application.port.out.MatchPersistencePort;
-import com.example.lolserver.support.Page;
+import com.example.lolserver.support.PaginationRequest;
+import com.example.lolserver.support.SliceResult;
 import com.example.lolserver.support.logging.LogExecutionTime;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,15 +27,18 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class MatchService {
+public class MatchService implements MatchQueryUseCase {
+
+    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final String DEFAULT_SORT_FIELD = "match";
 
     private final MatchPersistencePort matchPersistencePort;
 
-    public Page<GameReadModel> getMatches(MatchCommand matchCommand) {
-        Pageable pageable = PageRequest.of(
-                matchCommand.getPageNo(), 20, Sort.by(Sort.Direction.DESC, "match"));
+    public SliceResult<GameReadModel> getMatches(MatchCommand matchCommand) {
+        PaginationRequest paginationRequest = new PaginationRequest(
+                matchCommand.getPageNo(), DEFAULT_PAGE_SIZE, DEFAULT_SORT_FIELD, PaginationRequest.SortDirection.DESC);
 
-        return matchPersistencePort.getMatches(matchCommand.getPuuid(), matchCommand.getQueueId(), pageable);
+        return matchPersistencePort.getMatches(matchCommand.getPuuid(), matchCommand.getQueueId(), paginationRequest);
     }
 
     public List<MSChampion> getRankChampions(MSChampionCommand command) {
@@ -53,21 +55,19 @@ public class MatchService {
     }
 
     @LogExecutionTime
-    public Page<GameReadModel> getMatchesBatch(MatchCommand matchCommand) {
-        Pageable pageable = PageRequest.of(
-                matchCommand.getPageNo(), 20, Sort.by(Sort.Direction.DESC, "match"));
+    public SliceResult<GameReadModel> getMatchesBatch(MatchCommand matchCommand) {
+        PaginationRequest paginationRequest = new PaginationRequest(
+                matchCommand.getPageNo(), DEFAULT_PAGE_SIZE, DEFAULT_SORT_FIELD, PaginationRequest.SortDirection.DESC);
 
         return matchPersistencePort.getMatchesBatch(
-                matchCommand.getPuuid(), matchCommand.getSeason(), matchCommand.getQueueId(), pageable);
+                matchCommand.getPuuid(), matchCommand.getSeason(), matchCommand.getQueueId(), paginationRequest);
     }
 
-    public Page<String> findAllMatchIds(MatchCommand matchCommand) {
-        Pageable pageable = PageRequest.of(
-                matchCommand.getPageNo(),
-                20,
-                Sort.by(Sort.Direction.DESC, "match")
-        );
-        return matchPersistencePort.findAllMatchIds(matchCommand.getPuuid(), matchCommand.getQueueId(), pageable);
+    public SliceResult<String> findAllMatchIds(MatchCommand matchCommand) {
+        PaginationRequest paginationRequest = new PaginationRequest(
+                matchCommand.getPageNo(), DEFAULT_PAGE_SIZE, DEFAULT_SORT_FIELD, PaginationRequest.SortDirection.DESC);
+
+        return matchPersistencePort.findAllMatchIds(matchCommand.getPuuid(), matchCommand.getQueueId(), paginationRequest);
     }
 
     public DailyGameCountSummaryReadModel getDailyGameCounts(

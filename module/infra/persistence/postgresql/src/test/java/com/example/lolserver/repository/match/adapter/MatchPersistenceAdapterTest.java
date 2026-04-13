@@ -21,7 +21,8 @@ import com.example.lolserver.repository.match.matchsummoner.MatchSummonerReposit
 import com.example.lolserver.repository.match.matchsummoner.dsl.MatchSummonerRepositoryCustom;
 import com.example.lolserver.repository.match.matchteam.MatchTeamRepository;
 import com.example.lolserver.repository.match.timeline.TimelineRepositoryCustom;
-import com.example.lolserver.support.Page;
+import com.example.lolserver.support.PaginationRequest;
+import com.example.lolserver.support.SliceResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -88,7 +90,7 @@ class MatchPersistenceAdapterTest {
         // given
         String puuid = "test-puuid-123";
         Integer queueId = 420;
-        Pageable pageable = PageRequest.of(0, 10);
+        PaginationRequest paginationRequest = new PaginationRequest(0, 10, "match", PaginationRequest.SortDirection.DESC);
 
         MatchSummonerEntity summonerEntity = createMatchSummonerEntity(puuid, "KR_12345");
         MatchEntity matchEntity = MatchEntity.builder()
@@ -98,9 +100,9 @@ class MatchPersistenceAdapterTest {
                 .gameMode("CLASSIC")
                 .build();
 
-        SliceImpl<MatchEntity> slice = new SliceImpl<>(List.of(matchEntity), pageable, true);
+        SliceImpl<MatchEntity> slice = new SliceImpl<>(List.of(matchEntity), PageRequest.of(0, 10), true);
 
-        given(matchRepositoryCustom.getMatches(puuid, queueId, pageable)).willReturn(slice);
+        given(matchRepositoryCustom.getMatches(eq(puuid), eq(queueId), any(Pageable.class))).willReturn(slice);
         given(matchSummonerRepository.findByMatchId("KR_12345")).willReturn(List.of(summonerEntity));
         given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(queueId));
         given(matchMapper.toDomain(any(MatchSummonerEntity.class))).willReturn(createParticipantData(puuid));
@@ -111,13 +113,13 @@ class MatchPersistenceAdapterTest {
         given(matchTeamRepository.findByMatchId(anyString())).willReturn(Collections.emptyList());
 
         // when
-        Page<GameReadModel> result = adapter.getMatches(puuid, queueId, pageable);
+        SliceResult<GameReadModel> result = adapter.getMatches(puuid, queueId, paginationRequest);
 
         // then
         assertThat(result).isNotNull();
         assertThat(result.isHasNext()).isTrue();
         assertThat(result.getContent()).hasSize(1);
-        then(matchRepositoryCustom).should().getMatches(puuid, queueId, pageable);
+        then(matchRepositoryCustom).should().getMatches(eq(puuid), eq(queueId), any(Pageable.class));
     }
 
     @DisplayName("PUUID와 시즌, queueId로 랭크 챔피언 통계를 조회한다")
@@ -235,22 +237,22 @@ class MatchPersistenceAdapterTest {
         // given
         String puuid = "test-puuid-123";
         Integer queueId = 420;
-        Pageable pageable = PageRequest.of(0, 20);
+        PaginationRequest paginationRequest = new PaginationRequest(0, 20, "match", PaginationRequest.SortDirection.DESC);
 
         List<String> matchIds = List.of("KR_12345", "KR_12346", "KR_12347");
-        SliceImpl<String> slice = new SliceImpl<>(matchIds, pageable, false);
+        SliceImpl<String> slice = new SliceImpl<>(matchIds, PageRequest.of(0, 20), false);
 
-        given(matchSummonerRepositoryCustom.findAllMatchIdsByPuuidWithPage(puuid, queueId, pageable))
+        given(matchSummonerRepositoryCustom.findAllMatchIdsByPuuidWithPage(eq(puuid), eq(queueId), any(Pageable.class)))
                 .willReturn(slice);
 
         // when
-        Page<String> result = adapter.findAllMatchIds(puuid, queueId, pageable);
+        SliceResult<String> result = adapter.findAllMatchIds(puuid, queueId, paginationRequest);
 
         // then
         assertThat(result.getContent()).hasSize(3);
         assertThat(result.isHasNext()).isFalse();
         assertThat(result.getContent()).containsExactly("KR_12345", "KR_12346", "KR_12347");
-        then(matchSummonerRepositoryCustom).should().findAllMatchIdsByPuuidWithPage(puuid, queueId, pageable);
+        then(matchSummonerRepositoryCustom).should().findAllMatchIdsByPuuidWithPage(eq(puuid), eq(queueId), any(Pageable.class));
     }
 
     @DisplayName("아레나 모드(queueId 1700)에서는 placement 순으로 정렬된다")
@@ -259,7 +261,7 @@ class MatchPersistenceAdapterTest {
         // given
         String puuid = "test-puuid-123";
         Integer queueId = 1700; // Arena mode
-        Pageable pageable = PageRequest.of(0, 10);
+        PaginationRequest paginationRequest = new PaginationRequest(0, 10, "match", PaginationRequest.SortDirection.DESC);
 
         MatchSummonerEntity summoner1 = createMatchSummonerEntityWithPlacement(puuid, "KR_12345", 3);
         MatchSummonerEntity summoner2 = createMatchSummonerEntityWithPlacement("other-puuid", "KR_12345", 1);
@@ -271,9 +273,9 @@ class MatchPersistenceAdapterTest {
                 .gameMode("CHERRY")
                 .build();
 
-        SliceImpl<MatchEntity> slice = new SliceImpl<>(List.of(matchEntity), pageable, false);
+        SliceImpl<MatchEntity> slice = new SliceImpl<>(List.of(matchEntity), PageRequest.of(0, 10), false);
 
-        given(matchRepositoryCustom.getMatches(puuid, queueId, pageable)).willReturn(slice);
+        given(matchRepositoryCustom.getMatches(eq(puuid), eq(queueId), any(Pageable.class))).willReturn(slice);
         given(matchSummonerRepository.findByMatchId("KR_12345")).willReturn(List.of(summoner1, summoner2));
         given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(queueId));
 
@@ -289,7 +291,7 @@ class MatchPersistenceAdapterTest {
         given(matchTeamRepository.findByMatchId(anyString())).willReturn(Collections.emptyList());
 
         // when
-        Page<GameReadModel> result = adapter.getMatches(puuid, queueId, pageable);
+        SliceResult<GameReadModel> result = adapter.getMatches(puuid, queueId, paginationRequest);
 
         // then
         assertThat(result.getContent()).hasSize(1);

@@ -2,7 +2,8 @@ package com.example.lolserver.controller.summoner;
 
 import com.example.lolserver.domain.summoner.application.model.SummonerAutoReadModel;
 import com.example.lolserver.controller.summoner.response.SummonerRenewalResponse;
-import com.example.lolserver.domain.summoner.application.SummonerService;
+import com.example.lolserver.domain.summoner.application.port.in.SummonerQueryUseCase;
+import com.example.lolserver.domain.summoner.application.port.in.SummonerUseCase;
 import com.example.lolserver.domain.summoner.domain.SummonerRenewal;
 import com.example.lolserver.domain.summoner.application.model.SummonerReadModel;
 import com.example.lolserver.controller.support.response.ApiResponse;
@@ -24,7 +25,8 @@ import com.example.lolserver.domain.summoner.domain.vo.GameName;
 @RequiredArgsConstructor
 public class SummonerController {
 
-    private final SummonerService summonerService;
+    private final SummonerQueryUseCase summonerQueryUseCase;
+    private final SummonerUseCase summonerUseCase;
 
     /**
      * 유저 상세 정보 API
@@ -38,7 +40,7 @@ public class SummonerController {
             @PathVariable("gameName") String gameName
     ) {
         log.info("getSummoner");
-        SummonerReadModel summoner = summonerService.getSummoner(GameName.create(gameName), platformId);
+        SummonerReadModel summoner = summonerQueryUseCase.getSummoner(GameName.create(gameName), platformId);
 
         return ResponseEntity.ok(ApiResponse.success(summoner));
     }
@@ -54,7 +56,7 @@ public class SummonerController {
             @PathVariable("platformId") String platformId,
             @PathVariable("puuid") String puuid
     ) {
-        SummonerReadModel summonerResponse = summonerService.getSummonerByPuuid(platformId, puuid);
+        SummonerReadModel summonerResponse = summonerQueryUseCase.getSummonerByPuuid(platformId, puuid);
 
         return ResponseEntity.ok(ApiResponse.success(summonerResponse));
     }
@@ -70,7 +72,7 @@ public class SummonerController {
             @PathVariable("platformId") String platformId,
             @RequestParam String q
     ) {
-        List<SummonerAutoReadModel> result = summonerService.getAllSummonerAutoComplete(q, platformId);
+        List<SummonerAutoReadModel> result = summonerQueryUseCase.getAllSummonerAutoComplete(q, platformId);
 
         return ResponseEntity.ok(ApiResponse.success(result));
     }
@@ -90,7 +92,7 @@ public class SummonerController {
             @PathVariable("platformId") String platformId,
             @PathVariable("puuid") String puuid
     ) {
-        SummonerRenewal summonerRenewal = summonerService.renewalSummonerInfo(platformId, puuid);
+        SummonerRenewal summonerRenewal = summonerUseCase.renewalSummonerInfo(platformId, puuid);
         return ResponseEntity.ok(ApiResponse.success(
                 new SummonerRenewalResponse(
                         summonerRenewal.getPuuid(), summonerRenewal.getStatus().name()
@@ -107,7 +109,7 @@ public class SummonerController {
     public ResponseEntity<ApiResponse<SummonerRenewalResponse>> summonerRenewalStatus(
             @PathVariable String puuid
     ) {
-        SummonerRenewal summonerRenewal = summonerService.renewalSummonerStatus(puuid);
+        SummonerRenewal summonerRenewal = summonerQueryUseCase.renewalSummonerStatus(puuid);
         return ResponseEntity.ok(ApiResponse.success(
                 new SummonerRenewalResponse(
                         summonerRenewal.getPuuid(), summonerRenewal.getStatus().name()

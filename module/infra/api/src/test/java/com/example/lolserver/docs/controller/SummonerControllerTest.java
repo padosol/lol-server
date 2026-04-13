@@ -3,7 +3,8 @@ package com.example.lolserver.docs.controller;
 import com.example.lolserver.controller.summoner.SummonerController;
 import com.example.lolserver.domain.summoner.application.model.SummonerReadModel;
 import com.example.lolserver.docs.RestDocsSupport;
-import com.example.lolserver.domain.summoner.application.SummonerService;
+import com.example.lolserver.domain.summoner.application.port.in.SummonerQueryUseCase;
+import com.example.lolserver.domain.summoner.application.port.in.SummonerUseCase;
 import com.example.lolserver.domain.summoner.domain.SummonerRenewal;
 import com.example.lolserver.RenewalStatus;
 
@@ -39,9 +40,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SummonerControllerTest extends RestDocsSupport {
 
     @Mock
-    private SummonerService summonerService;
+    private SummonerQueryUseCase summonerQueryUseCase;
 
-
+    @Mock
+    private SummonerUseCase summonerUseCase;
 
     @InjectMocks
     private SummonerController summonerController;
@@ -68,7 +70,7 @@ class SummonerControllerTest extends RestDocsSupport {
                 .lastRevisionClickDateTime(now.toString())
                 .build();
 
-        given(summonerService.getSummoner(any(GameName.class), anyString())).willReturn(response);
+        given(summonerQueryUseCase.getSummoner(any(GameName.class), anyString())).willReturn(response);
 
         // when
         ResultActions result = mockMvc.perform(
@@ -113,7 +115,7 @@ class SummonerControllerTest extends RestDocsSupport {
                 .lastRevisionClickDateTime(now.toString())
                 .build();
 
-        given(summonerService.getSummonerByPuuid(anyString(), anyString())).willReturn(response);
+        given(summonerQueryUseCase.getSummonerByPuuid(anyString(), anyString())).willReturn(response);
 
         // when
         ResultActions result = mockMvc.perform(
@@ -151,7 +153,7 @@ class SummonerControllerTest extends RestDocsSupport {
                 new SummonerAutoReadModel("testUser1", "KR1", 123, 100L, "GOLD", "I", 50),
                 new SummonerAutoReadModel("testUser2", "KR1", 456, 120L, "SILVER", "II", 25)
         );
-        given(summonerService.getAllSummonerAutoComplete(anyString(), anyString())).willReturn(responses);
+        given(summonerQueryUseCase.getAllSummonerAutoComplete(anyString(), anyString())).willReturn(responses);
 
         // when
         ResultActions result = mockMvc.perform(get("/api/v1/{platformId}/summoners/autocomplete", "kr")
@@ -190,7 +192,7 @@ class SummonerControllerTest extends RestDocsSupport {
         String platformId = "kr";
 
         SummonerRenewal serviceResponse = new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
-        given(summonerService.renewalSummonerInfo(anyString(), anyString())).willReturn(serviceResponse);
+        given(summonerUseCase.renewalSummonerInfo(anyString(), anyString())).willReturn(serviceResponse);
 
         // when
         ResultActions result = mockMvc.perform(get("/api/v1/{platformId}/summoners/{puuid}/renewal", platformId, puuid));
@@ -222,7 +224,7 @@ class SummonerControllerTest extends RestDocsSupport {
                 puuid,
                 RenewalStatus.SUCCESS
         );
-        given(summonerService.renewalSummonerStatus(anyString())).willReturn(serviceResponse);
+        given(summonerQueryUseCase.renewalSummonerStatus(anyString())).willReturn(serviceResponse);
 
         // when
         ResultActions result = mockMvc.perform(get(BASE_URL + "/{puuid}/renewal-status", puuid));
@@ -253,7 +255,7 @@ class SummonerControllerTest extends RestDocsSupport {
                 puuid,
                 RenewalStatus.PROGRESS
         );
-        given(summonerService.renewalSummonerStatus(anyString())).willReturn(serviceResponse);
+        given(summonerQueryUseCase.renewalSummonerStatus(anyString())).willReturn(serviceResponse);
 
         // when
         ResultActions result = mockMvc.perform(get(BASE_URL + "/{puuid}/renewal-status", puuid));

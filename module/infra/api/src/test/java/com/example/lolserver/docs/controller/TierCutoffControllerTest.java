@@ -2,7 +2,7 @@ package com.example.lolserver.docs.controller;
 
 import com.example.lolserver.controller.tiercutoff.TierCutoffController;
 import com.example.lolserver.docs.RestDocsSupport;
-import com.example.lolserver.domain.tiercutoff.application.TierCutoffService;
+import com.example.lolserver.domain.tiercutoff.application.port.in.TierCutoffQueryUseCase;
 import com.example.lolserver.domain.tiercutoff.application.model.TierCutoffReadModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class TierCutoffControllerTest extends RestDocsSupport {
 
     @Mock
-    private TierCutoffService tierCutoffService;
+    private TierCutoffQueryUseCase tierCutoffService;
 
     @Override
     protected Object initController() {

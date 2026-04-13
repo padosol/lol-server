@@ -4,6 +4,8 @@ import com.example.lolserver.RenewalStatus;
 import com.example.lolserver.domain.summoner.application.model.SummonerAutoReadModel;
 import com.example.lolserver.domain.summoner.application.model.SummonerReadModel;
 import com.example.lolserver.domain.summoner.application.model.SummonerRenewalInfoReadModel;
+import com.example.lolserver.domain.summoner.application.port.in.SummonerQueryUseCase;
+import com.example.lolserver.domain.summoner.application.port.in.SummonerUseCase;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerCachePort;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerClientPort;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerMessagePort;
@@ -32,7 +34,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class SummonerService {
+public class SummonerService implements SummonerQueryUseCase, SummonerUseCase {
 
     private final SummonerPersistencePort summonerPersistencePort;
     private final SummonerClientPort summonerClientPort;

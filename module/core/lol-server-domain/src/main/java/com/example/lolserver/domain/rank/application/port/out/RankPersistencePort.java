@@ -2,8 +2,8 @@ package com.example.lolserver.domain.rank.application.port.out;
 
 import com.example.lolserver.domain.rank.domain.Rank;
 import com.example.lolserver.domain.rank.application.dto.RankSearchDto;
-import org.springframework.data.domain.Page;
+import com.example.lolserver.support.PageResult;
 
 public interface RankPersistencePort {
-    Page<Rank> getRanks(RankSearchDto rankSearchDto, String platformId);
+    PageResult<Rank> getRanks(RankSearchDto rankSearchDto, String platformId);
 }

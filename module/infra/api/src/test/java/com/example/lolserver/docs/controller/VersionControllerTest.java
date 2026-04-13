@@ -2,7 +2,7 @@ package com.example.lolserver.docs.controller;
 
 import com.example.lolserver.controller.version.VersionController;
 import com.example.lolserver.docs.RestDocsSupport;
-import com.example.lolserver.domain.version.application.VersionService;
+import com.example.lolserver.domain.version.application.port.in.VersionQueryUseCase;
 import com.example.lolserver.domain.version.application.model.VersionReadModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class VersionControllerTest extends RestDocsSupport {
 
     @Mock
-    private VersionService versionService;
+    private VersionQueryUseCase versionService;
 
     @Override
     protected Object initController() {

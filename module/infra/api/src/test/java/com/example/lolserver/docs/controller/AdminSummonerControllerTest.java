@@ -2,7 +2,7 @@ package com.example.lolserver.docs.controller;
 
 import com.example.lolserver.controller.admin.AdminSummonerController;
 import com.example.lolserver.docs.RestDocsSupport;
-import com.example.lolserver.domain.summoner.application.SummonerService;
+import com.example.lolserver.domain.summoner.application.port.in.SummonerQueryUseCase;
 import com.example.lolserver.domain.summoner.application.model.SummonerRenewalInfoReadModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AdminSummonerControllerTest extends RestDocsSupport {
 
     @Mock
-    private SummonerService summonerService;
+    private SummonerQueryUseCase summonerQueryUseCase;
 
     @InjectMocks
     private AdminSummonerController adminSummonerController;
@@ -56,7 +56,7 @@ class AdminSummonerControllerTest extends RestDocsSupport {
                         .tagLine("NA1")
                         .build()
         );
-        given(summonerService.getRefreshingSummoners()).willReturn(responses);
+        given(summonerQueryUseCase.getRefreshingSummoners()).willReturn(responses);
 
         // when
         ResultActions result = mockMvc.perform(get("/api/admin/summoners/renewals"));
@@ -80,7 +80,7 @@ class AdminSummonerControllerTest extends RestDocsSupport {
     @DisplayName("갱신 중인 소환사가 없으면 빈 리스트를 반환한다")
     void getRefreshingSummoners_empty() throws Exception {
         // given
-        given(summonerService.getRefreshingSummoners()).willReturn(Collections.emptyList());
+        given(summonerQueryUseCase.getRefreshingSummoners()).willReturn(Collections.emptyList());
 
         // when
         ResultActions result = mockMvc.perform(get("/api/admin/summoners/renewals"));

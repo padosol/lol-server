@@ -225,13 +225,13 @@ class SpectatorFinderTest {
     }
 
     private Summoner createSummoner(String puuid, LocalDateTime revisionDate) {
-        Summoner summoner = new Summoner();
-        summoner.setPuuid(puuid);
-        summoner.setGameName("TestPlayer");
-        summoner.setTagLine("KR1");
-        summoner.setRevisionDate(revisionDate);
-        summoner.setLastRiotCallDate(revisionDate);
-        return summoner;
+        return Summoner.builder()
+                .puuid(puuid)
+                .gameName("TestPlayer")
+                .tagLine("KR1")
+                .revisionDate(revisionDate)
+                .lastRiotCallDate(revisionDate)
+                .build();
     }
 
     private LocalDateTime toLocalDateTime(long timestampMillis) {

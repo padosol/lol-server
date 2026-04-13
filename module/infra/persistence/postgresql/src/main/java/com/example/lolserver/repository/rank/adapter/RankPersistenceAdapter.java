@@ -6,6 +6,7 @@ import com.example.lolserver.domain.rank.application.dto.RankSearchDto;
 import com.example.lolserver.repository.rank.SummonerRankingRepository;
 import com.example.lolserver.repository.rank.entity.SummonerRankingEntity;
 import com.example.lolserver.repository.rank.mapper.RankMapper;
+import com.example.lolserver.support.PageResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,7 +24,7 @@ public class RankPersistenceAdapter implements RankPersistencePort {
     private final RankMapper rankMapper;
 
     @Override
-    public Page<Rank> getRanks(RankSearchDto rankSearchDto, String platformId) {
+    public PageResult<Rank> getRanks(RankSearchDto rankSearchDto, String platformId) {
         String queue = toQueueString(rankSearchDto.getRankType());
         Pageable pageable = PageRequest.of(
                 rankSearchDto.getPage() - 1,
@@ -41,7 +42,20 @@ public class RankPersistenceAdapter implements RankPersistencePort {
             entityPage = summonerRankingRepository.findByPlatformIdAndQueue(normalizedPlatformId, queue, pageable);
         }
 
-        return entityPage.map(rankMapper::entityToDomain);
+        Page<Rank> domainPage = entityPage.map(rankMapper::entityToDomain);
+        return toPageResult(domainPage);
+    }
+
+    private <T> PageResult<T> toPageResult(Page<T> page) {
+        return new PageResult<>(
+                page.getContent(),
+                page.getNumber() + 1,
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isFirst(),
+                page.isLast()
+        );
     }
 
     private String toQueueString(RankSearchDto.GameType gameType) {

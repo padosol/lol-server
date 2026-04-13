@@ -15,12 +15,12 @@ import com.example.lolserver.domain.match.domain.gamedata.value.ItemValue;
 import com.example.lolserver.domain.match.domain.gamedata.value.StatValue;
 import com.example.lolserver.domain.match.domain.gamedata.value.Style;
 import com.example.lolserver.domain.match.domain.TeamData;
-import com.example.lolserver.domain.match.application.MatchService;
+import com.example.lolserver.domain.match.application.port.in.MatchQueryUseCase;
 import com.example.lolserver.domain.match.application.model.DailyGameCountReadModel;
 import com.example.lolserver.domain.match.application.model.DailyGameCountSummaryReadModel;
 import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.TimelineData;
-import com.example.lolserver.support.Page;
+import com.example.lolserver.support.SliceResult;
 
 
 
@@ -55,7 +55,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class MatchControllerTest extends RestDocsSupport {
 
     @Mock
-    private MatchService matchService;
+    private MatchQueryUseCase matchService;
 
     @InjectMocks
     private MatchController matchController;
@@ -141,7 +141,7 @@ class MatchControllerTest extends RestDocsSupport {
         MatchCommand request = MatchCommand.builder().puuid("puuid-1234").queueId(420).pageNo(1).platformId("kr").build();
         List<String> matchIds = List.of("KR_123456789", "KR_987654321");
 
-        Page<String> stringPage = new Page<>(matchIds, true);
+        SliceResult<String> stringPage = new SliceResult<>(matchIds, true);
         given(matchService.findAllMatchIds(any(MatchCommand.class))).willReturn(stringPage);
 
         // when & then
@@ -182,7 +182,7 @@ class MatchControllerTest extends RestDocsSupport {
 
         GameReadModel gameData = mock(GameReadModel.class);
 
-        Page<GameReadModel> pageOfGameData = new Page<>(List.of(gameData), false);
+        SliceResult<GameReadModel> pageOfGameData = new SliceResult<>(List.of(gameData), false);
 
         given(matchService.getMatches(any(MatchCommand.class))).willReturn(pageOfGameData);
 
@@ -291,7 +291,7 @@ class MatchControllerTest extends RestDocsSupport {
         gameData.setParticipantData(List.of(participant));
         gameData.setTeamInfoData(TeamData.builder().blueTeam(blueTeam).redTeam(redTeam).build());
 
-        Page<GameReadModel> pageOfGameData = new Page<>(List.of(gameData), false);
+        SliceResult<GameReadModel> pageOfGameData = new SliceResult<>(List.of(gameData), false);
 
         given(matchService.getMatchesBatch(any(MatchCommand.class))).willReturn(pageOfGameData);
 

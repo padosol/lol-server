@@ -13,7 +13,7 @@ import com.example.lolserver.repository.community.entity.CommunityPostEntity;
 import com.example.lolserver.repository.community.mapper.CommunityPostMapper;
 import com.example.lolserver.repository.community.repository.CommunityPostJpaRepository;
 import com.example.lolserver.repository.member.repository.MemberJpaRepository;
-import com.example.lolserver.support.Page;
+import com.example.lolserver.support.SliceResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,7 +48,7 @@ public class PostPersistenceAdapter implements PostPersistencePort {
     }
 
     @Override
-    public Page<PostListReadModel> findPosts(PostSearchCommand command) {
+    public SliceResult<PostListReadModel> findPosts(PostSearchCommand command) {
         Pageable pageable = PageRequest.of(command.getPage(), PAGE_SIZE);
         String sortType = command.getSortType() != null ? command.getSortType().name() : SortType.HOT.name();
         LocalDateTime since = resolveSince(command.getTimePeriod());
@@ -60,7 +60,7 @@ public class PostPersistenceAdapter implements PostPersistencePort {
     }
 
     @Override
-    public Page<PostListReadModel> searchPosts(PostSearchCommand command) {
+    public SliceResult<PostListReadModel> searchPosts(PostSearchCommand command) {
         Pageable pageable = PageRequest.of(command.getPage(), PAGE_SIZE);
 
         Slice<PostListDTO> slice = postRepositoryCustom.searchPosts(command.getKeyword(), pageable);
@@ -69,7 +69,7 @@ public class PostPersistenceAdapter implements PostPersistencePort {
     }
 
     @Override
-    public Page<PostListReadModel> findByMemberId(
+    public SliceResult<PostListReadModel> findByMemberId(
             Long memberId, int page) {
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         Slice<CommunityPostEntity> slice = postJpaRepository
@@ -82,7 +82,7 @@ public class PostPersistenceAdapter implements PostPersistencePort {
                         m.getProfileImageUrl()))
                 .orElse(null);
 
-        return new Page<>(
+        return new SliceResult<>(
                 slice.getContent().stream()
                         .map(entity -> PostListReadModel.builder()
                                 .id(entity.getId())
@@ -134,8 +134,8 @@ public class PostPersistenceAdapter implements PostPersistencePort {
         };
     }
 
-    private Page<PostListReadModel> toPage(Slice<PostListDTO> slice) {
-        return new Page<>(
+    private SliceResult<PostListReadModel> toPage(Slice<PostListDTO> slice) {
+        return new SliceResult<>(
                 slice.getContent().stream()
                         .map(dto -> PostListReadModel.builder()
                                 .id(dto.getId())

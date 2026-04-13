@@ -16,7 +16,7 @@ import com.example.lolserver.domain.community.domain.vo.PostCategory;
 import com.example.lolserver.domain.community.domain.vo.VoteTargetType;
 import com.example.lolserver.domain.member.application.port.out.MemberPersistencePort;
 import com.example.lolserver.domain.member.domain.Member;
-import com.example.lolserver.support.Page;
+import com.example.lolserver.support.SliceResult;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -112,17 +112,17 @@ public class PostService implements PostUseCase, PostQueryUseCase {
     }
 
     @Override
-    public Page<PostListReadModel> getPosts(PostSearchCommand command) {
+    public SliceResult<PostListReadModel> getPosts(PostSearchCommand command) {
         return postPersistencePort.findPosts(command);
     }
 
     @Override
-    public Page<PostListReadModel> searchPosts(PostSearchCommand command) {
+    public SliceResult<PostListReadModel> searchPosts(PostSearchCommand command) {
         return postPersistencePort.searchPosts(command);
     }
 
     @Override
-    public Page<PostListReadModel> getMyPosts(Long memberId, int page) {
+    public SliceResult<PostListReadModel> getMyPosts(Long memberId, int page) {
         return postPersistencePort.findByMemberId(memberId, page);
     }
 

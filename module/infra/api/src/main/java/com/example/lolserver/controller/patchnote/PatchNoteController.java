@@ -1,7 +1,7 @@
 package com.example.lolserver.controller.patchnote;
 
 import com.example.lolserver.controller.support.response.ApiResponse;
-import com.example.lolserver.domain.patchnote.application.PatchNoteService;
+import com.example.lolserver.domain.patchnote.application.port.in.PatchNoteQueryUseCase;
 import com.example.lolserver.domain.patchnote.application.model.PatchNoteReadModel;
 import com.example.lolserver.domain.patchnote.application.model.PatchNoteSummaryReadModel;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PatchNoteController {
 
-    private final PatchNoteService patchNoteService;
+    private final PatchNoteQueryUseCase patchNoteService;
 
     /**
      * 전체 패치노트 목록 조회 API

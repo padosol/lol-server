@@ -2,8 +2,8 @@ package com.example.lolserver.domain.rank.application.port.in;
 
 import com.example.lolserver.domain.rank.application.model.RankReadModel;
 import com.example.lolserver.domain.rank.application.dto.RankSearchDto;
-import org.springframework.data.domain.Page;
+import com.example.lolserver.support.PageResult;
 
 public interface RankUseCase {
-    Page<RankReadModel> getRanks(RankSearchDto rankSearchDto, String platformId);
+    PageResult<RankReadModel> getRanks(RankSearchDto rankSearchDto, String platformId);
 }
