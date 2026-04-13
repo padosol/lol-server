@@ -109,6 +109,12 @@ module/
 - **JPA 테스트**: `RepositoryTestBase` 상속 (`@DataJpaTest` + H2)
 - **RestDocs 테스트**: `RestDocsSupport` 상속 (Standalone MockMvc)
 - **어댑터 테스트**: Mock 기반 단위 테스트 (통합 테스트 아님)
+- **MapStruct Mapper 테스트**: 새 Mapper 추가 또는 기존 Mapper 수정 시 반드시 단위 테스트 작성
+  - 테스트 위치: `repository.{name}.mapper.*MapperTest`
+  - `componentModel = "spring"` Mapper: `new MapperImpl()` + `ReflectionTestUtils.setField()`로 의존 Mapper 주입
+  - `componentModel = "default"` Mapper: `Mapper.INSTANCE` 사용
+  - 필수 검증 항목: `@Mapping(ignore = true)` 필드가 실제로 무시되는지, `@AfterMapping`이 의도한 메서드에만 적용되는지
+  - `updateEntityFromDomain` 테스트 시 기존 컬렉션에 중복 엔티티가 추가되지 않는지 검증
 - `@DisplayName("한글 설명")`, AssertJ `assertThat` 사용
 - RestDocs 관련 파일(`.adoc`, RestDocs 테스트) 수정 시 반드시 `./gradlew :module:infra:api:asciidoctor` 실행하여 문서 재생성할 것
 
