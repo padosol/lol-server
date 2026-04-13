@@ -86,4 +86,11 @@ public class MatchSummonerDTO {
     private ItemValue item;
     private PerkStatValue perkStat;
     private PerkStyleValue perkStyle;
+
+    // 팀 집계 정보 (match_team LEFT JOIN)
+    private int teamChampionKills;
+    private int teamBaronKills;
+    private int teamDragonKills;
+    private int teamTowerKills;
+    private int teamInhibitorKills;
 }

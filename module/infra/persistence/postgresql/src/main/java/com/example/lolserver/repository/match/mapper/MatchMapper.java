@@ -16,7 +16,6 @@ import com.example.lolserver.repository.match.dto.ItemEventDTO;
 import com.example.lolserver.repository.match.dto.MSChampionDTO;
 import com.example.lolserver.repository.match.dto.MatchDTO;
 import com.example.lolserver.repository.match.dto.MatchSummonerDTO;
-import com.example.lolserver.repository.match.dto.MatchTeamDTO;
 import com.example.lolserver.repository.match.dto.SkillEventDTO;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
@@ -107,8 +106,6 @@ public interface MatchMapper {
     @Mapping(target = "style", source = "perkStyle")
     @Mapping(target = "statValue", source = "perkStat")
     ParticipantData toDomain(MatchSummonerDTO dto);
-
-    TeamInfoData toDomain(MatchTeamDTO dto);
 
     ItemEvents toDomain(ItemEventDTO dto);
     SkillEvents toDomain(SkillEventDTO dto);

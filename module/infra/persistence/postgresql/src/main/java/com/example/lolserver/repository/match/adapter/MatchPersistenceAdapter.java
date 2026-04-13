@@ -15,7 +15,6 @@ import com.example.lolserver.domain.match.domain.gamedata.timeline.events.SkillE
 import com.example.lolserver.repository.match.dto.ItemEventDTO;
 import com.example.lolserver.repository.match.dto.MatchDTO;
 import com.example.lolserver.repository.match.dto.MatchSummonerDTO;
-import com.example.lolserver.repository.match.dto.MatchTeamDTO;
 import com.example.lolserver.repository.match.dto.SkillEventDTO;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchTeamEntity;
@@ -152,14 +151,6 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                                         MatchSummonerDTO::getMatchId)),
                         queryExecutor);
 
-        CompletableFuture<Map<String, List<MatchTeamDTO>>> teamsFuture =
-                CompletableFuture.supplyAsync(() ->
-                        matchRepositoryCustom.getMatchTeams(matchIds)
-                                .stream()
-                                .collect(Collectors.groupingBy(
-                                        MatchTeamDTO::getMatchId)),
-                        queryExecutor);
-
         CompletableFuture<Map<String, List<ItemEventDTO>>> itemsFuture =
                 CompletableFuture.supplyAsync(() ->
                         timelineRepositoryCustom
@@ -180,8 +171,6 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
 
         Map<String, List<MatchSummonerDTO>> participantsByMatch =
                 summonersFuture.join();
-        Map<String, List<MatchTeamDTO>> teamsByMatch =
-                teamsFuture.join();
         Map<String, List<ItemEventDTO>> itemEventsByMatch =
                 itemsFuture.join();
         Map<String, List<SkillEventDTO>> skillEventsByMatch =
@@ -191,9 +180,6 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                 .map(matchDTO -> assembleGameDataFromDTO(
                         matchDTO,
                         participantsByMatch.getOrDefault(
-                                matchDTO.getMatchId(),
-                                Collections.emptyList()),
-                        teamsByMatch.getOrDefault(
                                 matchDTO.getMatchId(),
                                 Collections.emptyList()),
                         itemEventsByMatch.getOrDefault(
@@ -211,7 +197,6 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     private GameReadModel assembleGameDataFromDTO(
             MatchDTO matchDTO,
             List<MatchSummonerDTO> summonerDTOs,
-            List<MatchTeamDTO> teamDTOs,
             List<ItemEventDTO> itemEventDTOs,
             List<SkillEventDTO> skillEventDTOs
     ) {
@@ -251,15 +236,17 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
             }
         }
 
-        if (!teamDTOs.isEmpty()) {
+        if (!summonerDTOs.isEmpty()) {
             TeamInfoData blueTeam = null;
             TeamInfoData redTeam = null;
-            for (MatchTeamDTO teamDTO : teamDTOs) {
-                TeamInfoData teamInfo = matchMapper.toDomain(teamDTO);
-                if (teamDTO.getTeamId() == 100) {
-                    blueTeam = teamInfo;
-                } else if (teamDTO.getTeamId() == 200) {
-                    redTeam = teamInfo;
+            for (MatchSummonerDTO dto : summonerDTOs) {
+                if (dto.getTeamId() == 100 && blueTeam == null) {
+                    blueTeam = toTeamInfoData(dto);
+                } else if (dto.getTeamId() == 200 && redTeam == null) {
+                    redTeam = toTeamInfoData(dto);
+                }
+                if (blueTeam != null && redTeam != null) {
+                    break;
                 }
             }
             gameData.setTeamInfoData(TeamData.builder()
@@ -269,6 +256,18 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         }
 
         return gameData;
+    }
+
+    private TeamInfoData toTeamInfoData(MatchSummonerDTO dto) {
+        TeamInfoData teamInfo = new TeamInfoData();
+        teamInfo.setTeamId(dto.getTeamId());
+        teamInfo.setWin(dto.isWin());
+        teamInfo.setChampionKills(dto.getTeamChampionKills());
+        teamInfo.setBaronKills(dto.getTeamBaronKills());
+        teamInfo.setDragonKills(dto.getTeamDragonKills());
+        teamInfo.setTowerKills(dto.getTeamTowerKills());
+        teamInfo.setInhibitorKills(dto.getTeamInhibitorKills());
+        return teamInfo;
     }
 
     @Override

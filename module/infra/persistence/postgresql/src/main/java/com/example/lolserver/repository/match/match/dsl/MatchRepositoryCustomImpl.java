@@ -2,9 +2,7 @@ package com.example.lolserver.repository.match.match.dsl;
 
 import com.example.lolserver.repository.match.dto.MatchDTO;
 import com.example.lolserver.repository.match.dto.MatchSummonerDTO;
-import com.example.lolserver.repository.match.dto.MatchTeamDTO;
 import com.example.lolserver.repository.match.dto.QMatchDTO;
-import com.example.lolserver.repository.match.dto.QMatchTeamDTO;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.value.matchsummoner.ItemValue;
 import com.example.lolserver.repository.match.entity.value.matchsummoner.PerkStatValue;
@@ -139,6 +137,11 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
                 .leftJoin(summonerEntity)
                     .on(summonerEntity.puuid.eq(
                             matchSummonerEntity.puuid))
+                .leftJoin(matchTeamEntity)
+                    .on(matchTeamEntity.matchId.eq(
+                            matchSummonerEntity.matchId)
+                        .and(matchTeamEntity.teamId.eq(
+                            matchSummonerEntity.teamId)))
                 .where(matchSummonerEntity.matchId.in(matchIds))
                 .fetch();
     }
@@ -199,7 +202,12 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
                 matchSummonerEntity.playerAugment4,
                 itemProjection(),
                 perkStatProjection(),
-                perkStyleProjection()
+                perkStyleProjection(),
+                matchTeamEntity.championKills.as("teamChampionKills"),
+                matchTeamEntity.baronKills.as("teamBaronKills"),
+                matchTeamEntity.dragonKills.as("teamDragonKills"),
+                matchTeamEntity.towerKills.as("teamTowerKills"),
+                matchTeamEntity.inhibitorKills.as("teamInhibitorKills")
         );
     }
 
@@ -254,22 +262,4 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
         ).as("perkStyle");
     }
 
-    @LogExecutionTime
-    @Override
-    public List<MatchTeamDTO> getMatchTeams(List<String> matchIds) {
-        return jpaQueryFactory
-                .select(new QMatchTeamDTO(
-                        matchTeamEntity.matchId,
-                        matchTeamEntity.teamId,
-                        matchTeamEntity.win,
-                        matchTeamEntity.championKills,
-                        matchTeamEntity.baronKills,
-                        matchTeamEntity.dragonKills,
-                        matchTeamEntity.towerKills,
-                        matchTeamEntity.inhibitorKills
-                ))
-                .from(matchTeamEntity)
-                .where(matchTeamEntity.matchId.in(matchIds))
-                .fetch();
-    }
 }
