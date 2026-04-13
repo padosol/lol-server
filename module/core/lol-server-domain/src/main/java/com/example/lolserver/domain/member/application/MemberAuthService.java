@@ -30,6 +30,7 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MemberAuthService implements MemberAuthUseCase {
 
     private final MemberPersistencePort memberPersistencePort;
@@ -119,7 +120,7 @@ public class MemberAuthService implements MemberAuthUseCase {
         member.linkSocialAccount(
                 userInfo.getProvider(), userInfo.getProviderId(),
                 userInfo.getEmail(), userInfo.getNickname(),
-                userInfo.getProfileImageUrl());
+                userInfo.getProfileImageUrl(), userInfo.getPuuid());
 
         memberPersistencePort.save(member);
     }
@@ -203,7 +204,8 @@ public class MemberAuthService implements MemberAuthUseCase {
                 userInfo.getProviderId(),
                 userInfo.getEmail(),
                 userInfo.getNickname(),
-                userInfo.getProfileImageUrl());
+                userInfo.getProfileImageUrl(),
+                userInfo.getPuuid());
         return memberPersistencePort.save(member);
     }
 

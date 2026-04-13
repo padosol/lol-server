@@ -26,6 +26,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CommentService implements CommentUseCase, CommentQueryUseCase {
 
     private static final int MAX_DEPTH = 5;
@@ -102,7 +103,6 @@ public class CommentService implements CommentUseCase, CommentQueryUseCase {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<CommentTreeReadModel> getComments(Long postId) {
         postPersistencePort.findById(postId)
                 .orElseThrow(() -> new CoreException(ErrorType.POST_NOT_FOUND));

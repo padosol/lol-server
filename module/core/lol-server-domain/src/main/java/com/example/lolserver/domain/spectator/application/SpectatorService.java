@@ -3,9 +3,11 @@ package com.example.lolserver.domain.spectator.application;
 import com.example.lolserver.domain.spectator.application.model.CurrentGameInfoReadModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class SpectatorService {
 
     private final SpectatorFinder spectatorFinder;

@@ -7,9 +7,11 @@ import com.example.lolserver.domain.rank.application.dto.RankSearchDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RankService implements RankUseCase {
 
     private final RankPersistencePort rankPersistencePort;

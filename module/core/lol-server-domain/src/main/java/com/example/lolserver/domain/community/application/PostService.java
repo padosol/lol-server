@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PostService implements PostUseCase, PostQueryUseCase {
 
     private final PostPersistencePort postPersistencePort;
@@ -111,19 +112,16 @@ public class PostService implements PostUseCase, PostQueryUseCase {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Page<PostListReadModel> getPosts(PostSearchCommand command) {
         return postPersistencePort.findPosts(command);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Page<PostListReadModel> searchPosts(PostSearchCommand command) {
         return postPersistencePort.searchPosts(command);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Page<PostListReadModel> getMyPosts(Long memberId, int page) {
         return postPersistencePort.findByMemberId(memberId, page);
     }

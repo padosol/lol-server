@@ -21,6 +21,7 @@ import java.util.Optional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class VoteService implements VoteUseCase {
 
     private final VotePersistencePort votePersistencePort;

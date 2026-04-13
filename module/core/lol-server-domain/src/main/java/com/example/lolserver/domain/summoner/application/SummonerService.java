@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class SummonerService {
 
     private final SummonerPersistencePort summonerPersistencePort;
@@ -38,7 +39,6 @@ public class SummonerService {
     private final SummonerCachePort summonerCachePort;
     private final SummonerMessagePort summonerMessagePort;
 
-    @Transactional(readOnly = true)
     public SummonerReadModel getSummoner(GameName gameName, String platformId) {
         Optional<Summoner> summonerOpt = summonerPersistencePort.getSummoner(
                 gameName.summonerName(), gameName.tagLine(), platformId);
@@ -67,7 +67,6 @@ public class SummonerService {
         }
     }
 
-    @Transactional(readOnly = true)
     public List<SummonerAutoReadModel> getAllSummonerAutoComplete(String q, String platformId) {
         List<Summoner> summoners = summonerPersistencePort.getSummonerAuthComplete(q, platformId);
         return summoners.stream().map(summoner -> {
@@ -160,7 +159,6 @@ public class SummonerService {
         return new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
     }
 
-    @Transactional(readOnly = true)
     public SummonerReadModel getSummonerByPuuid(String platformId, String puuid) {
         Optional<Summoner> summonerOpt = summonerPersistencePort.findById(puuid);
 
@@ -186,7 +184,6 @@ public class SummonerService {
         }
     }
 
-    @Transactional(readOnly = true)
     public List<SummonerRenewalInfoReadModel> getRefreshingSummoners() {
         Set<String> puuids = summonerCachePort.getRefreshingPuuids();
         if (puuids.isEmpty()) {

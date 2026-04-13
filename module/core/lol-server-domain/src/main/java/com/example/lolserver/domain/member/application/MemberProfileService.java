@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MemberProfileService
         implements MemberCommandUseCase, MemberQueryUseCase {
 
@@ -34,7 +35,6 @@ public class MemberProfileService
     }
 
     @Override
-    @Transactional(readOnly = true)
     public MemberReadModel getMyProfile(Long memberId) {
         Member member = findActiveMember(memberId);
         return MemberReadModel.of(member);

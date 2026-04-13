@@ -6,12 +6,14 @@ import com.example.lolserver.domain.league.domain.League;
 import com.example.lolserver.domain.league.domain.vo.LeagueHistory;
 import com.example.lolserver.domain.league.application.port.LeaguePersistencePort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class LeagueService {
 
     private final LeaguePersistencePort leaguePersistencePort;

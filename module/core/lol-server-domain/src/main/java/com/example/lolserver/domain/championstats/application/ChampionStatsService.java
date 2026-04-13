@@ -18,6 +18,7 @@ import com.example.lolserver.domain.championstats.application.port.out.ChampionS
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.Map;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 public class ChampionStatsService {
 
     private final ChampionStatsQueryPort championStatsQueryPort;
