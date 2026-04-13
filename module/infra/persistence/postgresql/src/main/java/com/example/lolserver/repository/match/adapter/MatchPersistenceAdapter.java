@@ -296,7 +296,7 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
 
         // ParticipantsData
         List<ParticipantData> participantDataList = new ArrayList<>(
-                matchSummonerRepository.findByMatchId(matchEntity.getMatchId())
+                matchRepositoryCustom.getMatchSummoners(matchEntity.getMatchId())
                         .stream()
                         .map(matchMapper::toDomain)
                         .toList());

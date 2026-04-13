@@ -9,6 +9,7 @@ import com.example.lolserver.domain.match.domain.gamedata.TeamInfoData;
 import com.example.lolserver.domain.match.domain.gamedata.timeline.events.ItemEvents;
 import com.example.lolserver.domain.match.domain.gamedata.timeline.events.SkillEvents;
 import com.example.lolserver.repository.match.dto.MSChampionDTO;
+import com.example.lolserver.repository.match.dto.MatchSummonerDTO;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
 import com.example.lolserver.repository.match.entity.MatchTeamEntity;
@@ -92,7 +93,7 @@ class MatchPersistenceAdapterTest {
         Integer queueId = 420;
         PaginationRequest paginationRequest = new PaginationRequest(0, 10, "match", PaginationRequest.SortDirection.DESC);
 
-        MatchSummonerEntity summonerEntity = createMatchSummonerEntity(puuid, "KR_12345");
+        MatchSummonerDTO summonerDTO = createMatchSummonerDTO(puuid, "KR_12345");
         MatchEntity matchEntity = MatchEntity.builder()
                 .matchId("KR_12345")
                 .queueId(queueId)
@@ -103,9 +104,9 @@ class MatchPersistenceAdapterTest {
         SliceImpl<MatchEntity> slice = new SliceImpl<>(List.of(matchEntity), PageRequest.of(0, 10), true);
 
         given(matchRepositoryCustom.getMatches(eq(puuid), eq(queueId), any(Pageable.class))).willReturn(slice);
-        given(matchSummonerRepository.findByMatchId("KR_12345")).willReturn(List.of(summonerEntity));
+        given(matchRepositoryCustom.getMatchSummoners("KR_12345")).willReturn(List.of(summonerDTO));
         given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(queueId));
-        given(matchMapper.toDomain(any(MatchSummonerEntity.class))).willReturn(createParticipantData(puuid));
+        given(matchMapper.toDomain(any(MatchSummonerDTO.class))).willReturn(createParticipantData(puuid));
         given(timelineRepositoryCustom.selectAllItemEventsByMatch(anyString())).willReturn(Collections.emptyList());
         given(timelineRepositoryCustom.selectAllSkillEventsByMatch(anyString())).willReturn(Collections.emptyList());
         given(matchMapper.toDomainItemEventsList(any())).willReturn(Collections.emptyList());
@@ -153,7 +154,7 @@ class MatchPersistenceAdapterTest {
     void getGameData_existingMatchId_returnsGameData() {
         // given
         String matchId = "KR_12345";
-        MatchSummonerEntity summonerEntity = createMatchSummonerEntity("test-puuid", matchId);
+        MatchSummonerDTO summonerDTO = createMatchSummonerDTO("test-puuid", matchId);
 
         MatchEntity matchEntity = MatchEntity.builder()
                 .matchId(matchId)
@@ -163,9 +164,9 @@ class MatchPersistenceAdapterTest {
                 .build();
 
         given(matchRepository.findByMatchId(matchId)).willReturn(Optional.of(matchEntity));
-        given(matchSummonerRepository.findByMatchId(matchId)).willReturn(List.of(summonerEntity));
+        given(matchRepositoryCustom.getMatchSummoners(matchId)).willReturn(List.of(summonerDTO));
         given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(420));
-        given(matchMapper.toDomain(any(MatchSummonerEntity.class))).willReturn(createParticipantData("test-puuid"));
+        given(matchMapper.toDomain(any(MatchSummonerDTO.class))).willReturn(createParticipantData("test-puuid"));
         given(timelineRepositoryCustom.selectAllItemEventsByMatch(matchId)).willReturn(Collections.emptyList());
         given(timelineRepositoryCustom.selectAllSkillEventsByMatch(matchId)).willReturn(Collections.emptyList());
         given(matchMapper.toDomainItemEventsList(any())).willReturn(Collections.emptyList());
@@ -263,8 +264,8 @@ class MatchPersistenceAdapterTest {
         Integer queueId = 1700; // Arena mode
         PaginationRequest paginationRequest = new PaginationRequest(0, 10, "match", PaginationRequest.SortDirection.DESC);
 
-        MatchSummonerEntity summoner1 = createMatchSummonerEntityWithPlacement(puuid, "KR_12345", 3);
-        MatchSummonerEntity summoner2 = createMatchSummonerEntityWithPlacement("other-puuid", "KR_12345", 1);
+        MatchSummonerDTO summonerDTO1 = createMatchSummonerDTO(puuid, "KR_12345");
+        MatchSummonerDTO summonerDTO2 = createMatchSummonerDTO("other-puuid", "KR_12345");
 
         MatchEntity matchEntity = MatchEntity.builder()
                 .matchId("KR_12345")
@@ -276,14 +277,14 @@ class MatchPersistenceAdapterTest {
         SliceImpl<MatchEntity> slice = new SliceImpl<>(List.of(matchEntity), PageRequest.of(0, 10), false);
 
         given(matchRepositoryCustom.getMatches(eq(puuid), eq(queueId), any(Pageable.class))).willReturn(slice);
-        given(matchSummonerRepository.findByMatchId("KR_12345")).willReturn(List.of(summoner1, summoner2));
+        given(matchRepositoryCustom.getMatchSummoners("KR_12345")).willReturn(List.of(summonerDTO1, summonerDTO2));
         given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(queueId));
 
         ParticipantData participant1 = createParticipantDataWithPlacement(puuid, 3);
         ParticipantData participant2 = createParticipantDataWithPlacement("other-puuid", 1);
 
-        given(matchMapper.toDomain(summoner1)).willReturn(participant1);
-        given(matchMapper.toDomain(summoner2)).willReturn(participant2);
+        given(matchMapper.toDomain(summonerDTO1)).willReturn(participant1);
+        given(matchMapper.toDomain(summonerDTO2)).willReturn(participant2);
         given(timelineRepositoryCustom.selectAllItemEventsByMatch(anyString())).willReturn(Collections.emptyList());
         given(timelineRepositoryCustom.selectAllSkillEventsByMatch(anyString())).willReturn(Collections.emptyList());
         given(matchMapper.toDomainItemEventsList(any())).willReturn(Collections.emptyList());
@@ -305,7 +306,7 @@ class MatchPersistenceAdapterTest {
     void getGameData_withTeamData_returnsGameDataWithTeamInfo() {
         // given
         String matchId = "KR_12345";
-        MatchSummonerEntity summonerEntity = createMatchSummonerEntity("test-puuid", matchId);
+        MatchSummonerDTO summonerDTO = createMatchSummonerDTO("test-puuid", matchId);
 
         MatchEntity matchEntity = MatchEntity.builder()
                 .matchId(matchId)
@@ -339,9 +340,9 @@ class MatchPersistenceAdapterTest {
         redTeamInfo.setChampionKills(15);
 
         given(matchRepository.findByMatchId(matchId)).willReturn(Optional.of(matchEntity));
-        given(matchSummonerRepository.findByMatchId(matchId)).willReturn(List.of(summonerEntity));
+        given(matchRepositoryCustom.getMatchSummoners(matchId)).willReturn(List.of(summonerDTO));
         given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(420));
-        given(matchMapper.toDomain(any(MatchSummonerEntity.class))).willReturn(createParticipantData("test-puuid"));
+        given(matchMapper.toDomain(any(MatchSummonerDTO.class))).willReturn(createParticipantData("test-puuid"));
         given(timelineRepositoryCustom.selectAllItemEventsByMatch(matchId)).willReturn(Collections.emptyList());
         given(timelineRepositoryCustom.selectAllSkillEventsByMatch(matchId)).willReturn(Collections.emptyList());
         given(matchMapper.toDomainItemEventsList(any())).willReturn(Collections.emptyList());
@@ -363,6 +364,21 @@ class MatchPersistenceAdapterTest {
         assertThat(result.get().getTeamInfoData().getRedTeam().getTeamId()).isEqualTo(200);
         assertThat(result.get().getTeamInfoData().getRedTeam().isWin()).isFalse();
         then(matchTeamRepository).should().findByMatchId(matchId);
+    }
+
+    private MatchSummonerDTO createMatchSummonerDTO(String puuid, String matchId) {
+        MatchSummonerDTO dto = new MatchSummonerDTO();
+        dto.setPuuid(puuid);
+        dto.setMatchId(matchId);
+        dto.setParticipantId(1);
+        dto.setChampionId(157);
+        dto.setChampionName("Yasuo");
+        dto.setKills(10);
+        dto.setDeaths(5);
+        dto.setAssists(8);
+        dto.setWin(true);
+        dto.setTeamId(100);
+        return dto;
     }
 
     private MatchSummonerEntity createMatchSummonerEntity(String puuid, String matchId) {

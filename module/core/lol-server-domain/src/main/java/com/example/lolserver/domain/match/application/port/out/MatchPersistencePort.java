@@ -22,7 +22,9 @@ public interface MatchPersistencePort {
 
     SliceResult<String> findAllMatchIds(String puuid, Integer queueId, PaginationRequest paginationRequest);
 
-    SliceResult<GameReadModel> getMatchesBatch(String puuid, Integer season, Integer queueId, PaginationRequest paginationRequest);
+    SliceResult<GameReadModel> getMatchesBatch(
+            String puuid, Integer season, Integer queueId,
+            PaginationRequest paginationRequest);
 
     List<DailyGameCountReadModel> getDailyGameCounts(
         String puuid, Integer season, Integer queueId, LocalDateTime startDate);

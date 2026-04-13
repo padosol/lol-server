@@ -10,5 +10,6 @@ public interface ChampionStatsQueryUseCase {
 
     ChampionStatsReadModel getChampionStats(int championId, String patch, String platformId, TierFilter tierFilter);
 
-    List<PositionChampionStatsReadModel> getChampionStatsByPosition(String patch, String platformId, TierFilter tierFilter);
+    List<PositionChampionStatsReadModel> getChampionStatsByPosition(
+            String patch, String platformId, TierFilter tierFilter);
 }

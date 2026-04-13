@@ -67,7 +67,9 @@ public class MatchService implements MatchQueryUseCase {
         PaginationRequest paginationRequest = new PaginationRequest(
                 matchCommand.getPageNo(), DEFAULT_PAGE_SIZE, DEFAULT_SORT_FIELD, PaginationRequest.SortDirection.DESC);
 
-        return matchPersistencePort.findAllMatchIds(matchCommand.getPuuid(), matchCommand.getQueueId(), paginationRequest);
+        return matchPersistencePort.findAllMatchIds(
+                matchCommand.getPuuid(), matchCommand.getQueueId(),
+                paginationRequest);
     }
 
     public DailyGameCountSummaryReadModel getDailyGameCounts(

@@ -17,6 +17,8 @@ public interface MatchRepositoryCustom {
 
     List<MatchSummonerDTO> getMatchSummoners(List<String> matchIds);
 
+    List<MatchSummonerDTO> getMatchSummoners(String matchId);
+
     List<MatchTeamDTO> getMatchTeams(List<String> matchIds);
 
 }
