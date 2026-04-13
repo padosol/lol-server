@@ -18,6 +18,9 @@ public class CookieOAuth2AuthorizationRequestRepository
         implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
 
     private static final int EXPIRE_SECONDS = 300;
+    private static final String REMOVED_AUTH_REQUEST_ATTR =
+            CookieOAuth2AuthorizationRequestRepository.class.getName()
+                    + ".REMOVED_REQUEST";
 
     private final ConcurrentHashMap<String, AuthorizationRequestEntry> store =
             new ConcurrentHashMap<>();
@@ -30,10 +33,14 @@ public class CookieOAuth2AuthorizationRequestRepository
             return null;
         }
         AuthorizationRequestEntry entry = store.get(state);
-        if (entry == null || entry.isExpired()) {
-            return null;
+        if (entry != null && !entry.isExpired()) {
+            return entry.request();
         }
-        return entry.request();
+        Object removed = request.getAttribute(REMOVED_AUTH_REQUEST_ATTR);
+        if (removed instanceof OAuth2AuthorizationRequest removedRequest) {
+            return removedRequest;
+        }
+        return null;
     }
 
     @Override
@@ -70,7 +77,9 @@ public class CookieOAuth2AuthorizationRequestRepository
             return null;
         }
         log.debug("[OAuth2 State] 조회 성공 - state: {}", state);
-        return entry.request();
+        OAuth2AuthorizationRequest authRequest = entry.request();
+        request.setAttribute(REMOVED_AUTH_REQUEST_ATTR, authRequest);
+        return authRequest;
     }
 
     private void evictExpired() {

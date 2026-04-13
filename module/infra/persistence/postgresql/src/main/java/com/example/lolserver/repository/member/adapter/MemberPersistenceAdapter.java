@@ -49,6 +49,7 @@ public class MemberPersistenceAdapter implements MemberPersistencePort {
             }
         } else {
             entity = memberMapper.toEntity(member);
+            memberMapper.setSocialAccountRelationships(member, entity);
         }
         MemberEntity saved = memberJpaRepository.save(entity);
         return memberMapper.toDomainWithSocialAccounts(saved);

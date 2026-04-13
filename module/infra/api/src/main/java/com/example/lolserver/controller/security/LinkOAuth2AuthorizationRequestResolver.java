@@ -59,7 +59,7 @@ public class LinkOAuth2AuthorizationRequestResolver
             return authRequest;
         }
 
-        log.debug("소셜 계정 연동 요청 - memberId: {}", memberId);
+        log.info("소셜 계정 연동 요청 - memberId: {}", memberId);
 
         return OAuth2AuthorizationRequest.from(authRequest)
                 .attributes(attrs -> attrs.put(LINK_MEMBER_ID_ATTR, memberId))

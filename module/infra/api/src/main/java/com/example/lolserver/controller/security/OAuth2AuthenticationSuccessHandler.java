@@ -98,9 +98,6 @@ public class OAuth2AuthenticationSuccessHandler
             log.error("OAuth2 처리 중 오류: {}", e.getMessage());
             response.sendRedirect(
                     buildErrorRedirectUrl(e.getErrorType().name()));
-        } finally {
-            authorizationRequestRepository
-                    .removeAuthorizationRequest(request, response);
         }
     }
 
