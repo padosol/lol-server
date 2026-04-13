@@ -4,7 +4,6 @@ import com.example.lolserver.domain.member.domain.Member;
 import com.example.lolserver.domain.member.domain.SocialAccount;
 import com.example.lolserver.repository.member.entity.MemberEntity;
 import com.example.lolserver.repository.member.entity.SocialAccountEntity;
-import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -21,7 +20,6 @@ public interface MemberMapper {
     @Mapping(target = "socialAccounts", ignore = true)
     MemberEntity toEntity(Member member);
 
-    @AfterMapping
     default void setSocialAccountRelationships(
             Member member, @MappingTarget MemberEntity entity) {
         if (!member.isSocialAccountsLoaded()
