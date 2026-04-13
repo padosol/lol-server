@@ -82,6 +82,13 @@ public class MemberController {
         response.sendRedirect(redirectUrl);
     }
 
+    @DeleteMapping("/me")
+    public ApiResponse<Void> withdraw(
+            @AuthenticationPrincipal AuthenticatedMember member) {
+        memberAuthUseCase.withdraw(member.memberId());
+        return ApiResponse.success(null);
+    }
+
     @DeleteMapping("/me/social-accounts/{socialAccountId}")
     public ApiResponse<Void> unlinkSocialAccount(
             @AuthenticationPrincipal AuthenticatedMember member,

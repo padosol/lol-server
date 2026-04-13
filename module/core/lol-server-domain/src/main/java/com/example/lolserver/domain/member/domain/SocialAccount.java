@@ -2,6 +2,7 @@ package com.example.lolserver.domain.member.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(of = "id")
 public class SocialAccount {
 
     private Long id;
@@ -34,5 +36,13 @@ public class SocialAccount {
                 .profileImageUrl(profileImageUrl)
                 .linkedAt(LocalDateTime.now())
                 .build();
+    }
+
+    public void anonymize() {
+        this.email = null;
+        this.nickname = null;
+        this.profileImageUrl = null;
+        this.providerId = "withdrawn_" + this.id + "_"
+                + this.provider;
     }
 }

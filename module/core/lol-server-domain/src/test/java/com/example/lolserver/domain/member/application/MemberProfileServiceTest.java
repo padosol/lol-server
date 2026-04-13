@@ -2,7 +2,6 @@ package com.example.lolserver.domain.member.application;
 
 import com.example.lolserver.domain.member.application.model.MemberReadModel;
 import com.example.lolserver.domain.member.application.port.out.MemberPersistencePort;
-import com.example.lolserver.domain.member.application.port.out.SocialAccountPersistencePort;
 import com.example.lolserver.domain.member.domain.Member;
 import com.example.lolserver.domain.member.domain.SocialAccount;
 import com.example.lolserver.support.error.CoreException;
@@ -15,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,9 +28,6 @@ class MemberProfileServiceTest {
     @Mock
     private MemberPersistencePort memberPersistencePort;
 
-    @Mock
-    private SocialAccountPersistencePort socialAccountPersistencePort;
-
     @InjectMocks
     private MemberProfileService memberProfileService;
 
@@ -39,21 +36,20 @@ class MemberProfileServiceTest {
     void getMyProfile() {
         // given
         Long memberId = 1L;
-        Member member = Member.builder()
-                .id(1L).uuid("test-uuid").email("test@gmail.com")
-                .nickname("테스터").role("USER")
-                .createdAt(LocalDateTime.now()).build();
-
         SocialAccount socialAccount = SocialAccount.builder()
                 .id(1L).memberId(memberId)
                 .provider("GOOGLE").providerId("google-123")
                 .email("test@gmail.com")
                 .linkedAt(LocalDateTime.now()).build();
 
-        given(memberPersistencePort.findById(memberId))
+        Member member = Member.builder()
+                .id(1L).uuid("test-uuid").email("test@gmail.com")
+                .nickname("테스터").role("USER")
+                .socialAccounts(new ArrayList<>(List.of(socialAccount)))
+                .createdAt(LocalDateTime.now()).build();
+
+        given(memberPersistencePort.findByIdWithSocialAccounts(memberId))
                 .willReturn(Optional.of(member));
-        given(socialAccountPersistencePort.findByMemberId(memberId))
-                .willReturn(List.of(socialAccount));
 
         // when
         MemberReadModel result = memberProfileService.getMyProfile(memberId);
@@ -70,7 +66,7 @@ class MemberProfileServiceTest {
     @Test
     void getMyProfile_notFound() {
         // given
-        given(memberPersistencePort.findById(999L))
+        given(memberPersistencePort.findByIdWithSocialAccounts(999L))
                 .willReturn(Optional.empty());
 
         // when & then

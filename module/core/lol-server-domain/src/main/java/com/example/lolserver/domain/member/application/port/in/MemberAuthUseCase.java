@@ -21,4 +21,6 @@ public interface MemberAuthUseCase {
     AuthTokenReadModel refreshToken(TokenRefreshCommand command);
 
     void logout(Long memberId);
+
+    void withdraw(Long memberId);
 }

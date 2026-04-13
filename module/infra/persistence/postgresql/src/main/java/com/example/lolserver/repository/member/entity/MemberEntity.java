@@ -1,10 +1,12 @@
 package com.example.lolserver.repository.member.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +15,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "member")
@@ -46,4 +50,22 @@ public class MemberEntity {
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
+
+    @Column(name = "withdrawn_at")
+    private LocalDateTime withdrawnAt;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    @Builder.Default
+    private List<SocialAccountEntity> socialAccounts = new ArrayList<>();
+
+    public void addSocialAccount(SocialAccountEntity socialAccount) {
+        socialAccounts.add(socialAccount);
+        socialAccount.setMember(this);
+    }
+
+    public void removeSocialAccount(SocialAccountEntity socialAccount) {
+        socialAccounts.remove(socialAccount);
+        socialAccount.setMember(null);
+    }
 }
