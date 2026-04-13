@@ -16,11 +16,17 @@ public class RiotOAuth2UserInfoExtractor
     }
 
     @Override
+    public boolean isLoginAllowed() {
+        return false;
+    }
+
+    @Override
     public OAuthUserInfo extract(OAuth2User oauth2User) {
         Map<String, Object> attributes = oauth2User.getAttributes();
         return OAuthUserInfo.builder()
                 .provider("RIOT")
                 .providerId((String) attributes.get("sub"))
+                .puuid((String) attributes.get("puuid"))
                 .build();
     }
 }

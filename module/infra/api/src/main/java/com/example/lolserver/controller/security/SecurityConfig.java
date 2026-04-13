@@ -71,6 +71,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/community/posts").permitAll()
                         .requestMatchers("/api/community/**").authenticated()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/duo/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/duo/posts").permitAll()
+                        .requestMatchers("/api/duo/**").authenticated()
                         .requestMatchers("/api/members/**").authenticated()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

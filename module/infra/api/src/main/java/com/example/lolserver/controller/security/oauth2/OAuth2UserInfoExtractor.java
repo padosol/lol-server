@@ -8,4 +8,8 @@ public interface OAuth2UserInfoExtractor {
     String getRegistrationId();
 
     OAuthUserInfo extract(OAuth2User oauth2User);
+
+    default boolean isLoginAllowed() {
+        return true;
+    }
 }

@@ -47,6 +47,9 @@ public class SocialAccountEntity {
     @Column(name = "profile_image_url")
     private String profileImageUrl;
 
+    @Column(name = "puuid")
+    private String puuid;
+
     @Column(name = "linked_at", nullable = false)
     private LocalDateTime linkedAt;
 }

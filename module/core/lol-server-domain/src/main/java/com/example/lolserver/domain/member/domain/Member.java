@@ -87,7 +87,7 @@ public class Member {
 
     public void linkSocialAccount(String provider,
             String providerId, String email, String nickname,
-            String profileImageUrl) {
+            String profileImageUrl, String puuid) {
         if (this.socialAccounts == null) {
             this.socialAccounts = new ArrayList<>();
         }
@@ -99,7 +99,7 @@ public class Member {
         }
         SocialAccount newAccount = SocialAccount.create(
                 this.id, provider, providerId, email, nickname,
-                profileImageUrl);
+                profileImageUrl, puuid);
         this.socialAccounts.add(newAccount);
     }
 
@@ -138,12 +138,12 @@ public class Member {
 
     public static Member createNewWithSocialAccount(String provider,
             String providerId, String email, String nickname,
-            String profileImageUrl) {
+            String profileImageUrl, String puuid) {
         Member member = createNew();
         member.socialAccounts = new ArrayList<>();
         SocialAccount account = SocialAccount.create(
                 null, provider, providerId, email, nickname,
-                profileImageUrl);
+                profileImageUrl, puuid);
         member.socialAccounts.add(account);
         return member;
     }

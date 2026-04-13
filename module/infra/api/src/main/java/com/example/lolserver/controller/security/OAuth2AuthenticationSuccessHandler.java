@@ -7,6 +7,7 @@ import com.example.lolserver.domain.member.application.model.AuthTokenReadModel;
 import com.example.lolserver.domain.member.application.model.OAuthUserInfo;
 import com.example.lolserver.domain.member.application.port.in.MemberAuthUseCase;
 import com.example.lolserver.support.error.CoreException;
+import com.example.lolserver.support.error.ErrorType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -73,20 +74,24 @@ public class OAuth2AuthenticationSuccessHandler
                     extractors.get(registrationId);
             if (extractor == null) {
                 throw new CoreException(
-                        com.example.lolserver.support.error
-                                .ErrorType.OAUTH_LOGIN_FAILED,
+                        ErrorType.OAUTH_LOGIN_FAILED,
                         "지원하지 않는 OAuth 프로바이더: "
                                 + registrationId);
             }
 
             OAuthUserInfo userInfo = extractor.extract(oauth2User);
-            log.info("userInfo: {}", userInfo);
+            log.debug("OAuth2 userInfo: {}", userInfo);
 
             Long linkMemberId = extractLinkMemberId(request);
             if (linkMemberId != null) {
                 memberAuthUseCase.linkSocialAccount(
                         linkMemberId, userInfo);
                 response.sendRedirect(buildLinkSuccessRedirectUrl());
+            } else if (!extractor.isLoginAllowed()) {
+                log.warn("로그인을 지원하지 않는 프로바이더로 로그인 시도: {}",
+                        registrationId);
+                response.sendRedirect(buildErrorRedirectUrl(
+                        ErrorType.OAUTH_LOGIN_NOT_SUPPORTED.name()));
             } else {
                 AuthTokenReadModel result =
                         memberAuthUseCase.loginWithOAuthUserInfo(userInfo);

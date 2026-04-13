@@ -4,6 +4,7 @@ import com.example.lolserver.adapter.oauth.config.OAuthProperties;
 import com.example.lolserver.adapter.oauth.dto.OAuthTokenResponse;
 import com.example.lolserver.domain.member.application.model.OAuthUserInfo;
 import com.example.lolserver.domain.member.application.port.out.OAuthProviderClient;
+import com.example.lolserver.domain.member.application.port.out.RiotAccountPort;
 import com.example.lolserver.domain.member.domain.vo.OAuthProvider;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
@@ -17,7 +18,7 @@ import java.util.Map;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class RiotRsoClient implements OAuthProviderClient {
+public class RiotRsoClient implements OAuthProviderClient, RiotAccountPort {
 
     private final RestClient oauthRestClient;
     private final OAuthProperties oAuthProperties;
@@ -36,21 +37,26 @@ public class RiotRsoClient implements OAuthProviderClient {
                 code, redirectUri, config, OAuthProvider.RIOT);
         String accessToken = tokenResponse.getAccessToken();
 
-        return fetchAccountInfo(accessToken, config);
+        String puuid = fetchPuuid(accessToken);
+
+        return OAuthUserInfo.builder()
+                .provider(OAuthProvider.RIOT.name())
+                .providerId(puuid)
+                .puuid(puuid)
+                .build();
     }
 
     @SuppressWarnings("unchecked")
-    private OAuthUserInfo fetchAccountInfo(
-            String accessToken,
-            OAuthProperties.ProviderConfig config) {
+    @Override
+    public String fetchPuuid(String accessToken) {
+        OAuthProperties.ProviderConfig config =
+                oAuthProperties.getProviderConfig("riot");
         try {
-            log.info("access token: {}", accessToken);
             Map<String, Object> response = oauthRestClient.get()
                     .uri(config.getAccountUri())
                     .header("Authorization", "Bearer " + accessToken)
                     .retrieve()
                     .body(Map.class);
-            log.info("response: {}", response);
 
             if (response == null) {
                 throw new CoreException(ErrorType.OAUTH_LOGIN_FAILED,
@@ -63,16 +69,13 @@ public class RiotRsoClient implements OAuthProviderClient {
                         "Riot PUUID를 가져올 수 없습니다.");
             }
 
-            return OAuthUserInfo.builder()
-                    .provider(OAuthProvider.RIOT.name())
-                    .providerId(puuid)
-                    .build();
+            return puuid;
         } catch (CoreException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Riot 계정 정보 조회 실패: {}", e.getMessage());
+            log.error("Riot PUUID 조회 실패: {}", e.getMessage());
             throw new CoreException(ErrorType.OAUTH_LOGIN_FAILED,
-                    "Riot 계정 정보 조회에 실패했습니다.");
+                    "Riot PUUID 조회에 실패했습니다.");
         }
     }
 }

@@ -23,7 +23,7 @@ class MemberTest {
         // when
         member.linkSocialAccount(
                 "GOOGLE", "google-123", "test@gmail.com",
-                "테스터", null);
+                "테스터", null, null);
 
         // then
         assertThat(member.getSocialAccounts()).hasSize(1);
@@ -46,7 +46,7 @@ class MemberTest {
         // when & then
         assertThatThrownBy(() -> member.linkSocialAccount(
                 "GOOGLE", "google-456", "other@gmail.com",
-                "다른유저", null))
+                "다른유저", null, null))
                 .isInstanceOf(CoreException.class)
                 .extracting(e -> ((CoreException) e).getErrorType())
                 .isEqualTo(ErrorType.SOCIAL_ACCOUNT_ALREADY_LINKED);
@@ -105,7 +105,7 @@ class MemberTest {
         // when
         Member member = Member.createNewWithSocialAccount(
                 "GOOGLE", "google-123", "test@gmail.com",
-                "테스터", null);
+                "테스터", null, null);
 
         // then
         assertThat(member.getUuid()).isNotNull();

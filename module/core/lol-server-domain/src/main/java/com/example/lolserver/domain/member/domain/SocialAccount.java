@@ -22,11 +22,12 @@ public class SocialAccount {
     private String email;
     private String nickname;
     private String profileImageUrl;
+    private String puuid;
     private LocalDateTime linkedAt;
 
     public static SocialAccount create(Long memberId, String provider,
             String providerId, String email, String nickname,
-            String profileImageUrl) {
+            String profileImageUrl, String puuid) {
         return SocialAccount.builder()
                 .memberId(memberId)
                 .provider(provider)
@@ -34,6 +35,7 @@ public class SocialAccount {
                 .email(email)
                 .nickname(nickname)
                 .profileImageUrl(profileImageUrl)
+                .puuid(puuid)
                 .linkedAt(LocalDateTime.now())
                 .build();
     }
@@ -42,6 +44,7 @@ public class SocialAccount {
         this.email = null;
         this.nickname = null;
         this.profileImageUrl = null;
+        this.puuid = null;
         this.providerId = "withdrawn_" + this.id + "_"
                 + this.provider;
     }

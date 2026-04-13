@@ -33,6 +33,7 @@ class SocialAccountMapperTest {
                 .email("test@gmail.com")
                 .nickname("TestUser")
                 .profileImageUrl("https://example.com/photo.jpg")
+                .puuid("test-puuid-123")
                 .linkedAt(linkedAt)
                 .build();
 
@@ -49,6 +50,7 @@ class SocialAccountMapperTest {
         assertThat(result.getNickname()).isEqualTo("TestUser");
         assertThat(result.getProfileImageUrl())
                 .isEqualTo("https://example.com/photo.jpg");
+        assertThat(result.getPuuid()).isEqualTo("test-puuid-123");
         assertThat(result.getLinkedAt()).isEqualTo(linkedAt);
     }
 
@@ -84,6 +86,7 @@ class SocialAccountMapperTest {
                 .email("test@discord.com")
                 .nickname("DiscordUser")
                 .profileImageUrl("https://cdn.discord.com/avatar.png")
+                .puuid("discord-puuid-456")
                 .linkedAt(linkedAt)
                 .build();
 
@@ -97,6 +100,7 @@ class SocialAccountMapperTest {
         assertThat(result.getProvider()).isEqualTo("DISCORD");
         assertThat(result.getProviderId()).isEqualTo("discord-456");
         assertThat(result.getEmail()).isEqualTo("test@discord.com");
+        assertThat(result.getPuuid()).isEqualTo("discord-puuid-456");
         assertThat(result.getLinkedAt()).isEqualTo(linkedAt);
     }
 
@@ -127,6 +131,7 @@ class SocialAccountMapperTest {
                 .email("new@gmail.com")
                 .nickname("NewName")
                 .profileImageUrl("https://new.com/photo.jpg")
+                .puuid("new-puuid")
                 .linkedAt(LocalDateTime.of(2026, 12, 31, 23, 59))
                 .build();
 
@@ -143,6 +148,7 @@ class SocialAccountMapperTest {
         assertThat(entity.getNickname()).isEqualTo("NewName");
         assertThat(entity.getProfileImageUrl())
                 .isEqualTo("https://new.com/photo.jpg");
+        assertThat(entity.getPuuid()).isEqualTo("new-puuid");
     }
 
     @DisplayName("SocialAccountEntity 리스트를 도메인 리스트로 변환한다")

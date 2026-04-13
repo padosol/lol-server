@@ -15,6 +15,7 @@ public class SocialAccountReadModel {
     private String providerId;
     private String email;
     private String nickname;
+    private String puuid;
     private LocalDateTime linkedAt;
 
     public static SocialAccountReadModel of(SocialAccount account) {
@@ -24,6 +25,7 @@ public class SocialAccountReadModel {
                 .providerId(account.getProviderId())
                 .email(account.getEmail())
                 .nickname(account.getNickname())
+                .puuid(account.getPuuid())
                 .linkedAt(account.getLinkedAt())
                 .build();
     }
