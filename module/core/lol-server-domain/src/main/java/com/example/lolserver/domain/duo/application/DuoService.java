@@ -22,7 +22,8 @@ import com.example.lolserver.domain.duo.domain.vo.TierInfo;
 import com.example.lolserver.domain.league.application.port.LeaguePersistencePort;
 import com.example.lolserver.domain.member.application.port.out.MemberPersistencePort;
 import com.example.lolserver.domain.member.domain.Member;
-import com.example.lolserver.domain.member.domain.SocialAccount;
+import com.example.lolserver.domain.member.domain.vo.OAuthProvider;
+import com.example.lolserver.QueueType;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerPersistencePort;
 import com.example.lolserver.domain.summoner.domain.Summoner;
 import com.example.lolserver.support.SliceResult;
@@ -102,21 +103,7 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
             requests = Collections.emptyList();
         }
 
-        return DuoPostDetailReadModel.builder()
-                .id(duoPost.getId())
-                .primaryLane(duoPost.getPrimaryLane().name())
-                .secondaryLane(duoPost.getSecondaryLane().name())
-                .hasMicrophone(duoPost.isHasMicrophone())
-                .tier(duoPost.getTier())
-                .rank(duoPost.getRank())
-                .leaguePoints(duoPost.getLeaguePoints())
-                .memo(duoPost.getMemo())
-                .status(duoPost.getStatus().name())
-                .isOwner(isOwner)
-                .expiresAt(duoPost.getExpiresAt())
-                .createdAt(duoPost.getCreatedAt())
-                .requests(requests)
-                .build();
+        return DuoPostDetailReadModel.of(duoPost, isOwner, requests);
     }
 
     @Override
@@ -185,7 +172,7 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
                 .requestId(duoRequest.getId())
                 .partnerGameName(null)
                 .partnerTagLine(null)
-                .status("ACCEPTED")
+                .status(DuoRequestStatus.ACCEPTED.name())
                 .build();
     }
 
@@ -225,7 +212,7 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
                 .requestId(duoRequest.getId())
                 .partnerGameName(partnerGameName)
                 .partnerTagLine(partnerTagLine)
-                .status("CONFIRMED")
+                .status(DuoRequestStatus.CONFIRMED.name())
                 .build();
     }
 
@@ -284,15 +271,15 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
                 .orElseThrow(() -> new CoreException(ErrorType.MEMBER_NOT_FOUND));
 
         return member.getSocialAccounts().stream()
-                .filter(sa -> "RIOT".equals(sa.getProvider()) && sa.getPuuid() != null)
-                .map(SocialAccount::getPuuid)
+                .filter(sa -> OAuthProvider.RIOT.name().equals(sa.getProvider()) && sa.getPuuid() != null)
+                .map(sa -> sa.getPuuid())
                 .findFirst()
                 .orElseThrow(() -> new CoreException(ErrorType.RIOT_ACCOUNT_NOT_LINKED));
     }
 
     private TierInfo lookupTierInfo(String puuid) {
         return leaguePersistencePort.findAllLeaguesByPuuid(puuid).stream()
-                .filter(league -> "RANKED_SOLO_5x5".equals(league.getQueue()))
+                .filter(league -> QueueType.RANKED_SOLO_5x5.name().equals(league.getQueue()))
                 .findFirst()
                 .map(league -> new TierInfo(
                         league.getTier(), league.getRank(), league.getLeaguePoints()))

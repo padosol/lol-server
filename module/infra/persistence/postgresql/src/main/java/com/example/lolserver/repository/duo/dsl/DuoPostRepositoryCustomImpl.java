@@ -1,5 +1,6 @@
 package com.example.lolserver.repository.duo.dsl;
 
+import com.example.lolserver.domain.duo.domain.vo.DuoPostStatus;
 import com.example.lolserver.repository.duo.dto.DuoPostListDTO;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -25,45 +26,23 @@ public class DuoPostRepositoryCustomImpl implements DuoPostRepositoryCustom {
 
     @Override
     public Slice<DuoPostListDTO> findActivePosts(String lane, String tier, Pageable pageable) {
-        int pageSize = pageable.getPageSize();
-
-        List<DuoPostListDTO> result = jpaQueryFactory
-                .select(Projections.constructor(DuoPostListDTO.class,
-                        duoPostEntity.id,
-                        duoPostEntity.primaryLane,
-                        duoPostEntity.secondaryLane,
-                        duoPostEntity.hasMicrophone,
-                        duoPostEntity.tier,
-                        duoPostEntity.tierRank,
-                        duoPostEntity.leaguePoints,
-                        duoPostEntity.memo,
-                        duoPostEntity.status,
-                        duoRequestEntity.id.count(),
-                        duoPostEntity.expiresAt,
-                        duoPostEntity.createdAt
-                ))
-                .from(duoPostEntity)
-                .leftJoin(duoRequestEntity).on(duoRequestEntity.duoPostId.eq(duoPostEntity.id))
-                .where(
-                        duoPostEntity.status.eq("ACTIVE"),
-                        duoPostEntity.expiresAt.after(LocalDateTime.now()),
-                        laneEq(lane),
-                        tierEq(tier)
-                )
-                .groupBy(duoPostEntity.id)
-                .orderBy(duoPostEntity.createdAt.desc())
-                .offset((long) pageable.getPageNumber() * pageSize)
-                .limit(pageSize + 1)
-                .fetch();
-
-        boolean hasNext = result.size() > pageSize;
-        List<DuoPostListDTO> content = hasNext ? result.subList(0, pageSize) : result;
-
-        return new SliceImpl<>(content, pageable, hasNext);
+        return queryDuoPosts(pageable,
+                duoPostEntity.status.eq(DuoPostStatus.ACTIVE.name()),
+                duoPostEntity.expiresAt.after(LocalDateTime.now()),
+                laneEq(lane),
+                tierEq(tier)
+        );
     }
 
     @Override
     public Slice<DuoPostListDTO> findByMemberId(Long memberId, Pageable pageable) {
+        return queryDuoPosts(pageable,
+                duoPostEntity.memberId.eq(memberId)
+        );
+    }
+
+    private Slice<DuoPostListDTO> queryDuoPosts(Pageable pageable,
+            BooleanExpression... conditions) {
         int pageSize = pageable.getPageSize();
 
         List<DuoPostListDTO> result = jpaQueryFactory
@@ -83,7 +62,7 @@ public class DuoPostRepositoryCustomImpl implements DuoPostRepositoryCustom {
                 ))
                 .from(duoPostEntity)
                 .leftJoin(duoRequestEntity).on(duoRequestEntity.duoPostId.eq(duoPostEntity.id))
-                .where(duoPostEntity.memberId.eq(memberId))
+                .where(conditions)
                 .groupBy(duoPostEntity.id)
                 .orderBy(duoPostEntity.createdAt.desc())
                 .offset((long) pageable.getPageNumber() * pageSize)
