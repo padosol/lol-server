@@ -33,14 +33,14 @@ public class DuoPost {
     private LocalDateTime updatedAt;
 
     public static DuoPost create(Long memberId, String puuid,
-            Lane primaryLane, Lane secondaryLane,
+            String primaryLane, String secondaryLane,
             boolean hasMicrophone, TierInfo tierInfo, String memo) {
         LocalDateTime now = LocalDateTime.now();
         return DuoPost.builder()
                 .memberId(memberId)
                 .puuid(puuid)
-                .primaryLane(primaryLane)
-                .secondaryLane(secondaryLane)
+                .primaryLane(Lane.from(primaryLane))
+                .secondaryLane(Lane.from(secondaryLane))
                 .hasMicrophone(hasMicrophone)
                 .tier(tierInfo.tier())
                 .rank(tierInfo.rank())
@@ -95,10 +95,10 @@ public class DuoPost {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void updateContent(Lane primaryLane, Lane secondaryLane,
+    public void updateContent(String primaryLane, String secondaryLane,
                               boolean hasMicrophone, String memo) {
-        this.primaryLane = primaryLane;
-        this.secondaryLane = secondaryLane;
+        this.primaryLane = Lane.from(primaryLane);
+        this.secondaryLane = Lane.from(secondaryLane);
         this.hasMicrophone = hasMicrophone;
         this.memo = memo;
         this.updatedAt = LocalDateTime.now();

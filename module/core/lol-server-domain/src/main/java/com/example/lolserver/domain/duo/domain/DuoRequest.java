@@ -33,15 +33,15 @@ public class DuoRequest {
     private LocalDateTime updatedAt;
 
     public static DuoRequest create(Long duoPostId, Long requesterId,
-            String requesterPuuid, Lane primaryLane, Lane secondaryLane,
+            String requesterPuuid, String primaryLane, String secondaryLane,
             boolean hasMicrophone, TierInfo tierInfo, String memo) {
         LocalDateTime now = LocalDateTime.now();
         return DuoRequest.builder()
                 .duoPostId(duoPostId)
                 .requesterId(requesterId)
                 .requesterPuuid(requesterPuuid)
-                .primaryLane(primaryLane)
-                .secondaryLane(secondaryLane)
+                .primaryLane(Lane.from(primaryLane))
+                .secondaryLane(Lane.from(secondaryLane))
                 .hasMicrophone(hasMicrophone)
                 .tier(tierInfo.tier())
                 .rank(tierInfo.rank())

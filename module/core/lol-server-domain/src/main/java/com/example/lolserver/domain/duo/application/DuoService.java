@@ -18,7 +18,6 @@ import com.example.lolserver.domain.duo.application.port.out.DuoRequestPersisten
 import com.example.lolserver.domain.duo.domain.DuoPost;
 import com.example.lolserver.domain.duo.domain.DuoRequest;
 import com.example.lolserver.domain.duo.domain.vo.DuoRequestStatus;
-import com.example.lolserver.domain.duo.domain.vo.Lane;
 import com.example.lolserver.domain.duo.domain.vo.TierInfo;
 import com.example.lolserver.domain.league.application.port.LeaguePersistencePort;
 import com.example.lolserver.domain.member.application.port.out.MemberPersistencePort;
@@ -58,11 +57,9 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
         String puuid = extractRiotPuuid(memberId);
         TierInfo tierInfo = lookupTierInfo(puuid);
 
-        Lane primaryLane = parseLane(command.getPrimaryLane());
-        Lane secondaryLane = parseLane(command.getSecondaryLane());
-
         DuoPost duoPost = DuoPost.create(
-                memberId, puuid, primaryLane, secondaryLane,
+                memberId, puuid,
+                command.getPrimaryLane(), command.getSecondaryLane(),
                 command.isHasMicrophone(), tierInfo, command.getMemo()
         );
 
@@ -92,10 +89,8 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
         duoPost.validateOwner(memberId);
         duoPost.validateActive();
 
-        Lane primaryLane = parseLane(command.getPrimaryLane());
-        Lane secondaryLane = parseLane(command.getSecondaryLane());
-
-        duoPost.updateContent(primaryLane, secondaryLane,
+        duoPost.updateContent(
+                command.getPrimaryLane(), command.getSecondaryLane(),
                 command.isHasMicrophone(), command.getMemo());
 
         DuoPost saved = duoPostPersistencePort.save(duoPost);
@@ -154,11 +149,9 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
 
         TierInfo tierInfo = lookupTierInfo(puuid);
 
-        Lane primaryLane = parseLane(command.getPrimaryLane());
-        Lane secondaryLane = parseLane(command.getSecondaryLane());
-
         DuoRequest duoRequest = DuoRequest.create(
-                duoPostId, memberId, puuid, primaryLane, secondaryLane,
+                duoPostId, memberId, puuid,
+                command.getPrimaryLane(), command.getSecondaryLane(),
                 command.isHasMicrophone(), tierInfo, command.getMemo()
         );
 
@@ -273,11 +266,4 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
                 .orElse(TierInfo.UNRANKED);
     }
 
-    private Lane parseLane(String lane) {
-        try {
-            return Lane.valueOf(lane);
-        } catch (IllegalArgumentException e) {
-            throw new CoreException(ErrorType.INVALID_LANE);
-        }
-    }
 }

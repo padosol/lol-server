@@ -12,8 +12,8 @@ import java.util.List;
 @Mapper(componentModel = "spring", imports = {Lane.class, DuoPostStatus.class})
 public interface DuoPostMapper {
 
-    @Mapping(target = "primaryLane", expression = "java(Lane.valueOf(entity.getPrimaryLane()))")
-    @Mapping(target = "secondaryLane", expression = "java(Lane.valueOf(entity.getSecondaryLane()))")
+    @Mapping(target = "primaryLane", expression = "java(Lane.from(entity.getPrimaryLane()))")
+    @Mapping(target = "secondaryLane", expression = "java(Lane.from(entity.getSecondaryLane()))")
     @Mapping(target = "status", expression = "java(DuoPostStatus.valueOf(entity.getStatus()))")
     @Mapping(source = "tierRank", target = "rank")
     DuoPost toDomain(DuoPostEntity entity);
