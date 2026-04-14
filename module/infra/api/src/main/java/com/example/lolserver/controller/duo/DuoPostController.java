@@ -17,6 +17,8 @@ import com.example.lolserver.domain.duo.application.port.in.DuoPostUseCase;
 import com.example.lolserver.support.SliceResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,16 +39,17 @@ public class DuoPostController {
     private final DuoPostQueryUseCase duoPostQueryUseCase;
 
     @PostMapping("/posts")
-    public ApiResponse<DuoPostResponse> createDuoPost(
+    public ResponseEntity<ApiResponse<DuoPostResponse>> createDuoPost(
             @AuthenticationPrincipal AuthenticatedMember member,
             @Valid @RequestBody CreateDuoPostRequest request) {
         DuoPostReadModel result = duoPostUseCase.createDuoPost(
                 member.memberId(), request.toCommand());
-        return ApiResponse.success(DuoPostResponse.from(result));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(DuoPostResponse.from(result)));
     }
 
     @GetMapping("/posts")
-    public ApiResponse<SliceResponse<DuoPostListResponse>> getDuoPosts(
+    public ResponseEntity<ApiResponse<SliceResponse<DuoPostListResponse>>> getDuoPosts(
             @RequestParam(required = false) String lane,
             @RequestParam(required = false) String tier,
             @RequestParam(defaultValue = "0") int page) {
@@ -56,46 +59,48 @@ public class DuoPostController {
                 .page(page)
                 .build();
 
-        return ApiResponse.success(
-                toSlice(duoPostQueryUseCase.getDuoPosts(command)));
+        return ResponseEntity.ok(ApiResponse.success(
+                toSlice(duoPostQueryUseCase.getDuoPosts(command))));
     }
 
     @GetMapping("/posts/{postId}")
-    public ApiResponse<DuoPostDetailResponse> getDuoPost(
+    public ResponseEntity<ApiResponse<DuoPostDetailResponse>> getDuoPost(
             @PathVariable Long postId,
             @AuthenticationPrincipal AuthenticatedMember member) {
         Long currentMemberId =
                 member != null ? member.memberId() : null;
         DuoPostDetailReadModel readModel =
                 duoPostQueryUseCase.getDuoPost(postId, currentMemberId);
-        return ApiResponse.success(DuoPostDetailResponse.from(readModel));
+        return ResponseEntity.ok(
+                ApiResponse.success(DuoPostDetailResponse.from(readModel)));
     }
 
     @PutMapping("/posts/{postId}")
-    public ApiResponse<DuoPostResponse> updateDuoPost(
+    public ResponseEntity<ApiResponse<DuoPostResponse>> updateDuoPost(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long postId,
             @Valid @RequestBody UpdateDuoPostRequest request) {
         DuoPostReadModel result = duoPostUseCase.updateDuoPost(
                 member.memberId(), postId, request.toCommand());
-        return ApiResponse.success(DuoPostResponse.from(result));
+        return ResponseEntity.ok(
+                ApiResponse.success(DuoPostResponse.from(result)));
     }
 
     @DeleteMapping("/posts/{postId}")
-    public ApiResponse<?> deleteDuoPost(
+    public ResponseEntity<Void> deleteDuoPost(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long postId) {
         duoPostUseCase.deleteDuoPost(member.memberId(), postId);
-        return ApiResponse.success();
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/me/posts")
-    public ApiResponse<SliceResponse<DuoPostListResponse>> getMyDuoPosts(
+    public ResponseEntity<ApiResponse<SliceResponse<DuoPostListResponse>>> getMyDuoPosts(
             @AuthenticationPrincipal AuthenticatedMember member,
             @RequestParam(defaultValue = "0") int page) {
-        return ApiResponse.success(
+        return ResponseEntity.ok(ApiResponse.success(
                 toSlice(duoPostQueryUseCase.getMyDuoPosts(
-                        member.memberId(), page)));
+                        member.memberId(), page))));
     }
 
     private SliceResponse<DuoPostListResponse> toSlice(

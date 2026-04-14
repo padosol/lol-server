@@ -122,6 +122,11 @@ module/
 
 - DI: `@RequiredArgsConstructor` + `private final` 필드 (생성자 주입)
 - 로깅: `@Slf4j`
+- 컨트롤러 반환 타입: `ResponseEntity<ApiResponse<T>>` (RESTful 상태코드 사용)
+  - `POST` (생성): `ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(data))` → **201**
+  - `GET` (조회): `ResponseEntity.ok(ApiResponse.success(data))` → **200**
+  - `PUT` (수정): `ResponseEntity.ok(ApiResponse.success(data))` → **200**
+  - `DELETE` (삭제): `ResponseEntity.noContent().build()` → **204** (body 없음, 반환 타입 `ResponseEntity<Void>`)
 - 컨트롤러 응답 DTO: Java `record` (불변)
 - 커맨드: `@Builder @Getter @NoArgsConstructor @AllArgsConstructor` (도메인 객체에 `@Setter` 사용 금지 — 팩토리 메서드/Builder 사용)
 - 트랜잭션: 조회 `@Transactional(readOnly = true)`, 변경 `@Transactional`

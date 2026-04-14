@@ -121,7 +121,7 @@ class CommunityCommentControllerTest extends RestDocsSupport {
                                 .content(objectMapper.writeValueAsString(request))
                 )
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andDo(document("community-comment-create",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
@@ -271,20 +271,12 @@ class CommunityCommentControllerTest extends RestDocsSupport {
                         delete("/api/community/comments/{commentId}", 1L)
                 )
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status().isNoContent())
                 .andDo(document("community-comment-delete",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
                                 parameterWithName("commentId").description("댓글 ID")
-                        ),
-                        responseFields(
-                                fieldWithPath("result").type(JsonFieldType.STRING)
-                                        .description("API 응답 결과 (SUCCESS, ERROR)"),
-                                fieldWithPath("errorMessage").type(JsonFieldType.NULL)
-                                        .description("에러 메시지 (정상 응답 시 null)"),
-                                fieldWithPath("data").type(JsonFieldType.NULL)
-                                        .description("데이터 없음")
                         )
                 ));
     }

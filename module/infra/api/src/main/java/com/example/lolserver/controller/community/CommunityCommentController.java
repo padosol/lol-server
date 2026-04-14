@@ -12,6 +12,8 @@ import com.example.lolserver.domain.community.application.port.in.CommentQueryUs
 import com.example.lolserver.domain.community.application.port.in.CommentUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,7 +35,7 @@ public class CommunityCommentController {
     private final CommentQueryUseCase commentQueryUseCase;
 
     @PostMapping("/posts/{postId}/comments")
-    public ApiResponse<CommentResponse> createComment(
+    public ResponseEntity<ApiResponse<CommentResponse>> createComment(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long postId,
             @Valid @RequestBody CreateCommentRequest request) {
@@ -43,20 +45,21 @@ public class CommunityCommentController {
                 .build();
 
         CommentTreeReadModel readModel = commentUseCase.createComment(member.memberId(), postId, command);
-        return ApiResponse.success(CommentResponse.from(readModel));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(CommentResponse.from(readModel)));
     }
 
     @GetMapping("/posts/{postId}/comments")
-    public ApiResponse<List<CommentResponse>> getComments(@PathVariable Long postId) {
+    public ResponseEntity<ApiResponse<List<CommentResponse>>> getComments(@PathVariable Long postId) {
         List<CommentTreeReadModel> readModels = commentQueryUseCase.getComments(postId);
         List<CommentResponse> responses = readModels.stream()
                 .map(CommentResponse::from)
                 .toList();
-        return ApiResponse.success(responses);
+        return ResponseEntity.ok(ApiResponse.success(responses));
     }
 
     @PutMapping("/comments/{commentId}")
-    public ApiResponse<CommentResponse> updateComment(
+    public ResponseEntity<ApiResponse<CommentResponse>> updateComment(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long commentId,
             @Valid @RequestBody UpdateCommentRequest request) {
@@ -65,14 +68,15 @@ public class CommunityCommentController {
                 .build();
 
         CommentTreeReadModel readModel = commentUseCase.updateComment(member.memberId(), commentId, command);
-        return ApiResponse.success(CommentResponse.from(readModel));
+        return ResponseEntity.ok(
+                ApiResponse.success(CommentResponse.from(readModel)));
     }
 
     @DeleteMapping("/comments/{commentId}")
-    public ApiResponse<?> deleteComment(
+    public ResponseEntity<Void> deleteComment(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long commentId) {
         commentUseCase.deleteComment(member.memberId(), commentId);
-        return ApiResponse.success();
+        return ResponseEntity.noContent().build();
     }
 }

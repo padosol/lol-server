@@ -139,7 +139,7 @@ class DuoPostControllerTest extends RestDocsSupport {
                                 .content(objectMapper.writeValueAsString(request))
                 )
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andDo(document("duo-post-create",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
@@ -381,20 +381,12 @@ class DuoPostControllerTest extends RestDocsSupport {
                         delete("/api/duo/posts/{postId}", 1L)
                 )
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status().isNoContent())
                 .andDo(document("duo-post-delete",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
                                 parameterWithName("postId").description("게시글 ID")
-                        ),
-                        responseFields(
-                                fieldWithPath("result").type(JsonFieldType.STRING)
-                                        .description("API 응답 결과 (SUCCESS, ERROR)"),
-                                fieldWithPath("errorMessage").type(JsonFieldType.NULL)
-                                        .description("에러 메시지 (정상 응답 시 null)"),
-                                fieldWithPath("data").type(JsonFieldType.NULL)
-                                        .description("데이터 없음")
                         )
                 ));
     }

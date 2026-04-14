@@ -13,6 +13,8 @@ import com.example.lolserver.domain.duo.application.port.in.DuoRequestUseCase;
 import com.example.lolserver.support.SliceResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,17 +36,18 @@ public class DuoRequestController {
     private final DuoRequestQueryUseCase duoRequestQueryUseCase;
 
     @PostMapping("/posts/{postId}/requests")
-    public ApiResponse<DuoRequestResponse> createDuoRequest(
+    public ResponseEntity<ApiResponse<DuoRequestResponse>> createDuoRequest(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long postId,
             @Valid @RequestBody CreateDuoRequestRequest request) {
         DuoRequestReadModel result = duoRequestUseCase.createDuoRequest(
                 member.memberId(), postId, request.toCommand());
-        return ApiResponse.success(DuoRequestResponse.from(result));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(DuoRequestResponse.from(result)));
     }
 
     @GetMapping("/posts/{postId}/requests")
-    public ApiResponse<List<DuoRequestResponse>> getDuoRequestsForPost(
+    public ResponseEntity<ApiResponse<List<DuoRequestResponse>>> getDuoRequestsForPost(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long postId) {
         List<DuoRequestReadModel> requests =
@@ -53,49 +56,51 @@ public class DuoRequestController {
         List<DuoRequestResponse> responses = requests.stream()
                 .map(DuoRequestResponse::from)
                 .toList();
-        return ApiResponse.success(responses);
+        return ResponseEntity.ok(ApiResponse.success(responses));
     }
 
     @PutMapping("/requests/{requestId}/accept")
-    public ApiResponse<DuoMatchResultResponse> acceptDuoRequest(
+    public ResponseEntity<ApiResponse<DuoMatchResultResponse>> acceptDuoRequest(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long requestId) {
         DuoMatchResultReadModel result =
                 duoRequestUseCase.acceptDuoRequest(
                         member.memberId(), requestId);
-        return ApiResponse.success(DuoMatchResultResponse.from(result));
+        return ResponseEntity.ok(
+                ApiResponse.success(DuoMatchResultResponse.from(result)));
     }
 
     @PutMapping("/requests/{requestId}/confirm")
-    public ApiResponse<DuoMatchResultResponse> confirmDuoRequest(
+    public ResponseEntity<ApiResponse<DuoMatchResultResponse>> confirmDuoRequest(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long requestId) {
         DuoMatchResultReadModel result =
                 duoRequestUseCase.confirmDuoRequest(
                         member.memberId(), requestId);
-        return ApiResponse.success(DuoMatchResultResponse.from(result));
+        return ResponseEntity.ok(
+                ApiResponse.success(DuoMatchResultResponse.from(result)));
     }
 
     @PutMapping("/requests/{requestId}/reject")
-    public ApiResponse<?> rejectDuoRequest(
+    public ResponseEntity<Void> rejectDuoRequest(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long requestId) {
         duoRequestUseCase.rejectDuoRequest(
                 member.memberId(), requestId);
-        return ApiResponse.success();
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/requests/{requestId}/cancel")
-    public ApiResponse<?> cancelDuoRequest(
+    public ResponseEntity<Void> cancelDuoRequest(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long requestId) {
         duoRequestUseCase.cancelDuoRequest(
                 member.memberId(), requestId);
-        return ApiResponse.success();
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/me/requests")
-    public ApiResponse<SliceResponse<DuoRequestResponse>> getMyDuoRequests(
+    public ResponseEntity<ApiResponse<SliceResponse<DuoRequestResponse>>> getMyDuoRequests(
             @AuthenticationPrincipal AuthenticatedMember member,
             @RequestParam(defaultValue = "0") int page) {
         SliceResult<DuoRequestReadModel> result =
@@ -106,6 +111,7 @@ public class DuoRequestController {
                 .toList();
         SliceResult<DuoRequestResponse> responseResult =
                 new SliceResult<>(content, result.isHasNext());
-        return ApiResponse.success(SliceResponse.of(responseResult));
+        return ResponseEntity.ok(
+                ApiResponse.success(SliceResponse.of(responseResult)));
     }
 }

@@ -107,7 +107,7 @@ class DuoRequestControllerTest extends RestDocsSupport {
                                 .content(objectMapper.writeValueAsString(request))
                 )
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andDo(document("duo-request-create",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
@@ -293,20 +293,12 @@ class DuoRequestControllerTest extends RestDocsSupport {
                         put("/api/duo/requests/{requestId}/reject", 1L)
                 )
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status().isNoContent())
                 .andDo(document("duo-request-reject",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
                                 parameterWithName("requestId").description("요청 ID")
-                        ),
-                        responseFields(
-                                fieldWithPath("result").type(JsonFieldType.STRING)
-                                        .description("API 응답 결과 (SUCCESS, ERROR)"),
-                                fieldWithPath("errorMessage").type(JsonFieldType.NULL)
-                                        .description("에러 메시지 (정상 응답 시 null)"),
-                                fieldWithPath("data").type(JsonFieldType.NULL)
-                                        .description("데이터 없음")
                         )
                 ));
     }
@@ -320,20 +312,12 @@ class DuoRequestControllerTest extends RestDocsSupport {
                         put("/api/duo/requests/{requestId}/cancel", 1L)
                 )
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status().isNoContent())
                 .andDo(document("duo-request-cancel",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
                                 parameterWithName("requestId").description("요청 ID")
-                        ),
-                        responseFields(
-                                fieldWithPath("result").type(JsonFieldType.STRING)
-                                        .description("API 응답 결과 (SUCCESS, ERROR)"),
-                                fieldWithPath("errorMessage").type(JsonFieldType.NULL)
-                                        .description("에러 메시지 (정상 응답 시 null)"),
-                                fieldWithPath("data").type(JsonFieldType.NULL)
-                                        .description("데이터 없음")
                         )
                 ));
     }
