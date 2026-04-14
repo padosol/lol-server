@@ -1,5 +1,6 @@
 package com.example.lolserver.repository.rank.adapter;
 
+import com.example.lolserver.QueueType;
 import com.example.lolserver.domain.rank.application.port.out.RankPersistencePort;
 import com.example.lolserver.domain.rank.domain.Rank;
 import com.example.lolserver.domain.rank.application.dto.RankSearchDto;
@@ -60,8 +61,8 @@ public class RankPersistenceAdapter implements RankPersistencePort {
 
     private String toQueueString(RankSearchDto.GameType gameType) {
         return switch (gameType) {
-            case SOLO -> "RANKED_SOLO_5x5";
-            case FLEX -> "RANKED_FLEX_SR";
+            case SOLO -> QueueType.RANKED_SOLO_5x5.name();
+            case FLEX -> QueueType.RANKED_FLEX_SR.name();
         };
     }
 }

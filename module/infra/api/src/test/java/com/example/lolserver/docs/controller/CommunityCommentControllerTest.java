@@ -103,8 +103,8 @@ class CommunityCommentControllerTest extends RestDocsSupport {
                 .author(sampleAuthor())
                 .createdAt(LocalDateTime.of(2026, 3, 20, 11, 0, 0))
                 .updatedAt(LocalDateTime.of(2026, 3, 20, 11, 0, 0))
+                .children(List.of(child))
                 .build();
-        parent.setChildren(List.of(child));
         return parent;
     }
 

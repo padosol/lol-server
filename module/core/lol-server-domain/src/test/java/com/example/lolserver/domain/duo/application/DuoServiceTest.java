@@ -2,6 +2,7 @@ package com.example.lolserver.domain.duo.application;
 
 import com.example.lolserver.domain.duo.application.command.CreateDuoPostCommand;
 import com.example.lolserver.domain.duo.application.command.CreateDuoRequestCommand;
+import com.example.lolserver.domain.duo.application.command.UpdateDuoPostCommand;
 import com.example.lolserver.domain.duo.application.model.DuoMatchResultReadModel;
 import com.example.lolserver.domain.duo.application.model.DuoPostDetailReadModel;
 import com.example.lolserver.domain.duo.application.model.DuoPostReadModel;
@@ -245,6 +246,148 @@ class DuoServiceTest {
             // then
             assertThat(duoPost.getStatus()).isEqualTo(DuoPostStatus.DELETED);
             then(duoPostPersistencePort).should().save(duoPost);
+        }
+    }
+
+    @Nested
+    @DisplayName("updateDuoPost")
+    class UpdateDuoPost {
+
+        @DisplayName("존재하지 않는 게시글 수정 시 DUO_POST_NOT_FOUND 에러")
+        @Test
+        void postNotFound_throwsException() {
+            // given
+            Long memberId = 1L;
+            Long duoPostId = 999L;
+            UpdateDuoPostCommand command = UpdateDuoPostCommand.builder()
+                    .primaryLane("TOP")
+                    .secondaryLane("SUPPORT")
+                    .hasMicrophone(false)
+                    .memo("수정된 메모")
+                    .build();
+
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> duoService.updateDuoPost(memberId, duoPostId, command))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.DUO_POST_NOT_FOUND);
+        }
+
+        @DisplayName("소유자가 아닌 경우 FORBIDDEN 에러")
+        @Test
+        void notOwner_throwsForbidden() {
+            // given
+            Long memberId = 1L;
+            Long otherMemberId = 2L;
+            Long duoPostId = 100L;
+            DuoPost duoPost = createTestDuoPost(duoPostId, otherMemberId);
+            UpdateDuoPostCommand command = UpdateDuoPostCommand.builder()
+                    .primaryLane("TOP")
+                    .secondaryLane("SUPPORT")
+                    .hasMicrophone(false)
+                    .memo("수정된 메모")
+                    .build();
+
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+
+            // when & then
+            assertThatThrownBy(() -> duoService.updateDuoPost(memberId, duoPostId, command))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.FORBIDDEN);
+
+            then(duoPostPersistencePort).should(never()).save(any(DuoPost.class));
+        }
+
+        @DisplayName("MATCHED 상태 게시글 수정 시 DUO_POST_NOT_ACTIVE 에러")
+        @Test
+        void matchedPost_throwsNotActive() {
+            // given
+            Long memberId = 1L;
+            Long duoPostId = 100L;
+            DuoPost duoPost = createTestDuoPost(duoPostId, memberId,
+                    DuoPostStatus.MATCHED, LocalDateTime.now().plusHours(24));
+            UpdateDuoPostCommand command = UpdateDuoPostCommand.builder()
+                    .primaryLane("TOP")
+                    .secondaryLane("SUPPORT")
+                    .hasMicrophone(false)
+                    .memo("수정된 메모")
+                    .build();
+
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+
+            // when & then
+            assertThatThrownBy(() -> duoService.updateDuoPost(memberId, duoPostId, command))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.DUO_POST_NOT_ACTIVE);
+
+            then(duoPostPersistencePort).should(never()).save(any(DuoPost.class));
+        }
+
+        @DisplayName("만료된 게시글 수정 시 DUO_POST_NOT_ACTIVE 에러")
+        @Test
+        void expiredPost_throwsNotActive() {
+            // given
+            Long memberId = 1L;
+            Long duoPostId = 100L;
+            DuoPost duoPost = createTestDuoPost(duoPostId, memberId,
+                    DuoPostStatus.ACTIVE, LocalDateTime.now().minusHours(1));
+            UpdateDuoPostCommand command = UpdateDuoPostCommand.builder()
+                    .primaryLane("TOP")
+                    .secondaryLane("SUPPORT")
+                    .hasMicrophone(false)
+                    .memo("수정된 메모")
+                    .build();
+
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+
+            // when & then
+            assertThatThrownBy(() -> duoService.updateDuoPost(memberId, duoPostId, command))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.DUO_POST_NOT_ACTIVE);
+
+            then(duoPostPersistencePort).should(never()).save(any(DuoPost.class));
+        }
+
+        @DisplayName("정상 수정 - 라인, 마이크, 메모 변경 반영")
+        @Test
+        void success() {
+            // given
+            Long memberId = 1L;
+            Long duoPostId = 100L;
+            DuoPost duoPost = createTestDuoPost(duoPostId, memberId);
+            UpdateDuoPostCommand command = UpdateDuoPostCommand.builder()
+                    .primaryLane("TOP")
+                    .secondaryLane("SUPPORT")
+                    .hasMicrophone(false)
+                    .memo("수정된 메모")
+                    .build();
+
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+            given(duoPostPersistencePort.save(any(DuoPost.class)))
+                    .willAnswer(invocation -> invocation.getArgument(0));
+
+            // when
+            DuoPostReadModel result = duoService.updateDuoPost(memberId, duoPostId, command);
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.getPrimaryLane()).isEqualTo("TOP");
+            assertThat(result.getSecondaryLane()).isEqualTo("SUPPORT");
+            assertThat(result.isHasMicrophone()).isFalse();
+            assertThat(result.getMemo()).isEqualTo("수정된 메모");
+            assertThat(result.getTier()).isEqualTo("GOLD");
+            assertThat(result.getStatus()).isEqualTo("ACTIVE");
+            then(duoPostPersistencePort).should().save(any(DuoPost.class));
         }
     }
 
@@ -746,6 +889,26 @@ class DuoServiceTest {
                 .tier("GOLD")
                 .rank("I")
                 .leaguePoints(50)
+                .build();
+    }
+
+    private DuoPost createTestDuoPost(Long id, Long memberId,
+            DuoPostStatus status, LocalDateTime expiresAt) {
+        return DuoPost.builder()
+                .id(id)
+                .memberId(memberId)
+                .puuid("owner-puuid")
+                .primaryLane(Lane.MID)
+                .secondaryLane(Lane.JUNGLE)
+                .hasMicrophone(true)
+                .tier("GOLD")
+                .rank("I")
+                .leaguePoints(50)
+                .memo("듀오 구합니다")
+                .status(status)
+                .expiresAt(expiresAt)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
     }
 

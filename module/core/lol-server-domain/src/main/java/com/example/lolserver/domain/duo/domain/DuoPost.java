@@ -74,4 +74,13 @@ public class DuoPost {
         this.status = DuoPostStatus.EXPIRED;
         this.updatedAt = LocalDateTime.now();
     }
+
+    public void updateContent(Lane primaryLane, Lane secondaryLane,
+                              boolean hasMicrophone, String memo) {
+        this.primaryLane = primaryLane;
+        this.secondaryLane = secondaryLane;
+        this.hasMicrophone = hasMicrophone;
+        this.memo = memo;
+        this.updatedAt = LocalDateTime.now();
+    }
 }

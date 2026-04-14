@@ -3,6 +3,7 @@ package com.example.lolserver.domain.duo.application;
 import com.example.lolserver.domain.duo.application.command.CreateDuoPostCommand;
 import com.example.lolserver.domain.duo.application.command.CreateDuoRequestCommand;
 import com.example.lolserver.domain.duo.application.command.DuoPostSearchCommand;
+import com.example.lolserver.domain.duo.application.command.UpdateDuoPostCommand;
 import com.example.lolserver.domain.duo.application.model.DuoMatchResultReadModel;
 import com.example.lolserver.domain.duo.application.model.DuoPostDetailReadModel;
 import com.example.lolserver.domain.duo.application.model.DuoPostListReadModel;
@@ -22,6 +23,7 @@ import com.example.lolserver.domain.duo.domain.vo.TierInfo;
 import com.example.lolserver.domain.league.application.port.LeaguePersistencePort;
 import com.example.lolserver.domain.member.application.port.out.MemberPersistencePort;
 import com.example.lolserver.domain.member.domain.Member;
+import com.example.lolserver.domain.member.domain.SocialAccount;
 import com.example.lolserver.domain.member.domain.vo.OAuthProvider;
 import com.example.lolserver.QueueType;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerPersistencePort;
@@ -80,6 +82,31 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
 
         duoPost.markDeleted();
         duoPostPersistencePort.save(duoPost);
+    }
+
+    @Override
+    @Transactional
+    public DuoPostReadModel updateDuoPost(Long memberId, Long duoPostId,
+                                           UpdateDuoPostCommand command) {
+        DuoPost duoPost = duoPostPersistencePort.findById(duoPostId)
+                .orElseThrow(() -> new CoreException(ErrorType.DUO_POST_NOT_FOUND));
+
+        if (!duoPost.isOwner(memberId)) {
+            throw new CoreException(ErrorType.FORBIDDEN);
+        }
+
+        if (!duoPost.isActive()) {
+            throw new CoreException(ErrorType.DUO_POST_NOT_ACTIVE);
+        }
+
+        Lane primaryLane = parseLane(command.getPrimaryLane());
+        Lane secondaryLane = parseLane(command.getSecondaryLane());
+
+        duoPost.updateContent(primaryLane, secondaryLane,
+                command.isHasMicrophone(), command.getMemo());
+
+        DuoPost saved = duoPostPersistencePort.save(duoPost);
+        return DuoPostReadModel.of(saved);
     }
 
     @Override
@@ -167,13 +194,7 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
         duoRequest.accept();
         duoRequestPersistencePort.save(duoRequest);
 
-        return DuoMatchResultReadModel.builder()
-                .duoPostId(duoPost.getId())
-                .requestId(duoRequest.getId())
-                .partnerGameName(null)
-                .partnerTagLine(null)
-                .status(DuoRequestStatus.ACCEPTED.name())
-                .build();
+        return DuoMatchResultReadModel.of(duoPost, duoRequest);
     }
 
     @Override
@@ -198,22 +219,10 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
         duoRequestPersistencePort.rejectAllPendingAndAccepted(
                 duoPost.getId(), duoRequest.getId());
 
-        String partnerGameName = null;
-        String partnerTagLine = null;
         Summoner partnerSummoner = summonerPersistencePort
                 .findById(duoPost.getPuuid()).orElse(null);
-        if (partnerSummoner != null) {
-            partnerGameName = partnerSummoner.getGameName();
-            partnerTagLine = partnerSummoner.getTagLine();
-        }
 
-        return DuoMatchResultReadModel.builder()
-                .duoPostId(duoPost.getId())
-                .requestId(duoRequest.getId())
-                .partnerGameName(partnerGameName)
-                .partnerTagLine(partnerTagLine)
-                .status(DuoRequestStatus.CONFIRMED.name())
-                .build();
+        return DuoMatchResultReadModel.of(duoPost, duoRequest, partnerSummoner);
     }
 
     @Override
@@ -272,7 +281,7 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
 
         return member.getSocialAccounts().stream()
                 .filter(sa -> OAuthProvider.RIOT.name().equals(sa.getProvider()) && sa.getPuuid() != null)
-                .map(sa -> sa.getPuuid())
+                .map(SocialAccount::getPuuid)
                 .findFirst()
                 .orElseThrow(() -> new CoreException(ErrorType.RIOT_ACCOUNT_NOT_LINKED));
     }

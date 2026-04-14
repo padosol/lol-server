@@ -3,7 +3,6 @@ package com.example.lolserver.domain.community.application;
 import com.example.lolserver.domain.community.application.command.CreatePostCommand;
 import com.example.lolserver.domain.community.application.command.PostSearchCommand;
 import com.example.lolserver.domain.community.application.command.UpdatePostCommand;
-import com.example.lolserver.domain.community.application.model.AuthorReadModel;
 import com.example.lolserver.domain.community.application.model.PostDetailReadModel;
 import com.example.lolserver.domain.community.application.model.PostListReadModel;
 import com.example.lolserver.domain.community.application.port.in.PostQueryUseCase;
@@ -47,7 +46,7 @@ public class PostService implements PostUseCase, PostQueryUseCase {
 
         Post saved = postPersistencePort.save(post);
 
-        return toDetailReadModel(saved, member, null);
+        return PostDetailReadModel.of(saved, member, null);
     }
 
     @Override
@@ -68,7 +67,7 @@ public class PostService implements PostUseCase, PostQueryUseCase {
         Member member = memberPersistencePort.findById(memberId)
                 .orElseThrow(() -> new CoreException(ErrorType.MEMBER_NOT_FOUND));
 
-        return toDetailReadModel(saved, member, null);
+        return PostDetailReadModel.of(saved, member, null);
     }
 
     @Override
@@ -108,7 +107,7 @@ public class PostService implements PostUseCase, PostQueryUseCase {
                     .orElse(null);
         }
 
-        return toDetailReadModel(post, member, currentUserVote);
+        return PostDetailReadModel.of(post, member, currentUserVote);
     }
 
     @Override
@@ -132,25 +131,5 @@ public class PostService implements PostUseCase, PostQueryUseCase {
         } catch (IllegalArgumentException e) {
             throw new CoreException(ErrorType.INVALID_CATEGORY);
         }
-    }
-
-    private PostDetailReadModel toDetailReadModel(
-            Post post, Member member, Vote currentUserVote) {
-        return PostDetailReadModel.builder()
-                .id(post.getId())
-                .title(post.getTitle())
-                .content(post.getContent())
-                .category(post.getCategory())
-                .viewCount(post.getViewCount())
-                .upvoteCount(post.getUpvoteCount())
-                .downvoteCount(post.getDownvoteCount())
-                .commentCount(post.getCommentCount())
-                .author(AuthorReadModel.of(member))
-                .currentUserVote(
-                        currentUserVote != null
-                                ? currentUserVote.getVoteType() : null)
-                .createdAt(post.getCreatedAt())
-                .updatedAt(post.getUpdatedAt())
-                .build();
     }
 }

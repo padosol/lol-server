@@ -125,6 +125,11 @@ module/
 - 컨트롤러 응답 DTO: Java `record` (불변)
 - 커맨드: `@Builder @Getter @NoArgsConstructor @AllArgsConstructor` (도메인 객체에 `@Setter` 사용 금지 — 팩토리 메서드/Builder 사용)
 - 트랜잭션: 조회 `@Transactional(readOnly = true)`, 변경 `@Transactional`
+- 매직 스트링 금지: 기존 enum이 존재하는 값은 반드시 `EnumType.VALUE.name()` 또는 `EnumType.VALUE.getXxx()` 사용
+  - `OAuthProvider` (`core:lol-server-domain`): `"RIOT"`, `"GOOGLE"` 대신 `OAuthProvider.RIOT.name()`
+  - `QueueType` (`core:enum`): `"RANKED_SOLO_5x5"` 대신 `QueueType.RANKED_SOLO_5x5.name()`, `420` 대신 `QueueType.RANKED_SOLO_5x5.getQueueId()`
+  - `DuoPostStatus`, `DuoRequestStatus` 등 도메인 VO enum 동일 적용
+- ReadModel 변환: 서비스에서 인라인 빌더로 ReadModel을 생성하지 말고, `ReadModel.of(DomainObject, ...)` 정적 팩토리 메서드를 ReadModel 클래스에 정의하여 사용
 
 ### 비동기 쿼리 실행 패턴
 
