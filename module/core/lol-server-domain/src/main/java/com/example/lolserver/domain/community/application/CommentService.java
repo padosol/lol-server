@@ -69,9 +69,7 @@ public class CommentService implements CommentUseCase, CommentQueryUseCase {
         Comment comment = commentPersistencePort.findById(commentId)
                 .orElseThrow(() -> new CoreException(ErrorType.COMMENT_NOT_FOUND));
 
-        if (!comment.isOwner(memberId)) {
-            throw new CoreException(ErrorType.FORBIDDEN);
-        }
+        comment.validateOwner(memberId);
 
         comment.updateContent(command.getContent());
         Comment saved = commentPersistencePort.save(comment);
@@ -88,9 +86,7 @@ public class CommentService implements CommentUseCase, CommentQueryUseCase {
         Comment comment = commentPersistencePort.findById(commentId)
                 .orElseThrow(() -> new CoreException(ErrorType.COMMENT_NOT_FOUND));
 
-        if (!comment.isOwner(memberId)) {
-            throw new CoreException(ErrorType.FORBIDDEN);
-        }
+        comment.validateOwner(memberId);
 
         comment.markDeleted();
         commentPersistencePort.save(comment);

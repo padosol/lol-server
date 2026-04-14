@@ -103,6 +103,26 @@ module/
 - `ErrorType` enum - HTTP 상태 코드 매핑
 - `@RestControllerAdvice(CoreExceptionAdvice)` - 전역 예외 핸들러
 
+### 도메인 검증 패턴
+
+도메인 규칙 위반은 **도메인 객체가 직접 예외를 던져야** 합니다. Application 서비스에서 boolean 체크 후 예외를 던지지 않습니다.
+
+```java
+// ✅ 올바른 패턴: 도메인 객체의 guard 메서드
+duoPost.validateOwner(memberId);
+duoPost.validateActive();
+member.validateNotWithdrawn();
+
+// ❌ 금지: Application 서비스에서 boolean 체크 + 예외 던지기
+if (!duoPost.isOwner(memberId)) {
+    throw new CoreException(ErrorType.FORBIDDEN);
+}
+```
+
+- guard 메서드 네이밍: `validate*` 접두사 (`validateOwner`, `validateActive`, `validateNotDeleted` 등)
+- boolean 쿼리 메서드(`isOwner`, `isActive` 등)는 조건 분기용으로만 사용하고, 불변식 강제에는 guard 메서드 사용
+- 동일 boolean에 대해 반대 의미의 guard가 필요하면 별도 메서드 분리 (`validateOwner` vs `validateNotOwner`)
+
 ### 테스트 패턴
 
 - **단위 테스트**: `@ExtendWith(MockitoExtension.class)`, BDDMockito (`given/then`)

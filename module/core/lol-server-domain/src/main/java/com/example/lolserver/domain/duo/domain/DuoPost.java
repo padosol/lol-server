@@ -3,6 +3,8 @@ package com.example.lolserver.domain.duo.domain;
 import com.example.lolserver.domain.duo.domain.vo.DuoPostStatus;
 import com.example.lolserver.domain.duo.domain.vo.Lane;
 import com.example.lolserver.domain.duo.domain.vo.TierInfo;
+import com.example.lolserver.support.error.CoreException;
+import com.example.lolserver.support.error.ErrorType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -58,6 +60,24 @@ public class DuoPost {
     public boolean isActive() {
         return this.status == DuoPostStatus.ACTIVE
                 && LocalDateTime.now().isBefore(this.expiresAt);
+    }
+
+    public void validateOwner(Long memberId) {
+        if (!this.memberId.equals(memberId)) {
+            throw new CoreException(ErrorType.FORBIDDEN);
+        }
+    }
+
+    public void validateNotOwner(Long memberId) {
+        if (this.memberId.equals(memberId)) {
+            throw new CoreException(ErrorType.DUO_POST_SELF_REQUEST);
+        }
+    }
+
+    public void validateActive() {
+        if (!isActive()) {
+            throw new CoreException(ErrorType.DUO_POST_NOT_ACTIVE);
+        }
     }
 
     public void markMatched() {

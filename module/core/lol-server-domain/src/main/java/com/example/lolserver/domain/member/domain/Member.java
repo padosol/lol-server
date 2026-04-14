@@ -122,6 +122,12 @@ public class Member {
         return this.withdrawnAt != null;
     }
 
+    public void validateNotWithdrawn() {
+        if (this.withdrawnAt != null) {
+            throw new CoreException(ErrorType.MEMBER_WITHDRAWN);
+        }
+    }
+
     public void unlinkSocialAccount(Long socialAccountId) {
         if (this.socialAccounts == null
                 || this.socialAccounts.isEmpty()) {

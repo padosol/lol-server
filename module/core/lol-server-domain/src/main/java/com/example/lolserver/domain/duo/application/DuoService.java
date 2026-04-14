@@ -76,9 +76,7 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
         DuoPost duoPost = duoPostPersistencePort.findById(duoPostId)
                 .orElseThrow(() -> new CoreException(ErrorType.DUO_POST_NOT_FOUND));
 
-        if (!duoPost.isOwner(memberId)) {
-            throw new CoreException(ErrorType.FORBIDDEN);
-        }
+        duoPost.validateOwner(memberId);
 
         duoPost.markDeleted();
         duoPostPersistencePort.save(duoPost);
@@ -91,13 +89,8 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
         DuoPost duoPost = duoPostPersistencePort.findById(duoPostId)
                 .orElseThrow(() -> new CoreException(ErrorType.DUO_POST_NOT_FOUND));
 
-        if (!duoPost.isOwner(memberId)) {
-            throw new CoreException(ErrorType.FORBIDDEN);
-        }
-
-        if (!duoPost.isActive()) {
-            throw new CoreException(ErrorType.DUO_POST_NOT_ACTIVE);
-        }
+        duoPost.validateOwner(memberId);
+        duoPost.validateActive();
 
         Lane primaryLane = parseLane(command.getPrimaryLane());
         Lane secondaryLane = parseLane(command.getSecondaryLane());
@@ -147,13 +140,8 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
         DuoPost duoPost = duoPostPersistencePort.findById(duoPostId)
                 .orElseThrow(() -> new CoreException(ErrorType.DUO_POST_NOT_FOUND));
 
-        if (!duoPost.isActive()) {
-            throw new CoreException(ErrorType.DUO_POST_NOT_ACTIVE);
-        }
-
-        if (duoPost.isOwner(memberId)) {
-            throw new CoreException(ErrorType.DUO_POST_SELF_REQUEST);
-        }
+        duoPost.validateActive();
+        duoPost.validateNotOwner(memberId);
 
         boolean alreadyRequested = duoRequestPersistencePort
                 .existsByDuoPostIdAndRequesterIdAndStatusIn(
@@ -187,9 +175,7 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
         DuoPost duoPost = duoPostPersistencePort.findById(duoRequest.getDuoPostId())
                 .orElseThrow(() -> new CoreException(ErrorType.DUO_POST_NOT_FOUND));
 
-        if (!duoPost.isOwner(memberId)) {
-            throw new CoreException(ErrorType.FORBIDDEN);
-        }
+        duoPost.validateOwner(memberId);
 
         duoRequest.accept();
         duoRequestPersistencePort.save(duoRequest);
@@ -203,9 +189,7 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
         DuoRequest duoRequest = duoRequestPersistencePort.findById(requestId)
                 .orElseThrow(() -> new CoreException(ErrorType.DUO_REQUEST_NOT_FOUND));
 
-        if (!duoRequest.isRequester(memberId)) {
-            throw new CoreException(ErrorType.FORBIDDEN);
-        }
+        duoRequest.validateRequester(memberId);
 
         duoRequest.confirm();
         duoRequestPersistencePort.save(duoRequest);
@@ -234,9 +218,7 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
         DuoPost duoPost = duoPostPersistencePort.findById(duoRequest.getDuoPostId())
                 .orElseThrow(() -> new CoreException(ErrorType.DUO_POST_NOT_FOUND));
 
-        if (!duoPost.isOwner(memberId)) {
-            throw new CoreException(ErrorType.FORBIDDEN);
-        }
+        duoPost.validateOwner(memberId);
 
         duoRequest.reject();
         duoRequestPersistencePort.save(duoRequest);
@@ -248,9 +230,7 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
         DuoRequest duoRequest = duoRequestPersistencePort.findById(requestId)
                 .orElseThrow(() -> new CoreException(ErrorType.DUO_REQUEST_NOT_FOUND));
 
-        if (!duoRequest.isRequester(memberId)) {
-            throw new CoreException(ErrorType.FORBIDDEN);
-        }
+        duoRequest.validateRequester(memberId);
 
         duoRequest.cancel();
         duoRequestPersistencePort.save(duoRequest);
@@ -261,9 +241,7 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
         DuoPost duoPost = duoPostPersistencePort.findById(duoPostId)
                 .orElseThrow(() -> new CoreException(ErrorType.DUO_POST_NOT_FOUND));
 
-        if (!duoPost.isOwner(memberId)) {
-            throw new CoreException(ErrorType.FORBIDDEN);
-        }
+        duoPost.validateOwner(memberId);
 
         return duoRequestPersistencePort.findByDuoPostId(duoPostId).stream()
                 .map(DuoRequestReadModel::of)

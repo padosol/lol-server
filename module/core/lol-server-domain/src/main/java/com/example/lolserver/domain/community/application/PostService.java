@@ -57,9 +57,7 @@ public class PostService implements PostUseCase, PostQueryUseCase {
         Post post = postPersistencePort.findById(postId)
                 .orElseThrow(() -> new CoreException(ErrorType.POST_NOT_FOUND));
 
-        if (!post.isOwner(memberId)) {
-            throw new CoreException(ErrorType.FORBIDDEN);
-        }
+        post.validateOwner(memberId);
 
         post.updateContent(command.getTitle(), command.getContent(), command.getCategory());
         Post saved = postPersistencePort.save(post);
@@ -76,9 +74,7 @@ public class PostService implements PostUseCase, PostQueryUseCase {
         Post post = postPersistencePort.findById(postId)
                 .orElseThrow(() -> new CoreException(ErrorType.POST_NOT_FOUND));
 
-        if (!post.isOwner(memberId)) {
-            throw new CoreException(ErrorType.FORBIDDEN);
-        }
+        post.validateOwner(memberId);
 
         post.markDeleted();
         postPersistencePort.save(post);
@@ -90,9 +86,7 @@ public class PostService implements PostUseCase, PostQueryUseCase {
         Post post = postPersistencePort.findById(postId)
                 .orElseThrow(() -> new CoreException(ErrorType.POST_NOT_FOUND));
 
-        if (post.isDeleted()) {
-            throw new CoreException(ErrorType.POST_NOT_FOUND);
-        }
+        post.validateNotDeleted();
 
         postPersistencePort.incrementViewCount(postId);
         post.incrementViewCount();

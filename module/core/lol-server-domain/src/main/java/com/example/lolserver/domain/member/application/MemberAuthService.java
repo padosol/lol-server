@@ -97,9 +97,7 @@ public class MemberAuthService implements MemberAuthUseCase {
                 .orElseThrow(() -> new CoreException(
                         ErrorType.MEMBER_NOT_FOUND));
 
-        if (member.isWithdrawn()) {
-            throw new CoreException(ErrorType.MEMBER_WITHDRAWN);
-        }
+        member.validateNotWithdrawn();
 
         return generateTokens(member);
     }
@@ -179,9 +177,7 @@ public class MemberAuthService implements MemberAuthUseCase {
                 socialAccount.getMemberId())
                 .orElseThrow(() -> new CoreException(
                         ErrorType.MEMBER_NOT_FOUND));
-        if (member.isWithdrawn()) {
-            throw new CoreException(ErrorType.MEMBER_WITHDRAWN);
-        }
+        member.validateNotWithdrawn();
         member.updateLastLogin();
         memberPersistencePort.save(member);
         return member;
@@ -214,9 +210,7 @@ public class MemberAuthService implements MemberAuthUseCase {
                 .findByIdWithSocialAccounts(memberId)
                 .orElseThrow(() -> new CoreException(
                         ErrorType.MEMBER_NOT_FOUND));
-        if (member.isWithdrawn()) {
-            throw new CoreException(ErrorType.MEMBER_WITHDRAWN);
-        }
+        member.validateNotWithdrawn();
         return member;
     }
 

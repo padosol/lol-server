@@ -196,6 +196,30 @@ class MemberTest {
         assertThat(member.isWithdrawn()).isTrue();
     }
 
+    @DisplayName("활성 회원에 대해 validateNotWithdrawn 호출이 정상 통과한다")
+    @Test
+    void validateNotWithdrawn_activeMember_success() {
+        // given
+        Member member = createMemberWithSocialAccounts();
+
+        // when & then (no exception)
+        member.validateNotWithdrawn();
+    }
+
+    @DisplayName("탈퇴한 회원에 대해 validateNotWithdrawn 호출 시 MEMBER_WITHDRAWN 예외가 발생한다")
+    @Test
+    void validateNotWithdrawn_withdrawnMember_throwsException() {
+        // given
+        Member member = createMemberWithSocialAccounts();
+        member.withdraw();
+
+        // when & then
+        assertThatThrownBy(() -> member.validateNotWithdrawn())
+                .isInstanceOf(CoreException.class)
+                .extracting(e -> ((CoreException) e).getErrorType())
+                .isEqualTo(ErrorType.MEMBER_WITHDRAWN);
+    }
+
     private Member createMemberWithSocialAccounts(
             SocialAccount... accounts) {
         return Member.builder()

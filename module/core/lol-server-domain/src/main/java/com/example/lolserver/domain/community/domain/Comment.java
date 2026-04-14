@@ -1,5 +1,7 @@
 package com.example.lolserver.domain.community.domain;
 
+import com.example.lolserver.support.error.CoreException;
+import com.example.lolserver.support.error.ErrorType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,6 +41,12 @@ public class Comment {
 
     public boolean isOwner(Long memberId) {
         return this.memberId.equals(memberId);
+    }
+
+    public void validateOwner(Long memberId) {
+        if (!this.memberId.equals(memberId)) {
+            throw new CoreException(ErrorType.FORBIDDEN);
+        }
     }
 
     public void markDeleted() {

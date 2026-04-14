@@ -57,6 +57,12 @@ public class DuoRequest {
         return this.requesterId.equals(memberId);
     }
 
+    public void validateRequester(Long memberId) {
+        if (!this.requesterId.equals(memberId)) {
+            throw new CoreException(ErrorType.FORBIDDEN);
+        }
+    }
+
     public void accept() {
         if (this.status != DuoRequestStatus.PENDING) {
             throw new CoreException(ErrorType.DUO_REQUEST_NOT_PENDING);

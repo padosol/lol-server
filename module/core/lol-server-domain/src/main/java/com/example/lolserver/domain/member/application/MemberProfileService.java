@@ -45,9 +45,7 @@ public class MemberProfileService
                 .findByIdWithSocialAccounts(memberId)
                 .orElseThrow(() -> new CoreException(
                         ErrorType.MEMBER_NOT_FOUND));
-        if (member.isWithdrawn()) {
-            throw new CoreException(ErrorType.MEMBER_NOT_FOUND);
-        }
+        member.validateNotWithdrawn();
         return member;
     }
 }
