@@ -1,0 +1,10 @@
+[[duo-request-accept]]
+=== 듀오 요청 수락
+
+==== HTTP Request
+include::{snippets}/duo-request-accept/http-request.adoc[]
+include::{snippets}/duo-request-accept/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/duo-request-accept/http-response.adoc[]
+include::{snippets}/duo-request-accept/response-fields.adoc[]

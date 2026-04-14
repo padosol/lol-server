@@ -1,0 +1,11 @@
+[[duo-post-update]]
+=== 듀오 게시글 수정
+
+==== HTTP Request
+include::{snippets}/duo-post-update/http-request.adoc[]
+include::{snippets}/duo-post-update/path-parameters.adoc[]
+include::{snippets}/duo-post-update/request-fields.adoc[]
+
+==== HTTP Response
+include::{snippets}/duo-post-update/http-response.adoc[]
+include::{snippets}/duo-post-update/response-fields.adoc[]

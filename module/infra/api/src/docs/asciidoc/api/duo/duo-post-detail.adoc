@@ -1,0 +1,10 @@
+[[duo-post-detail]]
+=== 듀오 게시글 상세 조회
+
+==== HTTP Request
+include::{snippets}/duo-post-detail/http-request.adoc[]
+include::{snippets}/duo-post-detail/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/duo-post-detail/http-response.adoc[]
+include::{snippets}/duo-post-detail/response-fields.adoc[]

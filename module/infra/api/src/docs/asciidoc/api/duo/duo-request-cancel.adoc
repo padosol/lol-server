@@ -1,0 +1,9 @@
+[[duo-request-cancel]]
+=== 듀오 요청 취소
+
+==== HTTP Request
+include::{snippets}/duo-request-cancel/http-request.adoc[]
+include::{snippets}/duo-request-cancel/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/duo-request-cancel/http-response.adoc[]
