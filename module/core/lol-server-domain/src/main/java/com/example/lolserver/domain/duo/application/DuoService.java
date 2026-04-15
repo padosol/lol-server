@@ -12,9 +12,7 @@ import com.example.lolserver.domain.duo.application.port.in.DuoPostUseCase;
 import com.example.lolserver.domain.duo.application.port.out.DuoPostPersistencePort;
 import com.example.lolserver.domain.duo.application.port.out.DuoRequestPersistencePort;
 import com.example.lolserver.domain.duo.domain.DuoPost;
-import com.example.lolserver.domain.duo.domain.vo.MostChampion;
-import com.example.lolserver.domain.duo.domain.vo.RecentGameSummary;
-import com.example.lolserver.domain.duo.domain.vo.TierInfo;
+import com.example.lolserver.domain.duo.application.RiotAccountResolver.RiotAccountStats;
 import com.example.lolserver.support.SliceResult;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
@@ -40,15 +38,13 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase {
     @Transactional
     public DuoPostReadModel createDuoPost(Long memberId, CreateDuoPostCommand command) {
         String puuid = riotAccountResolver.extractRiotPuuid(memberId);
-        TierInfo tierInfo = riotAccountResolver.lookupTierInfo(puuid);
-        List<MostChampion> mostChampions = riotAccountResolver.lookupMostChampions(puuid);
-        RecentGameSummary recentGameSummary = riotAccountResolver.lookupRecentGameSummary(puuid);
+        RiotAccountStats stats = riotAccountResolver.lookupAllStats(puuid);
 
         DuoPost duoPost = DuoPost.create(
                 memberId, puuid,
                 command.getPrimaryLane(), command.getDesiredLane(),
-                command.isHasMicrophone(), tierInfo, command.getMemo(),
-                mostChampions, recentGameSummary
+                command.isHasMicrophone(), stats.tierInfo(), command.getMemo(),
+                stats.mostChampions(), stats.recentGameSummary()
         );
 
         DuoPost saved = duoPostPersistencePort.save(duoPost);

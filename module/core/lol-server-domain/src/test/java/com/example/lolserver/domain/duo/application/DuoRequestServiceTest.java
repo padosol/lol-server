@@ -10,6 +10,7 @@ import com.example.lolserver.domain.duo.domain.DuoRequest;
 import com.example.lolserver.domain.duo.domain.vo.DuoPostStatus;
 import com.example.lolserver.domain.duo.domain.vo.DuoRequestStatus;
 import com.example.lolserver.domain.duo.domain.vo.Lane;
+import com.example.lolserver.domain.duo.application.RiotAccountResolver.RiotAccountStats;
 import com.example.lolserver.domain.duo.domain.vo.MostChampion;
 import com.example.lolserver.domain.duo.domain.vo.RecentGameSummary;
 import com.example.lolserver.domain.duo.domain.vo.TierInfo;
@@ -185,10 +186,9 @@ class DuoRequestServiceTest {
                     new MostChampion(1, "Jinx", 30, 18, 12));
             RecentGameSummary recentGameSummary = new RecentGameSummary(10, 10, List.of(
                     new RecentGameSummary.PlayedChampion(1, "Jinx")));
+            RiotAccountStats stats = new RiotAccountStats(tierInfo, mostChampions, recentGameSummary);
 
-            given(riotAccountResolver.lookupTierInfo(puuid)).willReturn(tierInfo);
-            given(riotAccountResolver.lookupMostChampions(puuid)).willReturn(mostChampions);
-            given(riotAccountResolver.lookupRecentGameSummary(puuid)).willReturn(recentGameSummary);
+            given(riotAccountResolver.lookupAllStats(puuid)).willReturn(stats);
             given(duoRequestPersistencePort.save(any(DuoRequest.class)))
                     .willAnswer(invocation -> {
                         DuoRequest request = invocation.getArgument(0);

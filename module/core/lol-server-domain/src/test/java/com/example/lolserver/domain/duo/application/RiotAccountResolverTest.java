@@ -32,6 +32,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
@@ -203,9 +205,9 @@ class RiotAccountResolverTest {
             GameReadModel game2 = createTestGame(puuid, false, 2, "Zed");
 
             given(matchPersistencePort.getMatches(
-                    org.mockito.ArgumentMatchers.eq(puuid),
-                    org.mockito.ArgumentMatchers.eq(420),
-                    org.mockito.ArgumentMatchers.any(PaginationRequest.class)))
+                    eq(puuid),
+                    eq(420),
+                    any(PaginationRequest.class)))
                     .willReturn(new SliceResult<>(List.of(game1, game2), false));
 
             // when
@@ -224,9 +226,9 @@ class RiotAccountResolverTest {
             // given
             String puuid = "test-puuid";
             given(matchPersistencePort.getMatches(
-                    org.mockito.ArgumentMatchers.eq(puuid),
-                    org.mockito.ArgumentMatchers.eq(420),
-                    org.mockito.ArgumentMatchers.any(PaginationRequest.class)))
+                    eq(puuid),
+                    eq(420),
+                    any(PaginationRequest.class)))
                     .willReturn(new SliceResult<>(Collections.emptyList(), false));
 
             // when

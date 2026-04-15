@@ -20,8 +20,10 @@ import com.example.lolserver.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Component
 @RequiredArgsConstructor
@@ -43,6 +45,21 @@ public class RiotAccountResolver {
                 .map(SocialAccount::getPuuid)
                 .findFirst()
                 .orElseThrow(() -> new CoreException(ErrorType.RIOT_ACCOUNT_NOT_LINKED));
+    }
+
+    public RiotAccountStats lookupAllStats(String puuid) {
+        CompletableFuture<TierInfo> tierFuture =
+                CompletableFuture.supplyAsync(() -> lookupTierInfo(puuid));
+        CompletableFuture<List<MostChampion>> championsFuture =
+                CompletableFuture.supplyAsync(() -> lookupMostChampions(puuid));
+        CompletableFuture<RecentGameSummary> recentGameFuture =
+                CompletableFuture.supplyAsync(() -> lookupRecentGameSummary(puuid));
+
+        return new RiotAccountStats(
+                tierFuture.join(),
+                championsFuture.join(),
+                recentGameFuture.join()
+        );
     }
 
     public TierInfo lookupTierInfo(String puuid) {
@@ -83,7 +100,7 @@ public class RiotAccountResolver {
 
         int wins = 0;
         int losses = 0;
-        List<RecentGameSummary.PlayedChampion> playedChampions = new java.util.ArrayList<>();
+        List<RecentGameSummary.PlayedChampion> playedChampions = new ArrayList<>();
 
         for (GameReadModel game : games) {
             ParticipantData participant = game.getParticipantData().stream()
@@ -106,5 +123,12 @@ public class RiotAccountResolver {
         }
 
         return new RecentGameSummary(wins, losses, playedChampions);
+    }
+
+    public record RiotAccountStats(
+            TierInfo tierInfo,
+            List<MostChampion> mostChampions,
+            RecentGameSummary recentGameSummary
+    ) {
     }
 }

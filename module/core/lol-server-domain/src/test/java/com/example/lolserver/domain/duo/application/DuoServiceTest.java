@@ -11,6 +11,7 @@ import com.example.lolserver.domain.duo.domain.DuoRequest;
 import com.example.lolserver.domain.duo.domain.vo.DuoPostStatus;
 import com.example.lolserver.domain.duo.domain.vo.DuoRequestStatus;
 import com.example.lolserver.domain.duo.domain.vo.Lane;
+import com.example.lolserver.domain.duo.application.RiotAccountResolver.RiotAccountStats;
 import com.example.lolserver.domain.duo.domain.vo.MostChampion;
 import com.example.lolserver.domain.duo.domain.vo.RecentGameSummary;
 import com.example.lolserver.domain.duo.domain.vo.TierInfo;
@@ -96,11 +97,10 @@ class DuoServiceTest {
                     new MostChampion(1, "Ahri", 50, 30, 20));
             RecentGameSummary recentGameSummary = new RecentGameSummary(12, 8, List.of(
                     new RecentGameSummary.PlayedChampion(1, "Ahri")));
+            RiotAccountStats stats = new RiotAccountStats(tierInfo, mostChampions, recentGameSummary);
 
             given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
-            given(riotAccountResolver.lookupTierInfo(puuid)).willReturn(tierInfo);
-            given(riotAccountResolver.lookupMostChampions(puuid)).willReturn(mostChampions);
-            given(riotAccountResolver.lookupRecentGameSummary(puuid)).willReturn(recentGameSummary);
+            given(riotAccountResolver.lookupAllStats(puuid)).willReturn(stats);
             given(duoPostPersistencePort.save(any(DuoPost.class)))
                     .willAnswer(invocation -> {
                         DuoPost post = invocation.getArgument(0);
@@ -156,11 +156,12 @@ class DuoServiceTest {
                     .memo("티어 없음")
                     .build();
 
+            RiotAccountStats stats = new RiotAccountStats(
+                    TierInfo.UNRANKED, Collections.emptyList(),
+                    new RecentGameSummary(0, 0, Collections.emptyList()));
+
             given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
-            given(riotAccountResolver.lookupTierInfo(puuid)).willReturn(TierInfo.UNRANKED);
-            given(riotAccountResolver.lookupMostChampions(puuid)).willReturn(Collections.emptyList());
-            given(riotAccountResolver.lookupRecentGameSummary(puuid))
-                    .willReturn(new RecentGameSummary(0, 0, Collections.emptyList()));
+            given(riotAccountResolver.lookupAllStats(puuid)).willReturn(stats);
             given(duoPostPersistencePort.save(any(DuoPost.class)))
                     .willAnswer(invocation -> {
                         DuoPost post = invocation.getArgument(0);
@@ -303,7 +304,7 @@ class DuoServiceTest {
             Long memberId = 1L;
             Long duoPostId = 100L;
             DuoPost duoPost = createTestDuoPost(duoPostId, memberId,
-                    DuoPostStatus.MATCHED, LocalDateTime.now().plusHours(24));
+                    DuoPostStatus.MATCHED, LocalDateTime.now().plusHours(1));
             UpdateDuoPostCommand command = UpdateDuoPostCommand.builder()
                     .primaryLane("TOP")
                     .desiredLane("SUPPORT")

@@ -10,9 +10,7 @@ import com.example.lolserver.domain.duo.application.port.out.DuoRequestPersisten
 import com.example.lolserver.domain.duo.domain.DuoPost;
 import com.example.lolserver.domain.duo.domain.DuoRequest;
 import com.example.lolserver.domain.duo.domain.vo.DuoRequestStatus;
-import com.example.lolserver.domain.duo.domain.vo.MostChampion;
-import com.example.lolserver.domain.duo.domain.vo.RecentGameSummary;
-import com.example.lolserver.domain.duo.domain.vo.TierInfo;
+import com.example.lolserver.domain.duo.application.RiotAccountResolver.RiotAccountStats;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerPersistencePort;
 import com.example.lolserver.domain.summoner.domain.Summoner;
 import com.example.lolserver.support.SliceResult;
@@ -57,15 +55,13 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
             throw new CoreException(ErrorType.DUO_REQUEST_ALREADY_EXISTS);
         }
 
-        TierInfo tierInfo = riotAccountResolver.lookupTierInfo(puuid);
-        List<MostChampion> mostChampions = riotAccountResolver.lookupMostChampions(puuid);
-        RecentGameSummary recentGameSummary = riotAccountResolver.lookupRecentGameSummary(puuid);
+        RiotAccountStats stats = riotAccountResolver.lookupAllStats(puuid);
 
         DuoRequest duoRequest = DuoRequest.create(
                 duoPostId, memberId, puuid,
                 command.getPrimaryLane(), command.getDesiredLane(),
-                command.isHasMicrophone(), tierInfo, command.getMemo(),
-                mostChampions, recentGameSummary
+                command.isHasMicrophone(), stats.tierInfo(), command.getMemo(),
+                stats.mostChampions(), stats.recentGameSummary()
         );
 
         DuoRequest saved = duoRequestPersistencePort.save(duoRequest);
