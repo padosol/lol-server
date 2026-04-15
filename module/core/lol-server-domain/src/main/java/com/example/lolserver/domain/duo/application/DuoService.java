@@ -1,32 +1,20 @@
 package com.example.lolserver.domain.duo.application;
 
 import com.example.lolserver.domain.duo.application.command.CreateDuoPostCommand;
-import com.example.lolserver.domain.duo.application.command.CreateDuoRequestCommand;
 import com.example.lolserver.domain.duo.application.command.DuoPostSearchCommand;
 import com.example.lolserver.domain.duo.application.command.UpdateDuoPostCommand;
-import com.example.lolserver.domain.duo.application.model.DuoMatchResultReadModel;
 import com.example.lolserver.domain.duo.application.model.DuoPostDetailReadModel;
 import com.example.lolserver.domain.duo.application.model.DuoPostListReadModel;
 import com.example.lolserver.domain.duo.application.model.DuoPostReadModel;
 import com.example.lolserver.domain.duo.application.model.DuoRequestReadModel;
 import com.example.lolserver.domain.duo.application.port.in.DuoPostQueryUseCase;
 import com.example.lolserver.domain.duo.application.port.in.DuoPostUseCase;
-import com.example.lolserver.domain.duo.application.port.in.DuoRequestQueryUseCase;
-import com.example.lolserver.domain.duo.application.port.in.DuoRequestUseCase;
 import com.example.lolserver.domain.duo.application.port.out.DuoPostPersistencePort;
 import com.example.lolserver.domain.duo.application.port.out.DuoRequestPersistencePort;
 import com.example.lolserver.domain.duo.domain.DuoPost;
-import com.example.lolserver.domain.duo.domain.DuoRequest;
-import com.example.lolserver.domain.duo.domain.vo.DuoRequestStatus;
+import com.example.lolserver.domain.duo.domain.vo.MostChampion;
+import com.example.lolserver.domain.duo.domain.vo.RecentGameSummary;
 import com.example.lolserver.domain.duo.domain.vo.TierInfo;
-import com.example.lolserver.domain.league.application.port.LeaguePersistencePort;
-import com.example.lolserver.domain.member.application.port.out.MemberPersistencePort;
-import com.example.lolserver.domain.member.domain.Member;
-import com.example.lolserver.domain.member.domain.SocialAccount;
-import com.example.lolserver.domain.member.domain.vo.OAuthProvider;
-import com.example.lolserver.QueueType;
-import com.example.lolserver.domain.summoner.application.port.out.SummonerPersistencePort;
-import com.example.lolserver.domain.summoner.domain.Summoner;
 import com.example.lolserver.support.SliceResult;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
@@ -42,25 +30,25 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
-        DuoRequestUseCase, DuoRequestQueryUseCase {
+public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase {
 
     private final DuoPostPersistencePort duoPostPersistencePort;
     private final DuoRequestPersistencePort duoRequestPersistencePort;
-    private final MemberPersistencePort memberPersistencePort;
-    private final LeaguePersistencePort leaguePersistencePort;
-    private final SummonerPersistencePort summonerPersistencePort;
+    private final RiotAccountResolver riotAccountResolver;
 
     @Override
     @Transactional
     public DuoPostReadModel createDuoPost(Long memberId, CreateDuoPostCommand command) {
-        String puuid = extractRiotPuuid(memberId);
-        TierInfo tierInfo = lookupTierInfo(puuid);
+        String puuid = riotAccountResolver.extractRiotPuuid(memberId);
+        TierInfo tierInfo = riotAccountResolver.lookupTierInfo(puuid);
+        List<MostChampion> mostChampions = riotAccountResolver.lookupMostChampions(puuid);
+        RecentGameSummary recentGameSummary = riotAccountResolver.lookupRecentGameSummary(puuid);
 
         DuoPost duoPost = DuoPost.create(
                 memberId, puuid,
-                command.getPrimaryLane(), command.getSecondaryLane(),
-                command.isHasMicrophone(), tierInfo, command.getMemo()
+                command.getPrimaryLane(), command.getDesiredLane(),
+                command.isHasMicrophone(), tierInfo, command.getMemo(),
+                mostChampions, recentGameSummary
         );
 
         DuoPost saved = duoPostPersistencePort.save(duoPost);
@@ -90,7 +78,7 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
         duoPost.validateActive();
 
         duoPost.updateContent(
-                command.getPrimaryLane(), command.getSecondaryLane(),
+                command.getPrimaryLane(), command.getDesiredLane(),
                 command.isHasMicrophone(), command.getMemo());
 
         DuoPost saved = duoPostPersistencePort.save(duoPost);
@@ -125,145 +113,4 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase,
     public SliceResult<DuoPostListReadModel> getMyDuoPosts(Long memberId, int page) {
         return duoPostPersistencePort.findByMemberId(memberId, page);
     }
-
-    @Override
-    @Transactional
-    public DuoRequestReadModel createDuoRequest(Long memberId, Long duoPostId,
-            CreateDuoRequestCommand command) {
-        String puuid = extractRiotPuuid(memberId);
-
-        DuoPost duoPost = duoPostPersistencePort.findById(duoPostId)
-                .orElseThrow(() -> new CoreException(ErrorType.DUO_POST_NOT_FOUND));
-
-        duoPost.validateActive();
-        duoPost.validateNotOwner(memberId);
-
-        boolean alreadyRequested = duoRequestPersistencePort
-                .existsByDuoPostIdAndRequesterIdAndStatusIn(
-                        duoPostId, memberId,
-                        List.of(DuoRequestStatus.PENDING, DuoRequestStatus.ACCEPTED)
-                );
-        if (alreadyRequested) {
-            throw new CoreException(ErrorType.DUO_REQUEST_ALREADY_EXISTS);
-        }
-
-        TierInfo tierInfo = lookupTierInfo(puuid);
-
-        DuoRequest duoRequest = DuoRequest.create(
-                duoPostId, memberId, puuid,
-                command.getPrimaryLane(), command.getSecondaryLane(),
-                command.isHasMicrophone(), tierInfo, command.getMemo()
-        );
-
-        DuoRequest saved = duoRequestPersistencePort.save(duoRequest);
-        return DuoRequestReadModel.of(saved);
-    }
-
-    @Override
-    @Transactional
-    public DuoMatchResultReadModel acceptDuoRequest(Long memberId, Long requestId) {
-        DuoRequest duoRequest = duoRequestPersistencePort.findById(requestId)
-                .orElseThrow(() -> new CoreException(ErrorType.DUO_REQUEST_NOT_FOUND));
-
-        DuoPost duoPost = duoPostPersistencePort.findById(duoRequest.getDuoPostId())
-                .orElseThrow(() -> new CoreException(ErrorType.DUO_POST_NOT_FOUND));
-
-        duoPost.validateOwner(memberId);
-
-        duoRequest.accept();
-        duoRequestPersistencePort.save(duoRequest);
-
-        return DuoMatchResultReadModel.of(duoPost, duoRequest);
-    }
-
-    @Override
-    @Transactional
-    public DuoMatchResultReadModel confirmDuoRequest(Long memberId, Long requestId) {
-        DuoRequest duoRequest = duoRequestPersistencePort.findById(requestId)
-                .orElseThrow(() -> new CoreException(ErrorType.DUO_REQUEST_NOT_FOUND));
-
-        duoRequest.validateRequester(memberId);
-
-        duoRequest.confirm();
-        duoRequestPersistencePort.save(duoRequest);
-
-        DuoPost duoPost = duoPostPersistencePort.findById(duoRequest.getDuoPostId())
-                .orElseThrow(() -> new CoreException(ErrorType.DUO_POST_NOT_FOUND));
-
-        duoPost.markMatched();
-        duoPostPersistencePort.save(duoPost);
-
-        duoRequestPersistencePort.rejectAllPendingAndAccepted(
-                duoPost.getId(), duoRequest.getId());
-
-        Summoner partnerSummoner = summonerPersistencePort
-                .findById(duoPost.getPuuid()).orElse(null);
-
-        return DuoMatchResultReadModel.of(duoPost, duoRequest, partnerSummoner);
-    }
-
-    @Override
-    @Transactional
-    public void rejectDuoRequest(Long memberId, Long requestId) {
-        DuoRequest duoRequest = duoRequestPersistencePort.findById(requestId)
-                .orElseThrow(() -> new CoreException(ErrorType.DUO_REQUEST_NOT_FOUND));
-
-        DuoPost duoPost = duoPostPersistencePort.findById(duoRequest.getDuoPostId())
-                .orElseThrow(() -> new CoreException(ErrorType.DUO_POST_NOT_FOUND));
-
-        duoPost.validateOwner(memberId);
-
-        duoRequest.reject();
-        duoRequestPersistencePort.save(duoRequest);
-    }
-
-    @Override
-    @Transactional
-    public void cancelDuoRequest(Long memberId, Long requestId) {
-        DuoRequest duoRequest = duoRequestPersistencePort.findById(requestId)
-                .orElseThrow(() -> new CoreException(ErrorType.DUO_REQUEST_NOT_FOUND));
-
-        duoRequest.validateRequester(memberId);
-
-        duoRequest.cancel();
-        duoRequestPersistencePort.save(duoRequest);
-    }
-
-    @Override
-    public List<DuoRequestReadModel> getDuoRequestsForPost(Long memberId, Long duoPostId) {
-        DuoPost duoPost = duoPostPersistencePort.findById(duoPostId)
-                .orElseThrow(() -> new CoreException(ErrorType.DUO_POST_NOT_FOUND));
-
-        duoPost.validateOwner(memberId);
-
-        return duoRequestPersistencePort.findByDuoPostId(duoPostId).stream()
-                .map(DuoRequestReadModel::of)
-                .toList();
-    }
-
-    @Override
-    public SliceResult<DuoRequestReadModel> getMyDuoRequests(Long memberId, int page) {
-        return duoRequestPersistencePort.findByRequesterId(memberId, page);
-    }
-
-    private String extractRiotPuuid(Long memberId) {
-        Member member = memberPersistencePort.findByIdWithSocialAccounts(memberId)
-                .orElseThrow(() -> new CoreException(ErrorType.MEMBER_NOT_FOUND));
-
-        return member.getSocialAccounts().stream()
-                .filter(sa -> OAuthProvider.RIOT.name().equals(sa.getProvider()) && sa.getPuuid() != null)
-                .map(SocialAccount::getPuuid)
-                .findFirst()
-                .orElseThrow(() -> new CoreException(ErrorType.RIOT_ACCOUNT_NOT_LINKED));
-    }
-
-    private TierInfo lookupTierInfo(String puuid) {
-        return leaguePersistencePort.findAllLeaguesByPuuid(puuid).stream()
-                .filter(league -> QueueType.RANKED_SOLO_5x5.name().equals(league.getQueue()))
-                .findFirst()
-                .map(league -> new TierInfo(
-                        league.getTier(), league.getRank(), league.getLeaguePoints()))
-                .orElse(TierInfo.UNRANKED);
-    }
-
 }

@@ -6,14 +6,14 @@ import jakarta.validation.constraints.Size;
 
 public record CreateDuoRequestRequest(
         @NotBlank String primaryLane,
-        @NotBlank String secondaryLane,
+        @NotBlank String desiredLane,
         boolean hasMicrophone,
         @Size(max = 500) String memo
 ) {
     public CreateDuoRequestCommand toCommand() {
         return CreateDuoRequestCommand.builder()
                 .primaryLane(primaryLane)
-                .secondaryLane(secondaryLane)
+                .desiredLane(desiredLane)
                 .hasMicrophone(hasMicrophone)
                 .memo(memo)
                 .build();

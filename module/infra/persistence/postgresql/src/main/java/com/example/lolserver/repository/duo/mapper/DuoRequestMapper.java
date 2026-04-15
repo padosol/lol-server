@@ -13,13 +13,13 @@ import java.util.List;
 public interface DuoRequestMapper {
 
     @Mapping(target = "primaryLane", expression = "java(Lane.from(entity.getPrimaryLane()))")
-    @Mapping(target = "secondaryLane", expression = "java(Lane.from(entity.getSecondaryLane()))")
+    @Mapping(target = "desiredLane", expression = "java(Lane.from(entity.getDesiredLane()))")
     @Mapping(target = "status", expression = "java(DuoRequestStatus.valueOf(entity.getStatus()))")
     @Mapping(source = "tierRank", target = "rank")
     DuoRequest toDomain(DuoRequestEntity entity);
 
     @Mapping(target = "primaryLane", expression = "java(request.getPrimaryLane().name())")
-    @Mapping(target = "secondaryLane", expression = "java(request.getSecondaryLane().name())")
+    @Mapping(target = "desiredLane", expression = "java(request.getDesiredLane().name())")
     @Mapping(target = "status", expression = "java(request.getStatus().name())")
     @Mapping(source = "rank", target = "tierRank")
     DuoRequestEntity toEntity(DuoRequest request);

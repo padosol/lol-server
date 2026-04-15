@@ -3,6 +3,8 @@ package com.example.lolserver.repository.duo.mapper;
 import com.example.lolserver.domain.duo.domain.DuoRequest;
 import com.example.lolserver.domain.duo.domain.vo.DuoRequestStatus;
 import com.example.lolserver.domain.duo.domain.vo.Lane;
+import com.example.lolserver.domain.duo.domain.vo.MostChampion;
+import com.example.lolserver.domain.duo.domain.vo.RecentGameSummary;
 import com.example.lolserver.repository.duo.entity.DuoRequestEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,12 +31,20 @@ class DuoRequestMapperTest {
                 .requesterId(200L)
                 .requesterPuuid("requester-puuid-abc123")
                 .primaryLane("ADC")
-                .secondaryLane("SUPPORT")
+                .desiredLane("SUPPORT")
                 .hasMicrophone(true)
                 .tier("PLATINUM")
                 .tierRank("II")
                 .leaguePoints(45)
                 .memo("듀오 신청합니다")
+                .mostChampions(List.of(
+                        new MostChampion(1, "Jinx", 50, 30, 20),
+                        new MostChampion(2, "Lux", 40, 25, 15)
+                ))
+                .recentGameSummary(new RecentGameSummary(7, 3, List.of(
+                        new RecentGameSummary.PlayedChampion(1, "Jinx"),
+                        new RecentGameSummary.PlayedChampion(2, "Lux")
+                )))
                 .status("PENDING")
                 .createdAt(createdAt)
                 .updatedAt(updatedAt)
@@ -50,13 +60,17 @@ class DuoRequestMapperTest {
         assertThat(result.getRequesterId()).isEqualTo(200L);
         assertThat(result.getRequesterPuuid()).isEqualTo("requester-puuid-abc123");
         assertThat(result.getPrimaryLane()).isEqualTo(Lane.ADC);
-        assertThat(result.getSecondaryLane()).isEqualTo(Lane.SUPPORT);
+        assertThat(result.getDesiredLane()).isEqualTo(Lane.SUPPORT);
         assertThat(result.isHasMicrophone()).isTrue();
         assertThat(result.getTier()).isEqualTo("PLATINUM");
         assertThat(result.getRank()).isEqualTo("II");
         assertThat(result.getLeaguePoints()).isEqualTo(45);
         assertThat(result.getMemo()).isEqualTo("듀오 신청합니다");
         assertThat(result.getStatus()).isEqualTo(DuoRequestStatus.PENDING);
+        assertThat(result.getMostChampions()).hasSize(2);
+        assertThat(result.getMostChampions().get(0).championName()).isEqualTo("Jinx");
+        assertThat(result.getRecentGameSummary().wins()).isEqualTo(7);
+        assertThat(result.getRecentGameSummary().losses()).isEqualTo(3);
         assertThat(result.getCreatedAt()).isEqualTo(createdAt);
         assertThat(result.getUpdatedAt()).isEqualTo(updatedAt);
     }
@@ -74,12 +88,16 @@ class DuoRequestMapperTest {
                 .requesterId(200L)
                 .requesterPuuid("requester-puuid-abc123")
                 .primaryLane(Lane.JUNGLE)
-                .secondaryLane(Lane.TOP)
+                .desiredLane(Lane.TOP)
                 .hasMicrophone(false)
                 .tier("DIAMOND")
                 .rank("I")
                 .leaguePoints(80)
                 .memo("탑 서브로 갑니다")
+                .mostChampions(List.of(new MostChampion(3, "LeeSin", 60, 35, 25)))
+                .recentGameSummary(new RecentGameSummary(5, 5, List.of(
+                        new RecentGameSummary.PlayedChampion(3, "LeeSin")
+                )))
                 .status(DuoRequestStatus.ACCEPTED)
                 .createdAt(createdAt)
                 .updatedAt(updatedAt)
@@ -95,13 +113,17 @@ class DuoRequestMapperTest {
         assertThat(result.getRequesterId()).isEqualTo(200L);
         assertThat(result.getRequesterPuuid()).isEqualTo("requester-puuid-abc123");
         assertThat(result.getPrimaryLane()).isEqualTo("JUNGLE");
-        assertThat(result.getSecondaryLane()).isEqualTo("TOP");
+        assertThat(result.getDesiredLane()).isEqualTo("TOP");
         assertThat(result.isHasMicrophone()).isFalse();
         assertThat(result.getTier()).isEqualTo("DIAMOND");
         assertThat(result.getTierRank()).isEqualTo("I");
         assertThat(result.getLeaguePoints()).isEqualTo(80);
         assertThat(result.getMemo()).isEqualTo("탑 서브로 갑니다");
         assertThat(result.getStatus()).isEqualTo("ACCEPTED");
+        assertThat(result.getMostChampions()).hasSize(1);
+        assertThat(result.getMostChampions().get(0).championName()).isEqualTo("LeeSin");
+        assertThat(result.getRecentGameSummary().wins()).isEqualTo(5);
+        assertThat(result.getRecentGameSummary().losses()).isEqualTo(5);
         assertThat(result.getCreatedAt()).isEqualTo(createdAt);
         assertThat(result.getUpdatedAt()).isEqualTo(updatedAt);
     }
@@ -116,7 +138,7 @@ class DuoRequestMapperTest {
                 .requesterId(100L)
                 .requesterPuuid("puuid-1")
                 .primaryLane("MID")
-                .secondaryLane("ADC")
+                .desiredLane("ADC")
                 .hasMicrophone(true)
                 .tier("GOLD")
                 .tierRank("III")
@@ -132,7 +154,7 @@ class DuoRequestMapperTest {
                 .requesterId(200L)
                 .requesterPuuid("puuid-2")
                 .primaryLane("SUPPORT")
-                .secondaryLane("FILL")
+                .desiredLane("FILL")
                 .hasMicrophone(false)
                 .tier("SILVER")
                 .tierRank("I")

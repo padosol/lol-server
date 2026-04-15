@@ -2,6 +2,8 @@ package com.example.lolserver.domain.duo.domain;
 
 import com.example.lolserver.domain.duo.domain.vo.DuoPostStatus;
 import com.example.lolserver.domain.duo.domain.vo.Lane;
+import com.example.lolserver.domain.duo.domain.vo.MostChampion;
+import com.example.lolserver.domain.duo.domain.vo.RecentGameSummary;
 import com.example.lolserver.domain.duo.domain.vo.TierInfo;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
@@ -11,6 +13,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -21,33 +24,38 @@ public class DuoPost {
     private Long memberId;
     private String puuid;
     private Lane primaryLane;
-    private Lane secondaryLane;
+    private Lane desiredLane;
     private boolean hasMicrophone;
     private String tier;
     private String rank;
     private int leaguePoints;
     private String memo;
     private DuoPostStatus status;
+    private List<MostChampion> mostChampions;
+    private RecentGameSummary recentGameSummary;
     private LocalDateTime expiresAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public static DuoPost create(Long memberId, String puuid,
-            String primaryLane, String secondaryLane,
-            boolean hasMicrophone, TierInfo tierInfo, String memo) {
+            String primaryLane, String desiredLane,
+            boolean hasMicrophone, TierInfo tierInfo, String memo,
+            List<MostChampion> mostChampions, RecentGameSummary recentGameSummary) {
         LocalDateTime now = LocalDateTime.now();
         return DuoPost.builder()
                 .memberId(memberId)
                 .puuid(puuid)
                 .primaryLane(Lane.from(primaryLane))
-                .secondaryLane(Lane.from(secondaryLane))
+                .desiredLane(Lane.from(desiredLane))
                 .hasMicrophone(hasMicrophone)
                 .tier(tierInfo.tier())
                 .rank(tierInfo.rank())
                 .leaguePoints(tierInfo.leaguePoints())
                 .memo(memo)
                 .status(DuoPostStatus.ACTIVE)
-                .expiresAt(now.plusHours(24))
+                .mostChampions(mostChampions)
+                .recentGameSummary(recentGameSummary)
+                .expiresAt(now.plusHours(1))
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -95,10 +103,10 @@ public class DuoPost {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void updateContent(String primaryLane, String secondaryLane,
+    public void updateContent(String primaryLane, String desiredLane,
                               boolean hasMicrophone, String memo) {
         this.primaryLane = Lane.from(primaryLane);
-        this.secondaryLane = Lane.from(secondaryLane);
+        this.desiredLane = Lane.from(desiredLane);
         this.hasMicrophone = hasMicrophone;
         this.memo = memo;
         this.updatedAt = LocalDateTime.now();

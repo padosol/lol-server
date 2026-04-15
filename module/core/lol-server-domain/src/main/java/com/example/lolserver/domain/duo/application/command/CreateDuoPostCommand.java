@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreateDuoPostCommand {
     private String primaryLane;
-    private String secondaryLane;
+    private String desiredLane;
     private boolean hasMicrophone;
     private String memo;
 }

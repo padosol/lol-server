@@ -1,13 +1,16 @@
 package com.example.lolserver.controller.duo.response;
 
 import com.example.lolserver.domain.duo.application.model.DuoPostReadModel;
+import com.example.lolserver.domain.duo.domain.vo.MostChampion;
+import com.example.lolserver.domain.duo.domain.vo.RecentGameSummary;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record DuoPostResponse(
         Long id,
         String primaryLane,
-        String secondaryLane,
+        String desiredLane,
         boolean hasMicrophone,
         String tier,
         String rank,
@@ -15,6 +18,8 @@ public record DuoPostResponse(
         String memo,
         String status,
         boolean tierAvailable,
+        List<MostChampion> mostChampions,
+        RecentGameSummary recentGameSummary,
         LocalDateTime expiresAt,
         LocalDateTime createdAt
 ) {
@@ -22,7 +27,7 @@ public record DuoPostResponse(
         return new DuoPostResponse(
                 readModel.getId(),
                 readModel.getPrimaryLane(),
-                readModel.getSecondaryLane(),
+                readModel.getDesiredLane(),
                 readModel.isHasMicrophone(),
                 readModel.getTier(),
                 readModel.getRank(),
@@ -30,6 +35,8 @@ public record DuoPostResponse(
                 readModel.getMemo(),
                 readModel.getStatus(),
                 readModel.isTierAvailable(),
+                readModel.getMostChampions(),
+                readModel.getRecentGameSummary(),
                 readModel.getExpiresAt(),
                 readModel.getCreatedAt()
         );

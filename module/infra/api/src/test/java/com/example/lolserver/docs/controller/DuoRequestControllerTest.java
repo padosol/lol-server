@@ -19,6 +19,9 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
+import com.example.lolserver.domain.duo.domain.vo.MostChampion;
+import com.example.lolserver.domain.duo.domain.vo.RecentGameSummary;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -61,15 +64,31 @@ class DuoRequestControllerTest extends RestDocsSupport {
                 .id(1L)
                 .duoPostId(1L)
                 .primaryLane("ADC")
-                .secondaryLane("SUPPORT")
+                .desiredLane("SUPPORT")
                 .hasMicrophone(false)
                 .tier("SILVER")
                 .rank("II")
                 .leaguePoints(30)
                 .memo("같이 하실 분")
                 .status("PENDING")
+                .mostChampions(sampleMostChampions())
+                .recentGameSummary(sampleRecentGameSummary())
                 .createdAt(LocalDateTime.of(2026, 4, 14, 11, 0, 0))
                 .build();
+    }
+
+    private List<MostChampion> sampleMostChampions() {
+        return List.of(
+                new MostChampion(236, "루시안", 50, 30, 20),
+                new MostChampion(103, "아리", 40, 25, 15)
+        );
+    }
+
+    private RecentGameSummary sampleRecentGameSummary() {
+        return new RecentGameSummary(7, 3, List.of(
+                new RecentGameSummary.PlayedChampion(236, "루시안"),
+                new RecentGameSummary.PlayedChampion(103, "아리")
+        ));
     }
 
     private DuoMatchResultReadModel sampleAcceptedResult() {
@@ -117,7 +136,7 @@ class DuoRequestControllerTest extends RestDocsSupport {
                         requestFields(
                                 fieldWithPath("primaryLane").type(JsonFieldType.STRING)
                                         .description("주 라인 (TOP, JUNGLE, MID, ADC, SUPPORT)"),
-                                fieldWithPath("secondaryLane").type(JsonFieldType.STRING)
+                                fieldWithPath("desiredLane").type(JsonFieldType.STRING)
                                         .description("부 라인 (TOP, JUNGLE, MID, ADC, SUPPORT)"),
                                 fieldWithPath("hasMicrophone").type(JsonFieldType.BOOLEAN)
                                         .description("마이크 보유 여부"),
@@ -136,7 +155,7 @@ class DuoRequestControllerTest extends RestDocsSupport {
                                         .description("게시글 ID"),
                                 fieldWithPath("data.primaryLane").type(JsonFieldType.STRING)
                                         .description("주 라인"),
-                                fieldWithPath("data.secondaryLane").type(JsonFieldType.STRING)
+                                fieldWithPath("data.desiredLane").type(JsonFieldType.STRING)
                                         .description("부 라인"),
                                 fieldWithPath("data.hasMicrophone").type(JsonFieldType.BOOLEAN)
                                         .description("마이크 보유 여부"),
@@ -153,6 +172,24 @@ class DuoRequestControllerTest extends RestDocsSupport {
                                         .optional(),
                                 fieldWithPath("data.status").type(JsonFieldType.STRING)
                                         .description("요청 상태 (PENDING, ACCEPTED, CONFIRMED, REJECTED, CANCELLED)"),
+                                fieldWithPath("data.mostChampions[].championId").type(JsonFieldType.NUMBER)
+                                        .description("모스트 챔피언 ID"),
+                                fieldWithPath("data.mostChampions[].championName").type(JsonFieldType.STRING)
+                                        .description("모스트 챔피언 이름"),
+                                fieldWithPath("data.mostChampions[].playCount").type(JsonFieldType.NUMBER)
+                                        .description("플레이 횟수"),
+                                fieldWithPath("data.mostChampions[].wins").type(JsonFieldType.NUMBER)
+                                        .description("승리 횟수"),
+                                fieldWithPath("data.mostChampions[].losses").type(JsonFieldType.NUMBER)
+                                        .description("패배 횟수"),
+                                fieldWithPath("data.recentGameSummary.wins").type(JsonFieldType.NUMBER)
+                                        .description("최근 게임 승리 수"),
+                                fieldWithPath("data.recentGameSummary.losses").type(JsonFieldType.NUMBER)
+                                        .description("최근 게임 패배 수"),
+                                fieldWithPath("data.recentGameSummary.playedChampions[].championId").type(JsonFieldType.NUMBER)
+                                        .description("최근 플레이 챔피언 ID"),
+                                fieldWithPath("data.recentGameSummary.playedChampions[].championName").type(JsonFieldType.STRING)
+                                        .description("최근 플레이 챔피언 이름"),
                                 fieldWithPath("data.createdAt").type(JsonFieldType.STRING)
                                         .description("요청 일시")
                         )
@@ -187,7 +224,7 @@ class DuoRequestControllerTest extends RestDocsSupport {
                                         .description("게시글 ID"),
                                 fieldWithPath("data[].primaryLane").type(JsonFieldType.STRING)
                                         .description("요청자 주 라인"),
-                                fieldWithPath("data[].secondaryLane").type(JsonFieldType.STRING)
+                                fieldWithPath("data[].desiredLane").type(JsonFieldType.STRING)
                                         .description("요청자 부 라인"),
                                 fieldWithPath("data[].hasMicrophone").type(JsonFieldType.BOOLEAN)
                                         .description("요청자 마이크 보유 여부"),
@@ -204,6 +241,24 @@ class DuoRequestControllerTest extends RestDocsSupport {
                                         .optional(),
                                 fieldWithPath("data[].status").type(JsonFieldType.STRING)
                                         .description("요청 상태"),
+                                fieldWithPath("data[].mostChampions[].championId").type(JsonFieldType.NUMBER)
+                                        .description("요청자 모스트 챔피언 ID"),
+                                fieldWithPath("data[].mostChampions[].championName").type(JsonFieldType.STRING)
+                                        .description("요청자 모스트 챔피언 이름"),
+                                fieldWithPath("data[].mostChampions[].playCount").type(JsonFieldType.NUMBER)
+                                        .description("요청자 플레이 횟수"),
+                                fieldWithPath("data[].mostChampions[].wins").type(JsonFieldType.NUMBER)
+                                        .description("요청자 승리 횟수"),
+                                fieldWithPath("data[].mostChampions[].losses").type(JsonFieldType.NUMBER)
+                                        .description("요청자 패배 횟수"),
+                                fieldWithPath("data[].recentGameSummary.wins").type(JsonFieldType.NUMBER)
+                                        .description("요청자 최근 게임 승리 수"),
+                                fieldWithPath("data[].recentGameSummary.losses").type(JsonFieldType.NUMBER)
+                                        .description("요청자 최근 게임 패배 수"),
+                                fieldWithPath("data[].recentGameSummary.playedChampions[].championId").type(JsonFieldType.NUMBER)
+                                        .description("요청자 최근 플레이 챔피언 ID"),
+                                fieldWithPath("data[].recentGameSummary.playedChampions[].championName").type(JsonFieldType.STRING)
+                                        .description("요청자 최근 플레이 챔피언 이름"),
                                 fieldWithPath("data[].createdAt").type(JsonFieldType.STRING)
                                         .description("요청 일시")
                         )

@@ -1,6 +1,11 @@
 package com.example.lolserver.repository.duo.entity;
 
+import com.example.lolserver.domain.duo.domain.vo.MostChampion;
+import com.example.lolserver.domain.duo.domain.vo.RecentGameSummary;
+import com.example.lolserver.repository.duo.converter.MostChampionListConverter;
+import com.example.lolserver.repository.duo.converter.RecentGameSummaryConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -13,6 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "duo_request")
@@ -39,8 +45,8 @@ public class DuoRequestEntity {
     @Column(name = "primary_lane", nullable = false, length = 20)
     private String primaryLane;
 
-    @Column(name = "secondary_lane", nullable = false, length = 20)
-    private String secondaryLane;
+    @Column(name = "desired_lane", nullable = false, length = 20)
+    private String desiredLane;
 
     @Column(name = "has_microphone", nullable = false)
     private boolean hasMicrophone;
@@ -59,6 +65,14 @@ public class DuoRequestEntity {
 
     @Column(nullable = false, length = 20)
     private String status;
+
+    @Column(name = "most_champions", columnDefinition = "TEXT")
+    @Convert(converter = MostChampionListConverter.class)
+    private List<MostChampion> mostChampions;
+
+    @Column(name = "recent_game_summary", columnDefinition = "TEXT")
+    @Convert(converter = RecentGameSummaryConverter.class)
+    private RecentGameSummary recentGameSummary;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

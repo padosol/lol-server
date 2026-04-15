@@ -2,6 +2,8 @@ package com.example.lolserver.domain.duo.domain;
 
 import com.example.lolserver.domain.duo.domain.vo.DuoRequestStatus;
 import com.example.lolserver.domain.duo.domain.vo.Lane;
+import com.example.lolserver.domain.duo.domain.vo.MostChampion;
+import com.example.lolserver.domain.duo.domain.vo.RecentGameSummary;
 import com.example.lolserver.domain.duo.domain.vo.TierInfo;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
@@ -11,6 +13,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -22,32 +25,37 @@ public class DuoRequest {
     private Long requesterId;
     private String requesterPuuid;
     private Lane primaryLane;
-    private Lane secondaryLane;
+    private Lane desiredLane;
     private boolean hasMicrophone;
     private String tier;
     private String rank;
     private int leaguePoints;
     private String memo;
     private DuoRequestStatus status;
+    private List<MostChampion> mostChampions;
+    private RecentGameSummary recentGameSummary;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public static DuoRequest create(Long duoPostId, Long requesterId,
-            String requesterPuuid, String primaryLane, String secondaryLane,
-            boolean hasMicrophone, TierInfo tierInfo, String memo) {
+            String requesterPuuid, String primaryLane, String desiredLane,
+            boolean hasMicrophone, TierInfo tierInfo, String memo,
+            List<MostChampion> mostChampions, RecentGameSummary recentGameSummary) {
         LocalDateTime now = LocalDateTime.now();
         return DuoRequest.builder()
                 .duoPostId(duoPostId)
                 .requesterId(requesterId)
                 .requesterPuuid(requesterPuuid)
                 .primaryLane(Lane.from(primaryLane))
-                .secondaryLane(Lane.from(secondaryLane))
+                .desiredLane(Lane.from(desiredLane))
                 .hasMicrophone(hasMicrophone)
                 .tier(tierInfo.tier())
                 .rank(tierInfo.rank())
                 .leaguePoints(tierInfo.leaguePoints())
                 .memo(memo)
                 .status(DuoRequestStatus.PENDING)
+                .mostChampions(mostChampions)
+                .recentGameSummary(recentGameSummary)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
