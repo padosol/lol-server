@@ -22,6 +22,7 @@ spring:
       - postgresql-local.yml
       - redis-local.yml
       - clickhouse-local.yml
+      - logging-local.yml
 
 ---
 spring:

@@ -42,6 +42,7 @@ public class SecurityConfig {
     private final CustomOidcUserService customOidcUserService;
     private final ClientRegistrationRepository clientRegistrationRepository;
     private final SocialAccountLinkTokenStore socialAccountLinkTokenStore;
+    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
@@ -80,6 +81,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(
+                                restAuthenticationEntryPoint))
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(authorization -> authorization
                                 .baseUri("/oauth2/authorize")

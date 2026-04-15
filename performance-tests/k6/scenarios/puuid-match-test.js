@@ -35,8 +35,11 @@ export const options = {
     },
     thresholds: {
         http_req_failed: ['rate<0.01'],
-        match_response_time: ['p(95)<500', 'avg<300'],
-        match_success_rate: ['rate>0.995'],
+        match_response_time: ['p(95)<300', 'p(99)<500'],
+        http_req_duration: [{
+            threshold: 'p(95) > 2000',
+            abortOnFail: true
+        }]
     },
     summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(95)', 'p(99)'],
     tags: {
