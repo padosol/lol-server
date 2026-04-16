@@ -18,12 +18,15 @@ import com.example.lolserver.support.SliceResult;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 @Component
 @RequiredArgsConstructor
@@ -48,18 +51,31 @@ public class RiotAccountResolver {
     }
 
     public RiotAccountStats lookupAllStats(String puuid) {
+        Map<String, String> contextMap = MDC.getCopyOfContextMap();
+
         CompletableFuture<TierInfo> tierFuture =
-                CompletableFuture.supplyAsync(() -> lookupTierInfo(puuid));
+                CompletableFuture.supplyAsync(() -> withMdc(contextMap, () -> lookupTierInfo(puuid)));
         CompletableFuture<List<MostChampion>> championsFuture =
-                CompletableFuture.supplyAsync(() -> lookupMostChampions(puuid));
+                CompletableFuture.supplyAsync(() -> withMdc(contextMap, () -> lookupMostChampions(puuid)));
         CompletableFuture<RecentGameSummary> recentGameFuture =
-                CompletableFuture.supplyAsync(() -> lookupRecentGameSummary(puuid));
+                CompletableFuture.supplyAsync(() -> withMdc(contextMap, () -> lookupRecentGameSummary(puuid)));
 
         return new RiotAccountStats(
                 tierFuture.join(),
                 championsFuture.join(),
                 recentGameFuture.join()
         );
+    }
+
+    private <T> T withMdc(Map<String, String> contextMap, Supplier<T> supplier) {
+        if (contextMap != null) {
+            MDC.setContextMap(contextMap);
+        }
+        try {
+            return supplier.get();
+        } finally {
+            MDC.clear();
+        }
     }
 
     public TierInfo lookupTierInfo(String puuid) {

@@ -231,14 +231,17 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     }
 
     private TimelineData buildTimelineData(List<TimelineEventDTO> events) {
-        List<ItemEvents> itemEvents = events.stream()
-                .filter(e -> "ITEM".equals(e.getEventSource()))
-                .map(matchMapper::toItemEventsFromTimelineDTO)
-                .toList();
-        List<SkillEvents> skillEvents = events.stream()
-                .filter(e -> "SKILL".equals(e.getEventSource()))
-                .map(matchMapper::toSkillEventsFromTimelineDTO)
-                .toList();
+        List<ItemEvents> itemEvents = new ArrayList<>();
+        List<SkillEvents> skillEvents = new ArrayList<>();
+
+        for (TimelineEventDTO event : events) {
+            if (TimelineEventDTO.SOURCE_ITEM.equals(event.getEventSource())) {
+                itemEvents.add(matchMapper.toItemEventsFromTimelineDTO(event));
+            } else if (TimelineEventDTO.SOURCE_SKILL.equals(event.getEventSource())) {
+                skillEvents.add(matchMapper.toSkillEventsFromTimelineDTO(event));
+            }
+        }
+
         return new TimelineData(itemEvents, skillEvents);
     }
 

@@ -7,6 +7,9 @@ import lombok.Getter;
 @AllArgsConstructor
 public class TimelineEventDTO {
 
+    public static final String SOURCE_ITEM = "ITEM";
+    public static final String SOURCE_SKILL = "SKILL";
+
     private String matchId;
     private int participantId;
     private int eventId;

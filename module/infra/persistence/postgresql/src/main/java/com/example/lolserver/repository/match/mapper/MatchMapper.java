@@ -106,7 +106,6 @@ public interface MatchMapper {
     @Mapping(target = "statValue", source = "perkStat")
     ParticipantData toDomain(MatchSummonerDTO dto);
 
-    // TimelineEventDTO → Domain 변환
     default ItemEvents toItemEventsFromTimelineDTO(TimelineEventDTO dto) {
         return ItemEvents.builder()
                 .itemId(dto.getEventId())

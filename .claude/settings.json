@@ -24,5 +24,10 @@
       }
     ]
   },
-  "plansDirectory": "./plans"
+  "plansDirectory": "./plans",
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/scripts/statusline.sh",
+    "padding": 2
+  }
 }
