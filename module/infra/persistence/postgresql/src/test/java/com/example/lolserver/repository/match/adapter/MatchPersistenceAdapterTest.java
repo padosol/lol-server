@@ -8,13 +8,12 @@ import com.example.lolserver.domain.match.domain.gamedata.ParticipantData;
 import com.example.lolserver.domain.match.domain.gamedata.TeamInfoData;
 import com.example.lolserver.domain.match.domain.gamedata.timeline.events.ItemEvents;
 import com.example.lolserver.domain.match.domain.gamedata.timeline.events.SkillEvents;
+import com.example.lolserver.repository.match.dto.TimelineEventDTO;
 import com.example.lolserver.repository.match.dto.MSChampionDTO;
 import com.example.lolserver.repository.match.dto.MatchSummonerDTO;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
 import com.example.lolserver.repository.match.entity.MatchTeamEntity;
-import com.example.lolserver.repository.match.entity.timeline.events.ItemEventsEntity;
-import com.example.lolserver.repository.match.entity.timeline.events.SkillEventsEntity;
 import com.example.lolserver.repository.match.mapper.MatchMapper;
 import com.example.lolserver.repository.match.match.MatchRepository;
 import com.example.lolserver.repository.match.match.dsl.MatchRepositoryCustom;
@@ -107,10 +106,7 @@ class MatchPersistenceAdapterTest {
         given(matchRepositoryCustom.getMatchSummoners("KR_12345")).willReturn(List.of(summonerDTO));
         given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(queueId));
         given(matchMapper.toDomain(any(MatchSummonerDTO.class))).willReturn(createParticipantData(puuid));
-        given(timelineRepositoryCustom.selectAllItemEventsByMatch(anyString())).willReturn(Collections.emptyList());
-        given(timelineRepositoryCustom.selectAllSkillEventsByMatch(anyString())).willReturn(Collections.emptyList());
-        given(matchMapper.toDomainItemEventsList(any())).willReturn(Collections.emptyList());
-        given(matchMapper.toDomainSkillEventsList(any())).willReturn(Collections.emptyList());
+        given(timelineRepositoryCustom.selectAllTimelineEventsByMatch(anyString())).willReturn(Collections.emptyList());
         given(matchTeamRepository.findByMatchId(anyString())).willReturn(Collections.emptyList());
 
         // when
@@ -167,10 +163,7 @@ class MatchPersistenceAdapterTest {
         given(matchRepositoryCustom.getMatchSummoners(matchId)).willReturn(List.of(summonerDTO));
         given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(420));
         given(matchMapper.toDomain(any(MatchSummonerDTO.class))).willReturn(createParticipantData("test-puuid"));
-        given(timelineRepositoryCustom.selectAllItemEventsByMatch(matchId)).willReturn(Collections.emptyList());
-        given(timelineRepositoryCustom.selectAllSkillEventsByMatch(matchId)).willReturn(Collections.emptyList());
-        given(matchMapper.toDomainItemEventsList(any())).willReturn(Collections.emptyList());
-        given(matchMapper.toDomainSkillEventsList(any())).willReturn(Collections.emptyList());
+        given(timelineRepositoryCustom.selectAllTimelineEventsByMatch(matchId)).willReturn(Collections.emptyList());
         given(matchTeamRepository.findByMatchId(matchId)).willReturn(Collections.emptyList());
 
         // when
@@ -202,34 +195,26 @@ class MatchPersistenceAdapterTest {
     void getTimelineData_validMatchId_returnsTimelineData() {
         // given
         String matchId = "KR_12345";
-        List<ItemEventsEntity> itemEventsEntities = List.of(createItemEventsEntity());
-        List<SkillEventsEntity> skillEventsEntities = List.of(createSkillEventsEntity());
+        TimelineEventDTO itemEvent = new TimelineEventDTO(matchId, 1, 3006, "ITEM_PURCHASED", 60000L, "ITEM");
+        TimelineEventDTO skillEvent = new TimelineEventDTO(matchId, 1, 1, "NORMAL", 30000L, "SKILL");
 
-        ItemEvents itemEvents = ItemEvents.builder()
-                .participantId(1)
-                .itemId(3006)
-                .timestamp(60000L)
-                .type("ITEM_PURCHASED")
-                .build();
-        SkillEvents skillEvents = SkillEvents.builder()
-                .participantId(1)
-                .skillSlot(1)
-                .timestamp(30000L)
-                .type("SKILL_LEVEL_UP")
-                .build();
+        given(timelineRepositoryCustom.selectAllTimelineEventsByMatch(matchId))
+                .willReturn(List.of(itemEvent, skillEvent));
 
-        given(timelineRepositoryCustom.selectAllItemEventsByMatch(matchId)).willReturn(itemEventsEntities);
-        given(timelineRepositoryCustom.selectAllSkillEventsByMatch(matchId)).willReturn(skillEventsEntities);
-        given(matchMapper.toDomainItemEventsList(itemEventsEntities)).willReturn(List.of(itemEvents));
-        given(matchMapper.toDomainSkillEventsList(skillEventsEntities)).willReturn(List.of(skillEvents));
+        ItemEvents domainItemEvents = ItemEvents.builder()
+                .participantId(1).itemId(3006).timestamp(60000L).type("ITEM_PURCHASED").build();
+        SkillEvents domainSkillEvents = SkillEvents.builder()
+                .participantId(1).skillSlot(1).timestamp(30000L).levelUpType("NORMAL").build();
+
+        given(matchMapper.toItemEventsFromTimelineDTO(itemEvent)).willReturn(domainItemEvents);
+        given(matchMapper.toSkillEventsFromTimelineDTO(skillEvent)).willReturn(domainSkillEvents);
 
         // when
         TimelineData result = adapter.getTimelineData(matchId);
 
         // then
         assertThat(result).isNotNull();
-        then(timelineRepositoryCustom).should().selectAllItemEventsByMatch(matchId);
-        then(timelineRepositoryCustom).should().selectAllSkillEventsByMatch(matchId);
+        then(timelineRepositoryCustom).should().selectAllTimelineEventsByMatch(matchId);
     }
 
     @DisplayName("PUUID로 매치 ID 목록을 페이징하여 조회한다")
@@ -285,10 +270,7 @@ class MatchPersistenceAdapterTest {
 
         given(matchMapper.toDomain(summonerDTO1)).willReturn(participant1);
         given(matchMapper.toDomain(summonerDTO2)).willReturn(participant2);
-        given(timelineRepositoryCustom.selectAllItemEventsByMatch(anyString())).willReturn(Collections.emptyList());
-        given(timelineRepositoryCustom.selectAllSkillEventsByMatch(anyString())).willReturn(Collections.emptyList());
-        given(matchMapper.toDomainItemEventsList(any())).willReturn(Collections.emptyList());
-        given(matchMapper.toDomainSkillEventsList(any())).willReturn(Collections.emptyList());
+        given(timelineRepositoryCustom.selectAllTimelineEventsByMatch(anyString())).willReturn(Collections.emptyList());
         given(matchTeamRepository.findByMatchId(anyString())).willReturn(Collections.emptyList());
 
         // when
@@ -343,10 +325,7 @@ class MatchPersistenceAdapterTest {
         given(matchRepositoryCustom.getMatchSummoners(matchId)).willReturn(List.of(summonerDTO));
         given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(420));
         given(matchMapper.toDomain(any(MatchSummonerDTO.class))).willReturn(createParticipantData("test-puuid"));
-        given(timelineRepositoryCustom.selectAllItemEventsByMatch(matchId)).willReturn(Collections.emptyList());
-        given(timelineRepositoryCustom.selectAllSkillEventsByMatch(matchId)).willReturn(Collections.emptyList());
-        given(matchMapper.toDomainItemEventsList(any())).willReturn(Collections.emptyList());
-        given(matchMapper.toDomainSkillEventsList(any())).willReturn(Collections.emptyList());
+        given(timelineRepositoryCustom.selectAllTimelineEventsByMatch(matchId)).willReturn(Collections.emptyList());
         given(matchTeamRepository.findByMatchId(matchId)).willReturn(List.of(blueTeamEntity, redTeamEntity));
         given(matchMapper.toDomain(blueTeamEntity)).willReturn(blueTeamInfo);
         given(matchMapper.toDomain(redTeamEntity)).willReturn(redTeamInfo);
@@ -477,20 +456,4 @@ class MatchPersistenceAdapterTest {
         );
     }
 
-    private ItemEventsEntity createItemEventsEntity() {
-        ItemEventsEntity entity = new ItemEventsEntity();
-        entity.setParticipantId(1);
-        entity.setItemId(3006);
-        entity.setTimestamp(60000L);
-        entity.setType("ITEM_PURCHASED");
-        return entity;
-    }
-
-    private SkillEventsEntity createSkillEventsEntity() {
-        SkillEventsEntity entity = new SkillEventsEntity();
-        entity.setParticipantId(1);
-        entity.setSkillSlot(1);
-        entity.setTimestamp(30000L);
-        return entity;
-    }
 }

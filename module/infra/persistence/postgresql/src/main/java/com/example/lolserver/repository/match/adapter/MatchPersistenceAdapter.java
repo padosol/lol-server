@@ -12,14 +12,11 @@ import com.example.lolserver.domain.match.domain.TeamData;
 import com.example.lolserver.domain.match.domain.gamedata.timeline.ParticipantTimeline;
 import com.example.lolserver.domain.match.domain.gamedata.timeline.events.ItemEvents;
 import com.example.lolserver.domain.match.domain.gamedata.timeline.events.SkillEvents;
-import com.example.lolserver.repository.match.dto.ItemEventDTO;
 import com.example.lolserver.repository.match.dto.MatchDTO;
 import com.example.lolserver.repository.match.dto.MatchSummonerDTO;
-import com.example.lolserver.repository.match.dto.SkillEventDTO;
+import com.example.lolserver.repository.match.dto.TimelineEventDTO;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchTeamEntity;
-import com.example.lolserver.repository.match.entity.timeline.events.ItemEventsEntity;
-import com.example.lolserver.repository.match.entity.timeline.events.SkillEventsEntity;
 import com.example.lolserver.repository.match.mapper.MatchMapper;
 import com.example.lolserver.repository.match.match.MatchRepository;
 import com.example.lolserver.repository.match.match.dsl.MatchRepositoryCustom;
@@ -108,13 +105,8 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
 
     @Override
     public TimelineData getTimelineData(String matchId) {
-        List<ItemEventsEntity> persistenceItemEvents = timelineRepositoryCustom.selectAllItemEventsByMatch(matchId);
-        List<SkillEventsEntity> persistenceSkillEvents = timelineRepositoryCustom.selectAllSkillEventsByMatch(matchId);
-
-        List<ItemEvents> domainItemEvents = matchMapper.toDomainItemEventsList(persistenceItemEvents);
-        List<SkillEvents> domainSkillEvents = matchMapper.toDomainSkillEventsList(persistenceSkillEvents);
-
-        return new TimelineData(domainItemEvents, domainSkillEvents);
+        List<TimelineEventDTO> events = timelineRepositoryCustom.selectAllTimelineEventsByMatch(matchId);
+        return buildTimelineData(events);
     }
 
     @Override
@@ -151,30 +143,19 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                                         MatchSummonerDTO::getMatchId)),
                         queryExecutor);
 
-        CompletableFuture<Map<String, List<ItemEventDTO>>> itemsFuture =
+        CompletableFuture<Map<String, List<TimelineEventDTO>>> timelineEventsFuture =
                 CompletableFuture.supplyAsync(() ->
                         timelineRepositoryCustom
-                                .selectItemEventsByMatchIds(matchIds)
+                                .selectTimelineEventsByMatchIds(matchIds)
                                 .stream()
                                 .collect(Collectors.groupingBy(
-                                        ItemEventDTO::getMatchId)),
-                        queryExecutor);
-
-        CompletableFuture<Map<String, List<SkillEventDTO>>> skillsFuture =
-                CompletableFuture.supplyAsync(() ->
-                        timelineRepositoryCustom
-                                .selectSkillEventsByMatchIds(matchIds)
-                                .stream()
-                                .collect(Collectors.groupingBy(
-                                        SkillEventDTO::getMatchId)),
+                                        TimelineEventDTO::getMatchId)),
                         queryExecutor);
 
         Map<String, List<MatchSummonerDTO>> participantsByMatch =
                 summonersFuture.join();
-        Map<String, List<ItemEventDTO>> itemEventsByMatch =
-                itemsFuture.join();
-        Map<String, List<SkillEventDTO>> skillEventsByMatch =
-                skillsFuture.join();
+        Map<String, List<TimelineEventDTO>> timelineEventsByMatch =
+                timelineEventsFuture.join();
 
         List<GameReadModel> gameDataList = matchDTOs.stream()
                 .map(matchDTO -> assembleGameDataFromDTO(
@@ -182,10 +163,7 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                         participantsByMatch.getOrDefault(
                                 matchDTO.getMatchId(),
                                 Collections.emptyList()),
-                        itemEventsByMatch.getOrDefault(
-                                matchDTO.getMatchId(),
-                                Collections.emptyList()),
-                        skillEventsByMatch.getOrDefault(
+                        timelineEventsByMatch.getOrDefault(
                                 matchDTO.getMatchId(),
                                 Collections.emptyList())
                 ))
@@ -197,8 +175,7 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     private GameReadModel assembleGameDataFromDTO(
             MatchDTO matchDTO,
             List<MatchSummonerDTO> summonerDTOs,
-            List<ItemEventDTO> itemEventDTOs,
-            List<SkillEventDTO> skillEventDTOs
+            List<TimelineEventDTO> timelineEventDTOs
     ) {
         GameReadModel gameData = new GameReadModel();
 
@@ -217,12 +194,7 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                     Comparator.comparingInt(ParticipantData::getPlacement));
         }
 
-        List<ItemEvents> domainItemEvents =
-                matchMapper.toDomainItemEventDTOList(itemEventDTOs);
-        List<SkillEvents> domainSkillEvents =
-                matchMapper.toDomainSkillEventDTOList(skillEventDTOs);
-        TimelineData timelineData =
-                new TimelineData(domainItemEvents, domainSkillEvents);
+        TimelineData timelineData = buildTimelineData(timelineEventDTOs);
 
         for (ParticipantData participant : participantDataList) {
             int participantId = participant.getParticipantId();
@@ -256,6 +228,18 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         }
 
         return gameData;
+    }
+
+    private TimelineData buildTimelineData(List<TimelineEventDTO> events) {
+        List<ItemEvents> itemEvents = events.stream()
+                .filter(e -> "ITEM".equals(e.getEventSource()))
+                .map(matchMapper::toItemEventsFromTimelineDTO)
+                .toList();
+        List<SkillEvents> skillEvents = events.stream()
+                .filter(e -> "SKILL".equals(e.getEventSource()))
+                .map(matchMapper::toSkillEventsFromTimelineDTO)
+                .toList();
+        return new TimelineData(itemEvents, skillEvents);
     }
 
     private TeamInfoData toTeamInfoData(MatchSummonerDTO dto) {
@@ -306,20 +290,11 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
             participantDataList.sort(Comparator.comparingInt(ParticipantData::getPlacement));
         }
 
-        // TimelineData - construct it
-        // The previous MatchService had this logic, we need to replicate it here using the domain events
-        // Note: The MatchMapper now provides lists of domain events for TimelineData
-        List<ItemEventsEntity> persistenceItemEvents =
-                timelineRepositoryCustom.selectAllItemEventsByMatch(
+        // TimelineData
+        List<TimelineEventDTO> timelineEvents =
+                timelineRepositoryCustom.selectAllTimelineEventsByMatch(
                         matchEntity.getMatchId());
-        List<SkillEventsEntity> persistenceSkillEvents =
-                timelineRepositoryCustom.selectAllSkillEventsByMatch(
-                        matchEntity.getMatchId());
-
-        List<ItemEvents> domainItemEvents = matchMapper.toDomainItemEventsList(persistenceItemEvents);
-        List<SkillEvents> domainSkillEvents = matchMapper.toDomainSkillEventsList(persistenceSkillEvents);
-
-        TimelineData timelineData = new TimelineData(domainItemEvents, domainSkillEvents);
+        TimelineData timelineData = buildTimelineData(timelineEvents);
         // Integrate timeline data into ParticipantData
         for (ParticipantData participant : participantDataList) {
             int participantId = participant.getParticipantId();
