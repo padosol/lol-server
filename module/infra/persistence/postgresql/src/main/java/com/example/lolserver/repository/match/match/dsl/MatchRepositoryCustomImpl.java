@@ -185,101 +185,100 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
 
     private MatchSummonerDTO toMatchSummonerDTO(Object[] row) {
         MatchSummonerDTO dto = new MatchSummonerDTO();
-        int i = 0;
+        int[] idx = {0};
 
-        dto.setPuuid((String) row[i++]);
-        dto.setMatchId((String) row[i++]);
-        dto.setSummonerId((String) row[i++]);
-        dto.setRiotIdGameName((String) row[i++]);
-        dto.setRiotIdTagline((String) row[i++]);
-        dto.setProfileIcon(toInt(row[i++]));
-        dto.setParticipantId(toInt(row[i++]));
-        dto.setTier((String) row[i++]);
-        dto.setTierRank((String) row[i++]);
-        dto.setAbsolutePoints(row[i] != null ? toInt(row[i]) : null); i++;
-        dto.setSummonerLevel(toInt(row[i++]));
-
-        dto.setChampLevel(toInt(row[i++]));
-        dto.setChampionId(toInt(row[i++]));
-        dto.setChampionName((String) row[i++]);
-        dto.setChampExperience(toInt(row[i++]));
-        dto.setSummoner1Id(toInt(row[i++]));
-        dto.setSummoner2Id(toInt(row[i++]));
-
-        dto.setKills(toInt(row[i++]));
-        dto.setAssists(toInt(row[i++]));
-        dto.setDeaths(toInt(row[i++]));
-        dto.setDoubleKills(toInt(row[i++]));
-        dto.setTripleKills(toInt(row[i++]));
-        dto.setQuadraKills(toInt(row[i++]));
-        dto.setPentaKills(toInt(row[i++]));
-
-        dto.setGoldEarned(toInt(row[i++]));
-        dto.setConsumablesPurchased(toInt(row[i++]));
-        dto.setItemsPurchased(toInt(row[i++]));
-        dto.setNeutralMinionsKilled(toInt(row[i++]));
-        dto.setTotalMinionsKilled(toInt(row[i++]));
-
-        dto.setVisionScore(toInt(row[i++]));
-        dto.setVisionWardsBoughtInGame(toInt(row[i++]));
-        dto.setWardsKilled(toInt(row[i++]));
-        dto.setWardsPlaced(toInt(row[i++]));
-
-        dto.setTotalDamageDealtToChampions(toInt(row[i++]));
-        dto.setTotalDamageTaken(toInt(row[i++]));
-
-        dto.setTeamId(toInt(row[i++]));
-        dto.setTeamPosition((String) row[i++]);
-        dto.setWin((Boolean) row[i++]);
-        dto.setTimePlayed(toInt(row[i++]));
-        dto.setTimeCCingOthers(toInt(row[i++]));
-        dto.setIndividualPosition((String) row[i++]);
-        dto.setLane((String) row[i++]);
-        dto.setRole((String) row[i++]);
-        dto.setPlacement(toInt(row[i++]));
-
-        dto.setPlayerAugment1(toInt(row[i++]));
-        dto.setPlayerAugment2(toInt(row[i++]));
-        dto.setPlayerAugment3(toInt(row[i++]));
-        dto.setPlayerAugment4(toInt(row[i++]));
-
-        ItemValue item = new ItemValue();
-        item.setItem0(toInt(row[i++]));
-        item.setItem1(toInt(row[i++]));
-        item.setItem2(toInt(row[i++]));
-        item.setItem3(toInt(row[i++]));
-        item.setItem4(toInt(row[i++]));
-        item.setItem5(toInt(row[i++]));
-        item.setItem6(toInt(row[i++]));
-        dto.setItem(item);
-
-        PerkStatValue perkStat = new PerkStatValue();
-        perkStat.setStatPerkDefense(toInt(row[i++]));
-        perkStat.setStatPerkFlex(toInt(row[i++]));
-        perkStat.setStatPerkOffense(toInt(row[i++]));
-        dto.setPerkStat(perkStat);
-
-        PerkStyleValue perkStyle = new PerkStyleValue();
-        perkStyle.setPrimaryStyleId(toInt(row[i++]));
-        perkStyle.setPrimaryPerk0(toInt(row[i++]));
-        perkStyle.setPrimaryPerk1(toInt(row[i++]));
-        perkStyle.setPrimaryPerk2(toInt(row[i++]));
-        perkStyle.setPrimaryPerk3(toInt(row[i++]));
-        perkStyle.setSubStyleId(toInt(row[i++]));
-        perkStyle.setSubPerk0(toInt(row[i++]));
-        perkStyle.setSubPerk1(toInt(row[i++]));
-        dto.setPerkStyle(perkStyle);
-
-        dto.setTeamChampionKills(toInt(row[i++]));
-        dto.setTeamBaronKills(toInt(row[i++]));
-        dto.setTeamDragonKills(toInt(row[i++]));
-        dto.setTeamTowerKills(toInt(row[i++]));
-        dto.setTeamInhibitorKills(toInt(row[i++]));
-
-        dto.setGoldTimeline(toIntegerArray(row[i++]));
-        dto.setTimestamps(toIntegerArray(row[i]));
-
+        dto.setPuuid((String) row[idx[0]++]);
+        dto.setMatchId((String) row[idx[0]++]);
+        dto.setSummonerId((String) row[idx[0]++]);
+        dto.setRiotIdGameName((String) row[idx[0]++]);
+        dto.setRiotIdTagline((String) row[idx[0]++]);
+        dto.setProfileIcon(toInt(row[idx[0]++]));
+        dto.setParticipantId(toInt(row[idx[0]++]));
+        dto.setTier((String) row[idx[0]++]);
+        dto.setTierRank((String) row[idx[0]++]);
+        dto.setAbsolutePoints(row[idx[0]] != null ? toInt(row[idx[0]]) : null); idx[0]++;
+        dto.setSummonerLevel(toInt(row[idx[0]++]));
+        dto.setChampLevel(toInt(row[idx[0]++]));
+        dto.setChampionId(toInt(row[idx[0]++]));
+        dto.setChampionName((String) row[idx[0]++]);
+        dto.setChampExperience(toInt(row[idx[0]++]));
+        dto.setSummoner1Id(toInt(row[idx[0]++]));
+        dto.setSummoner2Id(toInt(row[idx[0]++]));
+        dto.setKills(toInt(row[idx[0]++]));
+        dto.setAssists(toInt(row[idx[0]++]));
+        dto.setDeaths(toInt(row[idx[0]++]));
+        dto.setDoubleKills(toInt(row[idx[0]++]));
+        dto.setTripleKills(toInt(row[idx[0]++]));
+        dto.setQuadraKills(toInt(row[idx[0]++]));
+        dto.setPentaKills(toInt(row[idx[0]++]));
+        dto.setGoldEarned(toInt(row[idx[0]++]));
+        dto.setConsumablesPurchased(toInt(row[idx[0]++]));
+        dto.setItemsPurchased(toInt(row[idx[0]++]));
+        dto.setNeutralMinionsKilled(toInt(row[idx[0]++]));
+        dto.setTotalMinionsKilled(toInt(row[idx[0]++]));
+        dto.setVisionScore(toInt(row[idx[0]++]));
+        dto.setVisionWardsBoughtInGame(toInt(row[idx[0]++]));
+        dto.setWardsKilled(toInt(row[idx[0]++]));
+        dto.setWardsPlaced(toInt(row[idx[0]++]));
+        dto.setTotalDamageDealtToChampions(toInt(row[idx[0]++]));
+        dto.setTotalDamageTaken(toInt(row[idx[0]++]));
+        dto.setTeamId(toInt(row[idx[0]++]));
+        dto.setTeamPosition((String) row[idx[0]++]);
+        dto.setWin((Boolean) row[idx[0]++]);
+        dto.setTimePlayed(toInt(row[idx[0]++]));
+        dto.setTimeCCingOthers(toInt(row[idx[0]++]));
+        dto.setIndividualPosition((String) row[idx[0]++]);
+        dto.setLane((String) row[idx[0]++]);
+        dto.setRole((String) row[idx[0]++]);
+        dto.setPlacement(toInt(row[idx[0]++]));
+        dto.setPlayerAugment1(toInt(row[idx[0]++]));
+        dto.setPlayerAugment2(toInt(row[idx[0]++]));
+        dto.setPlayerAugment3(toInt(row[idx[0]++]));
+        dto.setPlayerAugment4(toInt(row[idx[0]++]));
+        dto.setItem(toItemValue(row, idx));
+        dto.setPerkStat(toPerkStatValue(row, idx));
+        dto.setPerkStyle(toPerkStyleValue(row, idx));
+        dto.setTeamChampionKills(toInt(row[idx[0]++]));
+        dto.setTeamBaronKills(toInt(row[idx[0]++]));
+        dto.setTeamDragonKills(toInt(row[idx[0]++]));
+        dto.setTeamTowerKills(toInt(row[idx[0]++]));
+        dto.setTeamInhibitorKills(toInt(row[idx[0]++]));
+        dto.setGoldTimeline(toIntegerArray(row[idx[0]++]));
+        dto.setTimestamps(toIntegerArray(row[idx[0]]));
         return dto;
+    }
+
+    private ItemValue toItemValue(Object[] row, int[] idx) {
+        ItemValue item = new ItemValue();
+        item.setItem0(toInt(row[idx[0]++]));
+        item.setItem1(toInt(row[idx[0]++]));
+        item.setItem2(toInt(row[idx[0]++]));
+        item.setItem3(toInt(row[idx[0]++]));
+        item.setItem4(toInt(row[idx[0]++]));
+        item.setItem5(toInt(row[idx[0]++]));
+        item.setItem6(toInt(row[idx[0]++]));
+        return item;
+    }
+
+    private PerkStatValue toPerkStatValue(Object[] row, int[] idx) {
+        PerkStatValue perkStat = new PerkStatValue();
+        perkStat.setStatPerkDefense(toInt(row[idx[0]++]));
+        perkStat.setStatPerkFlex(toInt(row[idx[0]++]));
+        perkStat.setStatPerkOffense(toInt(row[idx[0]++]));
+        return perkStat;
+    }
+
+    private PerkStyleValue toPerkStyleValue(Object[] row, int[] idx) {
+        PerkStyleValue perkStyle = new PerkStyleValue();
+        perkStyle.setPrimaryStyleId(toInt(row[idx[0]++]));
+        perkStyle.setPrimaryPerk0(toInt(row[idx[0]++]));
+        perkStyle.setPrimaryPerk1(toInt(row[idx[0]++]));
+        perkStyle.setPrimaryPerk2(toInt(row[idx[0]++]));
+        perkStyle.setPrimaryPerk3(toInt(row[idx[0]++]));
+        perkStyle.setSubStyleId(toInt(row[idx[0]++]));
+        perkStyle.setSubPerk0(toInt(row[idx[0]++]));
+        perkStyle.setSubPerk1(toInt(row[idx[0]++]));
+        return perkStyle;
     }
 
     private int toInt(Object value) {
