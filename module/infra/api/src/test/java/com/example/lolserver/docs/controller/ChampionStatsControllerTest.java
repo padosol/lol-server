@@ -2,7 +2,7 @@ package com.example.lolserver.docs.controller;
 
 import com.example.lolserver.controller.championstats.ChampionStatsController;
 import com.example.lolserver.docs.RestDocsSupport;
-import com.example.lolserver.domain.championstats.application.ChampionStatsService;
+import com.example.lolserver.domain.championstats.application.port.in.ChampionStatsQueryUseCase;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
@@ -49,7 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ChampionStatsControllerTest extends RestDocsSupport {
 
     @Mock
-    private ChampionStatsService championStatsService;
+    private ChampionStatsQueryUseCase championStatsService;
 
     @InjectMocks
     private ChampionStatsController championStatsController;

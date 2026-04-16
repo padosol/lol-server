@@ -5,14 +5,17 @@ import java.util.List;
 import com.example.lolserver.domain.league.domain.League;
 import com.example.lolserver.domain.league.domain.vo.LeagueHistory;
 import com.example.lolserver.domain.league.application.port.LeaguePersistencePort;
+import com.example.lolserver.domain.league.application.port.in.LeagueQueryUseCase;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class LeagueService {
+@Transactional(readOnly = true)
+public class LeagueService implements LeagueQueryUseCase {
 
     private final LeaguePersistencePort leaguePersistencePort;
 

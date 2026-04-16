@@ -14,6 +14,7 @@ dependencies {
     implementation project(":module:infra:persistence:postgresql")
     implementation project(":module:infra:persistence:redis")
     implementation project(":module:infra:persistence:clickhouse")
+    implementation project(":module:support:logging")
 
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'

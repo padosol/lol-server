@@ -4,6 +4,8 @@ import com.example.lolserver.RenewalStatus;
 import com.example.lolserver.domain.summoner.application.model.SummonerAutoReadModel;
 import com.example.lolserver.domain.summoner.application.model.SummonerReadModel;
 import com.example.lolserver.domain.summoner.application.model.SummonerRenewalInfoReadModel;
+import com.example.lolserver.domain.summoner.application.port.in.SummonerQueryUseCase;
+import com.example.lolserver.domain.summoner.application.port.in.SummonerUseCase;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerCachePort;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerClientPort;
 import com.example.lolserver.domain.summoner.application.port.out.SummonerMessagePort;
@@ -31,14 +33,14 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SummonerService {
+@Transactional(readOnly = true)
+public class SummonerService implements SummonerQueryUseCase, SummonerUseCase {
 
     private final SummonerPersistencePort summonerPersistencePort;
     private final SummonerClientPort summonerClientPort;
     private final SummonerCachePort summonerCachePort;
     private final SummonerMessagePort summonerMessagePort;
 
-    @Transactional(readOnly = true)
     public SummonerReadModel getSummoner(GameName gameName, String platformId) {
         Optional<Summoner> summonerOpt = summonerPersistencePort.getSummoner(
                 gameName.summonerName(), gameName.tagLine(), platformId);
@@ -67,7 +69,6 @@ public class SummonerService {
         }
     }
 
-    @Transactional(readOnly = true)
     public List<SummonerAutoReadModel> getAllSummonerAutoComplete(String q, String platformId) {
         List<Summoner> summoners = summonerPersistencePort.getSummonerAuthComplete(q, platformId);
         return summoners.stream().map(summoner -> {
@@ -160,7 +161,6 @@ public class SummonerService {
         return new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
     }
 
-    @Transactional(readOnly = true)
     public SummonerReadModel getSummonerByPuuid(String platformId, String puuid) {
         Optional<Summoner> summonerOpt = summonerPersistencePort.findById(puuid);
 
@@ -186,7 +186,6 @@ public class SummonerService {
         }
     }
 
-    @Transactional(readOnly = true)
     public List<SummonerRenewalInfoReadModel> getRefreshingSummoners() {
         Set<String> puuids = summonerCachePort.getRefreshingPuuids();
         if (puuids.isEmpty()) {

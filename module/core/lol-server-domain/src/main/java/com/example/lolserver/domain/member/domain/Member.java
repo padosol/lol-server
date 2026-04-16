@@ -8,11 +8,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class Member {
@@ -35,6 +38,8 @@ public class Member {
     private String role;
     private LocalDateTime createdAt;
     private LocalDateTime lastLoginAt;
+    private LocalDateTime withdrawnAt;
+    private List<SocialAccount> socialAccounts;
 
     public static Member createNew() {
         return Member.builder()
@@ -68,5 +73,84 @@ public class Member {
                     "닉네임은 2자 이상 20자 이하로 입력해주세요.");
         }
         this.nickname = trimmed;
+    }
+
+    public List<SocialAccount> getSocialAccounts() {
+        return socialAccounts == null
+                ? List.of()
+                : Collections.unmodifiableList(socialAccounts);
+    }
+
+    public boolean isSocialAccountsLoaded() {
+        return socialAccounts != null;
+    }
+
+    public void linkSocialAccount(String provider,
+            String providerId, String email, String nickname,
+            String profileImageUrl, String puuid) {
+        if (this.socialAccounts == null) {
+            this.socialAccounts = new ArrayList<>();
+        }
+        boolean alreadyHasProvider = this.socialAccounts.stream()
+                .anyMatch(sa -> sa.getProvider().equals(provider));
+        if (alreadyHasProvider) {
+            throw new CoreException(
+                    ErrorType.SOCIAL_ACCOUNT_ALREADY_LINKED);
+        }
+        SocialAccount newAccount = SocialAccount.create(
+                this.id, provider, providerId, email, nickname,
+                profileImageUrl, puuid);
+        this.socialAccounts.add(newAccount);
+    }
+
+    public void withdraw() {
+        if (this.withdrawnAt != null) {
+            throw new CoreException(
+                    ErrorType.MEMBER_ALREADY_WITHDRAWN);
+        }
+        this.withdrawnAt = LocalDateTime.now();
+        this.email = "withdrawn_" + this.uuid;
+        this.nickname = "탈퇴한회원_"
+                + UUID.randomUUID().toString().substring(0, 8);
+        this.profileImageUrl = null;
+        if (this.socialAccounts != null) {
+            this.socialAccounts.forEach(SocialAccount::anonymize);
+        }
+    }
+
+    public boolean isWithdrawn() {
+        return this.withdrawnAt != null;
+    }
+
+    public void validateNotWithdrawn() {
+        if (this.withdrawnAt != null) {
+            throw new CoreException(ErrorType.MEMBER_WITHDRAWN);
+        }
+    }
+
+    public void unlinkSocialAccount(Long socialAccountId) {
+        if (this.socialAccounts == null
+                || this.socialAccounts.isEmpty()) {
+            throw new CoreException(
+                    ErrorType.SOCIAL_ACCOUNT_NOT_FOUND);
+        }
+        SocialAccount target = this.socialAccounts.stream()
+                .filter(sa -> sa.getId().equals(socialAccountId))
+                .findFirst()
+                .orElseThrow(() -> new CoreException(
+                        ErrorType.SOCIAL_ACCOUNT_NOT_FOUND));
+        this.socialAccounts.remove(target);
+    }
+
+    public static Member createNewWithSocialAccount(String provider,
+            String providerId, String email, String nickname,
+            String profileImageUrl, String puuid) {
+        Member member = createNew();
+        member.socialAccounts = new ArrayList<>();
+        SocialAccount account = SocialAccount.create(
+                null, provider, providerId, email, nickname,
+                profileImageUrl, puuid);
+        member.socialAccounts.add(account);
+        return member;
     }
 }

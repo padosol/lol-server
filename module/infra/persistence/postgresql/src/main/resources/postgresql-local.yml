@@ -28,8 +28,9 @@ spring:
       register-mbeans: true
       maximum-pool-size: 30
       minimum-idle: 30
-      connection-timeout: 10000
-      max-lifeime: 600000
+      connection-timeout: 10000    # 커넥션 풀에서 커넥션을 획득하기 위해 대기하는 시간 (ms)
+      max-lifetime: 600000         # 커넥션의 최대 생존 시간 (DB 의 wait_timeout 보다 짧게 설정 필수)
+      validation-timeout: 3000     # 커넥션이 유효한지 검사하는 최대 시간 (ms)
       pool-name: "lol-server-pool"
       
 

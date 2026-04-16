@@ -11,6 +11,8 @@ import com.example.lolserver.domain.community.domain.vo.VoteTargetType;
 import com.example.lolserver.domain.community.domain.vo.VoteType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,7 +29,7 @@ public class CommunityVoteController {
     private final VoteUseCase voteUseCase;
 
     @PostMapping("/votes")
-    public ApiResponse<VoteResponse> vote(
+    public ResponseEntity<ApiResponse<VoteResponse>> vote(
             @AuthenticationPrincipal AuthenticatedMember member,
             @Valid @RequestBody VoteRequest request) {
         VoteCommand command = VoteCommand.builder()
@@ -37,15 +39,16 @@ public class CommunityVoteController {
                 .build();
 
         VoteReadModel readModel = voteUseCase.vote(member.memberId(), command);
-        return ApiResponse.success(VoteResponse.from(readModel));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(VoteResponse.from(readModel)));
     }
 
     @DeleteMapping("/votes/{targetType}/{targetId}")
-    public ApiResponse<?> removeVote(
+    public ResponseEntity<Void> removeVote(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable VoteTargetType targetType,
             @PathVariable Long targetId) {
         voteUseCase.removeVote(member.memberId(), targetType, targetId);
-        return ApiResponse.success();
+        return ResponseEntity.noContent().build();
     }
 }

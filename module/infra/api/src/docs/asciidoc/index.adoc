@@ -102,6 +102,35 @@ include::api/season/season-list.adoc[]
 
 include::api/season/season-detail.adoc[]
 
+[[Duo-API]]
+== Duo API
+
+include::api/duo/duo-post-create.adoc[]
+
+include::api/duo/duo-post-list.adoc[]
+
+include::api/duo/duo-post-detail.adoc[]
+
+include::api/duo/duo-post-update.adoc[]
+
+include::api/duo/duo-post-delete.adoc[]
+
+include::api/duo/duo-post-my-list.adoc[]
+
+include::api/duo/duo-request-create.adoc[]
+
+include::api/duo/duo-request-list-for-post.adoc[]
+
+include::api/duo/duo-request-accept.adoc[]
+
+include::api/duo/duo-request-confirm.adoc[]
+
+include::api/duo/duo-request-reject.adoc[]
+
+include::api/duo/duo-request-cancel.adoc[]
+
+include::api/duo/duo-request-my-list.adoc[]
+
 [[Community-API]]
 == Community API
 

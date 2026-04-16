@@ -13,11 +13,13 @@ import com.example.lolserver.domain.championstats.application.model.ChampionStat
 import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
+import com.example.lolserver.domain.championstats.application.port.in.ChampionStatsQueryUseCase;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsCachePort;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,7 +27,8 @@ import java.util.Map;
 
 @Slf4j
 @Service
-public class ChampionStatsService {
+@Transactional(readOnly = true)
+public class ChampionStatsService implements ChampionStatsQueryUseCase {
 
     private final ChampionStatsQueryPort championStatsQueryPort;
     private final ChampionStatsCachePort championStatsCachePort;

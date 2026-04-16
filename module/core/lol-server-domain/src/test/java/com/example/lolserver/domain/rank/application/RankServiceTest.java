@@ -4,14 +4,13 @@ import com.example.lolserver.domain.rank.application.model.RankReadModel;
 import com.example.lolserver.domain.rank.application.dto.RankSearchDto;
 import com.example.lolserver.domain.rank.application.port.out.RankPersistencePort;
 import com.example.lolserver.domain.rank.domain.Rank;
+import com.example.lolserver.support.PageResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -68,16 +67,16 @@ class RankServiceTest {
                         .champions(List.of("Ahri", "Zed"))
                         .build()
         );
-        Page<Rank> rankPage = new PageImpl<>(ranks);
+        PageResult<Rank> rankPage = new PageResult<>(ranks, 1, 50, 2, 1, true, true);
         given(rankPersistencePort.getRanks(searchDto, platformId)).willReturn(rankPage);
 
         // when
-        Page<RankReadModel> result = rankService.getRanks(searchDto, platformId);
+        PageResult<RankReadModel> result = rankService.getRanks(searchDto, platformId);
 
         // then
-        assertThat(result.getContent()).hasSize(2);
-        assertThat(result.getContent().get(0).getGameName()).isEqualTo("Player1");
-        assertThat(result.getContent().get(1).getGameName()).isEqualTo("Player2");
+        assertThat(result.content()).hasSize(2);
+        assertThat(result.content().get(0).getGameName()).isEqualTo("Player1");
+        assertThat(result.content().get(1).getGameName()).isEqualTo("Player2");
         then(rankPersistencePort).should().getRanks(searchDto, platformId);
     }
 
@@ -89,14 +88,14 @@ class RankServiceTest {
         RankSearchDto searchDto = new RankSearchDto();
         searchDto.setTier("CHALLENGER");
 
-        Page<Rank> emptyPage = new PageImpl<>(Collections.emptyList());
+        PageResult<Rank> emptyPage = new PageResult<>(Collections.emptyList(), 1, 50, 0, 0, true, true);
         given(rankPersistencePort.getRanks(searchDto, platformId)).willReturn(emptyPage);
 
         // when
-        Page<RankReadModel> result = rankService.getRanks(searchDto, platformId);
+        PageResult<RankReadModel> result = rankService.getRanks(searchDto, platformId);
 
         // then
-        assertThat(result.getContent()).isEmpty();
+        assertThat(result.content()).isEmpty();
         then(rankPersistencePort).should().getRanks(searchDto, platformId);
     }
 
@@ -121,15 +120,15 @@ class RankServiceTest {
                 .leaguePoints(100)
                 .champions(List.of("Jinx", "Caitlyn"))
                 .build();
-        Page<Rank> rankPage = new PageImpl<>(List.of(rank));
+        PageResult<Rank> rankPage = new PageResult<>(List.of(rank), 1, 50, 1, 1, true, true);
         given(rankPersistencePort.getRanks(searchDto, platformId)).willReturn(rankPage);
 
         // when
-        Page<RankReadModel> result = rankService.getRanks(searchDto, platformId);
+        PageResult<RankReadModel> result = rankService.getRanks(searchDto, platformId);
 
         // then
-        assertThat(result.getContent()).hasSize(1);
-        RankReadModel response = result.getContent().get(0);
+        assertThat(result.content()).hasSize(1);
+        RankReadModel response = result.content().get(0);
         assertThat(response.getPuuid()).isEqualTo("puuid-test");
         assertThat(response.getCurrentRank()).isEqualTo(1);
         assertThat(response.getRankChange()).isEqualTo(2);

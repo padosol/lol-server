@@ -6,6 +6,7 @@ import com.example.lolserver.domain.member.application.model.AuthTokenReadModel;
 import com.example.lolserver.domain.member.application.model.OAuthUserInfo;
 import com.example.lolserver.domain.member.application.port.in.MemberAuthUseCase;
 import com.example.lolserver.domain.member.application.port.out.MemberPersistencePort;
+import com.example.lolserver.domain.member.application.port.out.MemberWithdrawalPersistencePort;
 import com.example.lolserver.domain.member.application.port.out.OAuthAuthorizationPort;
 import com.example.lolserver.domain.member.application.port.out.OAuthClientPort;
 import com.example.lolserver.domain.member.application.port.out.OAuthStatePort;
@@ -13,6 +14,7 @@ import com.example.lolserver.domain.member.application.port.out.RefreshTokenPort
 import com.example.lolserver.domain.member.application.port.out.SocialAccountPersistencePort;
 import com.example.lolserver.domain.member.application.port.out.TokenPort;
 import com.example.lolserver.domain.member.domain.Member;
+import com.example.lolserver.domain.member.domain.MemberWithdrawal;
 import com.example.lolserver.domain.member.domain.SocialAccount;
 import com.example.lolserver.domain.member.domain.vo.OAuthProvider;
 import com.example.lolserver.support.error.CoreException;
@@ -22,15 +24,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MemberAuthService implements MemberAuthUseCase {
 
     private final MemberPersistencePort memberPersistencePort;
     private final SocialAccountPersistencePort socialAccountPersistencePort;
+    private final MemberWithdrawalPersistencePort memberWithdrawalPersistencePort;
     private final OAuthClientPort oAuthClientPort;
     private final TokenPort tokenPort;
     private final RefreshTokenPort refreshTokenPort;
@@ -92,16 +97,14 @@ public class MemberAuthService implements MemberAuthUseCase {
                 .orElseThrow(() -> new CoreException(
                         ErrorType.MEMBER_NOT_FOUND));
 
+        member.validateNotWithdrawn();
+
         return generateTokens(member);
     }
 
     @Override
     @Transactional
     public void linkSocialAccount(Long memberId, OAuthUserInfo userInfo) {
-        memberPersistencePort.findById(memberId)
-                .orElseThrow(() -> new CoreException(
-                        ErrorType.MEMBER_NOT_FOUND));
-
         socialAccountPersistencePort
                 .findByProviderAndProviderId(
                         userInfo.getProvider(), userInfo.getProviderId())
@@ -110,34 +113,48 @@ public class MemberAuthService implements MemberAuthUseCase {
                             ErrorType.SOCIAL_ACCOUNT_ALREADY_LINKED);
                 });
 
-        SocialAccount newAccount = SocialAccount.create(
-                memberId,
-                userInfo.getProvider(),
-                userInfo.getProviderId(),
-                userInfo.getEmail(),
-                userInfo.getNickname(),
-                userInfo.getProfileImageUrl());
-        socialAccountPersistencePort.save(newAccount);
+        Member member = findMemberWithSocialAccounts(memberId);
+
+        member.linkSocialAccount(
+                userInfo.getProvider(), userInfo.getProviderId(),
+                userInfo.getEmail(), userInfo.getNickname(),
+                userInfo.getProfileImageUrl(), userInfo.getPuuid());
+
+        memberPersistencePort.save(member);
     }
 
     @Override
     @Transactional
     public void unlinkSocialAccount(Long memberId, Long socialAccountId) {
-        SocialAccount account = socialAccountPersistencePort
-                .findById(socialAccountId)
-                .orElseThrow(() -> new CoreException(
-                        ErrorType.SOCIAL_ACCOUNT_NOT_FOUND));
-
-        if (!account.getMemberId().equals(memberId)) {
-            throw new CoreException(ErrorType.FORBIDDEN);
-        }
-
-        socialAccountPersistencePort.delete(account);
+        Member member = findMemberWithSocialAccounts(memberId);
+        member.unlinkSocialAccount(socialAccountId);
+        memberPersistencePort.save(member);
     }
 
     @Override
     @Transactional
     public void logout(Long memberId) {
+        refreshTokenPort.delete(memberId);
+    }
+
+    @Override
+    @Transactional
+    public void withdraw(Long memberId) {
+        Member member = findMemberWithSocialAccounts(memberId);
+
+        List<MemberWithdrawal> withdrawals =
+                member.getSocialAccounts().stream()
+                        .map(sa -> MemberWithdrawal.create(
+                                sa.getProvider(),
+                                sa.getProviderId()))
+                        .toList();
+
+        member.withdraw();
+        memberPersistencePort.save(member);
+
+        withdrawals.forEach(
+                memberWithdrawalPersistencePort::save);
+
         refreshTokenPort.delete(memberId);
     }
 
@@ -148,29 +165,53 @@ public class MemberAuthService implements MemberAuthUseCase {
                         userInfo.getProvider(), userInfo.getProviderId())
                 .orElse(null);
 
-        Member member;
-        if (socialAccount != null) {
-            member = memberPersistencePort.findById(
-                    socialAccount.getMemberId())
-                    .orElseThrow(() -> new CoreException(
-                            ErrorType.MEMBER_NOT_FOUND));
-            member.updateLastLogin();
-            memberPersistencePort.save(member);
-        } else {
-            member = Member.createNew();
-            member = memberPersistencePort.save(member);
-
-            SocialAccount newSocialAccount = SocialAccount.create(
-                    member.getId(),
-                    userInfo.getProvider(),
-                    userInfo.getProviderId(),
-                    userInfo.getEmail(),
-                    userInfo.getNickname(),
-                    userInfo.getProfileImageUrl());
-            socialAccountPersistencePort.save(newSocialAccount);
-        }
+        Member member = socialAccount != null
+                ? loginExistingMember(socialAccount)
+                : registerNewMember(userInfo);
 
         return generateTokens(member);
+    }
+
+    private Member loginExistingMember(SocialAccount socialAccount) {
+        Member member = memberPersistencePort.findById(
+                socialAccount.getMemberId())
+                .orElseThrow(() -> new CoreException(
+                        ErrorType.MEMBER_NOT_FOUND));
+        member.validateNotWithdrawn();
+        member.updateLastLogin();
+        memberPersistencePort.save(member);
+        return member;
+    }
+
+    private Member registerNewMember(OAuthUserInfo userInfo) {
+        memberWithdrawalPersistencePort
+                .findByProviderAndProviderId(
+                        userInfo.getProvider(),
+                        userInfo.getProviderId())
+                .filter(MemberWithdrawal
+                        ::isWithinRestrictionPeriod)
+                .ifPresent(w -> {
+                    throw new CoreException(
+                            ErrorType.WITHDRAWAL_REREGISTRATION_RESTRICTED);
+                });
+
+        Member member = Member.createNewWithSocialAccount(
+                userInfo.getProvider(),
+                userInfo.getProviderId(),
+                userInfo.getEmail(),
+                userInfo.getNickname(),
+                userInfo.getProfileImageUrl(),
+                userInfo.getPuuid());
+        return memberPersistencePort.save(member);
+    }
+
+    private Member findMemberWithSocialAccounts(Long memberId) {
+        Member member = memberPersistencePort
+                .findByIdWithSocialAccounts(memberId)
+                .orElseThrow(() -> new CoreException(
+                        ErrorType.MEMBER_NOT_FOUND));
+        member.validateNotWithdrawn();
+        return member;
     }
 
     private AuthTokenReadModel generateTokens(Member member) {

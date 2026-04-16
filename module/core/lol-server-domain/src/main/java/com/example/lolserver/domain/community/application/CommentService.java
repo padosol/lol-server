@@ -2,7 +2,6 @@ package com.example.lolserver.domain.community.application;
 
 import com.example.lolserver.domain.community.application.command.CreateCommentCommand;
 import com.example.lolserver.domain.community.application.command.UpdateCommentCommand;
-import com.example.lolserver.domain.community.application.model.AuthorReadModel;
 import com.example.lolserver.domain.community.application.model.CommentTreeReadModel;
 import com.example.lolserver.domain.community.application.port.in.CommentQueryUseCase;
 import com.example.lolserver.domain.community.application.port.in.CommentUseCase;
@@ -26,11 +25,10 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CommentService implements CommentUseCase, CommentQueryUseCase {
 
     private static final int MAX_DEPTH = 5;
-    private static final String DELETED_COMMENT_CONTENT = "[삭제된 댓글입니다]";
-
     private final CommentPersistencePort commentPersistencePort;
     private final PostPersistencePort postPersistencePort;
     private final MemberPersistencePort memberPersistencePort;
@@ -62,7 +60,7 @@ public class CommentService implements CommentUseCase, CommentQueryUseCase {
         int commentCount = commentPersistencePort.countByPostId(postId);
         postPersistencePort.updateCommentCount(postId, commentCount);
 
-        return toReadModel(saved, member);
+        return CommentTreeReadModel.of(saved, member);
     }
 
     @Override
@@ -71,9 +69,7 @@ public class CommentService implements CommentUseCase, CommentQueryUseCase {
         Comment comment = commentPersistencePort.findById(commentId)
                 .orElseThrow(() -> new CoreException(ErrorType.COMMENT_NOT_FOUND));
 
-        if (!comment.isOwner(memberId)) {
-            throw new CoreException(ErrorType.FORBIDDEN);
-        }
+        comment.validateOwner(memberId);
 
         comment.updateContent(command.getContent());
         Comment saved = commentPersistencePort.save(comment);
@@ -81,7 +77,7 @@ public class CommentService implements CommentUseCase, CommentQueryUseCase {
         Member member = memberPersistencePort.findById(memberId)
                 .orElseThrow(() -> new CoreException(ErrorType.MEMBER_NOT_FOUND));
 
-        return toReadModel(saved, member);
+        return CommentTreeReadModel.of(saved, member);
     }
 
     @Override
@@ -90,9 +86,7 @@ public class CommentService implements CommentUseCase, CommentQueryUseCase {
         Comment comment = commentPersistencePort.findById(commentId)
                 .orElseThrow(() -> new CoreException(ErrorType.COMMENT_NOT_FOUND));
 
-        if (!comment.isOwner(memberId)) {
-            throw new CoreException(ErrorType.FORBIDDEN);
-        }
+        comment.validateOwner(memberId);
 
         comment.markDeleted();
         commentPersistencePort.save(comment);
@@ -102,7 +96,6 @@ public class CommentService implements CommentUseCase, CommentQueryUseCase {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<CommentTreeReadModel> getComments(Long postId) {
         postPersistencePort.findById(postId)
                 .orElseThrow(() -> new CoreException(ErrorType.POST_NOT_FOUND));
@@ -118,7 +111,7 @@ public class CommentService implements CommentUseCase, CommentQueryUseCase {
         Map<Long, CommentTreeReadModel> nodeMap = new HashMap<>();
         for (Comment comment : allComments) {
             Member member = memberCache.get(comment.getMemberId());
-            nodeMap.put(comment.getId(), toReadModel(comment, member));
+            nodeMap.put(comment.getId(), CommentTreeReadModel.of(comment, member));
         }
 
         List<CommentTreeReadModel> rootNodes = new ArrayList<>();
@@ -136,28 +129,5 @@ public class CommentService implements CommentUseCase, CommentQueryUseCase {
         }
 
         return rootNodes;
-    }
-
-    private CommentTreeReadModel toReadModel(Comment comment, Member member) {
-        AuthorReadModel author = member != null
-                ? AuthorReadModel.of(member) : null;
-
-        String content = comment.isDeleted()
-                ? DELETED_COMMENT_CONTENT : comment.getContent();
-
-        return CommentTreeReadModel.builder()
-                .id(comment.getId())
-                .postId(comment.getPostId())
-                .parentCommentId(comment.getParentCommentId())
-                .content(content)
-                .depth(comment.getDepth())
-                .upvoteCount(comment.getUpvoteCount())
-                .downvoteCount(comment.getDownvoteCount())
-                .deleted(comment.isDeleted())
-                .author(author)
-                .createdAt(comment.getCreatedAt())
-                .updatedAt(comment.getUpdatedAt())
-                .children(new ArrayList<>())
-                .build();
     }
 }

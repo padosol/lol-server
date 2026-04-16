@@ -11,7 +11,7 @@ import com.example.lolserver.domain.community.application.model.PostListReadMode
 import com.example.lolserver.domain.community.application.port.in.PostQueryUseCase;
 import com.example.lolserver.domain.community.application.port.in.PostUseCase;
 import com.example.lolserver.domain.community.domain.vo.VoteType;
-import com.example.lolserver.support.Page;
+import com.example.lolserver.support.SliceResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -111,7 +111,7 @@ class CommunityPostControllerTest extends RestDocsSupport {
                                 .content(objectMapper.writeValueAsString(request))
                 )
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andDo(document("community-post-create",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
@@ -164,7 +164,7 @@ class CommunityPostControllerTest extends RestDocsSupport {
     @DisplayName("게시글 목록 조회 API")
     @Test
     void getPosts() throws Exception {
-        Page<PostListReadModel> page = new Page<>(
+        SliceResult<PostListReadModel> page = new SliceResult<>(
                 List.of(samplePostList(1L, "첫 번째 게시글"), samplePostList(2L, "두 번째 게시글")),
                 true);
         given(postQueryUseCase.getPosts(any())).willReturn(page);
@@ -327,20 +327,12 @@ class CommunityPostControllerTest extends RestDocsSupport {
                         delete("/api/community/posts/{postId}", 1L)
                 )
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status().isNoContent())
                 .andDo(document("community-post-delete",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
                                 parameterWithName("postId").description("게시글 ID")
-                        ),
-                        responseFields(
-                                fieldWithPath("result").type(JsonFieldType.STRING)
-                                        .description("API 응답 결과 (SUCCESS, ERROR)"),
-                                fieldWithPath("errorMessage").type(JsonFieldType.NULL)
-                                        .description("에러 메시지 (정상 응답 시 null)"),
-                                fieldWithPath("data").type(JsonFieldType.NULL)
-                                        .description("데이터 없음")
                         )
                 ));
     }
@@ -348,7 +340,7 @@ class CommunityPostControllerTest extends RestDocsSupport {
     @DisplayName("게시글 검색 API")
     @Test
     void searchPosts() throws Exception {
-        Page<PostListReadModel> page = new Page<>(
+        SliceResult<PostListReadModel> page = new SliceResult<>(
                 List.of(samplePostList(1L, "아리 너프 관련 의견")),
                 false);
         given(postQueryUseCase.searchPosts(any())).willReturn(page);
@@ -383,7 +375,7 @@ class CommunityPostControllerTest extends RestDocsSupport {
     @DisplayName("내 게시글 목록 조회 API")
     @Test
     void getMyPosts() throws Exception {
-        Page<PostListReadModel> page = new Page<>(
+        SliceResult<PostListReadModel> page = new SliceResult<>(
                 List.of(samplePostList(1L, "내가 쓴 게시글")),
                 false);
         given(postQueryUseCase.getMyPosts(eq(1L), eq(0))).willReturn(page);

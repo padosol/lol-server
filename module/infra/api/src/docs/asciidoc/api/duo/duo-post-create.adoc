@@ -1,0 +1,10 @@
+[[duo-post-create]]
+=== 듀오 게시글 작성
+
+==== HTTP Request
+include::{snippets}/duo-post-create/http-request.adoc[]
+include::{snippets}/duo-post-create/request-fields.adoc[]
+
+==== HTTP Response
+include::{snippets}/duo-post-create/http-response.adoc[]
+include::{snippets}/duo-post-create/response-fields.adoc[]

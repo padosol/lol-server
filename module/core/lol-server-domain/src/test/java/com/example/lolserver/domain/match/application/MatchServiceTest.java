@@ -6,7 +6,8 @@ import com.example.lolserver.domain.match.application.port.out.MatchPersistenceP
 import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.TimelineData;
-import com.example.lolserver.support.Page;
+import com.example.lolserver.support.PaginationRequest;
+import com.example.lolserver.support.SliceResult;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
@@ -15,7 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Pageable;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,18 +50,18 @@ class MatchServiceTest {
                 .build();
 
         List<GameReadModel> games = List.of(new GameReadModel(), new GameReadModel());
-        Page<GameReadModel> expected = new Page<>(games, true);
+        SliceResult<GameReadModel> expected = new SliceResult<>(games, true);
 
-        given(matchPersistencePort.getMatches(eq("test-puuid"), eq(420), any(Pageable.class)))
+        given(matchPersistencePort.getMatches(eq("test-puuid"), eq(420), any(PaginationRequest.class)))
                 .willReturn(expected);
 
         // when
-        Page<GameReadModel> result = matchService.getMatches(command);
+        SliceResult<GameReadModel> result = matchService.getMatches(command);
 
         // then
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.isHasNext()).isTrue();
-        then(matchPersistencePort).should().getMatches(eq("test-puuid"), eq(420), any(Pageable.class));
+        then(matchPersistencePort).should().getMatches(eq("test-puuid"), eq(420), any(PaginationRequest.class));
     }
 
     @DisplayName("매치 결과가 없으면 빈 페이지를 반환한다")
@@ -74,17 +74,17 @@ class MatchServiceTest {
                 .pageNo(0)
                 .build();
 
-        Page<GameReadModel> emptyPage = new Page<>(Collections.emptyList(), false);
-        given(matchPersistencePort.getMatches(eq("test-puuid"), eq(420), any(Pageable.class)))
+        SliceResult<GameReadModel> emptyPage = new SliceResult<>(Collections.emptyList(), false);
+        given(matchPersistencePort.getMatches(eq("test-puuid"), eq(420), any(PaginationRequest.class)))
                 .willReturn(emptyPage);
 
         // when
-        Page<GameReadModel> result = matchService.getMatches(command);
+        SliceResult<GameReadModel> result = matchService.getMatches(command);
 
         // then
         assertThat(result.getContent()).isEmpty();
         assertThat(result.isHasNext()).isFalse();
-        then(matchPersistencePort).should().getMatches(eq("test-puuid"), eq(420), any(Pageable.class));
+        then(matchPersistencePort).should().getMatches(eq("test-puuid"), eq(420), any(PaginationRequest.class));
     }
 
     @DisplayName("유효한 커맨드로 챔피언 통계 조회 시 챔피언 리스트를 반환한다")
@@ -192,18 +192,18 @@ class MatchServiceTest {
                 .build();
 
         List<String> matchIds = List.of("KR_111", "KR_222", "KR_333");
-        Page<String> expected = new Page<>(matchIds, true);
+        SliceResult<String> expected = new SliceResult<>(matchIds, true);
 
-        given(matchPersistencePort.findAllMatchIds(eq("test-puuid"), eq(420), any(Pageable.class)))
+        given(matchPersistencePort.findAllMatchIds(eq("test-puuid"), eq(420), any(PaginationRequest.class)))
                 .willReturn(expected);
 
         // when
-        Page<String> result = matchService.findAllMatchIds(command);
+        SliceResult<String> result = matchService.findAllMatchIds(command);
 
         // then
         assertThat(result.getContent()).hasSize(3);
         assertThat(result.getContent()).containsExactly("KR_111", "KR_222", "KR_333");
         assertThat(result.isHasNext()).isTrue();
-        then(matchPersistencePort).should().findAllMatchIds(eq("test-puuid"), eq(420), any(Pageable.class));
+        then(matchPersistencePort).should().findAllMatchIds(eq("test-puuid"), eq(420), any(PaginationRequest.class));
     }
 }

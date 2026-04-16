@@ -1,7 +1,7 @@
 package com.example.lolserver.controller.season;
 
 import com.example.lolserver.controller.support.response.ApiResponse;
-import com.example.lolserver.domain.season.application.SeasonService;
+import com.example.lolserver.domain.season.application.port.in.SeasonQueryUseCase;
 import com.example.lolserver.domain.season.application.model.SeasonReadModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SeasonController {
 
-    private final SeasonService seasonService;
+    private final SeasonQueryUseCase seasonService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<SeasonReadModel>>> getAllSeasons() {

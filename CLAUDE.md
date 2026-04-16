@@ -103,12 +103,38 @@ module/
 - `ErrorType` enum - HTTP 상태 코드 매핑
 - `@RestControllerAdvice(CoreExceptionAdvice)` - 전역 예외 핸들러
 
+### 도메인 검증 패턴
+
+도메인 규칙 위반은 **도메인 객체가 직접 예외를 던져야** 합니다. Application 서비스에서 boolean 체크 후 예외를 던지지 않습니다.
+
+```java
+// ✅ 올바른 패턴: 도메인 객체의 guard 메서드
+duoPost.validateOwner(memberId);
+duoPost.validateActive();
+member.validateNotWithdrawn();
+
+// ❌ 금지: Application 서비스에서 boolean 체크 + 예외 던지기
+if (!duoPost.isOwner(memberId)) {
+    throw new CoreException(ErrorType.FORBIDDEN);
+}
+```
+
+- guard 메서드 네이밍: `validate*` 접두사 (`validateOwner`, `validateActive`, `validateNotDeleted` 등)
+- boolean 쿼리 메서드(`isOwner`, `isActive` 등)는 조건 분기용으로만 사용하고, 불변식 강제에는 guard 메서드 사용
+- 동일 boolean에 대해 반대 의미의 guard가 필요하면 별도 메서드 분리 (`validateOwner` vs `validateNotOwner`)
+
 ### 테스트 패턴
 
 - **단위 테스트**: `@ExtendWith(MockitoExtension.class)`, BDDMockito (`given/then`)
 - **JPA 테스트**: `RepositoryTestBase` 상속 (`@DataJpaTest` + H2)
 - **RestDocs 테스트**: `RestDocsSupport` 상속 (Standalone MockMvc)
 - **어댑터 테스트**: Mock 기반 단위 테스트 (통합 테스트 아님)
+- **MapStruct Mapper 테스트**: 새 Mapper 추가 또는 기존 Mapper 수정 시 반드시 단위 테스트 작성
+  - 테스트 위치: `repository.{name}.mapper.*MapperTest`
+  - `componentModel = "spring"` Mapper: `new MapperImpl()` + `ReflectionTestUtils.setField()`로 의존 Mapper 주입
+  - `componentModel = "default"` Mapper: `Mapper.INSTANCE` 사용
+  - 필수 검증 항목: `@Mapping(ignore = true)` 필드가 실제로 무시되는지, `@AfterMapping`이 의도한 메서드에만 적용되는지
+  - `updateEntityFromDomain` 테스트 시 기존 컬렉션에 중복 엔티티가 추가되지 않는지 검증
 - `@DisplayName("한글 설명")`, AssertJ `assertThat` 사용
 - RestDocs 관련 파일(`.adoc`, RestDocs 테스트) 수정 시 반드시 `./gradlew :module:infra:api:asciidoctor` 실행하여 문서 재생성할 것
 
@@ -116,9 +142,19 @@ module/
 
 - DI: `@RequiredArgsConstructor` + `private final` 필드 (생성자 주입)
 - 로깅: `@Slf4j`
+- 컨트롤러 반환 타입: `ResponseEntity<ApiResponse<T>>` (RESTful 상태코드 사용)
+  - `POST` (생성): `ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(data))` → **201**
+  - `GET` (조회): `ResponseEntity.ok(ApiResponse.success(data))` → **200**
+  - `PUT` (수정): `ResponseEntity.ok(ApiResponse.success(data))` → **200**
+  - `DELETE` (삭제): `ResponseEntity.noContent().build()` → **204** (body 없음, 반환 타입 `ResponseEntity<Void>`)
 - 컨트롤러 응답 DTO: Java `record` (불변)
 - 커맨드: `@Builder @Getter @NoArgsConstructor @AllArgsConstructor` (도메인 객체에 `@Setter` 사용 금지 — 팩토리 메서드/Builder 사용)
 - 트랜잭션: 조회 `@Transactional(readOnly = true)`, 변경 `@Transactional`
+- 매직 스트링 금지: 기존 enum이 존재하는 값은 반드시 `EnumType.VALUE.name()` 또는 `EnumType.VALUE.getXxx()` 사용
+  - `OAuthProvider` (`core:lol-server-domain`): `"RIOT"`, `"GOOGLE"` 대신 `OAuthProvider.RIOT.name()`
+  - `QueueType` (`core:enum`): `"RANKED_SOLO_5x5"` 대신 `QueueType.RANKED_SOLO_5x5.name()`, `420` 대신 `QueueType.RANKED_SOLO_5x5.getQueueId()`
+  - `DuoPostStatus`, `DuoRequestStatus` 등 도메인 VO enum 동일 적용
+- ReadModel 변환: 서비스에서 인라인 빌더로 ReadModel을 생성하지 말고, `ReadModel.of(DomainObject, ...)` 정적 팩토리 메서드를 ReadModel 클래스에 정의하여 사용
 
 ### 비동기 쿼리 실행 패턴
 

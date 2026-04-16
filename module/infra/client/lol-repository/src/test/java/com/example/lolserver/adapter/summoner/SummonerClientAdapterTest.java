@@ -157,13 +157,13 @@ class SummonerClientAdapterTest {
     }
 
     private Summoner createSummoner(String puuid, String gameName, String tagLine) {
-        Summoner summoner = new Summoner();
-        summoner.setPuuid(puuid);
-        summoner.setGameName(gameName);
-        summoner.setTagLine(tagLine);
-        summoner.setProfileIconId(1234);
-        summoner.setSummonerLevel(100L);
-        summoner.setRevisionDate(LocalDateTime.now());
-        return summoner;
+        return Summoner.builder()
+                .puuid(puuid)
+                .gameName(gameName)
+                .tagLine(tagLine)
+                .profileIconId(1234)
+                .summonerLevel(100L)
+                .revisionDate(LocalDateTime.now())
+                .build();
     }
 }

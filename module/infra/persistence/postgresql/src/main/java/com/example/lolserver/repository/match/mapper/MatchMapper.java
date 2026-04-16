@@ -12,12 +12,10 @@ import com.example.lolserver.domain.match.domain.gamedata.timeline.events.SkillE
 import com.example.lolserver.domain.match.domain.gamedata.value.ItemValue;
 import com.example.lolserver.domain.match.domain.gamedata.value.StatValue;
 import com.example.lolserver.domain.match.domain.gamedata.value.Style;
-import com.example.lolserver.repository.match.dto.ItemEventDTO;
 import com.example.lolserver.repository.match.dto.MSChampionDTO;
 import com.example.lolserver.repository.match.dto.MatchDTO;
 import com.example.lolserver.repository.match.dto.MatchSummonerDTO;
-import com.example.lolserver.repository.match.dto.MatchTeamDTO;
-import com.example.lolserver.repository.match.dto.SkillEventDTO;
+import com.example.lolserver.repository.match.dto.TimelineEventDTO;
 import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.MatchSummonerEntity;
 import com.example.lolserver.repository.match.entity.MatchTeamEntity;
@@ -108,11 +106,21 @@ public interface MatchMapper {
     @Mapping(target = "statValue", source = "perkStat")
     ParticipantData toDomain(MatchSummonerDTO dto);
 
-    TeamInfoData toDomain(MatchTeamDTO dto);
+    default ItemEvents toItemEventsFromTimelineDTO(TimelineEventDTO dto) {
+        return ItemEvents.builder()
+                .itemId(dto.getEventId())
+                .participantId(dto.getParticipantId())
+                .timestamp(dto.getTimestamp())
+                .type(dto.getEventType())
+                .build();
+    }
 
-    ItemEvents toDomain(ItemEventDTO dto);
-    SkillEvents toDomain(SkillEventDTO dto);
-
-    List<ItemEvents> toDomainItemEventDTOList(List<ItemEventDTO> dtos);
-    List<SkillEvents> toDomainSkillEventDTOList(List<SkillEventDTO> dtos);
+    default SkillEvents toSkillEventsFromTimelineDTO(TimelineEventDTO dto) {
+        return SkillEvents.builder()
+                .skillSlot(dto.getEventId())
+                .participantId(dto.getParticipantId())
+                .timestamp(dto.getTimestamp())
+                .levelUpType(dto.getEventType())
+                .build();
+    }
 }

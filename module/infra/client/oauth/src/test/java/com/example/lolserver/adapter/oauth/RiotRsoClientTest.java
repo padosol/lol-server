@@ -53,7 +53,7 @@ class RiotRsoClientTest {
         config.setClientSecret("riot-client-secret");
         config.setTokenUri("https://auth.riotgames.com/token");
         config.setUserInfoUri("https://auth.riotgames.com/userinfo");
-        config.setAccountUri("https://americas.api.riotgames.com/riot/account/v1/accounts/me");
+        config.setAccountUri("https://asia.api.riotgames.com/riot/account/v1/accounts/me");
     }
 
     @Test
@@ -68,7 +68,7 @@ class RiotRsoClientTest {
                         .build());
 
         given(oauthRestClient.get()).willReturn(requestHeadersUriSpec);
-        given(requestHeadersUriSpec.uri("https://americas.api.riotgames.com/riot/account/v1/accounts/me"))
+        given(requestHeadersUriSpec.uri("https://asia.api.riotgames.com/riot/account/v1/accounts/me"))
                 .willReturn(requestHeadersSpec);
         given(requestHeadersSpec.header("Authorization", "Bearer riot-access-token"))
                 .willReturn(requestHeadersSpec);
@@ -85,6 +85,7 @@ class RiotRsoClientTest {
         // then
         assertThat(userInfo.getProvider()).isEqualTo("RIOT");
         assertThat(userInfo.getProviderId()).isEqualTo("test-puuid-123");
+        assertThat(userInfo.getPuuid()).isEqualTo("test-puuid-123");
     }
 
     @Test
@@ -98,7 +99,7 @@ class RiotRsoClientTest {
                         .build());
 
         given(oauthRestClient.get()).willReturn(requestHeadersUriSpec);
-        given(requestHeadersUriSpec.uri("https://americas.api.riotgames.com/riot/account/v1/accounts/me"))
+        given(requestHeadersUriSpec.uri("https://asia.api.riotgames.com/riot/account/v1/accounts/me"))
                 .willReturn(requestHeadersSpec);
         given(requestHeadersSpec.header("Authorization", "Bearer riot-access-token"))
                 .willReturn(requestHeadersSpec);
@@ -107,6 +108,48 @@ class RiotRsoClientTest {
 
         // when & then
         assertThatThrownBy(() -> riotRsoClient.getUserInfo("code", "redirect"))
+                .isInstanceOf(CoreException.class);
+    }
+
+    @Test
+    @DisplayName("fetchPuuid로 access token을 사용하여 PUUID를 조회한다")
+    void fetchPuuid_success() {
+        // given
+        given(oAuthProperties.getProviderConfig("riot")).willReturn(config);
+        given(oauthRestClient.get()).willReturn(requestHeadersUriSpec);
+        given(requestHeadersUriSpec.uri("https://asia.api.riotgames.com/riot/account/v1/accounts/me"))
+                .willReturn(requestHeadersSpec);
+        given(requestHeadersSpec.header("Authorization", "Bearer test-access-token"))
+                .willReturn(requestHeadersSpec);
+        given(requestHeadersSpec.retrieve()).willReturn(responseSpec);
+        given(responseSpec.body(Map.class)).willReturn(Map.of(
+                "puuid", "fetched-puuid-456",
+                "gameName", "Player",
+                "tagLine", "KR1"
+        ));
+
+        // when
+        String puuid = riotRsoClient.fetchPuuid("test-access-token");
+
+        // then
+        assertThat(puuid).isEqualTo("fetched-puuid-456");
+    }
+
+    @Test
+    @DisplayName("fetchPuuid에서 응답이 null이면 예외가 발생한다")
+    void fetchPuuid_nullResponse_throwsException() {
+        // given
+        given(oAuthProperties.getProviderConfig("riot")).willReturn(config);
+        given(oauthRestClient.get()).willReturn(requestHeadersUriSpec);
+        given(requestHeadersUriSpec.uri("https://asia.api.riotgames.com/riot/account/v1/accounts/me"))
+                .willReturn(requestHeadersSpec);
+        given(requestHeadersSpec.header("Authorization", "Bearer test-access-token"))
+                .willReturn(requestHeadersSpec);
+        given(requestHeadersSpec.retrieve()).willReturn(responseSpec);
+        given(responseSpec.body(Map.class)).willReturn(null);
+
+        // when & then
+        assertThatThrownBy(() -> riotRsoClient.fetchPuuid("test-access-token"))
                 .isInstanceOf(CoreException.class);
     }
 }

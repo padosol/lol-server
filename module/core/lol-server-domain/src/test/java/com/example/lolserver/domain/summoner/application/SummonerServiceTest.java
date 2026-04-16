@@ -153,17 +153,33 @@ class SummonerServiceTest {
         String query = "Ranked";
         String platformId = "kr";
 
-        LeagueSummoner leagueSummoner = new LeagueSummoner(
-                "puuid-ranked", "RANKED_SOLO_5x5", "league-1",
-                100, 50, "DIAMOND", "I", 75,
-                false, false, false, true
-        );
+        LeagueSummoner leagueSummoner = LeagueSummoner.builder()
+                .puuid("puuid-ranked")
+                .queue("RANKED_SOLO_5x5")
+                .leagueId("league-1")
+                .wins(100)
+                .losses(50)
+                .tier("DIAMOND")
+                .rank("I")
+                .leaguePoints(75)
+                .veteran(false)
+                .inactive(false)
+                .freshBlood(false)
+                .hotStreak(true)
+                .build();
 
-        Summoner summoner = new Summoner(
-                "puuid-ranked", 300L, 123, "RankedPlayer", "KR1",
-                "kr", "rankedplayer", LocalDateTime.now(), LocalDateTime.now(),
-                List.of(leagueSummoner)
-        );
+        Summoner summoner = Summoner.builder()
+                .puuid("puuid-ranked")
+                .summonerLevel(300L)
+                .profileIconId(123)
+                .gameName("RankedPlayer")
+                .tagLine("KR1")
+                .platformId("kr")
+                .searchName("rankedplayer")
+                .revisionDate(LocalDateTime.now())
+                .lastRiotCallDate(LocalDateTime.now())
+                .leagueSummoners(List.of(leagueSummoner))
+                .build();
         given(summonerPersistencePort.getSummonerAuthComplete(query, platformId)).willReturn(List.of(summoner));
 
         // when
@@ -223,10 +239,17 @@ class SummonerServiceTest {
         LocalDateTime oldRevisionDate = LocalDateTime.now().minusMinutes(10);
         LocalDateTime oldClickDate = LocalDateTime.now().minusMinutes(3);
 
-        Summoner summoner = new Summoner(
-                puuid, 100L, 123, "Player", "KR1",
-                "kr", "player", oldRevisionDate, oldClickDate, null
-        );
+        Summoner summoner = Summoner.builder()
+                .puuid(puuid)
+                .summonerLevel(100L)
+                .profileIconId(123)
+                .gameName("Player")
+                .tagLine("KR1")
+                .platformId("kr")
+                .searchName("player")
+                .revisionDate(oldRevisionDate)
+                .lastRiotCallDate(oldClickDate)
+                .build();
 
         given(summonerCachePort.isUpdating(puuid)).willReturn(false);
         given(summonerCachePort.isClickCooldown(puuid)).willReturn(false);
@@ -252,10 +275,17 @@ class SummonerServiceTest {
         LocalDateTime recentRevisionDate = LocalDateTime.now().minusSeconds(30);
         LocalDateTime recentClickDate = LocalDateTime.now().minusSeconds(5);
 
-        Summoner summoner = new Summoner(
-                puuid, 100L, 123, "Player", "KR1",
-                "kr", "player", recentRevisionDate, recentClickDate, null
-        );
+        Summoner summoner = Summoner.builder()
+                .puuid(puuid)
+                .summonerLevel(100L)
+                .profileIconId(123)
+                .gameName("Player")
+                .tagLine("KR1")
+                .platformId("kr")
+                .searchName("player")
+                .revisionDate(recentRevisionDate)
+                .lastRiotCallDate(recentClickDate)
+                .build();
 
         given(summonerCachePort.isUpdating(puuid)).willReturn(false);
         given(summonerCachePort.isClickCooldown(puuid)).willReturn(false);
@@ -466,9 +496,16 @@ class SummonerServiceTest {
     // ========== Helper Methods ==========
 
     private Summoner createSummoner(String puuid, String gameName, String tagLine) {
-        return new Summoner(
-                puuid, 100L, 123, gameName, tagLine,
-                "kr", gameName.toLowerCase(), LocalDateTime.now(), LocalDateTime.now(), null
-        );
+        return Summoner.builder()
+                .puuid(puuid)
+                .summonerLevel(100L)
+                .profileIconId(123)
+                .gameName(gameName)
+                .tagLine(tagLine)
+                .platformId("kr")
+                .searchName(gameName.toLowerCase())
+                .revisionDate(LocalDateTime.now())
+                .lastRiotCallDate(LocalDateTime.now())
+                .build();
     }
 }

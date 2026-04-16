@@ -4,7 +4,7 @@ import com.example.lolserver.controller.spectator.response.QueueInfoResponse;
 import com.example.lolserver.controller.support.response.ApiResponse;
 import com.example.lolserver.domain.queue_type.application.QueueTypeService;
 import com.example.lolserver.domain.queue_type.domain.QueueInfo;
-import com.example.lolserver.domain.spectator.application.SpectatorService;
+import com.example.lolserver.domain.spectator.application.port.in.SpectatorQueryUseCase;
 import com.example.lolserver.domain.spectator.application.model.CurrentGameInfoReadModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +21,7 @@ import java.util.List;
 public class SpectatorController {
 
     private final QueueTypeService queueTypeService;
-    private final SpectatorService spectatorService;
+    private final SpectatorQueryUseCase spectatorService;
 
     @GetMapping("/v1/queue-tab")
     public ResponseEntity<ApiResponse<List<QueueInfoResponse>>> findAllQueueInfoForTab() {

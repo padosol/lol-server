@@ -3,13 +3,13 @@ package com.example.lolserver.controller.match;
 import com.example.lolserver.domain.match.application.command.MSChampionCommand;
 import com.example.lolserver.domain.match.application.command.MatchCommand;
 import com.example.lolserver.domain.match.domain.MSChampion;
-import com.example.lolserver.domain.match.application.MatchService;
+import com.example.lolserver.domain.match.application.port.in.MatchQueryUseCase;
 import com.example.lolserver.domain.match.application.model.DailyGameCountSummaryReadModel;
 import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.controller.support.response.ApiResponse;
 import com.example.lolserver.controller.support.response.SliceResponse;
-import com.example.lolserver.support.Page;
+import com.example.lolserver.support.SliceResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +28,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MatchController {
 
-    private final MatchService matchService;
+    private final MatchQueryUseCase matchService;
 
     @GetMapping("/matches/{matchId}")
     public ResponseEntity<ApiResponse<GameReadModel>> fetchMatchResponse(
@@ -43,7 +43,7 @@ public class MatchController {
             @PathVariable("platformId") String platformId,
             @ModelAttribute MatchCommand matchCommand) {
         matchCommand.setPlatformId(platformId);
-        Page<String> allMatchIds = matchService.findAllMatchIds(matchCommand);
+        SliceResult<String> allMatchIds = matchService.findAllMatchIds(matchCommand);
 
         return ResponseEntity.ok(ApiResponse.success(SliceResponse.of(allMatchIds)));
     }
@@ -53,7 +53,7 @@ public class MatchController {
             @PathVariable("platformId") String platformId,
             @ModelAttribute MatchCommand matchCommand) {
         matchCommand.setPlatformId(platformId);
-        Page<GameReadModel> matches = matchService.getMatches(matchCommand);
+        SliceResult<GameReadModel> matches = matchService.getMatches(matchCommand);
 
         return ResponseEntity.ok(ApiResponse.success(SliceResponse.of(matches)));
     }
@@ -80,7 +80,7 @@ public class MatchController {
                 .pageNo(pageNo != null ? pageNo : 1)
                 .platformId(platformId)
                 .build();
-        Page<GameReadModel> matches = matchService.getMatchesBatch(matchCommand);
+        SliceResult<GameReadModel> matches = matchService.getMatchesBatch(matchCommand);
         return ResponseEntity.ok(ApiResponse.success(SliceResponse.of(matches)));
     }
 

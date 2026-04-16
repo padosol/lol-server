@@ -259,4 +259,33 @@ class MemberControllerTest extends RestDocsSupport {
 
         then(memberAuthUseCase).should().unlinkSocialAccount(1L, 1L);
     }
+
+    @DisplayName("회원 탈퇴 API")
+    @Test
+    void withdraw() throws Exception {
+        // when & then
+        mockMvc.perform(
+                        delete("/api/members/me")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andDo(document("member-withdraw",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        responseFields(
+                                fieldWithPath("result")
+                                        .type(JsonFieldType.STRING)
+                                        .description("API 응답 결과"),
+                                fieldWithPath("errorMessage")
+                                        .type(JsonFieldType.NULL)
+                                        .description("에러 메시지"),
+                                fieldWithPath("data")
+                                        .type(JsonFieldType.NULL)
+                                        .description("응답 데이터")
+                        )
+                ));
+
+        then(memberAuthUseCase).should().withdraw(1L);
+    }
 }

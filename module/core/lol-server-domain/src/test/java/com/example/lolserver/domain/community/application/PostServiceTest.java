@@ -11,7 +11,7 @@ import com.example.lolserver.domain.community.domain.Post;
 import com.example.lolserver.domain.community.domain.vo.SortType;
 import com.example.lolserver.domain.member.application.port.out.MemberPersistencePort;
 import com.example.lolserver.domain.member.domain.Member;
-import com.example.lolserver.support.Page;
+import com.example.lolserver.support.SliceResult;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
@@ -213,13 +213,13 @@ class PostServiceTest {
                 .page(0)
                 .build();
 
-        Page<PostListReadModel> page =
-                new Page<>(List.of(), false);
+        SliceResult<PostListReadModel> page =
+                new SliceResult<>(List.of(), false);
 
         given(postPersistencePort.findPosts(command)).willReturn(page);
 
         // when
-        Page<PostListReadModel> result = postService.getPosts(command);
+        SliceResult<PostListReadModel> result = postService.getPosts(command);
 
         // then
         assertThat(result).isNotNull();

@@ -27,6 +27,6 @@ USER app
 
 EXPOSE 8080
 
-ENV SPRING_PROFILES_ACTIVE=dev
+ENV SPRING_PROFILES_ACTIVE=local
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

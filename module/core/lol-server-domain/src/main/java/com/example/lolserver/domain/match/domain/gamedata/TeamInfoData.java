@@ -20,4 +20,7 @@ public class TeamInfoData {
     private int dragonKills;
     private int towerKills;
     private int inhibitorKills;
+
+    private Integer[] goldTimeline;
+    private Integer[] timestamps;
 }

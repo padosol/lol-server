@@ -70,6 +70,7 @@ public class MatchSummonerDTO {
     private String teamPosition;
     private boolean win;
     private int timePlayed;
+
     private int timeCCingOthers;
     private String individualPosition;
     private String lane;
@@ -86,4 +87,14 @@ public class MatchSummonerDTO {
     private ItemValue item;
     private PerkStatValue perkStat;
     private PerkStyleValue perkStyle;
+
+    // 팀 집계 정보 (match_team LEFT JOIN)
+    private int teamChampionKills;
+    private int teamBaronKills;
+    private int teamDragonKills;
+    private int teamTowerKills;
+    private int teamInhibitorKills;
+
+    private Integer[] goldTimeline;
+    private Integer[] timestamps;
 }

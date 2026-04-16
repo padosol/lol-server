@@ -35,6 +35,9 @@ class SecurityConfigTest {
     @Mock
     private ClientRegistrationRepository clientRegistrationRepository;
 
+    @Mock
+    private RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+
     private final SocialAccountLinkTokenStore socialAccountLinkTokenStore =
             new SocialAccountLinkTokenStore();
 
@@ -72,7 +75,8 @@ class SecurityConfigTest {
                 cookieAuthorizationRequestRepository,
                 customOidcUserService,
                 clientRegistrationRepository,
-                socialAccountLinkTokenStore);
+                socialAccountLinkTokenStore,
+                restAuthenticationEntryPoint);
     }
 
     @DisplayName("CORS 설정 소스가 정상적으로 생성된다")

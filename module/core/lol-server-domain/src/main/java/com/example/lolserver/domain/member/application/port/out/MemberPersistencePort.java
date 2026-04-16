@@ -8,5 +8,7 @@ public interface MemberPersistencePort {
 
     Optional<Member> findById(Long id);
 
+    Optional<Member> findByIdWithSocialAccounts(Long id);
+
     Member save(Member member);
 }

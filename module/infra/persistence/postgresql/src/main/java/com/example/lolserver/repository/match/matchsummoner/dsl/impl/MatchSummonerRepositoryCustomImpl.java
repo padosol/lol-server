@@ -1,5 +1,6 @@
 package com.example.lolserver.repository.match.matchsummoner.dsl.impl;
 
+import com.example.lolserver.QueueType;
 import com.example.lolserver.repository.match.dto.DailyGameCountDTO;
 import com.example.lolserver.repository.match.dto.LinePositionDTO;
 import com.example.lolserver.repository.match.dto.MSChampionDTO;
@@ -242,8 +243,8 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
 
     private BooleanExpression queueIdEqOrAll(Integer queueId) {
         return queueId == null
-                ? matchEntity.queueId.eq(420)
-                    .or(matchEntity.queueId.eq(440))
+                ? matchEntity.queueId.eq(QueueType.RANKED_SOLO_5x5.getQueueId())
+                    .or(matchEntity.queueId.eq(QueueType.RANKED_FLEX_SR.getQueueId()))
                 : matchEntity.queueId.eq(queueId);
     }
 

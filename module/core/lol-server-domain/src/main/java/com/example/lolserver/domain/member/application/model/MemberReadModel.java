@@ -1,7 +1,6 @@
 package com.example.lolserver.domain.member.application.model;
 
 import com.example.lolserver.domain.member.domain.Member;
-import com.example.lolserver.domain.member.domain.SocialAccount;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -19,8 +18,7 @@ public class MemberReadModel {
     private String role;
     private List<SocialAccountReadModel> socialAccounts;
 
-    public static MemberReadModel of(
-            Member member, List<SocialAccount> socialAccounts) {
+    public static MemberReadModel of(Member member) {
         return MemberReadModel.builder()
                 .id(member.getId())
                 .uuid(member.getUuid())
@@ -28,7 +26,7 @@ public class MemberReadModel {
                 .nickname(member.getNickname())
                 .profileImageUrl(member.getProfileImageUrl())
                 .role(member.getRole())
-                .socialAccounts(socialAccounts.stream()
+                .socialAccounts(member.getSocialAccounts().stream()
                         .map(SocialAccountReadModel::of)
                         .toList())
                 .build();
