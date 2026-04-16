@@ -21,7 +21,6 @@ public class TeamInfoData {
     private int towerKills;
     private int inhibitorKills;
 
-    // 팀 누적 골드 타임라인
     private Integer[] goldTimeline;
     private Integer[] timestamps;
 }

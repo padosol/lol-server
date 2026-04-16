@@ -16,13 +16,11 @@ import com.example.lolserver.repository.match.dto.MatchDTO;
 import com.example.lolserver.repository.match.dto.MatchSummonerDTO;
 import com.example.lolserver.repository.match.dto.TimelineEventDTO;
 import com.example.lolserver.repository.match.entity.MatchEntity;
-import com.example.lolserver.repository.match.entity.MatchTeamEntity;
 import com.example.lolserver.repository.match.mapper.MatchMapper;
 import com.example.lolserver.repository.match.match.MatchRepository;
 import com.example.lolserver.repository.match.match.dsl.MatchRepositoryCustom;
 import com.example.lolserver.repository.match.matchsummoner.MatchSummonerRepository;
 import com.example.lolserver.repository.match.matchsummoner.dsl.MatchSummonerRepositoryCustom;
-import com.example.lolserver.repository.match.matchteam.MatchTeamRepository;
 import com.example.lolserver.repository.match.timeline.TimelineRepositoryCustom;
 import com.example.lolserver.support.PaginationRequest;
 import com.example.lolserver.support.SliceResult;
@@ -52,7 +50,6 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     private final MatchRepositoryCustom matchRepositoryCustom;
     private final TimelineRepositoryCustom timelineRepositoryCustom;
     private final MatchRepository matchRepository;
-    private final MatchTeamRepository matchTeamRepository;
     private final MatchMapper matchMapper;
     private final Executor queryExecutor;
 
@@ -62,7 +59,6 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
             MatchRepositoryCustom matchRepositoryCustom,
             TimelineRepositoryCustom timelineRepositoryCustom,
             MatchRepository matchRepository,
-            MatchTeamRepository matchTeamRepository,
             MatchMapper matchMapper,
             @Qualifier("queryExecutor") Executor queryExecutor
     ) {
@@ -71,7 +67,6 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         this.matchRepositoryCustom = matchRepositoryCustom;
         this.timelineRepositoryCustom = timelineRepositoryCustom;
         this.matchRepository = matchRepository;
-        this.matchTeamRepository = matchTeamRepository;
         this.matchMapper = matchMapper;
         this.queryExecutor = queryExecutor;
     }
@@ -350,27 +345,9 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         Map<Integer, List<MatchSummonerDTO>> byTeam = summonerDTOs.stream()
                 .collect(Collectors.groupingBy(MatchSummonerDTO::getTeamId));
 
-        List<MatchTeamEntity> teamEntities = matchTeamRepository.findByMatchId(matchEntity.getMatchId());
-        TeamInfoData blueTeam = null;
-        TeamInfoData redTeam = null;
-
-        for (MatchTeamEntity teamEntity : teamEntities) {
-            TeamInfoData teamInfo = matchMapper.toDomain(teamEntity);
-            List<MatchSummonerDTO> teamMembers = byTeam.get(teamEntity.getTeamId());
-            if (teamMembers != null) {
-                teamInfo.setGoldTimeline(sumGoldTimelines(teamMembers));
-                teamInfo.setTimestamps(getTimestamps(teamMembers));
-            }
-            if (teamEntity.getTeamId() == 100) {
-                blueTeam = teamInfo;
-            } else if (teamEntity.getTeamId() == 200) {
-                redTeam = teamInfo;
-            }
-        }
-
         gameData.setTeamInfoData(TeamData.builder()
-                .blueTeam(blueTeam)
-                .redTeam(redTeam)
+                .blueTeam(buildTeamInfoData(byTeam.get(100)))
+                .redTeam(buildTeamInfoData(byTeam.get(200)))
                 .build());
 
         return gameData;
