@@ -7,12 +7,10 @@ import com.example.lolserver.repository.match.entity.MatchEntity;
 import com.example.lolserver.repository.match.entity.value.matchsummoner.ItemValue;
 import com.example.lolserver.repository.match.entity.value.matchsummoner.PerkStatValue;
 import com.example.lolserver.repository.match.entity.value.matchsummoner.PerkStyleValue;
-import com.querydsl.core.types.Expression;
-import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.example.lolserver.support.logging.LogExecutionTime;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -25,8 +23,6 @@ import java.util.List;
 
 import static com.example.lolserver.repository.match.entity.QMatchSummonerEntity.matchSummonerEntity;
 import static com.example.lolserver.repository.match.entity.QMatchEntity.matchEntity;
-import static com.example.lolserver.repository.match.entity.QMatchTeamEntity.matchTeamEntity;
-import static com.example.lolserver.repository.summoner.entity.QSummonerEntity.summonerEntity;
 
 @Slf4j
 @Repository
@@ -34,6 +30,7 @@ import static com.example.lolserver.repository.summoner.entity.QSummonerEntity.s
 public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
+    private final EntityManager entityManager;
 
     @Override
     public Slice<MatchEntity> getMatches(String puuid, Integer queueId,
@@ -131,19 +128,54 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
     public List<MatchSummonerDTO> getMatchSummoners(
             List<String> matchIds
     ) {
-        return jpaQueryFactory
-                .select(matchSummonerProjection())
-                .from(matchSummonerEntity)
-                .leftJoin(summonerEntity)
-                    .on(summonerEntity.puuid.eq(
-                            matchSummonerEntity.puuid))
-                .leftJoin(matchTeamEntity)
-                    .on(matchTeamEntity.matchId.eq(
-                            matchSummonerEntity.matchId)
-                        .and(matchTeamEntity.teamId.eq(
-                            matchSummonerEntity.teamId)))
-                .where(matchSummonerEntity.matchId.in(matchIds))
-                .fetch();
+        String sql = """
+                SELECT mp.puuid, mp.match_id, mp.summoner_id,
+                       COALESCE(s.game_name, mp.riot_id_game_name) AS riot_id_game_name,
+                       COALESCE(s.tag_line, mp.riot_id_tagline) AS riot_id_tagline,
+                       mp.profile_icon, mp.participant_id, mp.tier, mp.tier_rank,
+                       mp.absolute_points, mp.summoner_level,
+                       mp.champ_level, mp.champion_id, mp.champion_name, mp.champ_experience,
+                       mp.summoner1id, mp.summoner2id,
+                       mp.kills, mp.assists, mp.deaths,
+                       mp.double_kills, mp.triple_kills, mp.quadra_kills, mp.penta_kills,
+                       mp.gold_earned, mp.consumables_purchased, mp.items_purchased,
+                       mp.neutral_minions_killed, mp.total_minions_killed,
+                       mp.vision_score, mp.vision_wards_bought_in_game, mp.wards_killed, mp.wards_placed,
+                       mp.total_damage_dealt_to_champions, mp.total_damage_taken,
+                       mp.team_id, mp.team_position, mp.win, mp.time_played, mp.timeccing_others,
+                       mp.individual_position, mp.lane, mp.role, mp.placement,
+                       mp.player_augment1, mp.player_augment2, mp.player_augment3, mp.player_augment4,
+                       mp.item0, mp.item1, mp.item2, mp.item3, mp.item4, mp.item5, mp.item6,
+                       mp.stat_perk_defense, mp.stat_perk_flex, mp.stat_perk_offense,
+                       mp.primary_style_id, mp.primary_perk0, mp.primary_perk1, mp.primary_perk2, mp.primary_perk3,
+                       mp.sub_style_id, mp.sub_perk0, mp.sub_perk1,
+                       mt.champion_kills AS team_champion_kills,
+                       mt.baron_kills AS team_baron_kills,
+                       mt.dragon_kills AS team_dragon_kills,
+                       mt.tower_kills AS team_tower_kills,
+                       mt.inhibitor_kills AS team_inhibitor_kills,
+                       pf_agg.gold_timeline,
+                       pf_agg.timestamps
+                FROM match_participant mp
+                LEFT JOIN summoner s ON s.puuid = mp.puuid
+                LEFT JOIN match_team mt ON mt.match_id = mp.match_id AND mt.team_id = mp.team_id
+                LEFT JOIN (
+                    SELECT match_id, participant_id,
+                           array_agg(total_gold ORDER BY timestamp) AS gold_timeline,
+                           array_agg(timestamp ORDER BY timestamp) AS timestamps
+                    FROM participant_frame
+                    WHERE match_id IN (:matchIds)
+                    GROUP BY match_id, participant_id
+                ) pf_agg ON mp.match_id = pf_agg.match_id AND mp.participant_id = pf_agg.participant_id
+                WHERE mp.match_id IN (:matchIds)
+                """;
+
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = entityManager.createNativeQuery(sql)
+                .setParameter("matchIds", matchIds)
+                .getResultList();
+
+        return rows.stream().map(this::toMatchSummonerDTO).toList();
     }
 
     @Override
@@ -151,115 +183,114 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
         return getMatchSummoners(List.of(matchId));
     }
 
-    private Expression<MatchSummonerDTO> matchSummonerProjection() {
-        return Projections.bean(MatchSummonerDTO.class,
-                matchSummonerEntity.puuid,
-                matchSummonerEntity.matchId,
-                matchSummonerEntity.summonerId,
-                gameNameCoalesce(), tagLineCoalesce(),
-                matchSummonerEntity.profileIcon,
-                matchSummonerEntity.participantId,
-                matchSummonerEntity.tier,
-                matchSummonerEntity.tierRank,
-                matchSummonerEntity.absolutePoints,
-                matchSummonerEntity.summonerLevel,
-                matchSummonerEntity.champLevel,
-                matchSummonerEntity.championId,
-                matchSummonerEntity.championName,
-                matchSummonerEntity.champExperience,
-                matchSummonerEntity.summoner1Id,
-                matchSummonerEntity.summoner2Id,
-                matchSummonerEntity.kills,
-                matchSummonerEntity.assists,
-                matchSummonerEntity.deaths,
-                matchSummonerEntity.doubleKills,
-                matchSummonerEntity.tripleKills,
-                matchSummonerEntity.quadraKills,
-                matchSummonerEntity.pentaKills,
-                matchSummonerEntity.goldEarned,
-                matchSummonerEntity.consumablesPurchased,
-                matchSummonerEntity.itemsPurchased,
-                matchSummonerEntity.neutralMinionsKilled,
-                matchSummonerEntity.totalMinionsKilled,
-                matchSummonerEntity.visionScore,
-                matchSummonerEntity.visionWardsBoughtInGame,
-                matchSummonerEntity.wardsKilled,
-                matchSummonerEntity.wardsPlaced,
-                matchSummonerEntity.totalDamageDealtToChampions,
-                matchSummonerEntity.totalDamageTaken,
-                matchSummonerEntity.teamId,
-                matchSummonerEntity.teamPosition,
-                matchSummonerEntity.win,
-                matchSummonerEntity.timePlayed,
-                matchSummonerEntity.timeCCingOthers,
-                matchSummonerEntity.individualPosition,
-                matchSummonerEntity.lane,
-                matchSummonerEntity.role,
-                matchSummonerEntity.placement,
-                matchSummonerEntity.playerAugment1,
-                matchSummonerEntity.playerAugment2,
-                matchSummonerEntity.playerAugment3,
-                matchSummonerEntity.playerAugment4,
-                itemProjection(),
-                perkStatProjection(),
-                perkStyleProjection(),
-                matchTeamEntity.championKills.as("teamChampionKills"),
-                matchTeamEntity.baronKills.as("teamBaronKills"),
-                matchTeamEntity.dragonKills.as("teamDragonKills"),
-                matchTeamEntity.towerKills.as("teamTowerKills"),
-                matchTeamEntity.inhibitorKills.as("teamInhibitorKills")
-        );
+    private MatchSummonerDTO toMatchSummonerDTO(Object[] row) {
+        MatchSummonerDTO dto = new MatchSummonerDTO();
+        int i = 0;
+
+        dto.setPuuid((String) row[i++]);
+        dto.setMatchId((String) row[i++]);
+        dto.setSummonerId((String) row[i++]);
+        dto.setRiotIdGameName((String) row[i++]);
+        dto.setRiotIdTagline((String) row[i++]);
+        dto.setProfileIcon(toInt(row[i++]));
+        dto.setParticipantId(toInt(row[i++]));
+        dto.setTier((String) row[i++]);
+        dto.setTierRank((String) row[i++]);
+        dto.setAbsolutePoints(row[i] != null ? toInt(row[i]) : null); i++;
+        dto.setSummonerLevel(toInt(row[i++]));
+
+        dto.setChampLevel(toInt(row[i++]));
+        dto.setChampionId(toInt(row[i++]));
+        dto.setChampionName((String) row[i++]);
+        dto.setChampExperience(toInt(row[i++]));
+        dto.setSummoner1Id(toInt(row[i++]));
+        dto.setSummoner2Id(toInt(row[i++]));
+
+        dto.setKills(toInt(row[i++]));
+        dto.setAssists(toInt(row[i++]));
+        dto.setDeaths(toInt(row[i++]));
+        dto.setDoubleKills(toInt(row[i++]));
+        dto.setTripleKills(toInt(row[i++]));
+        dto.setQuadraKills(toInt(row[i++]));
+        dto.setPentaKills(toInt(row[i++]));
+
+        dto.setGoldEarned(toInt(row[i++]));
+        dto.setConsumablesPurchased(toInt(row[i++]));
+        dto.setItemsPurchased(toInt(row[i++]));
+        dto.setNeutralMinionsKilled(toInt(row[i++]));
+        dto.setTotalMinionsKilled(toInt(row[i++]));
+
+        dto.setVisionScore(toInt(row[i++]));
+        dto.setVisionWardsBoughtInGame(toInt(row[i++]));
+        dto.setWardsKilled(toInt(row[i++]));
+        dto.setWardsPlaced(toInt(row[i++]));
+
+        dto.setTotalDamageDealtToChampions(toInt(row[i++]));
+        dto.setTotalDamageTaken(toInt(row[i++]));
+
+        dto.setTeamId(toInt(row[i++]));
+        dto.setTeamPosition((String) row[i++]);
+        dto.setWin((Boolean) row[i++]);
+        dto.setTimePlayed(toInt(row[i++]));
+        dto.setTimeCCingOthers(toInt(row[i++]));
+        dto.setIndividualPosition((String) row[i++]);
+        dto.setLane((String) row[i++]);
+        dto.setRole((String) row[i++]);
+        dto.setPlacement(toInt(row[i++]));
+
+        dto.setPlayerAugment1(toInt(row[i++]));
+        dto.setPlayerAugment2(toInt(row[i++]));
+        dto.setPlayerAugment3(toInt(row[i++]));
+        dto.setPlayerAugment4(toInt(row[i++]));
+
+        ItemValue item = new ItemValue();
+        item.setItem0(toInt(row[i++]));
+        item.setItem1(toInt(row[i++]));
+        item.setItem2(toInt(row[i++]));
+        item.setItem3(toInt(row[i++]));
+        item.setItem4(toInt(row[i++]));
+        item.setItem5(toInt(row[i++]));
+        item.setItem6(toInt(row[i++]));
+        dto.setItem(item);
+
+        PerkStatValue perkStat = new PerkStatValue();
+        perkStat.setStatPerkDefense(toInt(row[i++]));
+        perkStat.setStatPerkFlex(toInt(row[i++]));
+        perkStat.setStatPerkOffense(toInt(row[i++]));
+        dto.setPerkStat(perkStat);
+
+        PerkStyleValue perkStyle = new PerkStyleValue();
+        perkStyle.setPrimaryStyleId(toInt(row[i++]));
+        perkStyle.setPrimaryPerk0(toInt(row[i++]));
+        perkStyle.setPrimaryPerk1(toInt(row[i++]));
+        perkStyle.setPrimaryPerk2(toInt(row[i++]));
+        perkStyle.setPrimaryPerk3(toInt(row[i++]));
+        perkStyle.setSubStyleId(toInt(row[i++]));
+        perkStyle.setSubPerk0(toInt(row[i++]));
+        perkStyle.setSubPerk1(toInt(row[i++]));
+        dto.setPerkStyle(perkStyle);
+
+        dto.setTeamChampionKills(toInt(row[i++]));
+        dto.setTeamBaronKills(toInt(row[i++]));
+        dto.setTeamDragonKills(toInt(row[i++]));
+        dto.setTeamTowerKills(toInt(row[i++]));
+        dto.setTeamInhibitorKills(toInt(row[i++]));
+
+        dto.setGoldTimeline(toIntegerArray(row[i++]));
+        dto.setTimestamps(toIntegerArray(row[i]));
+
+        return dto;
     }
 
-    private Expression<String> gameNameCoalesce() {
-        return Expressions.stringTemplate(
-                "COALESCE({0}, {1})",
-                summonerEntity.gameName,
-                matchSummonerEntity.riotIdGameName)
-                .as("riotIdGameName");
+    private int toInt(Object value) {
+        return value != null ? ((Number) value).intValue() : 0;
     }
 
-    private Expression<String> tagLineCoalesce() {
-        return Expressions.stringTemplate(
-                "COALESCE({0}, {1})",
-                summonerEntity.tagLine,
-                matchSummonerEntity.riotIdTagline)
-                .as("riotIdTagline");
-    }
-
-    private Expression<ItemValue> itemProjection() {
-        return Projections.bean(ItemValue.class,
-                matchSummonerEntity.item.item0,
-                matchSummonerEntity.item.item1,
-                matchSummonerEntity.item.item2,
-                matchSummonerEntity.item.item3,
-                matchSummonerEntity.item.item4,
-                matchSummonerEntity.item.item5,
-                matchSummonerEntity.item.item6
-        ).as("item");
-    }
-
-    private Expression<PerkStatValue>
-            perkStatProjection() {
-        return Projections.bean(PerkStatValue.class,
-                matchSummonerEntity.perkStat.statPerkDefense,
-                matchSummonerEntity.perkStat.statPerkFlex,
-                matchSummonerEntity.perkStat.statPerkOffense
-        ).as("perkStat");
-    }
-
-    private Expression<PerkStyleValue>
-            perkStyleProjection() {
-        return Projections.bean(PerkStyleValue.class,
-                matchSummonerEntity.perkStyle.primaryStyleId,
-                matchSummonerEntity.perkStyle.primaryPerk0,
-                matchSummonerEntity.perkStyle.primaryPerk1,
-                matchSummonerEntity.perkStyle.primaryPerk2,
-                matchSummonerEntity.perkStyle.primaryPerk3,
-                matchSummonerEntity.perkStyle.subStyleId,
-                matchSummonerEntity.perkStyle.subPerk0,
-                matchSummonerEntity.perkStyle.subPerk1
-        ).as("perkStyle");
+    private Integer[] toIntegerArray(Object value) {
+        if (value == null) {
+            return null;
+        }
+        return (Integer[]) value;
     }
 
 }

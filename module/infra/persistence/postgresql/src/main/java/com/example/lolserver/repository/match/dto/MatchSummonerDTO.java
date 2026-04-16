@@ -3,6 +3,7 @@ package com.example.lolserver.repository.match.dto;
 import com.example.lolserver.repository.match.entity.value.matchsummoner.ItemValue;
 import com.example.lolserver.repository.match.entity.value.matchsummoner.PerkStatValue;
 import com.example.lolserver.repository.match.entity.value.matchsummoner.PerkStyleValue;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -70,6 +71,8 @@ public class MatchSummonerDTO {
     private String teamPosition;
     private boolean win;
     private int timePlayed;
+
+    @JsonProperty(value = "timeccing_others")
     private int timeCCingOthers;
     private String individualPosition;
     private String lane;
@@ -93,4 +96,8 @@ public class MatchSummonerDTO {
     private int teamDragonKills;
     private int teamTowerKills;
     private int teamInhibitorKills;
+
+    // 골드 타임라인 (participant_frame JOIN)
+    private Integer[] goldTimeline;
+    private Integer[] timestamps;
 }

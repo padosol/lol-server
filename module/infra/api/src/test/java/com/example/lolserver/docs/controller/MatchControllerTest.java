@@ -279,11 +279,15 @@ class MatchControllerTest extends RestDocsSupport {
                 .build();
 
         TeamInfoData blueTeam = new TeamInfoData(
-                100, true, 35, 2, 3, 9, 2
+                100, true, 35, 2, 3, 9, 2,
+                new Integer[]{500, 3000, 8000, 15000, 25000},
+                new Integer[]{60000, 120000, 180000, 240000, 300000}
         );
 
         TeamInfoData redTeam = new TeamInfoData(
-                200, false, 20, 1, 1, 3, 0
+                200, false, 20, 1, 1, 3, 0,
+                new Integer[]{450, 2800, 7500, 14000, 23000},
+                new Integer[]{60000, 120000, 180000, 240000, 300000}
         );
 
         GameReadModel gameData = new GameReadModel();
@@ -438,6 +442,8 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].teamInfoData.blueTeam.dragonKills").type(JsonFieldType.NUMBER).description("블루팀 드래곤 처치 수"),
                                 fieldWithPath("data.content[].teamInfoData.blueTeam.towerKills").type(JsonFieldType.NUMBER).description("블루팀 타워 파괴 수"),
                                 fieldWithPath("data.content[].teamInfoData.blueTeam.inhibitorKills").type(JsonFieldType.NUMBER).description("블루팀 억제기 파괴 수"),
+                                fieldWithPath("data.content[].teamInfoData.blueTeam.goldTimeline[]").type(JsonFieldType.ARRAY).description("블루팀 타임라인별 누적 골드"),
+                                fieldWithPath("data.content[].teamInfoData.blueTeam.timestamps[]").type(JsonFieldType.ARRAY).description("블루팀 골드 타임라인 타임스탬프 (ms)"),
 
                                 // TeamInfoData - 레드팀
                                 fieldWithPath("data.content[].teamInfoData.redTeam.teamId").type(JsonFieldType.NUMBER).description("레드팀 ID (200)"),
@@ -446,7 +452,9 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].teamInfoData.redTeam.baronKills").type(JsonFieldType.NUMBER).description("레드팀 바론 처치 수"),
                                 fieldWithPath("data.content[].teamInfoData.redTeam.dragonKills").type(JsonFieldType.NUMBER).description("레드팀 드래곤 처치 수"),
                                 fieldWithPath("data.content[].teamInfoData.redTeam.towerKills").type(JsonFieldType.NUMBER).description("레드팀 타워 파괴 수"),
-                                fieldWithPath("data.content[].teamInfoData.redTeam.inhibitorKills").type(JsonFieldType.NUMBER).description("레드팀 억제기 파괴 수")
+                                fieldWithPath("data.content[].teamInfoData.redTeam.inhibitorKills").type(JsonFieldType.NUMBER).description("레드팀 억제기 파괴 수"),
+                                fieldWithPath("data.content[].teamInfoData.redTeam.goldTimeline[]").type(JsonFieldType.ARRAY).description("레드팀 타임라인별 누적 골드"),
+                                fieldWithPath("data.content[].teamInfoData.redTeam.timestamps[]").type(JsonFieldType.ARRAY).description("레드팀 골드 타임라인 타임스탬프 (ms)")
                         )
                 ));
     }

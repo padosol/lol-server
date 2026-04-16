@@ -209,18 +209,12 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         }
 
         if (!summonerDTOs.isEmpty()) {
-            TeamInfoData blueTeam = null;
-            TeamInfoData redTeam = null;
-            for (MatchSummonerDTO dto : summonerDTOs) {
-                if (dto.getTeamId() == 100 && blueTeam == null) {
-                    blueTeam = toTeamInfoData(dto);
-                } else if (dto.getTeamId() == 200 && redTeam == null) {
-                    redTeam = toTeamInfoData(dto);
-                }
-                if (blueTeam != null && redTeam != null) {
-                    break;
-                }
-            }
+            Map<Integer, List<MatchSummonerDTO>> byTeam = summonerDTOs.stream()
+                    .collect(Collectors.groupingBy(MatchSummonerDTO::getTeamId));
+
+            TeamInfoData blueTeam = buildTeamInfoData(byTeam.get(100));
+            TeamInfoData redTeam = buildTeamInfoData(byTeam.get(200));
+
             gameData.setTeamInfoData(TeamData.builder()
                     .blueTeam(blueTeam)
                     .redTeam(redTeam)
@@ -245,16 +239,58 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         return new TimelineData(itemEvents, skillEvents);
     }
 
-    private TeamInfoData toTeamInfoData(MatchSummonerDTO dto) {
+    private TeamInfoData buildTeamInfoData(List<MatchSummonerDTO> teamMembers) {
+        if (teamMembers == null || teamMembers.isEmpty()) {
+            return null;
+        }
+        MatchSummonerDTO first = teamMembers.get(0);
         TeamInfoData teamInfo = new TeamInfoData();
-        teamInfo.setTeamId(dto.getTeamId());
-        teamInfo.setWin(dto.isWin());
-        teamInfo.setChampionKills(dto.getTeamChampionKills());
-        teamInfo.setBaronKills(dto.getTeamBaronKills());
-        teamInfo.setDragonKills(dto.getTeamDragonKills());
-        teamInfo.setTowerKills(dto.getTeamTowerKills());
-        teamInfo.setInhibitorKills(dto.getTeamInhibitorKills());
+        teamInfo.setTeamId(first.getTeamId());
+        teamInfo.setWin(first.isWin());
+        teamInfo.setChampionKills(first.getTeamChampionKills());
+        teamInfo.setBaronKills(first.getTeamBaronKills());
+        teamInfo.setDragonKills(first.getTeamDragonKills());
+        teamInfo.setTowerKills(first.getTeamTowerKills());
+        teamInfo.setInhibitorKills(first.getTeamInhibitorKills());
+        teamInfo.setGoldTimeline(sumGoldTimelines(teamMembers));
+        teamInfo.setTimestamps(getTimestamps(teamMembers));
         return teamInfo;
+    }
+
+    private Integer[] sumGoldTimelines(List<MatchSummonerDTO> teamMembers) {
+        Integer[] first = teamMembers.stream()
+                .map(MatchSummonerDTO::getGoldTimeline)
+                .filter(g -> g != null && g.length > 0)
+                .findFirst()
+                .orElse(null);
+        if (first == null) {
+            return null;
+        }
+
+        int length = first.length;
+        Integer[] sum = new Integer[length];
+        for (int i = 0; i < length; i++) {
+            sum[i] = 0;
+        }
+
+        for (MatchSummonerDTO member : teamMembers) {
+            Integer[] gold = member.getGoldTimeline();
+            if (gold == null) {
+                continue;
+            }
+            for (int i = 0; i < Math.min(length, gold.length); i++) {
+                sum[i] += gold[i] != null ? gold[i] : 0;
+            }
+        }
+        return sum;
+    }
+
+    private Integer[] getTimestamps(List<MatchSummonerDTO> teamMembers) {
+        return teamMembers.stream()
+                .map(MatchSummonerDTO::getTimestamps)
+                .filter(t -> t != null && t.length > 0)
+                .findFirst()
+                .orElse(null);
     }
 
     @Override
@@ -281,9 +317,10 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         gameData.setGameInfoData(gameInfoData);
 
         // ParticipantsData
+        List<MatchSummonerDTO> summonerDTOs =
+                matchRepositoryCustom.getMatchSummoners(matchEntity.getMatchId());
         List<ParticipantData> participantDataList = new ArrayList<>(
-                matchRepositoryCustom.getMatchSummoners(matchEntity.getMatchId())
-                        .stream()
+                summonerDTOs.stream()
                         .map(matchMapper::toDomain)
                         .toList());
         gameData.setParticipantData(participantDataList);
@@ -309,27 +346,32 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
             }
         }
 
-
         // TeamInfoData
+        Map<Integer, List<MatchSummonerDTO>> byTeam = summonerDTOs.stream()
+                .collect(Collectors.groupingBy(MatchSummonerDTO::getTeamId));
+
         List<MatchTeamEntity> teamEntities = matchTeamRepository.findByMatchId(matchEntity.getMatchId());
-        if (!teamEntities.isEmpty()) {
-            TeamInfoData blueTeam = null;
-            TeamInfoData redTeam = null;
+        TeamInfoData blueTeam = null;
+        TeamInfoData redTeam = null;
 
-            for (MatchTeamEntity teamEntity : teamEntities) {
-                TeamInfoData teamInfo = matchMapper.toDomain(teamEntity);
-                if (teamEntity.getTeamId() == 100) {
-                    blueTeam = teamInfo;
-                } else if (teamEntity.getTeamId() == 200) {
-                    redTeam = teamInfo;
-                }
+        for (MatchTeamEntity teamEntity : teamEntities) {
+            TeamInfoData teamInfo = matchMapper.toDomain(teamEntity);
+            List<MatchSummonerDTO> teamMembers = byTeam.get(teamEntity.getTeamId());
+            if (teamMembers != null) {
+                teamInfo.setGoldTimeline(sumGoldTimelines(teamMembers));
+                teamInfo.setTimestamps(getTimestamps(teamMembers));
             }
-
-            gameData.setTeamInfoData(TeamData.builder()
-                    .blueTeam(blueTeam)
-                    .redTeam(redTeam)
-                    .build());
+            if (teamEntity.getTeamId() == 100) {
+                blueTeam = teamInfo;
+            } else if (teamEntity.getTeamId() == 200) {
+                redTeam = teamInfo;
+            }
         }
+
+        gameData.setTeamInfoData(TeamData.builder()
+                .blueTeam(blueTeam)
+                .redTeam(redTeam)
+                .build());
 
         return gameData;
     }
