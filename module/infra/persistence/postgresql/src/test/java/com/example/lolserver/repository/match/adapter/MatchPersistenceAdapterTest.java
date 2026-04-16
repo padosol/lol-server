@@ -5,7 +5,6 @@ import com.example.lolserver.domain.match.domain.MSChampion;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.domain.match.domain.gamedata.GameInfoData;
 import com.example.lolserver.domain.match.domain.gamedata.ParticipantData;
-import com.example.lolserver.domain.match.domain.gamedata.TeamInfoData;
 import com.example.lolserver.domain.match.domain.gamedata.timeline.events.ItemEvents;
 import com.example.lolserver.domain.match.domain.gamedata.timeline.events.SkillEvents;
 import com.example.lolserver.repository.match.dto.TimelineEventDTO;
@@ -101,7 +100,7 @@ class MatchPersistenceAdapterTest {
         given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(queueId));
         given(matchMapper.toDomain(any(MatchSummonerDTO.class))).willReturn(createParticipantData(puuid));
         given(timelineRepositoryCustom.selectAllTimelineEventsByMatch(anyString())).willReturn(Collections.emptyList());
-        
+
         // when
         SliceResult<GameReadModel> result = adapter.getMatches(puuid, queueId, paginationRequest);
 
@@ -263,7 +262,7 @@ class MatchPersistenceAdapterTest {
         given(matchMapper.toDomain(summonerDTO1)).willReturn(participant1);
         given(matchMapper.toDomain(summonerDTO2)).willReturn(participant2);
         given(timelineRepositoryCustom.selectAllTimelineEventsByMatch(anyString())).willReturn(Collections.emptyList());
-        
+
         // when
         SliceResult<GameReadModel> result = adapter.getMatches(puuid, queueId, paginationRequest);
 
