@@ -61,10 +61,6 @@ public class DuoRequest {
                 .build();
     }
 
-    public boolean isRequester(Long memberId) {
-        return this.requesterId.equals(memberId);
-    }
-
     public void validateRequester(Long memberId) {
         if (!this.requesterId.equals(memberId)) {
             throw new CoreException(ErrorType.FORBIDDEN);

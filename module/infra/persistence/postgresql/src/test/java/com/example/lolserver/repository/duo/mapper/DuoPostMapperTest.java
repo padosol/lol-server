@@ -130,55 +130,6 @@ class DuoPostMapperTest {
         assertThat(result.getUpdatedAt()).isEqualTo(updatedAt);
     }
 
-    @DisplayName("Entity 리스트를 Domain 리스트로 변환한다")
-    @Test
-    void toDomainList_entityList_returnsDomainList() {
-        // given
-        DuoPostEntity entity1 = DuoPostEntity.builder()
-                .id(1L)
-                .memberId(100L)
-                .puuid("puuid-1")
-                .primaryLane("MID")
-                .desiredLane("ADC")
-                .hasMicrophone(true)
-                .tier("GOLD")
-                .tierRank("I")
-                .leaguePoints(50)
-                .status("ACTIVE")
-                .expiresAt(LocalDateTime.now().plusHours(24))
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-
-        DuoPostEntity entity2 = DuoPostEntity.builder()
-                .id(2L)
-                .memberId(200L)
-                .puuid("puuid-2")
-                .primaryLane("SUPPORT")
-                .desiredLane("FILL")
-                .hasMicrophone(false)
-                .tier("DIAMOND")
-                .tierRank("III")
-                .leaguePoints(20)
-                .status("EXPIRED")
-                .expiresAt(LocalDateTime.now())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-
-        // when
-        List<DuoPost> result = mapper.toDomainList(List.of(entity1, entity2));
-
-        // then
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).getId()).isEqualTo(1L);
-        assertThat(result.get(0).getPrimaryLane()).isEqualTo(Lane.MID);
-        assertThat(result.get(0).getStatus()).isEqualTo(DuoPostStatus.ACTIVE);
-        assertThat(result.get(1).getId()).isEqualTo(2L);
-        assertThat(result.get(1).getPrimaryLane()).isEqualTo(Lane.SUPPORT);
-        assertThat(result.get(1).getStatus()).isEqualTo(DuoPostStatus.EXPIRED);
-    }
-
     @DisplayName("null 입력 시 null을 반환한다")
     @Test
     void toDomain_nullInput_returnsNull() {

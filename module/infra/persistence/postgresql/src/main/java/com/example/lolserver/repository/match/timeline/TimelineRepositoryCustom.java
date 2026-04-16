@@ -1,7 +1,5 @@
 package com.example.lolserver.repository.match.timeline;
 
-
-
 import com.example.lolserver.repository.match.dto.ItemEventDTO;
 import com.example.lolserver.repository.match.dto.SkillEventDTO;
 import com.example.lolserver.repository.match.entity.timeline.events.ItemEventsEntity;
@@ -14,10 +12,6 @@ public interface TimelineRepositoryCustom {
     List<ItemEventsEntity> selectAllItemEventsByMatch(String matchId);
 
     List<SkillEventsEntity> selectAllSkillEventsByMatch(String matchId);
-
-    List<ItemEventsEntity> selectAllItemEventsByMatchIds(List<String> matchIds);
-
-    List<SkillEventsEntity> selectAllSkillEventsByMatchIds(List<String> matchIds);
 
     List<ItemEventDTO> selectItemEventsByMatchIds(List<String> matchIds);
 

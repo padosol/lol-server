@@ -98,11 +98,6 @@ public class DuoPost {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void markExpired() {
-        this.status = DuoPostStatus.EXPIRED;
-        this.updatedAt = LocalDateTime.now();
-    }
-
     public void updateContent(String primaryLane, String desiredLane,
                               boolean hasMicrophone, String memo) {
         this.primaryLane = Lane.from(primaryLane);

@@ -7,8 +7,6 @@ import com.example.lolserver.repository.duo.entity.DuoPostEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.util.List;
-
 @Mapper(componentModel = "spring", imports = {Lane.class, DuoPostStatus.class})
 public interface DuoPostMapper {
 
@@ -23,6 +21,4 @@ public interface DuoPostMapper {
     @Mapping(target = "status", expression = "java(post.getStatus().name())")
     @Mapping(source = "rank", target = "tierRank")
     DuoPostEntity toEntity(DuoPost post);
-
-    List<DuoPost> toDomainList(List<DuoPostEntity> entities);
 }

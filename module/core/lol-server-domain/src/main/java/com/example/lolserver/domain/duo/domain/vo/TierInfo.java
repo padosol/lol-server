@@ -6,8 +6,4 @@ public record TierInfo(
         int leaguePoints
 ) {
     public static final TierInfo UNRANKED = new TierInfo(null, null, 0);
-
-    public boolean isAvailable() {
-        return tier != null;
-    }
 }
