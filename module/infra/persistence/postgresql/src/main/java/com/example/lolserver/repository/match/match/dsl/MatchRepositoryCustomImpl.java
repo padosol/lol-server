@@ -238,6 +238,11 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
         dto.setItem(toItemValue(row, idx));
         dto.setPerkStat(toPerkStatValue(row, idx));
         dto.setPerkStyle(toPerkStyleValue(row, idx));
+        mapTeamAndTimeline(dto, row, idx);
+        return dto;
+    }
+
+    private void mapTeamAndTimeline(MatchSummonerDTO dto, Object[] row, int[] idx) {
         dto.setTeamChampionKills(toInt(row[idx[0]++]));
         dto.setTeamBaronKills(toInt(row[idx[0]++]));
         dto.setTeamDragonKills(toInt(row[idx[0]++]));
@@ -245,7 +250,6 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
         dto.setTeamInhibitorKills(toInt(row[idx[0]++]));
         dto.setGoldTimeline(toIntegerArray(row[idx[0]++]));
         dto.setTimestamps(toIntegerArray(row[idx[0]]));
-        return dto;
     }
 
     private ItemValue toItemValue(Object[] row, int[] idx) {
