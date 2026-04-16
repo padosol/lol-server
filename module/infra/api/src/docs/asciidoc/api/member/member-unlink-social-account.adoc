@@ -1,0 +1,10 @@
+[[member-unlink-social-account]]
+=== 소셜 계정 연동 해제
+
+==== HTTP Request
+include::{snippets}/member-unlink-social-account/http-request.adoc[]
+include::{snippets}/member-unlink-social-account/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/member-unlink-social-account/http-response.adoc[]
+include::{snippets}/member-unlink-social-account/response-fields.adoc[]

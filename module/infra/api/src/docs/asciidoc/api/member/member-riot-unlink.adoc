@@ -1,0 +1,10 @@
+[[member-riot-unlink]]
+=== Riot 계정 연동 해제
+
+==== HTTP Request
+include::{snippets}/member-riot-unlink/http-request.adoc[]
+include::{snippets}/member-riot-unlink/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/member-riot-unlink/http-response.adoc[]
+include::{snippets}/member-riot-unlink/response-fields.adoc[]

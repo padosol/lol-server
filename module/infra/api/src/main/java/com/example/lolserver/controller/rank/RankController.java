@@ -5,8 +5,8 @@ import com.example.lolserver.domain.rank.application.dto.RankSearchDto;
 import com.example.lolserver.domain.rank.application.RankService;
 import com.example.lolserver.controller.support.response.ApiResponse;
 import com.example.lolserver.controller.support.response.PageResponse;
+import com.example.lolserver.support.PageResult;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,7 +26,7 @@ public class RankController {
         @PathVariable("platformId") String platformId,
         RankSearchDto rankSearchDto
     ) {
-        Page<RankReadModel> ranks = rankService.getRanks(rankSearchDto, platformId);
+        PageResult<RankReadModel> ranks = rankService.getRanks(rankSearchDto, platformId);
 
         return new ResponseEntity<>(ApiResponse.success(PageResponse.of(ranks)), HttpStatus.OK);
     }

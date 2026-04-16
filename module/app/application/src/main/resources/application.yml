@@ -1,3 +1,13 @@
+message:
+  broker: rabbitmq
+
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
+---
 spring:
   config:
     activate:
@@ -6,10 +16,13 @@ spring:
       - core-local.yml
       - api-local.yml
       - client-repository-local.yml
+      - oauth-local.yml
       - rabbitmq-local.yml
+      - kafka-local.yml
       - postgresql-local.yml
       - redis-local.yml
       - clickhouse-local.yml
+      - logging-local.yml
 
 ---
 spring:
@@ -21,6 +34,7 @@ spring:
       - api-dev.yml
       - client-repository-dev.yml
       - rabbitmq-dev.yml
+      - kafka-dev.yml
       - postgresql-dev.yml
       - redis-dev.yml
       - clickhouse-dev.yml
@@ -35,6 +49,7 @@ spring:
       - api-prod.yml
       - client-repository-prod.yml
       - rabbitmq-prod.yml
+      - kafka-prod.yml
       - postgresql-prod.yml
       - redis-prod.yml
       - clickhouse-prod.yml

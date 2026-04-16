@@ -1,5 +1,5 @@
 # Stage 1: 빌드
-FROM eclipse-temurin:17-jdk AS build
+FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 
 # Gradle Wrapper 복사 및 실행 권한 부여
@@ -15,7 +15,7 @@ COPY module module
 RUN ./gradlew :module:app:application:bootJar -x test --no-daemon
 
 # Stage 2: 런타임
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
 RUN groupadd --system --gid 1001 spring && \
@@ -27,6 +27,6 @@ USER app
 
 EXPOSE 8080
 
-ENV SPRING_PROFILES_ACTIVE=dev
+ENV SPRING_PROFILES_ACTIVE=local
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

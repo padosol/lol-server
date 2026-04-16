@@ -1,0 +1,11 @@
+[[duo-request-create]]
+=== 듀오 요청 생성
+
+==== HTTP Request
+include::{snippets}/duo-request-create/http-request.adoc[]
+include::{snippets}/duo-request-create/path-parameters.adoc[]
+include::{snippets}/duo-request-create/request-fields.adoc[]
+
+==== HTTP Response
+include::{snippets}/duo-request-create/http-response.adoc[]
+include::{snippets}/duo-request-create/response-fields.adoc[]

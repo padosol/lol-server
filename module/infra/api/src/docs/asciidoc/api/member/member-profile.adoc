@@ -1,0 +1,9 @@
+[[member-profile]]
+=== 회원 프로필 조회
+
+==== HTTP Request
+include::{snippets}/member-profile/http-request.adoc[]
+
+==== HTTP Response
+include::{snippets}/member-profile/http-response.adoc[]
+include::{snippets}/member-profile/response-fields.adoc[]

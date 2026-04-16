@@ -1,0 +1,9 @@
+[[auth-logout]]
+=== 로그아웃
+
+==== HTTP Request
+include::{snippets}/auth-logout/http-request.adoc[]
+
+==== HTTP Response
+include::{snippets}/auth-logout/http-response.adoc[]
+include::{snippets}/auth-logout/response-fields.adoc[]

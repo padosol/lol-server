@@ -2,6 +2,7 @@ package com.example.lolserver.domain.patchnote.application;
 
 import com.example.lolserver.domain.patchnote.application.model.PatchNoteReadModel;
 import com.example.lolserver.domain.patchnote.application.model.PatchNoteSummaryReadModel;
+import com.example.lolserver.domain.patchnote.application.port.in.PatchNoteQueryUseCase;
 import com.example.lolserver.domain.patchnote.application.port.out.PatchNotePersistencePort;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
@@ -14,7 +15,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class PatchNoteService {
+public class PatchNoteService implements PatchNoteQueryUseCase {
 
     private final PatchNotePersistencePort patchNotePersistencePort;
 

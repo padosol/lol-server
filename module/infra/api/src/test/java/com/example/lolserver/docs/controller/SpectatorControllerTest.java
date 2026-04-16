@@ -4,7 +4,7 @@ import com.example.lolserver.controller.spectator.SpectatorController;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.queue_type.application.QueueTypeService;
 import com.example.lolserver.domain.queue_type.domain.QueueInfo;
-import com.example.lolserver.domain.spectator.application.SpectatorService;
+import com.example.lolserver.domain.spectator.application.port.in.SpectatorQueryUseCase;
 import com.example.lolserver.domain.spectator.application.model.BannedChampionReadModel;
 import com.example.lolserver.domain.spectator.application.model.CurrentGameInfoReadModel;
 import com.example.lolserver.domain.spectator.application.model.ParticipantReadModel;
@@ -36,7 +36,7 @@ class SpectatorControllerTest extends RestDocsSupport {
     private QueueTypeService queueTypeService;
 
     @Mock
-    private SpectatorService spectatorService;
+    private SpectatorQueryUseCase spectatorService;
 
     @Override
     protected Object initController() {

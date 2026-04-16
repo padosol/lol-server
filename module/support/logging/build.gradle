@@ -4,6 +4,5 @@ plugins {
 }
 
 dependencies {
-    // Potentially add logging-related dependencies here if specific ones are needed
-    // For now, it will inherit spring-boot-starter-logging from parent/application
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
 }

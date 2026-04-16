@@ -1,0 +1,9 @@
+[[duo-post-delete]]
+=== 듀오 게시글 삭제
+
+==== HTTP Request
+include::{snippets}/duo-post-delete/http-request.adoc[]
+include::{snippets}/duo-post-delete/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/duo-post-delete/http-response.adoc[]

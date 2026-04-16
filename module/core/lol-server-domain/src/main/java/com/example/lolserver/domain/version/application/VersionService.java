@@ -1,15 +1,18 @@
 package com.example.lolserver.domain.version.application;
 
 import com.example.lolserver.domain.version.application.model.VersionReadModel;
+import com.example.lolserver.domain.version.application.port.in.VersionQueryUseCase;
 import com.example.lolserver.domain.version.application.port.out.VersionPersistencePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class VersionService {
+@Transactional(readOnly = true)
+public class VersionService implements VersionQueryUseCase {
 
     private final VersionFinder versionFinder;
     private final VersionPersistencePort versionPersistencePort;

@@ -1,0 +1,10 @@
+[[community-post-search]]
+=== 게시글 검색
+
+==== HTTP Request
+include::{snippets}/community-post-search/http-request.adoc[]
+include::{snippets}/community-post-search/query-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/community-post-search/http-response.adoc[]
+include::{snippets}/community-post-search/response-fields.adoc[]

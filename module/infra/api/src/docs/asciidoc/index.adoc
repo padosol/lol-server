@@ -9,6 +9,26 @@ endif::[]
 :toclevels: 2
 :sectlinks:
 
+[[Auth-API]]
+== Auth API
+
+include::api/auth/auth-oauth2-login.adoc[]
+
+include::api/auth/auth-refresh.adoc[]
+
+include::api/auth/auth-logout.adoc[]
+
+[[Member-API]]
+== Member API
+
+include::api/member/member-profile.adoc[]
+
+include::api/member/member-nickname-update.adoc[]
+
+include::api/member/member-link-social-account.adoc[]
+
+include::api/member/member-unlink-social-account.adoc[]
+
 [[Summoner-API]]
 == Summoner API
 
@@ -81,3 +101,61 @@ include::api/tiercutoff/tiercutoff-detail.adoc[]
 include::api/season/season-list.adoc[]
 
 include::api/season/season-detail.adoc[]
+
+[[Duo-API]]
+== Duo API
+
+include::api/duo/duo-post-create.adoc[]
+
+include::api/duo/duo-post-list.adoc[]
+
+include::api/duo/duo-post-detail.adoc[]
+
+include::api/duo/duo-post-update.adoc[]
+
+include::api/duo/duo-post-delete.adoc[]
+
+include::api/duo/duo-post-my-list.adoc[]
+
+include::api/duo/duo-request-create.adoc[]
+
+include::api/duo/duo-request-list-for-post.adoc[]
+
+include::api/duo/duo-request-accept.adoc[]
+
+include::api/duo/duo-request-confirm.adoc[]
+
+include::api/duo/duo-request-reject.adoc[]
+
+include::api/duo/duo-request-cancel.adoc[]
+
+include::api/duo/duo-request-my-list.adoc[]
+
+[[Community-API]]
+== Community API
+
+include::api/community/community-post-create.adoc[]
+
+include::api/community/community-post-list.adoc[]
+
+include::api/community/community-post-detail.adoc[]
+
+include::api/community/community-post-update.adoc[]
+
+include::api/community/community-post-delete.adoc[]
+
+include::api/community/community-post-search.adoc[]
+
+include::api/community/community-post-my-list.adoc[]
+
+include::api/community/community-comment-create.adoc[]
+
+include::api/community/community-comment-list.adoc[]
+
+include::api/community/community-comment-update.adoc[]
+
+include::api/community/community-comment-delete.adoc[]
+
+include::api/community/community-vote.adoc[]
+
+include::api/community/community-vote-remove.adoc[]

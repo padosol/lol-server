@@ -58,11 +58,6 @@ public class SummonerEntity {
         }
     }
 
-    public void clickRenewal() {
-        this.lastRiotCallDate = LocalDateTime.now();
-    }
-
-
     public boolean isRevision(LocalDateTime clickDateTime) {
         // 마지막 Riot API 호출로부터 2분이 경과해야 갱신 가능
         if (this.lastRiotCallDate != null

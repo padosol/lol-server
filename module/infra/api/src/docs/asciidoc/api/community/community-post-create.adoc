@@ -1,0 +1,10 @@
+[[community-post-create]]
+=== 게시글 작성
+
+==== HTTP Request
+include::{snippets}/community-post-create/http-request.adoc[]
+include::{snippets}/community-post-create/request-fields.adoc[]
+
+==== HTTP Response
+include::{snippets}/community-post-create/http-response.adoc[]
+include::{snippets}/community-post-create/response-fields.adoc[]

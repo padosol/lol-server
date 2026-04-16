@@ -1,0 +1,11 @@
+[[community-post-update]]
+=== 게시글 수정
+
+==== HTTP Request
+include::{snippets}/community-post-update/http-request.adoc[]
+include::{snippets}/community-post-update/path-parameters.adoc[]
+include::{snippets}/community-post-update/request-fields.adoc[]
+
+==== HTTP Response
+include::{snippets}/community-post-update/http-response.adoc[]
+include::{snippets}/community-post-update/response-fields.adoc[]

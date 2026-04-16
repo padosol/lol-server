@@ -28,7 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 기술 스택
 
-- Java 17, Spring Boot 3.3.6, Gradle 8.5
+- Java 21, Spring Boot 3.3.6, Gradle 8.5
 - PostgreSQL (영속성), Redis/Redisson (캐싱), RabbitMQ (메시징)
 - QueryDSL 5.1.0, MapStruct 1.5.5, Bucket4j (Rate Limiting)
 - Spring RestDocs (API 문서화)
@@ -47,11 +47,16 @@ module/
 │   └── enum/                     # 공유 enum 타입
 ├── infra/
 │   ├── api/                      # REST 컨트롤러 (구동 어댑터)
-│   ├── client/lol-repository/    # Riot API 클라이언트 (피동 어댑터)
-│   ├── message/rabbitmq/         # 메시지 생산자/소비자
+│   ├── client/
+│   │   ├── lol-repository/       # Riot API 클라이언트 (피동 어댑터)
+│   │   └── oauth/                # OAuth2 클라이언트 (토큰 교환, RSO)
+│   ├── message/
+│   │   ├── rabbitmq/             # RabbitMQ 메시지 생산자/소비자
+│   │   └── kafka/                # Kafka 메시지 브로커 어댑터
 │   └── persistence/
 │       ├── postgresql/           # JPA 엔티티, 리포지토리, 어댑터
-│       └── redis/                # 캐싱 설정
+│       ├── redis/                # 캐싱, RefreshToken, OAuth State 저장
+│       └── clickhouse/           # 분석용 데이터 저장소
 └── support/logging/              # 횡단 관심사 유틸리티
 ```
 
@@ -66,60 +71,24 @@ module/
 
 ### 도메인 컨텍스트
 
-각 도메인 (champion, league, match, patchnote, queue_type, rank, spectator, summoner, tiercutoff, version)은 다음 구조를 따릅니다:
-- `domain/` - 순수 도메인 객체 (Write Model)
+각 도메인(`module/core/lol-server-domain/.../domain/` 하위)은 다음 구조를 따릅니다:
+- `domain/` - 순수 도메인 객체 (Write Model, 비즈니스 로직 포함)
 - `application/` - 애플리케이션 서비스
 - `application/port/` - 포트 인터페이스 (in/out)
 - `application/dto/` - Command, SearchDto 등 입력 DTO
-- `application/model/` - ReadModel 클래스 (조회용 DTO)
+- `application/model/` - ReadModel (불변, Java Record, 팩토리 메서드 `*.of()` 변환)
 
-### Read Model 패턴
+### 클래스 명명 규칙
 
-이 프로젝트는 **Write Model과 Read Model을 명확히 분리**합니다.
-
-#### Write Model (도메인 엔티티)
-- 위치: `domain/{도메인}/domain/`
-- 비즈니스 로직 포함
-- 상태 변경 가능
-
-#### Read Model (ReadModel)
-- 위치: `domain/{도메인}/application/model/`
-- 표현 전용, 비즈니스 로직 없음
-- 불변 (Java Record 권장)
-
-#### 계층별 Read Model
-
-| 계층 | 패키지 | 명명 규칙 | 용도 |
-|------|--------|----------|------|
-| 도메인 | `application/model/` | `*ReadModel` | 서비스 반환값, 조회 결과 |
-| API | `controller/*/response/` | `*Response` | API 응답 전용 |
-| 영속성 | `repository/*/dto/` | `*DTO` | QueryDSL 조회 결과 |
-
-#### Read Model 생성 방식
-
-- **팩토리 메서드** (권장): `SummonerReadModel.of(Summoner)` - Builder 패턴으로 도메인→ReadModel 변환
-- **Java Record**: 조회 결과용 불변 객체 (예: `CurrentGameInfoReadModel`)
-- **QueryDSL Projection**: `@QueryProjection` 생성자로 DB→DTO 직접 매핑
-
-### 패키지 명명 규칙
-
-- 도메인: `com.example.lolserver.domain.{domainName}`
-- 도메인 포트: `com.example.lolserver.domain.{domainName}.application.port`
-- 인프라 어댑터: `com.example.lolserver.repository.{domainName}.adapter`
-- 인프라 매퍼: `com.example.lolserver.repository.{domainName}.mapper`
-- 컨트롤러: `com.example.lolserver.controller.{domainName}`
-- 컨트롤러 응답: `com.example.lolserver.controller.{domainName}.response`
-- 컨트롤러 매퍼: `com.example.lolserver.controller.{domainName}.mapper`
-
-### 클래스 작성요령
-
-| 계층 | 접미사 | 예시 | 위치 |
-|------|--------|------|------|
-| 도메인 ReadModel | `*ReadModel` | `GameReadModel` | `application/model/` |
-| 컨트롤러 응답 | `*Response` | `SliceResponse` | `controller/*/response/` |
-| 영속성 DTO | `*DTO` | `MSChampionDTO` | `repository/*/dto/` |
-| 엔티티 | `*Entity` | `MatchEntity` | `repository/*/entity/` |
-| 커맨드 | `*Command` | `MatchCommand` | `application/command/` |
+| 계층 | 접미사 | 예시 | 패키지 |
+|------|--------|------|--------|
+| 도메인 ReadModel | `*ReadModel` | `GameReadModel` | `domain.{name}.application.model` |
+| 컨트롤러 응답 | `*Response` | `SliceResponse` | `controller.{name}.response` |
+| 영속성 DTO | `*DTO` | `MSChampionDTO` | `repository.{name}.dto` |
+| 엔티티 | `*Entity` | `MatchEntity` | `repository.{name}.entity` |
+| 어댑터 | `*Adapter` | `MatchPersistenceAdapter` | `repository.{name}.adapter` |
+| 매퍼 | `*Mapper` | `MatchMapper` | `repository.{name}.mapper` |
+| 커맨드 | `*Command` | `MatchCommand` | `domain.{name}.application.command` |
 
 ### API 응답 래퍼 패턴
 
@@ -134,21 +103,68 @@ module/
 - `ErrorType` enum - HTTP 상태 코드 매핑
 - `@RestControllerAdvice(CoreExceptionAdvice)` - 전역 예외 핸들러
 
+### 도메인 검증 패턴
+
+도메인 규칙 위반은 **도메인 객체가 직접 예외를 던져야** 합니다. Application 서비스에서 boolean 체크 후 예외를 던지지 않습니다.
+
+```java
+// ✅ 올바른 패턴: 도메인 객체의 guard 메서드
+duoPost.validateOwner(memberId);
+duoPost.validateActive();
+member.validateNotWithdrawn();
+
+// ❌ 금지: Application 서비스에서 boolean 체크 + 예외 던지기
+if (!duoPost.isOwner(memberId)) {
+    throw new CoreException(ErrorType.FORBIDDEN);
+}
+```
+
+- guard 메서드 네이밍: `validate*` 접두사 (`validateOwner`, `validateActive`, `validateNotDeleted` 등)
+- boolean 쿼리 메서드(`isOwner`, `isActive` 등)는 조건 분기용으로만 사용하고, 불변식 강제에는 guard 메서드 사용
+- 동일 boolean에 대해 반대 의미의 guard가 필요하면 별도 메서드 분리 (`validateOwner` vs `validateNotOwner`)
+
 ### 테스트 패턴
 
 - **단위 테스트**: `@ExtendWith(MockitoExtension.class)`, BDDMockito (`given/then`)
 - **JPA 테스트**: `RepositoryTestBase` 상속 (`@DataJpaTest` + H2)
 - **RestDocs 테스트**: `RestDocsSupport` 상속 (Standalone MockMvc)
 - **어댑터 테스트**: Mock 기반 단위 테스트 (통합 테스트 아님)
+- **MapStruct Mapper 테스트**: 새 Mapper 추가 또는 기존 Mapper 수정 시 반드시 단위 테스트 작성
+  - 테스트 위치: `repository.{name}.mapper.*MapperTest`
+  - `componentModel = "spring"` Mapper: `new MapperImpl()` + `ReflectionTestUtils.setField()`로 의존 Mapper 주입
+  - `componentModel = "default"` Mapper: `Mapper.INSTANCE` 사용
+  - 필수 검증 항목: `@Mapping(ignore = true)` 필드가 실제로 무시되는지, `@AfterMapping`이 의도한 메서드에만 적용되는지
+  - `updateEntityFromDomain` 테스트 시 기존 컬렉션에 중복 엔티티가 추가되지 않는지 검증
 - `@DisplayName("한글 설명")`, AssertJ `assertThat` 사용
+- RestDocs 관련 파일(`.adoc`, RestDocs 테스트) 수정 시 반드시 `./gradlew :module:infra:api:asciidoctor` 실행하여 문서 재생성할 것
 
 ### 코드 컨벤션
 
 - DI: `@RequiredArgsConstructor` + `private final` 필드 (생성자 주입)
 - 로깅: `@Slf4j`
+- 컨트롤러 반환 타입: `ResponseEntity<ApiResponse<T>>` (RESTful 상태코드 사용)
+  - `POST` (생성): `ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(data))` → **201**
+  - `GET` (조회): `ResponseEntity.ok(ApiResponse.success(data))` → **200**
+  - `PUT` (수정): `ResponseEntity.ok(ApiResponse.success(data))` → **200**
+  - `DELETE` (삭제): `ResponseEntity.noContent().build()` → **204** (body 없음, 반환 타입 `ResponseEntity<Void>`)
 - 컨트롤러 응답 DTO: Java `record` (불변)
-- 커맨드: `@Builder @Getter @Setter @NoArgsConstructor @AllArgsConstructor`
+- 커맨드: `@Builder @Getter @NoArgsConstructor @AllArgsConstructor` (도메인 객체에 `@Setter` 사용 금지 — 팩토리 메서드/Builder 사용)
 - 트랜잭션: 조회 `@Transactional(readOnly = true)`, 변경 `@Transactional`
+- 매직 스트링 금지: 기존 enum이 존재하는 값은 반드시 `EnumType.VALUE.name()` 또는 `EnumType.VALUE.getXxx()` 사용
+  - `OAuthProvider` (`core:lol-server-domain`): `"RIOT"`, `"GOOGLE"` 대신 `OAuthProvider.RIOT.name()`
+  - `QueueType` (`core:enum`): `"RANKED_SOLO_5x5"` 대신 `QueueType.RANKED_SOLO_5x5.name()`, `420` 대신 `QueueType.RANKED_SOLO_5x5.getQueueId()`
+  - `DuoPostStatus`, `DuoRequestStatus` 등 도메인 VO enum 동일 적용
+- ReadModel 변환: 서비스에서 인라인 빌더로 ReadModel을 생성하지 말고, `ReadModel.of(DomainObject, ...)` 정적 팩토리 메서드를 ReadModel 클래스에 정의하여 사용
+
+### 비동기 쿼리 실행 패턴
+
+- Virtual Thread 기반 병렬 쿼리 실행 (`CompletableFuture.supplyAsync()` + `queryExecutor` 빈)
+- `@LogExecutionTime` AOP 어노테이션으로 메서드 실행 시간 로깅
+
+### Git 워크플로우
+
+**브랜치 전략**: Git Flow 변형 — `feature/*`, `fix/*`, `refactor/*` → `develop` → `main`
+**Hotfix 플로우**: `hotfix/*` → `main` → `develop` 역반영
 
 ### 커밋 메시지 컨벤션
 
@@ -166,7 +182,4 @@ Riot API 키 설정: `riot.api.key` 속성
 
 ### 참조 문서
 
-TDD 진행 시 다음 스킬을 참조하여 패턴 준수:
-- `.claude/skills/test-driven-development/SKILL.md` - TDD 워크플로우 및 패턴
-- `.claude/skills/test-driven-development/testing-anti-patterns.md` - 테스트 안티패턴
 - `.claude/skills/build-validator/SKILL.md` - 빌드 오류 분석

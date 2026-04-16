@@ -93,16 +93,17 @@ class SummonerMapperTest {
     void toEntity_validSummoner_returnsSummonerEntity() {
         // given
         LocalDateTime now = LocalDateTime.now();
-        Summoner summoner = new Summoner();
-        summoner.setPuuid("test-puuid");
-        summoner.setSummonerLevel(300L);
-        summoner.setProfileIconId(5001);
-        summoner.setGameName("TestPlayer");
-        summoner.setTagLine("KR1");
-        summoner.setPlatformId("kr");
-        summoner.setSearchName("testplayer");
-        summoner.setRevisionDate(now);
-        summoner.setLastRiotCallDate(now.minusMinutes(5));
+        Summoner summoner = Summoner.builder()
+                .puuid("test-puuid")
+                .summonerLevel(300L)
+                .profileIconId(5001)
+                .gameName("TestPlayer")
+                .tagLine("KR1")
+                .platformId("kr")
+                .searchName("testplayer")
+                .revisionDate(now)
+                .lastRiotCallDate(now.minusMinutes(5))
+                .build();
 
         // when
         SummonerEntity result = mapper.toEntity(summoner);

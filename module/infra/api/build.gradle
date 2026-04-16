@@ -3,11 +3,19 @@ dependencies {
     implementation project(":module:core:enum")
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.data:spring-data-commons'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
     asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
 
+    // JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
 
+    testImplementation 'org.springframework.security:spring-security-test'
 }
 
 ext { // 전역 변수
@@ -19,7 +27,7 @@ test {
 }
 
 asciidoctor {
-    inputs.dir snippetsDir
+    inputs.files fileTree(snippetsDir)
     configurations 'asciidoctorExt'
 
     sources { // 특정 파일만 html로 만든다.

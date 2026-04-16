@@ -16,7 +16,13 @@ export const customMetrics = {
     championRotationResponseTime: new Trend('champion_rotation_response_time', true),
     rankChampionsResponseTime: new Trend('rank_champions_response_time', true),
 
+    // Champion Stats API 응답 시간
+    championStatsDetailResponseTime: new Trend('champion_stats_detail_response_time', true),
+    championStatsPositionsResponseTime: new Trend('champion_stats_positions_response_time', true),
+
     // API별 성공률
+    championStatsDetailSuccessRate: new Rate('champion_stats_detail_success_rate'),
+    championStatsPositionsSuccessRate: new Rate('champion_stats_positions_success_rate'),
     summonerSuccessRate: new Rate('summoner_success_rate'),
     autocompleteSuccessRate: new Rate('autocomplete_success_rate'),
     matchSuccessRate: new Rate('match_success_rate'),
@@ -56,10 +62,10 @@ export function validateResponse(response, apiName, expectedStatus = 200) {
 export function validateApiSuccess(response, apiName) {
     try {
         const body = JSON.parse(response.body);
-        const isSuccess = body.success === true;
+        const isSuccess = body.result === 'SUCCESS';
 
         if (!isSuccess) {
-            console.error(`[${apiName}] API returned success=false: ${JSON.stringify(body)}`);
+            console.error(`[${apiName}] API returned result=${body.result}: ${JSON.stringify(body)}`);
         }
 
         return check(response, {

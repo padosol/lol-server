@@ -1,7 +1,7 @@
 package com.example.lolserver.controller.tiercutoff;
 
 import com.example.lolserver.controller.support.response.ApiResponse;
-import com.example.lolserver.domain.tiercutoff.application.TierCutoffService;
+import com.example.lolserver.domain.tiercutoff.application.port.in.TierCutoffQueryUseCase;
 import com.example.lolserver.domain.tiercutoff.application.model.TierCutoffReadModel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TierCutoffController {
 
-    private final TierCutoffService tierCutoffService;
+    private final TierCutoffQueryUseCase tierCutoffService;
 
     /**
      * 지역별 티어 컷오프 목록 조회 API

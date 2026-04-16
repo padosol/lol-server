@@ -11,7 +11,7 @@ export const HEADERS = {
     'Accept': 'application/json',
 };
 
-// 타임아웃 설정 (밀리초)
+// 타임아웃 설정 (밀리초)m
 export const TIMEOUTS = {
     request: '30s',
     connect: '10s',
@@ -34,17 +34,17 @@ export const ENDPOINTS = {
         getMatchIds: (platformId, puuid, page = 0, size = 10) => `/api/v1/${platformId}/matches/matchIds?puuid=${puuid}&page=${page}&size=${size}`,
         getMatches: (platformId, puuid, page = 0, size = 10) => `/api/v1/${platformId}/matches?puuid=${puuid}&page=${page}&size=${size}`,
         getMatchesByPuuid: (platformId, puuid, season, queueId, pageNo = 1) => {
-            const params = new URLSearchParams({ pageNo: String(pageNo) });
+            const parts = [`pageNo=${pageNo}`];
 
             if (season !== undefined && season !== null && season !== '') {
-                params.set('season', String(season));
+                parts.push(`season=${season}`);
             }
 
             if (queueId !== undefined && queueId !== null && queueId !== '') {
-                params.set('queueId', String(queueId));
+                parts.push(`queueId=${queueId}`);
             }
 
-            return `/api/v1/${platformId}/summoners/${puuid}/matches?${params.toString()}`;
+            return `/api/v1/${platformId}/summoners/${puuid}/matches?${parts.join('&')}`;
         },
         timeline: (matchId) => `/api/v1/match/timeline/${matchId}`,
     },
@@ -57,6 +57,14 @@ export const ENDPOINTS = {
     // League API
     league: {
         getByPuuid: (puuid) => `/api/v1/leagues/by-puuid/${puuid}`,
+    },
+
+    // Champion Stats API
+    championStats: {
+        getDetail: (platformId, championId, patch, tier) =>
+            `/api/v1/${platformId}/champion-stats?championId=${championId}&patch=${encodeURIComponent(patch)}&tier=${encodeURIComponent(tier)}`,
+        getPositions: (platformId, patch, tier) =>
+            `/api/v1/${platformId}/champion-stats/positions?patch=${encodeURIComponent(patch)}&tier=${encodeURIComponent(tier)}`,
     },
 
     // Rank API

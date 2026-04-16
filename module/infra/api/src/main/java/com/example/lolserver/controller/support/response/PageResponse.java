@@ -1,6 +1,6 @@
 package com.example.lolserver.controller.support.response;
 
-import org.springframework.data.domain.Page;
+import com.example.lolserver.support.PageResult;
 import java.util.List;
 
 public record PageResponse<T>(
@@ -12,15 +12,15 @@ public record PageResponse<T>(
     boolean isFirst,
     boolean isLast
 ) {
-    public static <T> PageResponse<T> of(Page<T> page) {
+    public static <T> PageResponse<T> of(PageResult<T> pageResult) {
         return new PageResponse<>(
-            page.getContent(),
-            page.getNumber() + 1,
-            page.getSize(),
-            page.getTotalElements(),
-            page.getTotalPages(),
-            page.isFirst(),
-            page.isLast()
+            pageResult.content(),
+            pageResult.page(),
+            pageResult.size(),
+            pageResult.totalElements(),
+            pageResult.totalPages(),
+            pageResult.isFirst(),
+            pageResult.isLast()
         );
     }
 }

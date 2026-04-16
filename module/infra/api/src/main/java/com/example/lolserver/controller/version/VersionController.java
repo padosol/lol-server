@@ -1,7 +1,7 @@
 package com.example.lolserver.controller.version;
 
 import com.example.lolserver.controller.support.response.ApiResponse;
-import com.example.lolserver.domain.version.application.VersionService;
+import com.example.lolserver.domain.version.application.port.in.VersionQueryUseCase;
 import com.example.lolserver.domain.version.application.model.VersionReadModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class VersionController {
 
-    private final VersionService versionService;
+    private final VersionQueryUseCase versionService;
 
     @GetMapping("/latest")
     public ResponseEntity<ApiResponse<VersionReadModel>> getLatestVersion() {

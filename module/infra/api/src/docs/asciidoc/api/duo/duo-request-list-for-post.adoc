@@ -1,0 +1,10 @@
+[[duo-request-list-for-post]]
+=== 게시글 요청 목록 조회
+
+==== HTTP Request
+include::{snippets}/duo-request-list-for-post/http-request.adoc[]
+include::{snippets}/duo-request-list-for-post/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/duo-request-list-for-post/http-response.adoc[]
+include::{snippets}/duo-request-list-for-post/response-fields.adoc[]

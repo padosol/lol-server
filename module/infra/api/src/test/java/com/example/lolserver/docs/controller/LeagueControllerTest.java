@@ -2,7 +2,7 @@ package com.example.lolserver.docs.controller;
 
 import com.example.lolserver.controller.league.LeagueController;
 import com.example.lolserver.docs.RestDocsSupport;
-import com.example.lolserver.domain.league.application.LeagueService;
+import com.example.lolserver.domain.league.application.port.in.LeagueQueryUseCase;
 import com.example.lolserver.domain.league.domain.League;
 import com.example.lolserver.domain.league.domain.vo.LeagueHistory;
 import org.junit.jupiter.api.DisplayName;
@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class LeagueControllerTest extends RestDocsSupport {
 
     @Mock
-    private LeagueService leagueService;
+    private LeagueQueryUseCase leagueService;
 
     @InjectMocks
     private LeagueController leagueController;

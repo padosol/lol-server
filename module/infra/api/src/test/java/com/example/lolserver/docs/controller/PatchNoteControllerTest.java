@@ -2,7 +2,7 @@ package com.example.lolserver.docs.controller;
 
 import com.example.lolserver.controller.patchnote.PatchNoteController;
 import com.example.lolserver.docs.RestDocsSupport;
-import com.example.lolserver.domain.patchnote.application.PatchNoteService;
+import com.example.lolserver.domain.patchnote.application.port.in.PatchNoteQueryUseCase;
 import com.example.lolserver.domain.patchnote.application.model.PatchNoteReadModel;
 import com.example.lolserver.domain.patchnote.application.model.PatchNoteSummaryReadModel;
 import com.example.lolserver.domain.patchnote.application.model.patchnote.*;
@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class PatchNoteControllerTest extends RestDocsSupport {
 
     @Mock
-    private PatchNoteService patchNoteService;
+    private PatchNoteQueryUseCase patchNoteService;
 
     @Override
     protected Object initController() {

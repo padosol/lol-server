@@ -1,0 +1,9 @@
+[[duo-request-reject]]
+=== 듀오 요청 거절
+
+==== HTTP Request
+include::{snippets}/duo-request-reject/http-request.adoc[]
+include::{snippets}/duo-request-reject/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/duo-request-reject/http-response.adoc[]

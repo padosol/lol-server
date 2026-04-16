@@ -2,6 +2,7 @@ package com.example.lolserver.domain.tiercutoff.application;
 
 import com.example.lolserver.Platform;
 import com.example.lolserver.domain.tiercutoff.application.model.TierCutoffReadModel;
+import com.example.lolserver.domain.tiercutoff.application.port.in.TierCutoffQueryUseCase;
 import com.example.lolserver.domain.tiercutoff.application.port.out.TierCutoffPersistencePort;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
@@ -15,7 +16,7 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class TierCutoffService {
+public class TierCutoffService implements TierCutoffQueryUseCase {
 
     private static final Set<String> SUPPORTED_TIERS = Set.of("CHALLENGER", "GRANDMASTER");
 

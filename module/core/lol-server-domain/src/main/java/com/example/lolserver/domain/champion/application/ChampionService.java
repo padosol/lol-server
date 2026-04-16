@@ -7,12 +7,14 @@ import com.example.lolserver.domain.champion.domain.ChampionRotate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ChampionService implements ChampionRotateUseCase {
 
     private final ChampionClientPort championClientPort;

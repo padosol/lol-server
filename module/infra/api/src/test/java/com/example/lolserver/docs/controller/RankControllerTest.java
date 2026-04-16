@@ -6,15 +6,13 @@ import com.example.lolserver.domain.rank.application.RankService;
 import com.example.lolserver.domain.rank.application.model.RankReadModel;
 import com.example.lolserver.domain.rank.application.dto.RankSearchDto;
 import com.example.lolserver.domain.rank.domain.Rank;
+import com.example.lolserver.support.PageResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.payload.JsonFieldType;
 
@@ -73,7 +71,7 @@ class RankControllerTest extends RestDocsSupport {
                 .build();
 
         List<RankReadModel> rankResponses = List.of(new RankReadModel(rank));
-        Page<RankReadModel> response = new PageImpl<>(rankResponses, PageRequest.of(0, 50), 1);
+        PageResult<RankReadModel> response = new PageResult<>(rankResponses, 1, 50, 1, 1, true, true);
 
         given(rankService.getRanks(any(RankSearchDto.class), eq(platformId))).willReturn(response);
 

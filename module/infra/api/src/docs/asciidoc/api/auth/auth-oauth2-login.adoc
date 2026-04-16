@@ -1,0 +1,66 @@
+[[auth-oauth2-login]]
+=== OAuth2 소셜 로그인
+
+OAuth2 소셜 로그인은 Spring Security OAuth2 Client가 처리합니다.
+브라우저 리다이렉트 기반으로 동작하며, 프론트엔드에서 아래 흐름을 따릅니다.
+
+==== 지원 프로바이더
+
+|===
+| 프로바이더 | 로그인 URL
+
+| Google
+| `GET /oauth2/authorize/google`
+
+| Riot (RSO)
+| `GET /oauth2/authorize/riot`
+|===
+
+==== 로그인 흐름
+
+[source]
+----
+1. 프론트엔드 → GET /oauth2/authorize/{provider}
+   └─ 브라우저가 프로바이더 로그인 페이지로 리다이렉트됨
+
+2. 사용자가 프로바이더 계정으로 로그인
+
+3. 프로바이더 → GET /login/oauth2/code/{provider}?code={code}&state={state}
+   └─ Spring Security가 자동으로 콜백을 처리
+
+4. 서버 → 프론트엔드 콜백 URL로 리다이렉트
+   └─ 성공: {frontendCallbackUrl}#accessToken={token}&refreshToken={token}&expiresIn={seconds}
+   └─ 실패: {frontendCallbackUrl}#error=OAUTH_LOGIN_FAILED
+----
+
+==== 성공 응답
+
+인증 성공 시 프론트엔드 콜백 URL의 **fragment(#)** 에 토큰 정보가 포함됩니다.
+
+|===
+| 파라미터 | 타입 | 설명
+
+| accessToken
+| String
+| JWT 액세스 토큰
+
+| refreshToken
+| String
+| JWT 리프레시 토큰
+
+| expiresIn
+| Number
+| 액세스 토큰 만료 시간 (초)
+|===
+
+==== 실패 응답
+
+인증 실패 시 프론트엔드 콜백 URL의 **fragment(#)** 에 에러 정보가 포함됩니다.
+
+|===
+| 파라미터 | 타입 | 설명
+
+| error
+| String
+| 에러 코드 (예: `OAUTH_LOGIN_FAILED`)
+|===

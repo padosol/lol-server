@@ -3,7 +3,7 @@ package com.example.lolserver.controller.league;
 import com.example.lolserver.controller.league.response.LeagueResponse;
 import com.example.lolserver.controller.league.mapper.LeagueMapper;
 import com.example.lolserver.domain.league.domain.League;
-import com.example.lolserver.domain.league.application.LeagueService;
+import com.example.lolserver.domain.league.application.port.in.LeagueQueryUseCase;
 import com.example.lolserver.controller.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LeagueController {
 
-    private final LeagueService leagueService;
+    private final LeagueQueryUseCase leagueService;
 
     /**
      * 소환사 리그 정보 조회 API

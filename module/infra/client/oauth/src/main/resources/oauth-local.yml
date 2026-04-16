@@ -1,0 +1,10 @@
+oauth:
+  providers:
+    riot:
+      client-id: ${RIOT_RSO_CLIENT_ID:}
+      client-secret: ${RIOT_RSO_CLIENT_SECRET:}
+      token-uri: https://auth.riotgames.com/token
+      user-info-uri: https://auth.riotgames.com/userinfo
+      account-uri: https://asia.api.riotgames.com/riot/account/v1/accounts/me
+      authorization-uri: https://auth.riotgames.com/authorize
+      scope: openid cpid
