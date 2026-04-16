@@ -41,10 +41,7 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase {
         RiotAccountStats stats = riotAccountResolver.lookupAllStats(puuid);
 
         DuoPost duoPost = DuoPost.create(
-                memberId, puuid,
-                command.getPrimaryLane(), command.getDesiredLane(),
-                command.isHasMicrophone(), stats.tierInfo(), command.getMemo(),
-                stats.mostChampions(), stats.recentGameSummary()
+                memberId, puuid, command, stats
         );
 
         DuoPost saved = duoPostPersistencePort.save(duoPost);

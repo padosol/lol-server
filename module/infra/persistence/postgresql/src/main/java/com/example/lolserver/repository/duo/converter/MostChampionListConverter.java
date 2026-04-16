@@ -13,7 +13,7 @@ import java.util.List;
 @Converter
 public class MostChampionListConverter implements AttributeConverter<List<MostChampion>, String> {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Override
     public String convertToDatabaseColumn(List<MostChampion> attribute) {
@@ -21,7 +21,7 @@ public class MostChampionListConverter implements AttributeConverter<List<MostCh
             return null;
         }
         try {
-            return objectMapper.writeValueAsString(attribute);
+            return OBJECT_MAPPER.writeValueAsString(attribute);
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("Failed to serialize most champions", e);
         }
@@ -33,7 +33,7 @@ public class MostChampionListConverter implements AttributeConverter<List<MostCh
             return Collections.emptyList();
         }
         try {
-            return objectMapper.readValue(dbData, new TypeReference<>() {});
+            return OBJECT_MAPPER.readValue(dbData, new TypeReference<>() {});
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("Failed to deserialize most champions", e);
         }

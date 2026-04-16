@@ -1,5 +1,7 @@
 package com.example.lolserver.domain.duo.domain;
 
+import com.example.lolserver.domain.duo.application.RiotAccountResolver.RiotAccountStats;
+import com.example.lolserver.domain.duo.application.command.CreateDuoRequestCommand;
 import com.example.lolserver.domain.duo.domain.vo.DuoRequestStatus;
 import com.example.lolserver.domain.duo.domain.vo.Lane;
 import com.example.lolserver.domain.duo.domain.vo.MostChampion;
@@ -38,24 +40,24 @@ public class DuoRequest {
     private LocalDateTime updatedAt;
 
     public static DuoRequest create(Long duoPostId, Long requesterId,
-            String requesterPuuid, String primaryLane, String desiredLane,
-            boolean hasMicrophone, TierInfo tierInfo, String memo,
-            List<MostChampion> mostChampions, RecentGameSummary recentGameSummary) {
+            String requesterPuuid, CreateDuoRequestCommand command,
+            RiotAccountStats stats) {
+        TierInfo tierInfo = stats.tierInfo();
         LocalDateTime now = LocalDateTime.now();
         return DuoRequest.builder()
                 .duoPostId(duoPostId)
                 .requesterId(requesterId)
                 .requesterPuuid(requesterPuuid)
-                .primaryLane(Lane.from(primaryLane))
-                .desiredLane(Lane.from(desiredLane))
-                .hasMicrophone(hasMicrophone)
+                .primaryLane(Lane.from(command.getPrimaryLane()))
+                .desiredLane(Lane.from(command.getDesiredLane()))
+                .hasMicrophone(command.isHasMicrophone())
                 .tier(tierInfo.tier())
                 .rank(tierInfo.rank())
                 .leaguePoints(tierInfo.leaguePoints())
-                .memo(memo)
+                .memo(command.getMemo())
                 .status(DuoRequestStatus.PENDING)
-                .mostChampions(mostChampions)
-                .recentGameSummary(recentGameSummary)
+                .mostChampions(stats.mostChampions())
+                .recentGameSummary(stats.recentGameSummary())
                 .createdAt(now)
                 .updatedAt(now)
                 .build();

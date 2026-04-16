@@ -1,5 +1,7 @@
 package com.example.lolserver.domain.duo.domain;
 
+import com.example.lolserver.domain.duo.application.RiotAccountResolver.RiotAccountStats;
+import com.example.lolserver.domain.duo.application.command.CreateDuoPostCommand;
 import com.example.lolserver.domain.duo.domain.vo.DuoPostStatus;
 import com.example.lolserver.domain.duo.domain.vo.Lane;
 import com.example.lolserver.domain.duo.domain.vo.MostChampion;
@@ -38,23 +40,22 @@ public class DuoPost {
     private LocalDateTime updatedAt;
 
     public static DuoPost create(Long memberId, String puuid,
-            String primaryLane, String desiredLane,
-            boolean hasMicrophone, TierInfo tierInfo, String memo,
-            List<MostChampion> mostChampions, RecentGameSummary recentGameSummary) {
+            CreateDuoPostCommand command, RiotAccountStats stats) {
+        TierInfo tierInfo = stats.tierInfo();
         LocalDateTime now = LocalDateTime.now();
         return DuoPost.builder()
                 .memberId(memberId)
                 .puuid(puuid)
-                .primaryLane(Lane.from(primaryLane))
-                .desiredLane(Lane.from(desiredLane))
-                .hasMicrophone(hasMicrophone)
+                .primaryLane(Lane.from(command.getPrimaryLane()))
+                .desiredLane(Lane.from(command.getDesiredLane()))
+                .hasMicrophone(command.isHasMicrophone())
                 .tier(tierInfo.tier())
                 .rank(tierInfo.rank())
                 .leaguePoints(tierInfo.leaguePoints())
-                .memo(memo)
+                .memo(command.getMemo())
                 .status(DuoPostStatus.ACTIVE)
-                .mostChampions(mostChampions)
-                .recentGameSummary(recentGameSummary)
+                .mostChampions(stats.mostChampions())
+                .recentGameSummary(stats.recentGameSummary())
                 .expiresAt(now.plusHours(1))
                 .createdAt(now)
                 .updatedAt(now)

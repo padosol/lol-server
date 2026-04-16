@@ -58,10 +58,7 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
         RiotAccountStats stats = riotAccountResolver.lookupAllStats(puuid);
 
         DuoRequest duoRequest = DuoRequest.create(
-                duoPostId, memberId, puuid,
-                command.getPrimaryLane(), command.getDesiredLane(),
-                command.isHasMicrophone(), stats.tierInfo(), command.getMemo(),
-                stats.mostChampions(), stats.recentGameSummary()
+                duoPostId, memberId, puuid, command, stats
         );
 
         DuoRequest saved = duoRequestPersistencePort.save(duoRequest);
