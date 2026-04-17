@@ -15,10 +15,11 @@
 |------|----------|--------|
 | `To Do` | 티켓 생성 직후 | PM / 팀 |
 | `In Progress` | 작업 착수 (브랜치 생성 직전) | 담당 개발자가 수동 이동 |
-| `In Review` | 해당 티켓의 PR Open 시 | GitHub 연동 자동 or 담당자 이동 |
-| `Done` | PR이 `develop`에 머지됨 | 담당자 이동 (자동 전이 미사용) |
+| `In Review` | 해당 티켓의 PR Open 시 | 담당자 이동 |
+| `Done` | PR이 `develop`/`main`에 머지됨 | **Jira Automation 자동 전이** |
 
-> 상태 자동 전이는 현재 사용하지 않습니다. 담당자가 직접 이동시키는 것을 원칙으로 합니다.
+- `Done`으로의 전이는 Jira Automation 룰이 자동 처리합니다 (섹션 8 참조).
+- 그 외 상태는 담당자가 직접 이동시키는 것을 원칙으로 합니다.
 
 ## 3. 브랜치 전략
 
@@ -85,8 +86,9 @@ docs: MP-20 워크플로우 가이드 작성
 
 ### (선택) Smart Commits 키워드
 
-팀이 필요할 때만 사용합니다. **상태 전이 키워드는 지양**합니다(수동 이동 원칙).
+팀이 필요할 때만 사용합니다. **`#done` 등 상태 전이 키워드는 사용하지 마세요** — `Done` 전이는 Jira Automation 룰이 PR 머지 시점에 자동 처리합니다(섹션 8). 키워드와 중복되면 의도치 않게 머지 전 티켓이 닫힐 수 있습니다.
 
+허용 키워드:
 - 코멘트 동기화: `fix: MP-1 #comment 코드 리뷰 반영`
 - 작업 시간 로깅: `feat: MP-1 #time 2h 초안 구현`
 
@@ -120,7 +122,8 @@ docs: MP-20 워크플로우 가이드 작성
    ```
 5. GitHub에서 `develop` 대상 PR 생성 → Jira 티켓 "Development" 패널에 PR 자동 연결 → 티켓 상태를 `In Review`로 이동
 6. 리뷰 승인 + CI 통과 후 **Squash & Merge**
-7. Jira 티켓을 `Done`으로 이동, 로컬 브랜치 정리
+7. Jira 티켓이 자동으로 `Done`으로 이동됨 (GitHub Actions). 자동 전이가 실패한 경우 수동 이동.
+8. 로컬 브랜치 정리
    ```bash
    git switch develop && git pull
    git branch -d feature/MP-1-duo-post-api
@@ -141,3 +144,40 @@ docs: MP-20 워크플로우 가이드 작성
 
 **Q. 티켓이 아직 없는 급한 수정이 필요합니다.**
 - 먼저 Jira에 티켓을 만들고 키를 받은 후 작업을 시작합니다. 추적 불가능한 변경이 남지 않도록 하기 위함입니다.
+
+## 8. PR 머지 시 자동 전이 (Jira Automation)
+
+PR이 `develop` 또는 `main`에 머지되면 Jira Automation 룰이 해당 티켓을 자동으로 `Done`으로 전이시킵니다. GitHub Actions 같은 코드/시크릿이 **필요 없고**, GitHub for Jira 연동이 전달하는 `Pull request merged` 이벤트만으로 동작합니다.
+
+> **참고**: 과거에 많이 쓰이던 `atlassian/gajira-*` GitHub Action은 Atlassian이 2022년 v3 이후 유지보수 중단(deprecated)했습니다. 현재 Atlassian 공식 권장 경로는 아래의 Jira Automation 룰입니다.
+
+### 동작 조건
+
+- GitHub for Jira 앱이 이 저장소에 연결되어 있어야 합니다 (이미 완료).
+- PR 브랜치명 또는 PR 제목에 `MP-\d+` 키가 포함되어 있어야 Jira가 PR–티켓 매핑을 인식합니다 (섹션 3 규칙 준수).
+- 아래 Automation 룰이 Jira 프로젝트에 **Enabled** 상태여야 합니다.
+
+### 룰 설정 (Jira 관리자 1회 작업)
+
+Jira 프로젝트 → **Project settings → Automation → Create rule**
+
+1. **Trigger**: `Pull request merged`
+2. **Condition (선택)**: Branch/destination이 `develop` 또는 `main`으로 시작
+3. **Action**: `Transition issue` → Destination status `Done`
+4. **Scope**: Single project (해당 프로젝트만) — 영향 범위 최소화
+5. Rule 이름 예: `PR merged → Done`. **Enable** 후 저장.
+
+실행 로그는 **Project settings → Automation → Audit log**에서 확인할 수 있습니다.
+
+### Jira 워크플로우 측 요구사항
+
+- 현재 상태(`To Do`/`In Progress`/`In Review`) 어디에서든 `Done`으로 가는 transition이 프로젝트 워크플로우에 정의되어 있어야 합니다.
+
+### 실패 케이스
+
+| 증상 | 원인 | 해결 |
+|------|------|------|
+| PR은 Jira Development 패널에 보이는데 상태 전이 없음 | Automation 룰 비활성 또는 조건 불일치 | Audit log 확인, 룰 Enable 상태 확인 |
+| Jira Development 패널 자체가 비어 있음 | 브랜치명/PR 제목에 `MP-\d+` 없음 또는 GitHub for Jira 미연결 | 네이밍 규칙 준수, 연동 상태 확인 |
+| Audit log에 `Transition is not valid` | 현재 상태에서 `Done`으로 가는 워크플로우 transition 미정의 | Jira 프로젝트 워크플로우 점검 |
+| 다른 Destination 이름(`Closed`, `완료` 등) 사용 | 룰의 Destination status 값 불일치 | 룰의 Transition 대상 상태를 프로젝트에 맞춰 변경 |
