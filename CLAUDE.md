@@ -166,11 +166,13 @@ if (!duoPost.isOwner(memberId)) {
 **브랜치 전략**: Git Flow 변형 — `feature/*`, `fix/*`, `refactor/*` → `develop` → `main`
 **Hotfix 플로우**: `hotfix/*` → `main` → `develop` 역반영
 
+> Jira 키(`MP-*`)를 포함한 브랜치 네이밍, 커밋 규칙, 티켓 생명주기는 [`docs/workflow.md`](docs/workflow.md) 참조.
+
 ### 커밋 메시지 컨벤션
 
-- 형식: `<type>: <한글 설명>`
+- 형식: `<type>: MP-<번호> <한글 설명>` (Jira 키 필수)
 - 타입: `feat`, `fix`, `refactor`, `docs`, `chore`
-- 예시: `feat: 소환사별 매치 목록 배치 조회 API 추가`
+- 예시: `feat: MP-1 소환사별 매치 목록 배치 조회 API 추가`
 
 ## 설정
 
