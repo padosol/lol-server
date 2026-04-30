@@ -1,0 +1,7 @@
+stats:
+  datasource: ${STATS_DATASOURCE:clickhouse}
+
+bigquery:
+  project-id: ${BIGQUERY_PROJECT_ID:lol-server-local}
+  dataset: ${BIGQUERY_DATASET:lol_stats}
+  credentials-location: ${BIGQUERY_CREDENTIALS_LOCATION:}

@@ -22,6 +22,7 @@ spring:
       - postgresql-local.yml
       - redis-local.yml
       - clickhouse-local.yml
+      - bigquery-local.yml
       - logging-local.yml
 
 ---
@@ -38,6 +39,7 @@ spring:
       - postgresql-dev.yml
       - redis-dev.yml
       - clickhouse-dev.yml
+      - bigquery-dev.yml
 
 ---
 spring:
@@ -53,3 +55,4 @@ spring:
       - postgresql-prod.yml
       - redis-prod.yml
       - clickhouse-prod.yml
+      - bigquery-prod.yml
