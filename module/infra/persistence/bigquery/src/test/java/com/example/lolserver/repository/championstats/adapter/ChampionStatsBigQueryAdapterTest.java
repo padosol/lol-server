@@ -37,15 +37,15 @@ class ChampionStatsBigQueryAdapterTest {
 
     @BeforeEach
     void setUp() {
-        BigQueryProperties properties = new BigQueryProperties("test-project", "lol_stats", null);
+        BigQueryProperties properties = new BigQueryProperties("test-project", "lol_analytics", null);
         adapter = new ChampionStatsBigQueryAdapter(bigQuery, properties);
     }
 
-    @DisplayName("챔피언 승률 조회 시 BigQuery에 named parameter를 바인딩한다")
+    @DisplayName("챔피언 승률 조회 시 named parameter를 BigQuery 스키마(patch_version_int, tier_bucket)에 맞춰 바인딩한다")
     @Test
     void getChampionWinRates() throws InterruptedException {
         // given
-        TierFilter tierFilter = TierFilter.of("EMERALD");
+        TierFilter tierFilter = TierFilter.of("EMERALD+");
         FieldValueList row = mock(FieldValueList.class);
         given(row.get("team_position")).willReturn(FieldValue.of(FieldValue.Attribute.PRIMITIVE, "MIDDLE"));
         given(row.get("total_games")).willReturn(FieldValue.of(FieldValue.Attribute.PRIMITIVE, "1000"));
@@ -70,18 +70,21 @@ class ChampionStatsBigQueryAdapterTest {
         ArgumentCaptor<QueryJobConfiguration> captor = ArgumentCaptor.forClass(QueryJobConfiguration.class);
         verify(bigQuery).query(captor.capture());
         Map<String, QueryParameterValue> params = captor.getValue().getNamedParameters();
-        assertThat(params).containsKeys("championId", "patch", "platform", "tiers");
+        assertThat(params).containsKeys("championId", "patch", "platform", "tierBuckets");
         assertThat(params.get("championId").getValue()).isEqualTo("13");
-        assertThat(params.get("patch").getValue()).isEqualTo("16.1");
+        assertThat(params.get("patch").getValue()).isEqualTo("1601");
         assertThat(params.get("platform").getValue()).isEqualTo("KR");
-        assertThat(captor.getValue().getQuery()).contains("`lol_stats.match_participant_local`");
+        assertThat(params.get("tierBuckets").getArrayValues())
+                .extracting(QueryParameterValue::getValue)
+                .contains("6000", "7000", "8000", "9000", "10000");
+        assertThat(captor.getValue().getQuery()).contains("`lol_analytics.mv_champion_pick_stats`");
     }
 
     @DisplayName("포지션별 챔피언 통계를 Map 형태로 그룹핑한다")
     @Test
     void getChampionStatsByPosition() throws InterruptedException {
         // given
-        TierFilter tierFilter = TierFilter.of("EMERALD");
+        TierFilter tierFilter = TierFilter.of("EMERALD+");
         FieldValueList topRow = stubRateRow("TOP", "266", "0.52", "0.08", "0.05", "1500");
         FieldValueList topRow2 = stubRateRow("TOP", "122", "0.48", "0.06", "0.03", "1200");
         FieldValueList jungleRow = stubRateRow("JUNGLE", "64", "0.51", "0.10", "0.07", "2000");
@@ -103,11 +106,32 @@ class ChampionStatsBigQueryAdapterTest {
         assertThat(grouped.get("JUNGLE").get(0).championId()).isEqualTo(64);
     }
 
+    @DisplayName("단일 티어 필터는 해당 티어의 tier_bucket 값 하나만 바인딩한다")
+    @Test
+    void singleTierFilterBindsSingleBucket() throws InterruptedException {
+        // given
+        TierFilter tierFilter = TierFilter.of("EMERALD");
+        TableResult result = mock(TableResult.class);
+        given(result.iterateAll()).willReturn(List.of());
+        given(bigQuery.query(any(QueryJobConfiguration.class))).willReturn(result);
+
+        // when
+        adapter.getChampionWinRates(13, "16.1", "KR", tierFilter);
+
+        // then
+        ArgumentCaptor<QueryJobConfiguration> captor = ArgumentCaptor.forClass(QueryJobConfiguration.class);
+        verify(bigQuery).query(captor.capture());
+        Map<String, QueryParameterValue> params = captor.getValue().getNamedParameters();
+        assertThat(params.get("tierBuckets").getArrayValues())
+                .extracting(QueryParameterValue::getValue)
+                .containsExactly("6000");
+    }
+
     @DisplayName("BigQuery 쿼리가 인터럽트되면 IllegalStateException을 던지고 인터럽트 플래그를 복원한다")
     @Test
     void queryInterrupted() throws InterruptedException {
         // given
-        TierFilter tierFilter = TierFilter.of("EMERALD");
+        TierFilter tierFilter = TierFilter.of("EMERALD+");
         given(bigQuery.query(any(QueryJobConfiguration.class)))
                 .willThrow(new InterruptedException("test interrupt"));
 

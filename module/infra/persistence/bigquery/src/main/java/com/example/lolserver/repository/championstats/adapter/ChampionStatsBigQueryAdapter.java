@@ -1,5 +1,6 @@
 package com.example.lolserver.repository.championstats.adapter;
 
+import com.example.lolserver.Tier;
 import com.example.lolserver.TierFilter;
 import com.example.lolserver.config.BigQueryProperties;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
@@ -47,7 +48,7 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
     @Override
     public List<ChampionWinRateReadModel> getChampionWinRates(
             int championId, String patch, String platformId, TierFilter tierFilter) {
-        String sql = ChampionStatsBigQuerySqls.WIN_RATES.formatted(table("match_participant_local"));
+        String sql = ChampionStatsBigQuerySqls.WIN_RATES.formatted(table("mv_champion_pick_stats"));
 
         QueryJobConfiguration job = baseQuery(sql, patch, platformId, tierFilter)
                 .addNamedParameter("championId", QueryParameterValue.int64(championId))
@@ -77,7 +78,7 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
             int championId, String patch, String platformId,
             TierFilter tierFilter, String position, String orderDirection) {
         String sql = ChampionStatsBigQuerySqls.MATCHUPS
-                .formatted(table("champion_matchup_stats_agg"), orderDirection);
+                .formatted(table("mv_champion_matchup_stats"), orderDirection);
 
         QueryJobConfiguration job = championPositionQuery(sql, patch, platformId, tierFilter, championId, position)
                 .build();
@@ -93,7 +94,7 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
     @Override
     public List<ChampionRuneBuildReadModel> getChampionRuneBuilds(
             int championId, String patch, String platformId, TierFilter tierFilter, String position) {
-        String sql = ChampionStatsBigQuerySqls.RUNE_BUILDS.formatted(table("champion_rune_stats_agg"));
+        String sql = ChampionStatsBigQuerySqls.RUNE_BUILDS.formatted(table("mv_champion_rune_stats"));
 
         QueryJobConfiguration job = championPositionQuery(sql, patch, platformId, tierFilter, championId, position)
                 .build();
@@ -119,7 +120,7 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
     @Override
     public List<ChampionSpellStatsReadModel> getChampionSpellStats(
             int championId, String patch, String platformId, TierFilter tierFilter, String position) {
-        String sql = ChampionStatsBigQuerySqls.SPELL_STATS.formatted(table("champion_spell_stats_agg"));
+        String sql = ChampionStatsBigQuerySqls.SPELL_STATS.formatted(table("mv_champion_spell_stats"));
 
         QueryJobConfiguration job = championPositionQuery(sql, patch, platformId, tierFilter, championId, position)
                 .build();
@@ -136,7 +137,7 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
     @Override
     public List<ChampionSkillBuildReadModel> getChampionSkillBuilds(
             int championId, String patch, String platformId, TierFilter tierFilter, String position) {
-        String sql = ChampionStatsBigQuerySqls.SKILL_BUILDS.formatted(table("champion_skill_build_stats_agg"));
+        String sql = ChampionStatsBigQuerySqls.SKILL_BUILDS.formatted(table("mv_champion_skill_build_stats"));
 
         QueryJobConfiguration job = championPositionQuery(sql, patch, platformId, tierFilter, championId, position)
                 .build();
@@ -152,7 +153,7 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
     @Override
     public List<ChampionStartItemBuildReadModel> getChampionStartItemBuilds(
             int championId, String patch, String platformId, TierFilter tierFilter, String position) {
-        String sql = ChampionStatsBigQuerySqls.START_ITEM_BUILDS.formatted(table("champion_start_item_stats_agg"));
+        String sql = ChampionStatsBigQuerySqls.START_ITEM_BUILDS.formatted(table("mv_champion_start_item_stats"));
 
         QueryJobConfiguration job = championPositionQuery(sql, patch, platformId, tierFilter, championId, position)
                 .build();
@@ -168,7 +169,7 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
     @Override
     public List<ChampionItemBuildReadModel> getChampionItemBuilds(
             int championId, String patch, String platformId, TierFilter tierFilter, String position) {
-        String sql = ChampionStatsBigQuerySqls.ITEM_BUILDS.formatted(table("champion_item_build_stats_agg"));
+        String sql = ChampionStatsBigQuerySqls.ITEM_BUILDS.formatted(table("mv_champion_item_build_stats"));
 
         QueryJobConfiguration job = championPositionQuery(sql, patch, platformId, tierFilter, championId, position)
                 .build();
@@ -185,8 +186,8 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
     public List<ChampionItemStatsReadModel> getChampionItemStats(
             int championId, String patch, String platformId, TierFilter tierFilter, String position, int itemOrder) {
         String sql = ChampionStatsBigQuerySqls.ITEM_STATS.formatted(
-                table("champion_item_stats_agg"),
-                table("champion_stats_agg"),
+                table("mv_champion_item_stats"),
+                table("mv_champion_pick_stats"),
                 table("legendary_items"));
 
         QueryJobConfiguration job = championPositionQuery(sql, patch, platformId, tierFilter, championId, position)
@@ -206,10 +207,9 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
     public Map<String, List<ChampionRateReadModel>> getChampionStatsByPosition(
             String patch, String platformId, TierFilter tierFilter) {
         String sql = ChampionStatsBigQuerySqls.STATS_BY_POSITION.formatted(
-                table("champion_stats_agg"),
-                table("match_count_agg"),
-                table("champion_bans_agg"),
-                table("match_count_agg"));
+                table("mv_match_count_stats"),
+                table("mv_champion_ban_stats"),
+                table("mv_champion_pick_stats"));
 
         QueryJobConfiguration job = baseQuery(sql, patch, platformId, tierFilter).build();
 
@@ -239,11 +239,10 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
             String sql, String patch, String platformId, TierFilter tierFilter) {
         return QueryJobConfiguration.newBuilder(sql)
                 .setUseLegacySql(false)
-                .addNamedParameter("patch", QueryParameterValue.string(patch))
+                .addNamedParameter("patch", QueryParameterValue.int64(toPatchVersionInt(patch)))
                 .addNamedParameter("platform", QueryParameterValue.string(platformId))
-                .addNamedParameter("tiers", QueryParameterValue.array(
-                        tierFilter.getTierNames().toArray(String[]::new),
-                        StandardSQLTypeName.STRING));
+                .addNamedParameter("tierBuckets", QueryParameterValue.array(
+                        toTierBuckets(tierFilter), StandardSQLTypeName.INT64));
     }
 
     private QueryJobConfiguration.Builder championPositionQuery(
@@ -252,6 +251,26 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
         return baseQuery(sql, patch, platformId, tierFilter)
                 .addNamedParameter("championId", QueryParameterValue.int64(championId))
                 .addNamedParameter("position", QueryParameterValue.string(position));
+    }
+
+    private static long toPatchVersionInt(String patch) {
+        String[] parts = patch.split("\\.");
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Unsupported patch format: " + patch);
+        }
+        try {
+            int major = Integer.parseInt(parts[0]);
+            int minor = Integer.parseInt(parts[1]);
+            return (long) major * 100 + minor;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Unsupported patch format: " + patch, e);
+        }
+    }
+
+    private static Long[] toTierBuckets(TierFilter tierFilter) {
+        return tierFilter.getTierNames().stream()
+                .map(name -> (long) Tier.valueOf(name).getScore())
+                .toArray(Long[]::new);
     }
 
     private static int getInt(FieldValueList row, String column) {
