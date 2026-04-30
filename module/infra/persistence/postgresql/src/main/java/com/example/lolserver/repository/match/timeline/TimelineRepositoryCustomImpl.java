@@ -12,18 +12,34 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TimelineRepositoryCustomImpl implements TimelineRepositoryCustom {
 
+    private static final String EVENT_TYPES_IN_USE =
+            "('SKILL_LEVEL_UP','ITEM_PURCHASED','ITEM_SOLD','ITEM_DESTROYED','ITEM_UNDO')";
+
+    private static final String SELECT_PROJECTION = """
+            SELECT
+                match_id,
+                (data->>'participantId')::int AS participant_id,
+                data->>'type'                 AS type,
+                (data->>'itemId')::int        AS item_id,
+                (data->>'skillSlot')::int     AS skill_slot,
+                data->>'levelUpType'          AS level_up_type,
+                (data->>'beforeId')::int      AS before_id,
+                (data->>'afterId')::int       AS after_id,
+                (data->>'goldGain')::int      AS gold_gain,
+                timestamp
+            FROM timeline_event_frame
+            """;
+
     private final EntityManager entityManager;
 
     @Override
     public List<TimelineEventDTO> selectAllTimelineEventsByMatch(String matchId) {
-        String sql = """
-                SELECT match_id, participant_id, skill_slot AS event_id,
-                       level_up_type AS event_type, timestamp, 'SKILL' AS event_source
-                FROM skill_level_up_event WHERE match_id = :matchId
-                UNION ALL
-                SELECT match_id, participant_id, item_id AS event_id,
-                       type AS event_type, timestamp, 'ITEM' AS event_source
-                FROM item_event WHERE match_id = :matchId
+        String sql = SELECT_PROJECTION + """
+                WHERE match_id = :matchId
+                  AND data->>'participantId' IS NOT NULL
+                  AND data->>'type' IN """ + EVENT_TYPES_IN_USE + """
+
+                ORDER BY timestamp, event_index
                 """;
 
         @SuppressWarnings("unchecked")
@@ -37,14 +53,12 @@ public class TimelineRepositoryCustomImpl implements TimelineRepositoryCustom {
     @LogExecutionTime
     @Override
     public List<TimelineEventDTO> selectTimelineEventsByMatchIds(List<String> matchIds) {
-        String sql = """
-                SELECT match_id, participant_id, skill_slot AS event_id,
-                       level_up_type AS event_type, timestamp, 'SKILL' AS event_source
-                FROM skill_level_up_event WHERE match_id IN (:matchIds)
-                UNION ALL
-                SELECT match_id, participant_id, item_id AS event_id,
-                       type AS event_type, timestamp, 'ITEM' AS event_source
-                FROM item_event WHERE match_id IN (:matchIds)
+        String sql = SELECT_PROJECTION + """
+                WHERE match_id IN (:matchIds)
+                  AND data->>'participantId' IS NOT NULL
+                  AND data->>'type' IN """ + EVENT_TYPES_IN_USE + """
+
+                ORDER BY timestamp, event_index
                 """;
 
         @SuppressWarnings("unchecked")
@@ -59,10 +73,18 @@ public class TimelineRepositoryCustomImpl implements TimelineRepositoryCustom {
         return new TimelineEventDTO(
                 (String) row[0],
                 ((Number) row[1]).intValue(),
-                ((Number) row[2]).intValue(),
-                (String) row[3],
-                ((Number) row[4]).longValue(),
-                (String) row[5]
+                (String) row[2],
+                toNullableInt(row[3]),
+                toNullableInt(row[4]),
+                (String) row[5],
+                toNullableInt(row[6]),
+                toNullableInt(row[7]),
+                toNullableInt(row[8]),
+                ((Number) row[9]).longValue()
         );
+    }
+
+    private Integer toNullableInt(Object raw) {
+        return raw == null ? null : ((Number) raw).intValue();
     }
 }

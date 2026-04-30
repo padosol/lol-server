@@ -224,9 +224,9 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         List<SkillEvents> skillEvents = new ArrayList<>();
 
         for (TimelineEventDTO event : events) {
-            if (TimelineEventDTO.SOURCE_ITEM.equals(event.getEventSource())) {
+            if (event.isItemEvent()) {
                 itemEvents.add(matchMapper.toItemEventsFromTimelineDTO(event));
-            } else if (TimelineEventDTO.SOURCE_SKILL.equals(event.getEventSource())) {
+            } else if (event.isSkillEvent()) {
                 skillEvents.add(matchMapper.toSkillEventsFromTimelineDTO(event));
             }
         }
