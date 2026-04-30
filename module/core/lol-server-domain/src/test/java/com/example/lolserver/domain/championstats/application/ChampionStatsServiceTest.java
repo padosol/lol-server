@@ -1,6 +1,7 @@
 package com.example.lolserver.domain.championstats.application;
 
 import com.example.lolserver.TierFilter;
+import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
@@ -83,6 +84,9 @@ class ChampionStatsServiceTest {
             List<ChampionStartItemBuildReadModel> middleStartItemBuilds = List.of(
                 new ChampionStartItemBuildReadModel("1056,2003", 600, 0.51, 0.6)
             );
+            List<ChampionBootBuildReadModel> middleBootBuilds = List.of(
+                new ChampionBootBuildReadModel(3020, 700, 0.53, 0.7)
+            );
             List<ChampionItemBuildReadModel> middleItemBuilds = List.of(
                 new ChampionItemBuildReadModel("3089,3157,3165", 500, 0.52, 0.5)
             );
@@ -119,6 +123,8 @@ class ChampionStatsServiceTest {
                 .willReturn(middleSkillBuilds);
             given(championStatsQueryPort.getChampionStartItemBuilds(championId, patch, platformId, tierFilter, "MIDDLE"))
                 .willReturn(middleStartItemBuilds);
+            given(championStatsQueryPort.getChampionBootBuilds(championId, patch, platformId, tierFilter, "MIDDLE"))
+                .willReturn(middleBootBuilds);
             given(championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tierFilter, "MIDDLE"))
                 .willReturn(middleItemBuilds);
             given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tierFilter, "MIDDLE", 1))
@@ -140,6 +146,8 @@ class ChampionStatsServiceTest {
             given(championStatsQueryPort.getChampionSkillBuilds(championId, patch, platformId, tierFilter, "TOP"))
                 .willReturn(List.of());
             given(championStatsQueryPort.getChampionStartItemBuilds(championId, patch, platformId, tierFilter, "TOP"))
+                .willReturn(List.of());
+            given(championStatsQueryPort.getChampionBootBuilds(championId, patch, platformId, tierFilter, "TOP"))
                 .willReturn(List.of());
             given(championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tierFilter, "TOP"))
                 .willReturn(List.of());
@@ -174,6 +182,8 @@ class ChampionStatsServiceTest {
             assertThat(middleStats.skillBuilds()).hasSize(1);
             assertThat(middleStats.startItemBuilds()).hasSize(1);
             assertThat(middleStats.startItemBuilds().get(0).startItems()).isEqualTo("1056,2003");
+            assertThat(middleStats.bootBuilds()).hasSize(1);
+            assertThat(middleStats.bootBuilds().get(0).bootId()).isEqualTo(3020);
             assertThat(middleStats.itemBuilds()).hasSize(1);
             assertThat(middleStats.itemStatsByOrder()).hasSize(3);
 

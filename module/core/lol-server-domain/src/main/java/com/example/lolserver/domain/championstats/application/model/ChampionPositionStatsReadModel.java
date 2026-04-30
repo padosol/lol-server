@@ -13,6 +13,7 @@ public record ChampionPositionStatsReadModel(
     List<ChampionSpellStatsReadModel> spellStats,
     List<ChampionSkillBuildReadModel> skillBuilds,
     List<ChampionStartItemBuildReadModel> startItemBuilds,
+    List<ChampionBootBuildReadModel> bootBuilds,
     List<ChampionItemBuildReadModel> itemBuilds,
     Map<Integer, List<ChampionItemStatsReadModel>> itemStatsByOrder
 ) {}

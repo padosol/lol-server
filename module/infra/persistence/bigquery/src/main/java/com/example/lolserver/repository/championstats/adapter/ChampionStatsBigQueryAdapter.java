@@ -3,6 +3,7 @@ package com.example.lolserver.repository.championstats.adapter;
 import com.example.lolserver.Tier;
 import com.example.lolserver.TierFilter;
 import com.example.lolserver.config.BigQueryProperties;
+import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
@@ -160,6 +161,22 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
 
         return query(job, row -> new ChampionStartItemBuildReadModel(
                 row.get("start_items").getStringValue(),
+                row.get("games").getLongValue(),
+                row.get("win_rate").getDoubleValue(),
+                row.get("pick_rate").getDoubleValue()
+        ));
+    }
+
+    @Override
+    public List<ChampionBootBuildReadModel> getChampionBootBuilds(
+            int championId, String patch, String platformId, TierFilter tierFilter, String position) {
+        String sql = ChampionStatsBigQuerySqls.BOOT_BUILDS.formatted(table("mv_champion_boot_stats"));
+
+        QueryJobConfiguration job = championPositionQuery(sql, patch, platformId, tierFilter, championId, position)
+                .build();
+
+        return query(job, row -> new ChampionBootBuildReadModel(
+                getInt(row, "boot_id"),
                 row.get("games").getLongValue(),
                 row.get("win_rate").getDoubleValue(),
                 row.get("pick_rate").getDoubleValue()

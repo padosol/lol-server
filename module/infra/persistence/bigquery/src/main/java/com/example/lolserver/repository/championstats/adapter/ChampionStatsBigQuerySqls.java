@@ -153,6 +153,32 @@ final class ChampionStatsBigQuerySqls {
             LIMIT 2
             """;
 
+    static final String BOOT_BUILDS = """
+            WITH
+                agg AS (
+                    SELECT boot_id,
+                           SUM(pick_count) AS pick_count,
+                           SUM(win_count)  AS win_count
+                    FROM %s
+                    WHERE patch_version_int = @patch
+                      AND platform_id = @platform
+                      AND tier_bucket IN UNNEST(@tierBuckets)
+                      AND champion_id = @championId
+                      AND individual_position = @position
+                    GROUP BY boot_id
+                    HAVING pick_count >= 30
+                ),
+                total AS (SELECT SUM(pick_count) AS total_games FROM agg)
+            SELECT a.boot_id,
+                   a.pick_count                           AS games,
+                   SAFE_DIVIDE(a.win_count, a.pick_count) AS win_rate,
+                   SAFE_DIVIDE(a.pick_count, t.total_games) AS pick_rate
+            FROM agg AS a
+            CROSS JOIN total AS t
+            ORDER BY a.pick_count DESC
+            LIMIT 2
+            """;
+
     static final String ITEM_BUILDS = """
             WITH
                 agg AS (

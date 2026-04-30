@@ -1,6 +1,7 @@
 package com.example.lolserver.repository.championstats.adapter;
 
 import com.example.lolserver.TierFilter;
+import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
@@ -191,6 +192,28 @@ class ChampionStatsClickHouseAdapterTest {
         // then
         assertThat(result).hasSize(1);
         assertThat(result.get(0).startItems()).isEqualTo("1056,2003");
+    }
+
+    @DisplayName("챔피언 신발 빌드 통계를 조회한다")
+    @Test
+    @SuppressWarnings("unchecked")
+    void getChampionBootBuilds() {
+        // given
+        TierFilter tierFilter = TierFilter.of("EMERALD");
+        List<ChampionBootBuildReadModel> expected = List.of(
+            new ChampionBootBuildReadModel(3047, 700, 0.53, 0.7)
+        );
+        given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
+            .willReturn(expected);
+
+        // when
+        List<ChampionBootBuildReadModel> result =
+            adapter.getChampionBootBuilds(13, "16.1", "KR", tierFilter, "MIDDLE");
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).bootId()).isEqualTo(3047);
+        assertThat(result.get(0).winRate()).isEqualTo(0.53);
     }
 
     @DisplayName("챔피언 3코어 아이템 빌드 통계를 조회한다")

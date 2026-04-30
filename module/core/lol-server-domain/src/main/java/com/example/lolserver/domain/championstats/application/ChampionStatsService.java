@@ -1,6 +1,7 @@
 package com.example.lolserver.domain.championstats.application;
 
 import com.example.lolserver.TierFilter;
+import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
@@ -86,6 +87,8 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
             championStatsQueryPort.getChampionSkillBuilds(championId, patch, platformId, tierFilter, position);
         List<ChampionStartItemBuildReadModel> startItemBuilds =
             championStatsQueryPort.getChampionStartItemBuilds(championId, patch, platformId, tierFilter, position);
+        List<ChampionBootBuildReadModel> bootBuilds =
+            championStatsQueryPort.getChampionBootBuilds(championId, patch, platformId, tierFilter, position);
         List<ChampionItemBuildReadModel> itemBuilds =
             championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tierFilter, position);
 
@@ -106,7 +109,7 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
             winRate.totalWinRate(),
             winRate.totalGames(),
             strongMatchups, weakMatchups, runeBuilds, spellStats, skillBuilds,
-            startItemBuilds, itemBuilds, itemStatsByOrder
+            startItemBuilds, bootBuilds, itemBuilds, itemStatsByOrder
         );
     }
 

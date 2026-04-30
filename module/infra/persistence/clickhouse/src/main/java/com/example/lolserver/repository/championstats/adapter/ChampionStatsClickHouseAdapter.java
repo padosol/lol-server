@@ -1,6 +1,7 @@
 package com.example.lolserver.repository.championstats.adapter;
 
 import com.example.lolserver.TierFilter;
+import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
@@ -293,6 +294,44 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new ChampionStartItemBuildReadModel(
                         rs.getString("start_items"),
+                        rs.getLong("games"),
+                        rs.getDouble("win_rate"),
+                        rs.getDouble("pick_rate")
+                ));
+    }
+
+    @Override
+    public List<ChampionBootBuildReadModel> getChampionBootBuilds(
+            int championId, String patch, String platformId, TierFilter tierFilter, String position) {
+        String sql = """
+                WITH
+                    boot_stats AS (
+                        SELECT
+                            boot_id,
+                            sum(games) AS games,
+                            sum(wins)  AS wins
+                        FROM champion_boot_stats_agg
+                        WHERE patch_version = %1$s AND platform_id = %2$s AND %3$s
+                              AND champion_id = %4$d AND team_position = %5$s
+                        GROUP BY boot_id
+                    ),
+                    total AS (
+                        SELECT sum(games) AS total_games FROM boot_stats
+                    )
+                SELECT
+                    bs.boot_id,
+                    bs.games,
+                    bs.wins / bs.games       AS win_rate,
+                    bs.games / t.total_games AS pick_rate
+                FROM boot_stats AS bs
+                CROSS JOIN total AS t
+                ORDER BY bs.games DESC
+                LIMIT 2
+                """.formatted(quote(patch), quote(platformId), tierInClause(tierFilter), championId, quote(position));
+
+        return clickHouseJdbcTemplate.query(sql,
+                (rs, rowNum) -> new ChampionBootBuildReadModel(
+                        rs.getInt("boot_id"),
                         rs.getLong("games"),
                         rs.getDouble("win_rate"),
                         rs.getDouble("pick_rate")
