@@ -137,7 +137,6 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                             primary_style_id, sub_style_id,
                             primary_perk0, primary_perk1, primary_perk2, primary_perk3,
                             sub_perk0, sub_perk1,
-                            stat_perk_defense, stat_perk_flex, stat_perk_offense,
                             sum(games) AS games,
                             sum(wins)  AS wins
                         FROM champion_rune_stats_agg
@@ -145,8 +144,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                               AND champion_id = %4$d AND team_position = %5$s
                         GROUP BY primary_style_id, sub_style_id,
                                  primary_perk0, primary_perk1, primary_perk2, primary_perk3,
-                                 sub_perk0, sub_perk1,
-                                 stat_perk_defense, stat_perk_flex, stat_perk_offense
+                                 sub_perk0, sub_perk1
                     ),
                     total AS (
                         SELECT sum(games) AS total_games FROM rune_stats
@@ -155,7 +153,6 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                     rs.primary_style_id, rs.sub_style_id,
                     rs.primary_perk0, rs.primary_perk1, rs.primary_perk2, rs.primary_perk3,
                     rs.sub_perk0, rs.sub_perk1,
-                    rs.stat_perk_defense, rs.stat_perk_flex, rs.stat_perk_offense,
                     rs.games,
                     rs.wins / rs.games       AS win_rate,
                     rs.games / t.total_games AS pick_rate
@@ -175,9 +172,6 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                         rs.getInt("primary_perk3"),
                         rs.getInt("sub_perk0"),
                         rs.getInt("sub_perk1"),
-                        rs.getInt("stat_perk_defense"),
-                        rs.getInt("stat_perk_flex"),
-                        rs.getInt("stat_perk_offense"),
                         rs.getLong("games"),
                         rs.getDouble("win_rate"),
                         rs.getDouble("pick_rate")

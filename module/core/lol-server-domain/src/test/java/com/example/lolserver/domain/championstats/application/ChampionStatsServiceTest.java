@@ -73,7 +73,7 @@ class ChampionStatsServiceTest {
 
             // MIDDLE 포지션 상세 통계
             List<ChampionRuneBuildReadModel> middleRuneBuilds = List.of(
-                new ChampionRuneBuildReadModel(8100, 8300, 8112, 8139, 8143, 8135, 8304, 8345, 5002, 5008, 5005, 300, 0.5333, 0.6)
+                new ChampionRuneBuildReadModel(8100, 8300, 8112, 8139, 8143, 8135, 8304, 8345, 300, 0.5333, 0.6)
             );
             List<ChampionSpellStatsReadModel> middleSpellStats = List.of(
                 new ChampionSpellStatsReadModel(4, 14, 800, 0.52, 0.8)

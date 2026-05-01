@@ -70,7 +70,7 @@ class ChampionStatsControllerTest extends RestDocsSupport {
 
         ChampionMatchupReadModel matchup = new ChampionMatchupReadModel(86, 200, 0.55, 0.4);
         ChampionRuneBuildReadModel runeBuild = new ChampionRuneBuildReadModel(
-                8000, 8400, 8010, 9111, 9104, 8299, 8446, 8451, 5002, 5008, 5005, 250, 0.56, 0.5
+                8000, 8400, 8010, 9111, 9104, 8299, 8446, 8451, 250, 0.56, 0.5
         );
         ChampionSpellStatsReadModel spellStats = new ChampionSpellStatsReadModel(4, 14, 800, 0.52, 0.8);
         ChampionSkillBuildReadModel skillBuild = new ChampionSkillBuildReadModel(
@@ -160,9 +160,6 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.positions[].runeBuilds[].primaryPerk3").type(JsonFieldType.NUMBER).description("주 룬 슬롯 3"),
                                 fieldWithPath("data.positions[].runeBuilds[].subPerk0").type(JsonFieldType.NUMBER).description("보조 룬 슬롯 0"),
                                 fieldWithPath("data.positions[].runeBuilds[].subPerk1").type(JsonFieldType.NUMBER).description("보조 룬 슬롯 1"),
-                                fieldWithPath("data.positions[].runeBuilds[].statPerkDefense").type(JsonFieldType.NUMBER).description("방어 스탯 룬"),
-                                fieldWithPath("data.positions[].runeBuilds[].statPerkFlex").type(JsonFieldType.NUMBER).description("유연 스탯 룬"),
-                                fieldWithPath("data.positions[].runeBuilds[].statPerkOffense").type(JsonFieldType.NUMBER).description("공격 스탯 룬"),
                                 fieldWithPath("data.positions[].runeBuilds[].games").type(JsonFieldType.NUMBER).description("게임 수"),
                                 fieldWithPath("data.positions[].runeBuilds[].winRate").type(JsonFieldType.NUMBER).description("승률"),
                                 fieldWithPath("data.positions[].runeBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),

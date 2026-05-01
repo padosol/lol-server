@@ -109,9 +109,6 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
                 getInt(row, "primary_perk3"),
                 getInt(row, "sub_perk0"),
                 getInt(row, "sub_perk1"),
-                getInt(row, "stat_perk_defense"),
-                getInt(row, "stat_perk_flex"),
-                getInt(row, "stat_perk_offense"),
                 row.get("games").getLongValue(),
                 row.get("win_rate").getDoubleValue(),
                 row.get("pick_rate").getDoubleValue()

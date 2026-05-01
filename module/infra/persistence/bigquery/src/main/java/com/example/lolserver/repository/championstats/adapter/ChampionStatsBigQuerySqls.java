@@ -48,7 +48,6 @@ final class ChampionStatsBigQuerySqls {
                     SELECT primary_style_id, sub_style_id,
                            primary_perk0, primary_perk1, primary_perk2, primary_perk3,
                            sub_perk0, sub_perk1,
-                           stat_perk_defense, stat_perk_flex, stat_perk_offense,
                            SUM(pick_count) AS pick_count,
                            SUM(win_count)  AS win_count
                     FROM %s
@@ -59,14 +58,12 @@ final class ChampionStatsBigQuerySqls {
                       AND individual_position = @position
                     GROUP BY primary_style_id, sub_style_id,
                              primary_perk0, primary_perk1, primary_perk2, primary_perk3,
-                             sub_perk0, sub_perk1,
-                             stat_perk_defense, stat_perk_flex, stat_perk_offense
+                             sub_perk0, sub_perk1
                 ),
                 total AS (SELECT SUM(pick_count) AS total_games FROM agg)
             SELECT a.primary_style_id, a.sub_style_id,
                    a.primary_perk0, a.primary_perk1, a.primary_perk2, a.primary_perk3,
                    a.sub_perk0, a.sub_perk1,
-                   a.stat_perk_defense, a.stat_perk_flex, a.stat_perk_offense,
                    a.pick_count                           AS games,
                    SAFE_DIVIDE(a.win_count, a.pick_count) AS win_rate,
                    SAFE_DIVIDE(a.pick_count, t.total_games) AS pick_rate

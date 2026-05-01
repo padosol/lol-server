@@ -119,7 +119,7 @@ class ChampionStatsClickHouseAdapterTest {
         // given
         TierFilter tierFilter = TierFilter.of("EMERALD");
         List<ChampionRuneBuildReadModel> expected = List.of(
-            new ChampionRuneBuildReadModel(8100, 8300, 8112, 8139, 8143, 8135, 8304, 8345, 5002, 5008, 5005, 300, 0.5333, 0.6)
+            new ChampionRuneBuildReadModel(8100, 8300, 8112, 8139, 8143, 8135, 8304, 8345, 300, 0.5333, 0.6)
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
             .willReturn(expected);
