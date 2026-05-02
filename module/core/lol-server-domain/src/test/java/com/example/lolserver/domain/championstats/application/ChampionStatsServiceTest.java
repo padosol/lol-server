@@ -3,7 +3,6 @@ package com.example.lolserver.domain.championstats.application;
 import com.example.lolserver.TierFilter;
 import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
-import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionPositionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
@@ -90,15 +89,6 @@ class ChampionStatsServiceTest {
             List<ChampionItemBuildReadModel> middleItemBuilds = List.of(
                 new ChampionItemBuildReadModel("3089,3157,3165", 500, 0.52, 0.5)
             );
-            List<ChampionItemStatsReadModel> middleItemStats1 = List.of(
-                new ChampionItemStatsReadModel(3089, "Rabadon's Deathcap", 400, 0.55, 0.4)
-            );
-            List<ChampionItemStatsReadModel> middleItemStats2 = List.of(
-                new ChampionItemStatsReadModel(3157, "Zhonya's Hourglass", 350, 0.53, 0.35)
-            );
-            List<ChampionItemStatsReadModel> middleItemStats3 = List.of(
-                new ChampionItemStatsReadModel(3165, "Morellonomicon", 200, 0.50, 0.2)
-            );
 
             List<ChampionMatchupReadModel> middleStrongMatchups = List.of(
                 new ChampionMatchupReadModel(7, 120, 0.5417, 0.12),
@@ -127,12 +117,6 @@ class ChampionStatsServiceTest {
                 .willReturn(middleBootBuilds);
             given(championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tierFilter, "MIDDLE"))
                 .willReturn(middleItemBuilds);
-            given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tierFilter, "MIDDLE", 1))
-                .willReturn(middleItemStats1);
-            given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tierFilter, "MIDDLE", 2))
-                .willReturn(middleItemStats2);
-            given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tierFilter, "MIDDLE", 3))
-                .willReturn(middleItemStats3);
 
             // TOP 포지션 상세 통계
             given(championStatsQueryPort.getStrongMatchups(championId, patch, platformId, tierFilter, "TOP"))
@@ -150,12 +134,6 @@ class ChampionStatsServiceTest {
             given(championStatsQueryPort.getChampionBootBuilds(championId, patch, platformId, tierFilter, "TOP"))
                 .willReturn(List.of());
             given(championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tierFilter, "TOP"))
-                .willReturn(List.of());
-            given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tierFilter, "TOP", 1))
-                .willReturn(List.of());
-            given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tierFilter, "TOP", 2))
-                .willReturn(List.of());
-            given(championStatsQueryPort.getChampionItemStats(championId, patch, platformId, tierFilter, "TOP", 3))
                 .willReturn(List.of());
 
             // when
@@ -185,7 +163,6 @@ class ChampionStatsServiceTest {
             assertThat(middleStats.bootBuilds()).hasSize(1);
             assertThat(middleStats.bootBuilds().get(0).bootId()).isEqualTo(3020);
             assertThat(middleStats.itemBuilds()).hasSize(1);
-            assertThat(middleStats.itemStatsByOrder()).hasSize(3);
 
             ChampionPositionStatsReadModel topStats = result.positions().get(1);
             assertThat(topStats.teamPosition()).isEqualTo("TOP");

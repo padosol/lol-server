@@ -3,7 +3,6 @@ package com.example.lolserver.domain.championstats.application;
 import com.example.lolserver.TierFilter;
 import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
-import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionPositionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
@@ -22,7 +21,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -97,19 +95,12 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
         List<ChampionMatchupReadModel> weakMatchups =
             championStatsQueryPort.getWeakMatchups(championId, patch, platformId, tierFilter, position);
 
-        Map<Integer, List<ChampionItemStatsReadModel>> itemStatsByOrder = new LinkedHashMap<>();
-        for (int order = 1; order <= 3; order++) {
-            itemStatsByOrder.put(order,
-                championStatsQueryPort.getChampionItemStats(
-                    championId, patch, platformId, tierFilter, position, order));
-        }
-
         return new ChampionPositionStatsReadModel(
             position,
             winRate.totalWinRate(),
             winRate.totalGames(),
             strongMatchups, weakMatchups, runeBuilds, spellStats, skillBuilds,
-            startItemBuilds, bootBuilds, itemBuilds, itemStatsByOrder
+            startItemBuilds, bootBuilds, itemBuilds
         );
     }
 

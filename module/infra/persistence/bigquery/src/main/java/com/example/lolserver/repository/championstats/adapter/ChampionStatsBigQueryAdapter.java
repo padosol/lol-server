@@ -5,7 +5,6 @@ import com.example.lolserver.TierFilter;
 import com.example.lolserver.config.BigQueryProperties;
 import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
-import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
@@ -49,6 +48,8 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
     @Override
     public List<ChampionWinRateReadModel> getChampionWinRates(
             int championId, String patch, String platformId, TierFilter tierFilter) {
+        log.info("championId: {}, patch: {}, platformId: {}, tierFilter: {}",
+                championId, patch, platformId, tierFilter);
         String sql = ChampionStatsBigQuerySqls.WIN_RATES.formatted(table("mv_champion_pick_stats"));
 
         QueryJobConfiguration job = baseQuery(sql, patch, platformId, tierFilter)
@@ -135,7 +136,7 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
     @Override
     public List<ChampionSkillBuildReadModel> getChampionSkillBuilds(
             int championId, String patch, String platformId, TierFilter tierFilter, String position) {
-        String sql = ChampionStatsBigQuerySqls.SKILL_BUILDS.formatted(table("mv_champion_skill_build_stats"));
+        String sql = ChampionStatsBigQuerySqls.SKILL_BUILDS.formatted(table("mv_champion_skill_stats"));
 
         QueryJobConfiguration job = championPositionQuery(sql, patch, platformId, tierFilter, championId, position)
                 .build();
@@ -190,27 +191,6 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
 
         return query(job, row -> new ChampionItemBuildReadModel(
                 row.get("item_build").getStringValue(),
-                row.get("games").getLongValue(),
-                row.get("win_rate").getDoubleValue(),
-                row.get("pick_rate").getDoubleValue()
-        ));
-    }
-
-    @Override
-    public List<ChampionItemStatsReadModel> getChampionItemStats(
-            int championId, String patch, String platformId, TierFilter tierFilter, String position, int itemOrder) {
-        String sql = ChampionStatsBigQuerySqls.ITEM_STATS.formatted(
-                table("mv_champion_item_stats"),
-                table("mv_champion_pick_stats"),
-                table("legendary_items"));
-
-        QueryJobConfiguration job = championPositionQuery(sql, patch, platformId, tierFilter, championId, position)
-                .addNamedParameter("itemOrder", QueryParameterValue.int64(itemOrder))
-                .build();
-
-        return query(job, row -> new ChampionItemStatsReadModel(
-                getInt(row, "item_id"),
-                row.get("item_name").getStringValue(),
                 row.get("games").getLongValue(),
                 row.get("win_rate").getDoubleValue(),
                 row.get("pick_rate").getDoubleValue()

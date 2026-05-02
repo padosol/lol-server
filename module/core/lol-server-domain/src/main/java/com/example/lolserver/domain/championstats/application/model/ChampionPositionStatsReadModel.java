@@ -1,7 +1,6 @@
 package com.example.lolserver.domain.championstats.application.model;
 
 import java.util.List;
-import java.util.Map;
 
 public record ChampionPositionStatsReadModel(
     String teamPosition,
@@ -14,6 +13,5 @@ public record ChampionPositionStatsReadModel(
     List<ChampionSkillBuildReadModel> skillBuilds,
     List<ChampionStartItemBuildReadModel> startItemBuilds,
     List<ChampionBootBuildReadModel> bootBuilds,
-    List<ChampionItemBuildReadModel> itemBuilds,
-    Map<Integer, List<ChampionItemStatsReadModel>> itemStatsByOrder
+    List<ChampionItemBuildReadModel> itemBuilds
 ) {}

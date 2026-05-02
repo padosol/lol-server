@@ -102,7 +102,9 @@ final class ChampionStatsBigQuerySqls {
     static final String SKILL_BUILDS = """
             WITH
                 agg AS (
-                    SELECT skill_build,
+                    SELECT skill1, skill2, skill3, skill4, skill5,
+                           skill6, skill7, skill8, skill9, skill10,
+                           skill11, skill12, skill13, skill14, skill15,
                            SUM(pick_count) AS pick_count,
                            SUM(win_count)  AS win_count
                     FROM %s
@@ -111,12 +113,18 @@ final class ChampionStatsBigQuerySqls {
                       AND tier_bucket IN UNNEST(@tierBuckets)
                       AND champion_id = @championId
                       AND individual_position = @position
-                    GROUP BY skill_build
+                    GROUP BY skill1, skill2, skill3, skill4, skill5,
+                             skill6, skill7, skill8, skill9, skill10,
+                             skill11, skill12, skill13, skill14, skill15
                 ),
                 total AS (SELECT SUM(pick_count) AS total_games FROM agg)
-            SELECT a.skill_build,
-                   a.pick_count                           AS games,
-                   SAFE_DIVIDE(a.win_count, a.pick_count) AS win_rate,
+            SELECT TO_JSON_STRING([
+                       a.skill1, a.skill2, a.skill3, a.skill4, a.skill5,
+                       a.skill6, a.skill7, a.skill8, a.skill9, a.skill10,
+                       a.skill11, a.skill12, a.skill13, a.skill14, a.skill15
+                   ])                                       AS skill_build,
+                   a.pick_count                             AS games,
+                   SAFE_DIVIDE(a.win_count, a.pick_count)   AS win_rate,
                    SAFE_DIVIDE(a.pick_count, t.total_games) AS pick_rate
             FROM agg AS a
             CROSS JOIN total AS t
@@ -197,42 +205,6 @@ final class ChampionStatsBigQuerySqls {
                    SAFE_DIVIDE(a.win_count, a.pick_count) AS win_rate,
                    SAFE_DIVIDE(a.pick_count, t.total_games) AS pick_rate
             FROM agg AS a
-            CROSS JOIN total AS t
-            ORDER BY a.pick_count DESC
-            LIMIT 2
-            """;
-
-    static final String ITEM_STATS = """
-            WITH
-                agg AS (
-                    SELECT item_id,
-                           SUM(pick_count) AS pick_count,
-                           SUM(win_count)  AS win_count
-                    FROM %s
-                    WHERE patch_version_int = @patch
-                      AND platform_id = @platform
-                      AND tier_bucket IN UNNEST(@tierBuckets)
-                      AND champion_id = @championId
-                      AND individual_position = @position
-                      AND item_order = @itemOrder
-                    GROUP BY item_id
-                ),
-                total AS (
-                    SELECT SUM(pick_count) AS total_games
-                    FROM %s
-                    WHERE patch_version_int = @patch
-                      AND platform_id = @platform
-                      AND tier_bucket IN UNNEST(@tierBuckets)
-                      AND champion_id = @championId
-                      AND individual_position = @position
-                )
-            SELECT a.item_id                              AS item_id,
-                   li.item_name                           AS item_name,
-                   a.pick_count                           AS games,
-                   SAFE_DIVIDE(a.win_count, a.pick_count) AS win_rate,
-                   SAFE_DIVIDE(a.pick_count, t.total_games) AS pick_rate
-            FROM agg AS a
-            INNER JOIN %s AS li USING (item_id)
             CROSS JOIN total AS t
             ORDER BY a.pick_count DESC
             LIMIT 2

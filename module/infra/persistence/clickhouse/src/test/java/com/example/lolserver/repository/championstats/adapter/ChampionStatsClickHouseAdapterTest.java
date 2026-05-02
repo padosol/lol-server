@@ -3,7 +3,6 @@ package com.example.lolserver.repository.championstats.adapter;
 import com.example.lolserver.TierFilter;
 import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
-import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
@@ -234,27 +233,6 @@ class ChampionStatsClickHouseAdapterTest {
         // then
         assertThat(result).hasSize(1);
         assertThat(result.get(0).itemBuild()).isEqualTo("3089,3157,3165");
-    }
-
-    @DisplayName("챔피언 완성 아이템 통계를 코어 순서별로 조회한다")
-    @Test
-    @SuppressWarnings("unchecked")
-    void getChampionItemStats() {
-        // given
-        TierFilter tierFilter = TierFilter.of("EMERALD");
-        List<ChampionItemStatsReadModel> expected = List.of(
-            new ChampionItemStatsReadModel(3089, "Rabadon's Deathcap", 400, 0.55, 0.4)
-        );
-        given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
-            .willReturn(expected);
-
-        // when
-        List<ChampionItemStatsReadModel> result = adapter.getChampionItemStats(13, "16.1", "KR", tierFilter, "MIDDLE", 1);
-
-        // then
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).itemId()).isEqualTo(3089);
-        assertThat(result.get(0).itemName()).isEqualTo("Rabadon's Deathcap");
     }
 
     @DisplayName("포지션별 챔피언 승률/픽률/밴률을 Map으로 반환한다")

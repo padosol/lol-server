@@ -3,7 +3,6 @@ package com.example.lolserver.repository.championstats.adapter;
 import com.example.lolserver.TierFilter;
 import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
-import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
@@ -40,7 +39,8 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
     /**
      * TierFilter의 티어 이름들을 SQL IN 절로 변환합니다.
      *
-     * <p>SQL Injection 안전성: TierFilter.of()가 Tier.valueOf()로 검증하므로
+     * <p>
+     * SQL Injection 안전성: TierFilter.of()가 Tier.valueOf()로 검증하므로
      * tierNames에는 Tier enum에 정의된 값만 포함됩니다.
      * ClickHouse JDBC는 IN 절의 PreparedStatement 바인딩을 지원하지 않아
      * 문자열 삽입 방식을 사용하되, quote()로 이스케이프합니다.
@@ -54,6 +54,8 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
     @Override
     public List<ChampionWinRateReadModel> getChampionWinRates(
             int championId, String patch, String platformId, TierFilter tierFilter) {
+        log.info("championId: {}, patch: {}, platformId: {}, tierFilter: {}",
+                championId, patch, platformId, tierFilter);
         String sql = """
                 SELECT team_position       AS team_position,
                        toInt64(count(*))   AS total_games,
@@ -70,8 +72,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                         rs.getString("team_position"),
                         rs.getLong("total_games"),
                         rs.getLong("total_wins"),
-                        rs.getDouble("total_win_rate")
-                ));
+                        rs.getDouble("total_win_rate")));
     }
 
     @Override
@@ -115,16 +116,15 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                 ORDER BY win_rate %6$s
                 LIMIT 3
                 """.formatted(
-                        quote(patch), quote(platformId), tierInClause(tierFilter),
-                        championId, quote(position), orderDirection);
+                quote(patch), quote(platformId), tierInClause(tierFilter),
+                championId, quote(position), orderDirection);
 
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new ChampionMatchupReadModel(
                         rs.getInt("opponent_champion_id"),
                         rs.getLong("games"),
                         rs.getDouble("win_rate"),
-                        rs.getDouble("pick_rate")
-                ));
+                        rs.getDouble("pick_rate")));
     }
 
     @Override
@@ -174,8 +174,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                         rs.getInt("sub_perk1"),
                         rs.getLong("games"),
                         rs.getDouble("win_rate"),
-                        rs.getDouble("pick_rate")
-                ));
+                        rs.getDouble("pick_rate")));
     }
 
     @Override
@@ -214,8 +213,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                         rs.getInt("summoner2id"),
                         rs.getLong("games"),
                         rs.getDouble("win_rate"),
-                        rs.getDouble("pick_rate")
-                ));
+                        rs.getDouble("pick_rate")));
     }
 
     @Override
@@ -252,8 +250,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                         rs.getString("skill_build"),
                         rs.getLong("games"),
                         rs.getDouble("win_rate"),
-                        rs.getDouble("pick_rate")
-                ));
+                        rs.getDouble("pick_rate")));
     }
 
     @Override
@@ -290,8 +287,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                         rs.getString("start_items"),
                         rs.getLong("games"),
                         rs.getDouble("win_rate"),
-                        rs.getDouble("pick_rate")
-                ));
+                        rs.getDouble("pick_rate")));
     }
 
     @Override
@@ -328,8 +324,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                         rs.getInt("boot_id"),
                         rs.getLong("games"),
                         rs.getDouble("win_rate"),
-                        rs.getDouble("pick_rate")
-                ));
+                        rs.getDouble("pick_rate")));
     }
 
     @Override
@@ -363,51 +358,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                         rs.getString("item_build"),
                         rs.getLong("games"),
                         rs.getDouble("win_rate"),
-                        rs.getDouble("pick_rate")
-                ));
-    }
-
-    @Override
-    public List<ChampionItemStatsReadModel> getChampionItemStats(
-            int championId, String patch, String platformId, TierFilter tierFilter, String position, int itemOrder) {
-        String tierIn = tierInClause(tierFilter);
-        String sql = """
-                WITH
-                    item_stats AS (
-                        SELECT item_id, sum(games) AS games, sum(wins) AS wins
-                        FROM champion_item_stats_agg
-                        WHERE patch_version = %1$s AND platform_id = %2$s AND %3$s
-                              AND champion_id = %4$d AND team_position = %5$s
-                              AND item_order = %6$d
-                        GROUP BY item_id
-                    ),
-                    total AS (
-                        SELECT sum(games) AS total_games
-                        FROM champion_stats_agg
-                        WHERE patch_version = %1$s AND platform_id = %2$s AND %3$s
-                              AND champion_id = %4$d AND team_position = %5$s
-                    )
-                SELECT
-                    its.item_id              AS item_id,
-                    li.item_name             AS item_name,
-                    its.games                AS games,
-                    its.wins / its.games     AS win_rate,
-                    its.games / t.total_games AS pick_rate
-                FROM item_stats AS its
-                INNER JOIN legendary_items AS li USING (item_id)
-                CROSS JOIN total AS t
-                ORDER BY its.games DESC
-                LIMIT 2
-                """.formatted(quote(patch), quote(platformId), tierIn, championId, quote(position), itemOrder);
-
-        return clickHouseJdbcTemplate.query(sql,
-                (rs, rowNum) -> new ChampionItemStatsReadModel(
-                        rs.getInt("item_id"),
-                        rs.getString("item_name"),
-                        rs.getLong("games"),
-                        rs.getDouble("win_rate"),
-                        rs.getDouble("pick_rate")
-                ));
+                        rs.getDouble("pick_rate")));
     }
 
     @Override
@@ -460,12 +411,10 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                                 rs.getDouble("win_rate"),
                                 rs.getDouble("pick_rate"),
                                 rs.getDouble("ban_rate"),
-                                rs.getLong("total_games")
-                        )
-                )).stream()
+                                rs.getLong("total_games"))))
+                .stream()
                 .collect(Collectors.groupingBy(
                         Map.Entry::getKey,
-                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())
-                ));
+                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
     }
 }
