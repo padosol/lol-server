@@ -32,14 +32,28 @@ final class ChampionStatsBigQuerySqls {
                     HAVING pick_count >= 30
                 ),
                 total AS (SELECT SUM(pick_count) AS total_games FROM agg)
-            SELECT a.matchup_champion_id                  AS opponent_champion_id,
+            SELECT 'TOP'                                  AS rank_type,
+                   a.matchup_champion_id                  AS opponent_champion_id,
                    a.pick_count                           AS games,
                    SAFE_DIVIDE(a.win_count, a.pick_count) AS win_rate,
                    SAFE_DIVIDE(a.pick_count, t.total_games) AS pick_rate
             FROM agg AS a
             CROSS JOIN total AS t
-            ORDER BY win_rate %s, a.pick_count DESC
-            LIMIT 3
+            QUALIFY ROW_NUMBER() OVER (
+                ORDER BY SAFE_DIVIDE(a.win_count, a.pick_count) DESC, a.pick_count DESC
+            ) <= 5
+            UNION ALL
+            SELECT 'BOTTOM'                               AS rank_type,
+                   a.matchup_champion_id                  AS opponent_champion_id,
+                   a.pick_count                           AS games,
+                   SAFE_DIVIDE(a.win_count, a.pick_count) AS win_rate,
+                   SAFE_DIVIDE(a.pick_count, t.total_games) AS pick_rate
+            FROM agg AS a
+            CROSS JOIN total AS t
+            QUALIFY ROW_NUMBER() OVER (
+                ORDER BY SAFE_DIVIDE(a.win_count, a.pick_count) ASC, a.pick_count DESC
+            ) <= 5
+            ORDER BY rank_type, win_rate DESC
             """;
 
     static final String RUNE_BUILDS = """
@@ -70,7 +84,7 @@ final class ChampionStatsBigQuerySqls {
             FROM agg AS a
             CROSS JOIN total AS t
             ORDER BY a.pick_count DESC
-            LIMIT 2
+            LIMIT 5
             """;
 
     static final String SPELL_STATS = """
@@ -96,7 +110,7 @@ final class ChampionStatsBigQuerySqls {
             FROM agg AS a
             CROSS JOIN total AS t
             ORDER BY a.pick_count DESC
-            LIMIT 2
+            LIMIT 3
             """;
 
     static final String SKILL_BUILDS = """
@@ -129,7 +143,7 @@ final class ChampionStatsBigQuerySqls {
             FROM agg AS a
             CROSS JOIN total AS t
             ORDER BY a.pick_count DESC
-            LIMIT 2
+            LIMIT 3
             """;
 
     static final String START_ITEM_BUILDS = """
@@ -155,7 +169,7 @@ final class ChampionStatsBigQuerySqls {
             FROM agg AS a
             CROSS JOIN total AS t
             ORDER BY a.pick_count DESC
-            LIMIT 2
+            LIMIT 5
             """;
 
     static final String BOOT_BUILDS = """
@@ -181,7 +195,7 @@ final class ChampionStatsBigQuerySqls {
             FROM agg AS a
             CROSS JOIN total AS t
             ORDER BY a.pick_count DESC
-            LIMIT 2
+            LIMIT 5
             """;
 
     static final String ITEM_BUILDS = """
@@ -207,7 +221,7 @@ final class ChampionStatsBigQuerySqls {
             FROM agg AS a
             CROSS JOIN total AS t
             ORDER BY a.pick_count DESC
-            LIMIT 2
+            LIMIT 5
             """;
 
     static final String STATS_BY_POSITION = """
@@ -238,18 +252,63 @@ final class ChampionStatsBigQuerySqls {
                       AND platform_id = @platform
                       AND tier_bucket IN UNNEST(@tierBuckets)
                     GROUP BY individual_position, champion_id
+                ),
+                base AS (
+                    SELECT l.individual_position,
+                           l.champion_id,
+                           l.pick_count,
+                           l.win_count,
+                           COALESCE(b.ban_count, 0) AS ban_count,
+                           d.match_count,
+                           SAFE_DIVIDE(l.pick_count, d.match_count) AS pick_rate,
+                           SAFE_DIVIDE(COALESCE(b.ban_count, 0), d.match_count) AS ban_rate,
+                           SAFE_DIVIDE(
+                               l.pick_count + COALESCE(b.ban_count, 0),
+                               d.match_count
+                           ) AS presence,
+                           SAFE_DIVIDE(l.win_count, l.pick_count) AS win_rate,
+                           SAFE_DIVIDE(
+                               (l.win_count + 1.96 * 1.96 / 2) / l.pick_count - 1.96 * SQRT(
+                                   SAFE_DIVIDE(
+                                       l.win_count * (l.pick_count - l.win_count),
+                                       l.pick_count
+                                   ) + 1.96 * 1.96 / 4
+                               ) / l.pick_count,
+                               1 + 1.96 * 1.96 / l.pick_count
+                           ) AS wilson_wr
+                    FROM pick_per_lane AS l
+                    LEFT JOIN ban_per_champ AS b USING (champion_id)
+                    CROSS JOIN denom AS d
+                    WHERE l.pick_count >= 20
+                ),
+                ranked AS (
+                    SELECT *,
+                           PERCENT_RANK() OVER (
+                               PARTITION BY individual_position
+                               ORDER BY wilson_wr
+                           ) AS pct_wilson_wr,
+                           PERCENT_RANK() OVER (
+                               PARTITION BY individual_position
+                               ORDER BY presence
+                           ) AS pct_presence
+                    FROM base
                 )
-            SELECT l.individual_position                                                       AS team_position,
-                   l.champion_id                                                               AS champion_id,
-                   COALESCE(ROUND(SAFE_DIVIDE(l.win_count, l.pick_count), 4), 0)               AS win_rate,
-                   COALESCE(ROUND(SAFE_DIVIDE(l.pick_count, d.match_count), 4), 0)             AS pick_rate,
-                   COALESCE(ROUND(SAFE_DIVIDE(COALESCE(b.ban_count, 0), d.match_count), 4), 0) AS ban_rate,
-                   l.pick_count                                                                AS total_games
-            FROM pick_per_lane AS l
-            CROSS JOIN denom AS d
-            LEFT JOIN ban_per_champ AS b USING (champion_id)
-            WHERE l.pick_count >= 20
-            ORDER BY l.individual_position, l.pick_count DESC
+            SELECT individual_position                            AS team_position,
+                   champion_id                                    AS champion_id,
+                   COALESCE(ROUND(win_rate, 4), 0)                AS win_rate,
+                   COALESCE(ROUND(pick_rate, 4), 0)               AS pick_rate,
+                   COALESCE(ROUND(ban_rate, 4), 0)                AS ban_rate,
+                   pick_count                                     AS total_games,
+                   CASE
+                       WHEN 0.6 * pct_wilson_wr + 0.4 * pct_presence >= 0.97 THEN 'S+'
+                       WHEN 0.6 * pct_wilson_wr + 0.4 * pct_presence >= 0.90 THEN 'S'
+                       WHEN 0.6 * pct_wilson_wr + 0.4 * pct_presence >= 0.75 THEN 'A'
+                       WHEN 0.6 * pct_wilson_wr + 0.4 * pct_presence >= 0.50 THEN 'B'
+                       WHEN 0.6 * pct_wilson_wr + 0.4 * pct_presence >= 0.20 THEN 'C'
+                       ELSE 'D'
+                   END                                            AS tier
+            FROM ranked
+            ORDER BY individual_position, pick_count DESC
             """;
 
     private ChampionStatsBigQuerySqls() {

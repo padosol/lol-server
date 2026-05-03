@@ -77,6 +77,8 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
             ChampionWinRateReadModel winRate) {
         String position = winRate.teamPosition();
 
+        List<ChampionMatchupReadModel> matchups =
+            championStatsQueryPort.getChampionMatchups(championId, patch, platformId, tierFilter, position);
         List<ChampionRuneBuildReadModel> runeBuilds =
             championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tierFilter, position);
         List<ChampionSpellStatsReadModel> spellStats =
@@ -90,16 +92,11 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
         List<ChampionItemBuildReadModel> itemBuilds =
             championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tierFilter, position);
 
-        List<ChampionMatchupReadModel> strongMatchups =
-            championStatsQueryPort.getStrongMatchups(championId, patch, platformId, tierFilter, position);
-        List<ChampionMatchupReadModel> weakMatchups =
-            championStatsQueryPort.getWeakMatchups(championId, patch, platformId, tierFilter, position);
-
         return new ChampionPositionStatsReadModel(
             position,
             winRate.totalWinRate(),
             winRate.totalGames(),
-            strongMatchups, weakMatchups, runeBuilds, spellStats, skillBuilds,
+            matchups, runeBuilds, spellStats, skillBuilds,
             startItemBuilds, bootBuilds, itemBuilds
         );
     }
@@ -124,7 +121,7 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
         List<PositionChampionStatsReadModel> result = groupedByPosition.entrySet().stream()
                 .map(entry -> new PositionChampionStatsReadModel(
                         entry.getKey(),
-                        ChampionTierCalculator.assignTiers(entry.getValue())
+                        assignTiersIfMissing(entry.getValue())
                 ))
                 .toList();
 
@@ -133,5 +130,12 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
         }
 
         return result;
+    }
+
+    private static List<ChampionRateReadModel> assignTiersIfMissing(List<ChampionRateReadModel> champions) {
+        if (!champions.isEmpty() && champions.get(0).tier() != null) {
+            return champions;
+        }
+        return ChampionTierCalculator.assignTiers(champions);
     }
 }

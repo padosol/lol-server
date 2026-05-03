@@ -2,6 +2,7 @@ package com.example.lolserver.repository.championstats.adapter;
 
 import com.example.lolserver.TierFilter;
 import com.example.lolserver.config.BigQueryProperties;
+import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 import com.google.cloud.bigquery.BigQuery;
@@ -80,14 +81,14 @@ class ChampionStatsBigQueryAdapterTest {
         assertThat(captor.getValue().getQuery()).contains("`lol_analytics.mv_champion_pick_stats`");
     }
 
-    @DisplayName("포지션별 챔피언 통계를 Map 형태로 그룹핑한다")
+    @DisplayName("포지션별 챔피언 통계를 Map으로 그룹핑하고 BQ가 산정한 tier 라벨을 그대로 전달한다")
     @Test
     void getChampionStatsByPosition() throws InterruptedException {
         // given
         TierFilter tierFilter = TierFilter.of("EMERALD+");
-        FieldValueList topRow = stubRateRow("TOP", "266", "0.52", "0.08", "0.05", "1500");
-        FieldValueList topRow2 = stubRateRow("TOP", "122", "0.48", "0.06", "0.03", "1200");
-        FieldValueList jungleRow = stubRateRow("JUNGLE", "64", "0.51", "0.10", "0.07", "2000");
+        FieldValueList topRow = stubRateRow("TOP", "266", "0.52", "0.08", "0.05", "1500", "S+");
+        FieldValueList topRow2 = stubRateRow("TOP", "122", "0.48", "0.06", "0.03", "1200", "B");
+        FieldValueList jungleRow = stubRateRow("JUNGLE", "64", "0.51", "0.10", "0.07", "2000", "A");
 
         TableResult result = mock(TableResult.class);
         given(result.iterateAll()).willReturn(List.of(topRow, topRow2, jungleRow));
@@ -102,8 +103,11 @@ class ChampionStatsBigQueryAdapterTest {
         assertThat(grouped.get("TOP")).hasSize(2);
         assertThat(grouped.get("TOP").get(0).championId()).isEqualTo(266);
         assertThat(grouped.get("TOP").get(0).winRate()).isEqualTo(0.52);
+        assertThat(grouped.get("TOP").get(0).tier()).isEqualTo("S+");
+        assertThat(grouped.get("TOP").get(1).tier()).isEqualTo("B");
         assertThat(grouped.get("JUNGLE")).hasSize(1);
         assertThat(grouped.get("JUNGLE").get(0).championId()).isEqualTo(64);
+        assertThat(grouped.get("JUNGLE").get(0).tier()).isEqualTo("A");
     }
 
     @DisplayName("단일 티어 필터는 해당 티어의 tier_bucket 값 하나만 바인딩한다")
@@ -127,6 +131,35 @@ class ChampionStatsBigQueryAdapterTest {
                 .containsExactly("6000");
     }
 
+    @DisplayName("매치업 조회 시 rank_type(TOP/BOTTOM)을 그대로 모델에 매핑하고 single UNION 쿼리로 묶는다")
+    @Test
+    void getChampionMatchupsMapsRankType() throws InterruptedException {
+        // given
+        TierFilter tierFilter = TierFilter.of("EMERALD+");
+        FieldValueList topRow = stubMatchupRow("TOP", "266", "120", "0.55", "0.12");
+        FieldValueList bottomRow = stubMatchupRow("BOTTOM", "122", "150", "0.45", "0.15");
+
+        TableResult result = mock(TableResult.class);
+        given(result.iterateAll()).willReturn(List.of(topRow, bottomRow));
+        given(bigQuery.query(any(QueryJobConfiguration.class))).willReturn(result);
+
+        // when
+        List<ChampionMatchupReadModel> matchups =
+                adapter.getChampionMatchups(13, "16.1", "KR", tierFilter, "MIDDLE");
+
+        // then
+        assertThat(matchups).hasSize(2);
+        assertThat(matchups.get(0).rankType()).isEqualTo("TOP");
+        assertThat(matchups.get(0).opponentChampionId()).isEqualTo(266);
+        assertThat(matchups.get(1).rankType()).isEqualTo("BOTTOM");
+        assertThat(matchups.get(1).opponentChampionId()).isEqualTo(122);
+
+        ArgumentCaptor<QueryJobConfiguration> captor = ArgumentCaptor.forClass(QueryJobConfiguration.class);
+        verify(bigQuery).query(captor.capture());
+        assertThat(captor.getValue().getQuery()).contains("UNION ALL");
+        assertThat(captor.getValue().getNamedParameters()).containsKeys("championId", "position");
+    }
+
     @DisplayName("BigQuery 쿼리가 인터럽트되면 IllegalStateException을 던지고 인터럽트 플래그를 복원한다")
     @Test
     void queryInterrupted() throws InterruptedException {
@@ -144,9 +177,20 @@ class ChampionStatsBigQueryAdapterTest {
         }
     }
 
+    private FieldValueList stubMatchupRow(
+            String rankType, String opponentChampionId, String games, String winRate, String pickRate) {
+        FieldValueList row = mock(FieldValueList.class);
+        given(row.get("rank_type")).willReturn(FieldValue.of(FieldValue.Attribute.PRIMITIVE, rankType));
+        given(row.get("opponent_champion_id")).willReturn(FieldValue.of(FieldValue.Attribute.PRIMITIVE, opponentChampionId));
+        given(row.get("games")).willReturn(FieldValue.of(FieldValue.Attribute.PRIMITIVE, games));
+        given(row.get("win_rate")).willReturn(FieldValue.of(FieldValue.Attribute.PRIMITIVE, winRate));
+        given(row.get("pick_rate")).willReturn(FieldValue.of(FieldValue.Attribute.PRIMITIVE, pickRate));
+        return row;
+    }
+
     private FieldValueList stubRateRow(
             String position, String championId, String winRate,
-            String pickRate, String banRate, String totalGames) {
+            String pickRate, String banRate, String totalGames, String tier) {
         FieldValueList row = mock(FieldValueList.class);
         given(row.get("team_position")).willReturn(FieldValue.of(FieldValue.Attribute.PRIMITIVE, position));
         given(row.get("champion_id")).willReturn(FieldValue.of(FieldValue.Attribute.PRIMITIVE, championId));
@@ -154,6 +198,7 @@ class ChampionStatsBigQueryAdapterTest {
         given(row.get("pick_rate")).willReturn(FieldValue.of(FieldValue.Attribute.PRIMITIVE, pickRate));
         given(row.get("ban_rate")).willReturn(FieldValue.of(FieldValue.Attribute.PRIMITIVE, banRate));
         given(row.get("total_games")).willReturn(FieldValue.of(FieldValue.Attribute.PRIMITIVE, totalGames));
+        given(row.get("tier")).willReturn(FieldValue.of(FieldValue.Attribute.PRIMITIVE, tier));
         return row;
     }
 }

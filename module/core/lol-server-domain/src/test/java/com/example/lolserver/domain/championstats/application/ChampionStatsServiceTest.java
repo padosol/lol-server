@@ -90,21 +90,17 @@ class ChampionStatsServiceTest {
                 new ChampionItemBuildReadModel("3089,3157,3165", 500, 0.52, 0.5)
             );
 
-            List<ChampionMatchupReadModel> middleStrongMatchups = List.of(
-                new ChampionMatchupReadModel(7, 120, 0.5417, 0.12),
-                new ChampionMatchupReadModel(103, 100, 0.5300, 0.10),
-                new ChampionMatchupReadModel(4, 80, 0.5250, 0.08)
-            );
-            List<ChampionMatchupReadModel> middleWeakMatchups = List.of(
-                new ChampionMatchupReadModel(238, 150, 0.4667, 0.15),
-                new ChampionMatchupReadModel(91, 130, 0.4692, 0.13),
-                new ChampionMatchupReadModel(55, 90, 0.4778, 0.09)
+            List<ChampionMatchupReadModel> middleMatchups = List.of(
+                ChampionMatchupReadModel.top(7, 120, 0.5417, 0.12),
+                ChampionMatchupReadModel.top(103, 100, 0.5300, 0.10),
+                ChampionMatchupReadModel.top(4, 80, 0.5250, 0.08),
+                ChampionMatchupReadModel.bottom(238, 150, 0.4667, 0.15),
+                ChampionMatchupReadModel.bottom(91, 130, 0.4692, 0.13),
+                ChampionMatchupReadModel.bottom(55, 90, 0.4778, 0.09)
             );
 
-            given(championStatsQueryPort.getStrongMatchups(championId, patch, platformId, tierFilter, "MIDDLE"))
-                .willReturn(middleStrongMatchups);
-            given(championStatsQueryPort.getWeakMatchups(championId, patch, platformId, tierFilter, "MIDDLE"))
-                .willReturn(middleWeakMatchups);
+            given(championStatsQueryPort.getChampionMatchups(championId, patch, platformId, tierFilter, "MIDDLE"))
+                .willReturn(middleMatchups);
             given(championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tierFilter, "MIDDLE"))
                 .willReturn(middleRuneBuilds);
             given(championStatsQueryPort.getChampionSpellStats(championId, patch, platformId, tierFilter, "MIDDLE"))
@@ -119,9 +115,7 @@ class ChampionStatsServiceTest {
                 .willReturn(middleItemBuilds);
 
             // TOP 포지션 상세 통계
-            given(championStatsQueryPort.getStrongMatchups(championId, patch, platformId, tierFilter, "TOP"))
-                .willReturn(List.of());
-            given(championStatsQueryPort.getWeakMatchups(championId, patch, platformId, tierFilter, "TOP"))
+            given(championStatsQueryPort.getChampionMatchups(championId, patch, platformId, tierFilter, "TOP"))
                 .willReturn(List.of());
             given(championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tierFilter, "TOP"))
                 .willReturn(List.of());
@@ -148,12 +142,13 @@ class ChampionStatsServiceTest {
             assertThat(middleStats.teamPosition()).isEqualTo("MIDDLE");
             assertThat(middleStats.winRate()).isEqualTo(0.52);
             assertThat(middleStats.totalGames()).isEqualTo(1000);
-            assertThat(middleStats.strongMatchups()).hasSize(3);
-            assertThat(middleStats.strongMatchups().get(0).opponentChampionId()).isEqualTo(7);
-            assertThat(middleStats.strongMatchups().get(0).winRate()).isEqualTo(0.5417);
-            assertThat(middleStats.weakMatchups()).hasSize(3);
-            assertThat(middleStats.weakMatchups().get(0).opponentChampionId()).isEqualTo(238);
-            assertThat(middleStats.weakMatchups().get(0).winRate()).isEqualTo(0.4667);
+            assertThat(middleStats.matchups()).hasSize(6);
+            assertThat(middleStats.matchups().get(0).rankType()).isEqualTo("TOP");
+            assertThat(middleStats.matchups().get(0).opponentChampionId()).isEqualTo(7);
+            assertThat(middleStats.matchups().get(0).winRate()).isEqualTo(0.5417);
+            assertThat(middleStats.matchups().get(3).rankType()).isEqualTo("BOTTOM");
+            assertThat(middleStats.matchups().get(3).opponentChampionId()).isEqualTo(238);
+            assertThat(middleStats.matchups().get(3).winRate()).isEqualTo(0.4667);
             assertThat(middleStats.runeBuilds()).hasSize(1);
             assertThat(middleStats.spellStats()).hasSize(1);
             assertThat(middleStats.spellStats().get(0).summoner1Id()).isEqualTo(4);

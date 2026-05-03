@@ -17,6 +17,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -76,20 +77,17 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
     }
 
     @Override
-    public List<ChampionMatchupReadModel> getStrongMatchups(
+    public List<ChampionMatchupReadModel> getChampionMatchups(
             int championId, String patch, String platformId, TierFilter tierFilter, String position) {
-        return queryMatchups(championId, patch, platformId, tierFilter, position, "DESC");
-    }
-
-    @Override
-    public List<ChampionMatchupReadModel> getWeakMatchups(
-            int championId, String patch, String platformId, TierFilter tierFilter, String position) {
-        return queryMatchups(championId, patch, platformId, tierFilter, position, "ASC");
+        List<ChampionMatchupReadModel> matchups = new ArrayList<>();
+        matchups.addAll(queryMatchups(championId, patch, platformId, tierFilter, position, "TOP", "DESC"));
+        matchups.addAll(queryMatchups(championId, patch, platformId, tierFilter, position, "BOTTOM", "ASC"));
+        return matchups;
     }
 
     private List<ChampionMatchupReadModel> queryMatchups(
             int championId, String patch, String platformId,
-            TierFilter tierFilter, String position, String orderDirection) {
+            TierFilter tierFilter, String position, String rankType, String orderDirection) {
         String sql = """
                 WITH
                     matchup_stats AS (
@@ -114,13 +112,14 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                 FROM matchup_stats AS ms
                 CROSS JOIN total AS t
                 ORDER BY win_rate %6$s
-                LIMIT 3
+                LIMIT 5
                 """.formatted(
                 quote(patch), quote(platformId), tierInClause(tierFilter),
                 championId, quote(position), orderDirection);
 
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new ChampionMatchupReadModel(
+                        rankType,
                         rs.getInt("opponent_champion_id"),
                         rs.getLong("games"),
                         rs.getDouble("win_rate"),

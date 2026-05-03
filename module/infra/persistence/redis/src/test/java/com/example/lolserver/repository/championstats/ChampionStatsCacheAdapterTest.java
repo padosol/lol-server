@@ -45,7 +45,7 @@ class ChampionStatsCacheAdapterTest {
         String patch = "16.1";
         String platformId = "KR";
         String tierDisplay = "EMERALD";
-        String expectedKey = "champion-stats:detail:KR:13:16.1:EMERALD";
+        String expectedKey = "champion-stats:v3:detail:KR:13:16.1:EMERALD";
 
         ChampionStatsReadModel cached = new ChampionStatsReadModel("EMERALD", List.of());
 
@@ -68,7 +68,7 @@ class ChampionStatsCacheAdapterTest {
         String patch = "16.1";
         String platformId = "KR";
         String tierDisplay = "EMERALD";
-        String expectedKey = "champion-stats:detail:KR:13:16.1:EMERALD";
+        String expectedKey = "champion-stats:v3:detail:KR:13:16.1:EMERALD";
 
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
         given(valueOperations.get(expectedKey)).willReturn(null);
@@ -88,7 +88,7 @@ class ChampionStatsCacheAdapterTest {
         String patch = "16.1";
         String platformId = "KR";
         String tierDisplay = "EMERALD";
-        String expectedKey = "champion-stats:detail:KR:13:16.1:EMERALD";
+        String expectedKey = "champion-stats:v3:detail:KR:13:16.1:EMERALD";
 
         ChampionStatsReadModel stats = new ChampionStatsReadModel("EMERALD", List.of());
 
@@ -118,7 +118,7 @@ class ChampionStatsCacheAdapterTest {
         String patch = "16.1";
         String platformId = "KR";
         String tierDisplay = "EMERALD";
-        String expectedKey = "champion-stats:positions:KR:16.1:EMERALD";
+        String expectedKey = "champion-stats:v3:positions:KR:16.1:EMERALD";
 
         List<PositionChampionStatsReadModel> cached = List.of(
             new PositionChampionStatsReadModel("TOP", List.of())
@@ -141,7 +141,7 @@ class ChampionStatsCacheAdapterTest {
         String patch = "16.1";
         String platformId = "KR";
         String tierDisplay = "EMERALD";
-        String expectedKey = "champion-stats:positions:KR:16.1:EMERALD";
+        String expectedKey = "champion-stats:v3:positions:KR:16.1:EMERALD";
 
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
         given(valueOperations.get(expectedKey)).willReturn(null);
@@ -160,7 +160,7 @@ class ChampionStatsCacheAdapterTest {
         String patch = "16.1";
         String platformId = "KR";
         String tierDisplay = "EMERALD";
-        String expectedKey = "champion-stats:positions:KR:16.1:EMERALD";
+        String expectedKey = "champion-stats:v3:positions:KR:16.1:EMERALD";
 
         List<PositionChampionStatsReadModel> stats = List.of(
             new PositionChampionStatsReadModel("TOP", List.of())

@@ -65,27 +65,15 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
     }
 
     @Override
-    public List<ChampionMatchupReadModel> getStrongMatchups(
+    public List<ChampionMatchupReadModel> getChampionMatchups(
             int championId, String patch, String platformId, TierFilter tierFilter, String position) {
-        return queryMatchups(championId, patch, platformId, tierFilter, position, "DESC");
-    }
-
-    @Override
-    public List<ChampionMatchupReadModel> getWeakMatchups(
-            int championId, String patch, String platformId, TierFilter tierFilter, String position) {
-        return queryMatchups(championId, patch, platformId, tierFilter, position, "ASC");
-    }
-
-    private List<ChampionMatchupReadModel> queryMatchups(
-            int championId, String patch, String platformId,
-            TierFilter tierFilter, String position, String orderDirection) {
-        String sql = ChampionStatsBigQuerySqls.MATCHUPS
-                .formatted(table("mv_champion_matchup_stats"), orderDirection);
+        String sql = ChampionStatsBigQuerySqls.MATCHUPS.formatted(table("mv_champion_matchup_stats"));
 
         QueryJobConfiguration job = championPositionQuery(sql, patch, platformId, tierFilter, championId, position)
                 .build();
 
         return query(job, row -> new ChampionMatchupReadModel(
+                row.get("rank_type").getStringValue(),
                 getInt(row, "opponent_champion_id"),
                 row.get("games").getLongValue(),
                 row.get("win_rate").getDoubleValue(),
@@ -215,7 +203,8 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
                                 row.get("win_rate").getDoubleValue(),
                                 row.get("pick_rate").getDoubleValue(),
                                 row.get("ban_rate").getDoubleValue(),
-                                row.get("total_games").getLongValue()
+                                row.get("total_games").getLongValue(),
+                                row.get("tier").getStringValue()
                         )
                 ));
 
