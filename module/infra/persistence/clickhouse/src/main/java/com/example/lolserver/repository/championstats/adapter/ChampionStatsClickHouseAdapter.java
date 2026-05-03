@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -35,6 +36,17 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
 
     private static String quote(String value) {
         return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'";
+    }
+
+    private static List<Integer> parseCsvIntArray(String csv) {
+        if (csv == null || csv.isBlank()) {
+            return List.of();
+        }
+        return Arrays.stream(csv.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(Integer::parseInt)
+                .toList();
     }
 
     /**
@@ -283,7 +295,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
 
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new ChampionStartItemBuildReadModel(
-                        rs.getString("start_items"),
+                        parseCsvIntArray(rs.getString("start_items")),
                         rs.getLong("games"),
                         rs.getDouble("win_rate"),
                         rs.getDouble("pick_rate")));
@@ -354,7 +366,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
 
         return clickHouseJdbcTemplate.query(sql,
                 (rs, rowNum) -> new ChampionItemBuildReadModel(
-                        rs.getString("item_build"),
+                        parseCsvIntArray(rs.getString("item_build")),
                         rs.getLong("games"),
                         rs.getDouble("win_rate"),
                         rs.getDouble("pick_rate")));

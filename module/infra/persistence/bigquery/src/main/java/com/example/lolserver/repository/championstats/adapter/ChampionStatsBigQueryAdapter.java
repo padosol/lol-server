@@ -13,6 +13,9 @@ import com.example.lolserver.domain.championstats.application.model.ChampionSpel
 import com.example.lolserver.domain.championstats.application.model.ChampionStartItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.QueryJobConfiguration;
@@ -36,6 +39,9 @@ import java.util.stream.Collectors;
 @Primary
 @ConditionalOnProperty(name = "stats.datasource", havingValue = "bigquery")
 public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final TypeReference<List<Integer>> INT_LIST_TYPE = new TypeReference<>() {};
 
     private final BigQuery bigQuery;
     private final String dataset;
@@ -146,7 +152,7 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
                 .build();
 
         return query(job, row -> new ChampionStartItemBuildReadModel(
-                row.get("start_items").getStringValue(),
+                parseIntArrayJson(row.get("start_items").getStringValue()),
                 row.get("games").getLongValue(),
                 row.get("win_rate").getDoubleValue(),
                 row.get("pick_rate").getDoubleValue()
@@ -178,7 +184,7 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
                 .build();
 
         return query(job, row -> new ChampionItemBuildReadModel(
-                row.get("item_build").getStringValue(),
+                parseIntArrayJson(row.get("item_build").getStringValue()),
                 row.get("games").getLongValue(),
                 row.get("win_rate").getDoubleValue(),
                 row.get("pick_rate").getDoubleValue()
@@ -258,6 +264,14 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
 
     private static int getInt(FieldValueList row, String column) {
         return (int) row.get(column).getLongValue();
+    }
+
+    private static List<Integer> parseIntArrayJson(String json) {
+        try {
+            return MAPPER.readValue(json, INT_LIST_TYPE);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Failed to parse int array: " + json, e);
+        }
     }
 
     private <T> List<T> query(QueryJobConfiguration job, Function<FieldValueList, T> mapper) {

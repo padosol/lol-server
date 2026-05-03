@@ -162,7 +162,7 @@ class ChampionStatsClickHouseAdapterTest {
         // given
         TierFilter tierFilter = TierFilter.of("EMERALD");
         List<ChampionStartItemBuildReadModel> expected = List.of(
-            new ChampionStartItemBuildReadModel("1056,2003", 600, 0.51, 0.6)
+            new ChampionStartItemBuildReadModel(List.of(1056, 2003), 600, 0.51, 0.6)
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
             .willReturn(expected);
@@ -172,7 +172,7 @@ class ChampionStatsClickHouseAdapterTest {
 
         // then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).startItems()).isEqualTo("1056,2003");
+        assertThat(result.get(0).startItems()).containsExactly(1056, 2003);
     }
 
     @DisplayName("챔피언 신발 빌드 통계를 조회한다")
@@ -204,7 +204,7 @@ class ChampionStatsClickHouseAdapterTest {
         // given
         TierFilter tierFilter = TierFilter.of("EMERALD");
         List<ChampionItemBuildReadModel> expected = List.of(
-            new ChampionItemBuildReadModel("3089,3157,3165", 500, 0.52, 0.5)
+            new ChampionItemBuildReadModel(List.of(3089, 3157, 3165), 500, 0.52, 0.5)
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
             .willReturn(expected);
@@ -214,7 +214,7 @@ class ChampionStatsClickHouseAdapterTest {
 
         // then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).itemBuild()).isEqualTo("3089,3157,3165");
+        assertThat(result.get(0).itemBuild()).containsExactly(3089, 3157, 3165);
     }
 
     @DisplayName("포지션별 챔피언 승률/픽률/밴률을 Map으로 반환한다")

@@ -77,10 +77,12 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                 "Q,E,W,Q,Q,R,Q,E,Q,E,R,E,E,W,W", 400, 0.55, 0.4
         );
         ChampionStartItemBuildReadModel startItemBuild = new ChampionStartItemBuildReadModel(
-                "1054,2003", 600, 0.51, 0.6
+                List.of(1054, 2003), 600, 0.51, 0.6
         );
         ChampionBootBuildReadModel bootBuild = new ChampionBootBuildReadModel(3047, 700, 0.53, 0.7);
-        ChampionItemBuildReadModel itemBuild = new ChampionItemBuildReadModel("3078,3053,3065", 300, 0.5667, 0.3);
+        ChampionItemBuildReadModel itemBuild = new ChampionItemBuildReadModel(
+                List.of(3078, 3053, 3065), 300, 0.5667, 0.3
+        );
 
         ChampionPositionStatsReadModel positionStats = new ChampionPositionStatsReadModel(
                 "TOP", 0.55, 1500,
@@ -170,7 +172,7 @@ class ChampionStatsControllerTest extends RestDocsSupport {
 
                                 // startItemBuilds
                                 fieldWithPath("data.positions[].startItemBuilds[]").type(JsonFieldType.ARRAY).description("시작 아이템 빌드 목록"),
-                                fieldWithPath("data.positions[].startItemBuilds[].startItems").type(JsonFieldType.STRING).description("시작 아이템 ID 목록"),
+                                fieldWithPath("data.positions[].startItemBuilds[].startItems").type(JsonFieldType.ARRAY).description("시작 아이템 ID 배열 (number[])"),
                                 fieldWithPath("data.positions[].startItemBuilds[].games").type(JsonFieldType.NUMBER).description("게임 수"),
                                 fieldWithPath("data.positions[].startItemBuilds[].winRate").type(JsonFieldType.NUMBER).description("승률"),
                                 fieldWithPath("data.positions[].startItemBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
@@ -184,7 +186,7 @@ class ChampionStatsControllerTest extends RestDocsSupport {
 
                                 // itemBuilds (3코어)
                                 fieldWithPath("data.positions[].itemBuilds[]").type(JsonFieldType.ARRAY).description("3코어 아이템 빌드 목록"),
-                                fieldWithPath("data.positions[].itemBuilds[].itemBuild").type(JsonFieldType.STRING).description("아이템 빌드 순서"),
+                                fieldWithPath("data.positions[].itemBuilds[].itemBuild").type(JsonFieldType.ARRAY).description("아이템 ID 배열 (number[], 빌드 순서)"),
                                 fieldWithPath("data.positions[].itemBuilds[].games").type(JsonFieldType.NUMBER).description("게임 수"),
                                 fieldWithPath("data.positions[].itemBuilds[].winRate").type(JsonFieldType.NUMBER).description("승률"),
                                 fieldWithPath("data.positions[].itemBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률")

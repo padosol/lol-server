@@ -81,13 +81,13 @@ class ChampionStatsServiceTest {
                 new ChampionSkillBuildReadModel("QWEQEEREQEQWWWW", 400, 0.525, 0.4)
             );
             List<ChampionStartItemBuildReadModel> middleStartItemBuilds = List.of(
-                new ChampionStartItemBuildReadModel("1056,2003", 600, 0.51, 0.6)
+                new ChampionStartItemBuildReadModel(List.of(1056, 2003), 600, 0.51, 0.6)
             );
             List<ChampionBootBuildReadModel> middleBootBuilds = List.of(
                 new ChampionBootBuildReadModel(3020, 700, 0.53, 0.7)
             );
             List<ChampionItemBuildReadModel> middleItemBuilds = List.of(
-                new ChampionItemBuildReadModel("3089,3157,3165", 500, 0.52, 0.5)
+                new ChampionItemBuildReadModel(List.of(3089, 3157, 3165), 500, 0.52, 0.5)
             );
 
             List<ChampionMatchupReadModel> middleMatchups = List.of(
@@ -154,7 +154,7 @@ class ChampionStatsServiceTest {
             assertThat(middleStats.spellStats().get(0).summoner1Id()).isEqualTo(4);
             assertThat(middleStats.skillBuilds()).hasSize(1);
             assertThat(middleStats.startItemBuilds()).hasSize(1);
-            assertThat(middleStats.startItemBuilds().get(0).startItems()).isEqualTo("1056,2003");
+            assertThat(middleStats.startItemBuilds().get(0).startItems()).containsExactly(1056, 2003);
             assertThat(middleStats.bootBuilds()).hasSize(1);
             assertThat(middleStats.bootBuilds().get(0).bootId()).isEqualTo(3020);
             assertThat(middleStats.itemBuilds()).hasSize(1);
