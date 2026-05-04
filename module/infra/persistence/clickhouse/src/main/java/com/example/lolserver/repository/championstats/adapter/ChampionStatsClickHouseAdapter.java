@@ -77,6 +77,7 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                 FROM match_participant_local
                 WHERE champion_id = %d AND patch_version = %s AND platform_id = %s AND %s
                 GROUP BY team_position
+                HAVING count(*) > 20
                 ORDER BY total_games DESC
                 """.formatted(championId, quote(patch), quote(platformId), tierInClause(tierFilter));
 

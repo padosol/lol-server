@@ -13,6 +13,7 @@ final class ChampionStatsBigQuerySqls {
               AND platform_id = @platform
               AND tier_bucket IN UNNEST(@tierBuckets)
             GROUP BY individual_position
+            HAVING SUM(pick_count) > 20
             ORDER BY total_games DESC
             """;
 
