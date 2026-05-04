@@ -9,9 +9,6 @@ public record ChampionRuneBuildReadModel(
     int primaryPerk3,
     int subPerk0,
     int subPerk1,
-    int statPerkDefense,
-    int statPerkFlex,
-    int statPerkOffense,
     long games,
     double winRate,
     double pickRate

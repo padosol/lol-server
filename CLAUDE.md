@@ -45,12 +45,12 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
 - 도메인 규칙은 도메인 객체 `validate*` guard 가 직접 던진다 (서비스에서 boolean+throw 금지)
 - ReadModel 변환은 `*ReadModel.of(domain)` 정적 팩토리에서만
 - 매직 스트링 금지: `OAuthProvider.RIOT.name()`, `QueueType.RANKED_SOLO_5x5.name()` 등 enum 사용
-- 커밋 메시지: `<type>: MP-<번호> <한글 설명>` (Jira 키 필수; 타입 `feat`, `fix`, `refactor`, `docs`, `chore`)
+- 커밋 메시지: `<type>: MP-<번호> <한글 설명>` (Linear 키 필수; 타입 `feat`, `fix`, `refactor`, `docs`, `chore`)
 - 브랜치: `feature/MP-<번호>-*`, `fix/MP-<번호>-*`, `refactor/MP-<번호>-*` → `develop` → `main`; hotfix 는 `hotfix/MP-<번호>-* → main → develop`
 
 ## See Also
 
-- [`docs/workflow.md`](docs/workflow.md) — Jira(`MP-*`) 키 기반 브랜치/커밋/티켓 생명주기
+- [`docs/workflow.md`](docs/workflow.md) — Linear(`MP-*`) 키 기반 브랜치/커밋/이슈 생명주기
 - `docs/oauth2-login.md`, `docs/rso-oauth2-troubleshooting.md` — OAuth/RSO 흐름 디테일
 - `docs/0[1-4]_*.sql` — ClickHouse 스키마 정의/뷰/쿼리
 - `docs/review/` — 과거 리팩터링/리뷰 메모

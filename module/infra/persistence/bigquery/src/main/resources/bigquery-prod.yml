@@ -1,0 +1,7 @@
+stats:
+  datasource: ${STATS_DATASOURCE:clickhouse}
+
+bigquery:
+  project-id: ${BIGQUERY_PROJECT_ID}
+  dataset: ${BIGQUERY_DATASET}
+  credentials-location: ${BIGQUERY_CREDENTIALS_LOCATION:}

@@ -1,8 +1,8 @@
 package com.example.lolserver.repository.championstats.adapter;
 
 import com.example.lolserver.TierFilter;
+import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
-import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
@@ -65,50 +65,32 @@ class ChampionStatsClickHouseAdapterTest {
         assertThat(result.get(1).totalGames()).isEqualTo(200);
     }
 
-    @DisplayName("유리한 매치업 통계를 승률 높은 순으로 반환한다")
+    @DisplayName("매치업을 TOP(승률 높은 순) + BOTTOM(승률 낮은 순)으로 합쳐서 반환한다")
     @Test
     @SuppressWarnings("unchecked")
-    void getStrongMatchups() {
+    void getChampionMatchups() {
         // given
         TierFilter tierFilter = TierFilter.of("EMERALD");
-        List<ChampionMatchupReadModel> expected = List.of(
-            new ChampionMatchupReadModel(7, 120, 0.5417, 0.12),
-            new ChampionMatchupReadModel(103, 100, 0.5300, 0.10),
-            new ChampionMatchupReadModel(4, 80, 0.5250, 0.08)
+        List<ChampionMatchupReadModel> top = List.of(
+            ChampionMatchupReadModel.top(7, 120, 0.5417, 0.12),
+            ChampionMatchupReadModel.top(103, 100, 0.5300, 0.10)
+        );
+        List<ChampionMatchupReadModel> bottom = List.of(
+            ChampionMatchupReadModel.bottom(238, 150, 0.4667, 0.15),
+            ChampionMatchupReadModel.bottom(91, 130, 0.4692, 0.13)
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
-            .willReturn(expected);
+            .willReturn(top, bottom);
 
         // when
-        List<ChampionMatchupReadModel> result = adapter.getStrongMatchups(13, "16.1", "KR", tierFilter, "MIDDLE");
+        List<ChampionMatchupReadModel> result = adapter.getChampionMatchups(13, "16.1", "KR", tierFilter, "MIDDLE");
 
         // then
-        assertThat(result).hasSize(3);
+        assertThat(result).hasSize(4);
+        assertThat(result.get(0).rankType()).isEqualTo("TOP");
         assertThat(result.get(0).opponentChampionId()).isEqualTo(7);
-        assertThat(result.get(0).winRate()).isEqualTo(0.5417);
-    }
-
-    @DisplayName("불리한 매치업 통계를 승률 낮은 순으로 반환한다")
-    @Test
-    @SuppressWarnings("unchecked")
-    void getWeakMatchups() {
-        // given
-        TierFilter tierFilter = TierFilter.of("EMERALD");
-        List<ChampionMatchupReadModel> expected = List.of(
-            new ChampionMatchupReadModel(238, 150, 0.4667, 0.15),
-            new ChampionMatchupReadModel(91, 130, 0.4692, 0.13),
-            new ChampionMatchupReadModel(55, 90, 0.4778, 0.09)
-        );
-        given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
-            .willReturn(expected);
-
-        // when
-        List<ChampionMatchupReadModel> result = adapter.getWeakMatchups(13, "16.1", "KR", tierFilter, "MIDDLE");
-
-        // then
-        assertThat(result).hasSize(3);
-        assertThat(result.get(0).opponentChampionId()).isEqualTo(238);
-        assertThat(result.get(0).winRate()).isEqualTo(0.4667);
+        assertThat(result.get(2).rankType()).isEqualTo("BOTTOM");
+        assertThat(result.get(2).opponentChampionId()).isEqualTo(238);
     }
 
     @DisplayName("챔피언 룬 빌드 통계를 조회한다")
@@ -118,7 +100,7 @@ class ChampionStatsClickHouseAdapterTest {
         // given
         TierFilter tierFilter = TierFilter.of("EMERALD");
         List<ChampionRuneBuildReadModel> expected = List.of(
-            new ChampionRuneBuildReadModel(8100, 8300, 8112, 8139, 8143, 8135, 8304, 8345, 5002, 5008, 5005, 300, 0.5333, 0.6)
+            new ChampionRuneBuildReadModel(8100, 8300, 8112, 8139, 8143, 8135, 8304, 8345, 300, 0.5333, 0.6)
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
             .willReturn(expected);
@@ -180,7 +162,7 @@ class ChampionStatsClickHouseAdapterTest {
         // given
         TierFilter tierFilter = TierFilter.of("EMERALD");
         List<ChampionStartItemBuildReadModel> expected = List.of(
-            new ChampionStartItemBuildReadModel("1056,2003", 600, 0.51, 0.6)
+            new ChampionStartItemBuildReadModel(List.of(1056, 2003), 600, 0.51, 0.6)
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
             .willReturn(expected);
@@ -190,7 +172,29 @@ class ChampionStatsClickHouseAdapterTest {
 
         // then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).startItems()).isEqualTo("1056,2003");
+        assertThat(result.get(0).startItems()).containsExactly(1056, 2003);
+    }
+
+    @DisplayName("챔피언 신발 빌드 통계를 조회한다")
+    @Test
+    @SuppressWarnings("unchecked")
+    void getChampionBootBuilds() {
+        // given
+        TierFilter tierFilter = TierFilter.of("EMERALD");
+        List<ChampionBootBuildReadModel> expected = List.of(
+            new ChampionBootBuildReadModel(3047, 700, 0.53, 0.7)
+        );
+        given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
+            .willReturn(expected);
+
+        // when
+        List<ChampionBootBuildReadModel> result =
+            adapter.getChampionBootBuilds(13, "16.1", "KR", tierFilter, "MIDDLE");
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).bootId()).isEqualTo(3047);
+        assertThat(result.get(0).winRate()).isEqualTo(0.53);
     }
 
     @DisplayName("챔피언 3코어 아이템 빌드 통계를 조회한다")
@@ -200,7 +204,7 @@ class ChampionStatsClickHouseAdapterTest {
         // given
         TierFilter tierFilter = TierFilter.of("EMERALD");
         List<ChampionItemBuildReadModel> expected = List.of(
-            new ChampionItemBuildReadModel("3089,3157,3165", 500, 0.52, 0.5)
+            new ChampionItemBuildReadModel(List.of(3089, 3157, 3165), 500, 0.52, 0.5)
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
             .willReturn(expected);
@@ -210,28 +214,7 @@ class ChampionStatsClickHouseAdapterTest {
 
         // then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).itemBuild()).isEqualTo("3089,3157,3165");
-    }
-
-    @DisplayName("챔피언 완성 아이템 통계를 코어 순서별로 조회한다")
-    @Test
-    @SuppressWarnings("unchecked")
-    void getChampionItemStats() {
-        // given
-        TierFilter tierFilter = TierFilter.of("EMERALD");
-        List<ChampionItemStatsReadModel> expected = List.of(
-            new ChampionItemStatsReadModel(3089, "Rabadon's Deathcap", 400, 0.55, 0.4)
-        );
-        given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
-            .willReturn(expected);
-
-        // when
-        List<ChampionItemStatsReadModel> result = adapter.getChampionItemStats(13, "16.1", "KR", tierFilter, "MIDDLE", 1);
-
-        // then
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).itemId()).isEqualTo(3089);
-        assertThat(result.get(0).itemName()).isEqualTo("Rabadon's Deathcap");
+        assertThat(result.get(0).itemBuild()).containsExactly(3089, 3157, 3165);
     }
 
     @DisplayName("포지션별 챔피언 승률/픽률/밴률을 Map으로 반환한다")
@@ -241,9 +224,9 @@ class ChampionStatsClickHouseAdapterTest {
         // given
         TierFilter tierFilter = TierFilter.of("EMERALD");
         List<AbstractMap.SimpleEntry<String, ChampionRateReadModel>> entries = List.of(
-            new AbstractMap.SimpleEntry<>("TOP", new ChampionRateReadModel(266, 0.5200, 0.0800, 0.0500, 1500)),
-            new AbstractMap.SimpleEntry<>("TOP", new ChampionRateReadModel(122, 0.4800, 0.0600, 0.0300, 1200)),
-            new AbstractMap.SimpleEntry<>("JUNGLE", new ChampionRateReadModel(64, 0.5100, 0.1000, 0.0700, 2000))
+            new AbstractMap.SimpleEntry<>("TOP", new ChampionRateReadModel(266, 0.5200, 0.0800, 0.0500, 1500, null)),
+            new AbstractMap.SimpleEntry<>("TOP", new ChampionRateReadModel(122, 0.4800, 0.0600, 0.0300, 1200, null)),
+            new AbstractMap.SimpleEntry<>("JUNGLE", new ChampionRateReadModel(64, 0.5100, 0.1000, 0.0700, 2000, null))
         );
         given(clickHouseJdbcTemplate.query(anyString(), any(RowMapper.class)))
             .willReturn(entries);

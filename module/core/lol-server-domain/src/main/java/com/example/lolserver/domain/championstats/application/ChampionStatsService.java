@@ -1,8 +1,8 @@
 package com.example.lolserver.domain.championstats.application;
 
 import com.example.lolserver.TierFilter;
+import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
-import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionPositionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -78,6 +77,8 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
             ChampionWinRateReadModel winRate) {
         String position = winRate.teamPosition();
 
+        List<ChampionMatchupReadModel> matchups =
+            championStatsQueryPort.getChampionMatchups(championId, patch, platformId, tierFilter, position);
         List<ChampionRuneBuildReadModel> runeBuilds =
             championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tierFilter, position);
         List<ChampionSpellStatsReadModel> spellStats =
@@ -86,27 +87,17 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
             championStatsQueryPort.getChampionSkillBuilds(championId, patch, platformId, tierFilter, position);
         List<ChampionStartItemBuildReadModel> startItemBuilds =
             championStatsQueryPort.getChampionStartItemBuilds(championId, patch, platformId, tierFilter, position);
+        List<ChampionBootBuildReadModel> bootBuilds =
+            championStatsQueryPort.getChampionBootBuilds(championId, patch, platformId, tierFilter, position);
         List<ChampionItemBuildReadModel> itemBuilds =
             championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tierFilter, position);
-
-        List<ChampionMatchupReadModel> strongMatchups =
-            championStatsQueryPort.getStrongMatchups(championId, patch, platformId, tierFilter, position);
-        List<ChampionMatchupReadModel> weakMatchups =
-            championStatsQueryPort.getWeakMatchups(championId, patch, platformId, tierFilter, position);
-
-        Map<Integer, List<ChampionItemStatsReadModel>> itemStatsByOrder = new LinkedHashMap<>();
-        for (int order = 1; order <= 3; order++) {
-            itemStatsByOrder.put(order,
-                championStatsQueryPort.getChampionItemStats(
-                    championId, patch, platformId, tierFilter, position, order));
-        }
 
         return new ChampionPositionStatsReadModel(
             position,
             winRate.totalWinRate(),
             winRate.totalGames(),
-            strongMatchups, weakMatchups, runeBuilds, spellStats, skillBuilds,
-            startItemBuilds, itemBuilds, itemStatsByOrder
+            matchups, runeBuilds, spellStats, skillBuilds,
+            startItemBuilds, bootBuilds, itemBuilds
         );
     }
 
@@ -130,7 +121,7 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
         List<PositionChampionStatsReadModel> result = groupedByPosition.entrySet().stream()
                 .map(entry -> new PositionChampionStatsReadModel(
                         entry.getKey(),
-                        ChampionTierCalculator.assignTiers(entry.getValue())
+                        assignTiersIfMissing(entry.getValue())
                 ))
                 .toList();
 
@@ -139,5 +130,12 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
         }
 
         return result;
+    }
+
+    private static List<ChampionRateReadModel> assignTiersIfMissing(List<ChampionRateReadModel> champions) {
+        if (!champions.isEmpty() && champions.get(0).tier() != null) {
+            return champions;
+        }
+        return ChampionTierCalculator.assignTiers(champions);
     }
 }

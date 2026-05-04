@@ -50,6 +50,8 @@ out/
 
 ### Claude Code ###
 .claude/settings.local.json
+.claude/command-log.txt
+.claude/messages/
 
 ### Checkstyle CLI ###
 config/checkstyle/checkstyle-*-all.jar

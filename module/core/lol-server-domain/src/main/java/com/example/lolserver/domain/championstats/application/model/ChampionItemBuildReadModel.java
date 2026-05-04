@@ -1,7 +1,9 @@
 package com.example.lolserver.domain.championstats.application.model;
 
+import java.util.List;
+
 public record ChampionItemBuildReadModel(
-    String itemBuild,
+    List<Integer> itemBuild,
     long games,
     double winRate,
     double pickRate

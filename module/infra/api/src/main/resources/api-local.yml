@@ -42,16 +42,6 @@ jwt:
 app:
   frontend-callback-url: http://localhost:3000/auth/callback
 
-# logging:
-#   level:
-#     org.springframework.security: DEBUG
-#     org.springframework.security.oauth2: TRACE
-#     org.springframework.security.oauth2.client: TRACE
-#     org.springframework.web.client.RestTemplate: DEBUG
-#     org.springframework.web.client.RestClient: DEBUG
-#     org.springframework.http.client: DEBUG
-#     com.example.lolserver.controller.security: DEBUG
-
 cors:
   allowed-origins:
     - http://localhost:3000

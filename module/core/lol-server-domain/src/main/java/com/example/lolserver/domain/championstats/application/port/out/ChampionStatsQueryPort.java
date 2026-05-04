@@ -1,8 +1,8 @@
 package com.example.lolserver.domain.championstats.application.port.out;
 
 import com.example.lolserver.TierFilter;
+import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
-import com.example.lolserver.domain.championstats.application.model.ChampionItemStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRuneBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionSkillBuildReadModel;
@@ -22,10 +22,7 @@ public interface ChampionStatsQueryPort {
     List<ChampionWinRateReadModel> getChampionWinRates(
             int championId, String patch, String platformId, TierFilter tierFilter);
 
-    List<ChampionMatchupReadModel> getStrongMatchups(
-            int championId, String patch, String platformId, TierFilter tierFilter, String position);
-
-    List<ChampionMatchupReadModel> getWeakMatchups(
+    List<ChampionMatchupReadModel> getChampionMatchups(
             int championId, String patch, String platformId, TierFilter tierFilter, String position);
 
     List<ChampionRuneBuildReadModel> getChampionRuneBuilds(
@@ -40,9 +37,9 @@ public interface ChampionStatsQueryPort {
     List<ChampionStartItemBuildReadModel> getChampionStartItemBuilds(
             int championId, String patch, String platformId, TierFilter tierFilter, String position);
 
-    List<ChampionItemBuildReadModel> getChampionItemBuilds(
+    List<ChampionBootBuildReadModel> getChampionBootBuilds(
             int championId, String patch, String platformId, TierFilter tierFilter, String position);
 
-    List<ChampionItemStatsReadModel> getChampionItemStats(
-            int championId, String patch, String platformId, TierFilter tierFilter, String position, int itemOrder);
+    List<ChampionItemBuildReadModel> getChampionItemBuilds(
+            int championId, String patch, String platformId, TierFilter tierFilter, String position);
 }
