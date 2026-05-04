@@ -46,6 +46,6 @@ ClickHouse 분석 어댑터 (driven adapter). 챔피언 통계 (승률/픽률/�
 
 ## See Also
 
-- [core:lol-server-domain](../../core/lol-server-domain/CLAUDE.md) — `domain/championstats/` 가 호출자
+- [core:lol-server-domain](../../../core/lol-server-domain/CLAUDE.md) — `domain/championstats/` 가 호출자
 - [postgresql](../postgresql/CLAUDE.md) — OLTP 영속성 (책임 분리: 트랜잭션/단일 객체 = postgres, 집계 = clickhouse)
 - 테스트: `module/infra/persistence/clickhouse/src/test/.../ChampionStatsClickHouseAdapterTest.java` (Testcontainers 또는 임베디드 환경 필요)

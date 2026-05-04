@@ -60,3 +60,6 @@ config/checkstyle/checkstyle-*-all.jar
 performance-tests/results/*.json
 performance-tests/results/*.txt
 !performance-tests/results/.gitkeep
+
+### AI-Ready Audit ###
+.ai-ready-audit/

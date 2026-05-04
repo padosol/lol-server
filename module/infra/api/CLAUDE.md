@@ -55,6 +55,14 @@ REST 컨트롤러 (driving adapter). HTTP 요청을 받아 도메인 UseCase를 
 - consumed by: `app:application` (bootJar 만 의존, 그 외 직접 사용처 없음)
 - 런타임에 인프라 어댑터 모듈 (persistence/postgresql, redis, client/oauth 등) 이 도메인 out port 를 채워주지 않으면 빈 주입이 실패한다 — 컨트롤러 자체는 어댑터 모듈을 직접 참조하지 않는다
 
+## Quick Commands
+
+```bash
+./gradlew :module:infra:api:test                # 컨트롤러/Security/RestDocs 테스트
+./gradlew :module:infra:api:asciidoctor         # RestDocs HTML 재생성 (테스트 변경 후 필수)
+./gradlew :module:infra:api:checkstyleMain      # checkstyle 단독 실행
+```
+
 ## See Also
 
 - [core:lol-server-domain](../../core/lol-server-domain/CLAUDE.md) — 호출하는 UseCase 의 출처

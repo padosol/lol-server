@@ -61,9 +61,17 @@ PostgreSQL 영속성 어댑터 (driven adapter). 도메인의 `*PersistencePort`
 - consumed by: `app:application` (런타임 빈 주입). 다른 인프라 모듈은 직접 의존 안 함
 - `queryExecutor` 빈은 이 모듈이 정의 — Virtual Thread 기반, MDC 전파 포함
 
+## Quick Commands
+
+```bash
+./gradlew :module:infra:persistence:postgresql:test            # JPA + Mapper + QueryDSL 테스트
+./gradlew :module:infra:persistence:postgresql:compileJava     # QueryDSL Q-class 재생성
+./gradlew :module:infra:persistence:postgresql:flywayMigrate   # Flyway 수동 적용 (필요 시)
+```
+
 ## See Also
 
-- [core:lol-server-domain](../../core/lol-server-domain/CLAUDE.md) — 구현 대상 PersistencePort 의 출처
+- [core:lol-server-domain](../../../core/lol-server-domain/CLAUDE.md) — 구현 대상 PersistencePort 의 출처
 - [redis](../redis/CLAUDE.md) — 같은 도메인의 캐시 어댑터 (Cache vs DB 책임 분리 확인용)
 - [clickhouse](../clickhouse/CLAUDE.md) — 분석 쿼리용 어댑터
 - 테스트 명령: `./gradlew :module:infra:persistence:postgresql:test`

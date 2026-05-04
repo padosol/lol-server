@@ -56,8 +56,15 @@ Riot API 호출 어댑터 (driven adapter). 도메인의 `*ClientPort` 를 Sprin
 - consumed by: `app:application` (런타임 빈 주입). 다른 인프라는 직접 의존 안 함
 - 외부 의존: `lol.repository.url` (게이트웨이/프록시 URL) — 환경별 yaml 설정
 
+## Quick Commands
+
+```bash
+./gradlew :module:infra:client:lol-repository:test            # RestClient + Mapper + Fake 어댑터 테스트
+./gradlew :module:infra:client:lol-repository:checkstyleMain  # checkstyle 단독
+```
+
 ## See Also
 
-- [core:lol-server-domain](../../core/lol-server-domain/CLAUDE.md) — `*ClientPort` 정의처
+- [core:lol-server-domain](../../../core/lol-server-domain/CLAUDE.md) — `*ClientPort` 정의처
 - [client/oauth](../oauth/CLAUDE.md) — 같은 client 카테고리, 인증/토큰 교환 담당
 - [persistence/redis](../../persistence/redis/CLAUDE.md) — `SummonerCacheAdapter` 가 외부 호출 전 캐시 hit 검증
