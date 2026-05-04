@@ -1,0 +1,61 @@
+name: Docs Check
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - '**/*.md'
+      - '.github/workflows/docs-check.yml'
+  workflow_dispatch:
+
+jobs:
+  link-check:
+    name: Markdown Link Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run lychee link check
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --no-progress
+            --exclude-mail
+            --exclude '^https?://localhost'
+            --exclude '^https?://127\.0\.0\.1'
+            --exclude '^https?://example\.'
+            --exclude 'cdn\.discordapp\.com'
+            './**/*.md'
+          fail: true
+          format: markdown
+          output: ./lychee-report.md
+
+      - name: Upload link report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lychee-report
+          path: ./lychee-report.md
+
+  context-doc-lint:
+    name: CLAUDE.md Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check CLAUDE.md line counts
+        shell: bash
+        run: |
+          set -euo pipefail
+          MAX_LINES=80
+          fail=0
+          while IFS= read -r f; do
+            lines=$(wc -l < "$f")
+            if [ "$lines" -gt "$MAX_LINES" ]; then
+              echo "::error file=$f::CLAUDE.md is $lines lines (max $MAX_LINES). 'compass, not encyclopedia' — split or trim."
+              fail=1
+            else
+              echo "ok  $f ($lines lines)"
+            fi
+          done < <(git ls-files '**/CLAUDE.md' 'CLAUDE.md')
+          exit $fail

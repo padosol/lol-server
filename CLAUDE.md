@@ -50,6 +50,7 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
 
 ## See Also
 
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — 모듈 의존 그래프 + 데이터 흐름 (mermaid) + 변경 영향 표
 - [`docs/workflow.md`](docs/workflow.md) — Linear(`MP-*`) 키 기반 브랜치/커밋/이슈 생명주기
 - `docs/oauth2-login.md`, `docs/rso-oauth2-troubleshooting.md` — OAuth/RSO 흐름 디테일
 - `docs/0[1-4]_*.sql` — ClickHouse 스키마 정의/뷰/쿼리

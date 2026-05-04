@@ -52,6 +52,13 @@
 - consumed by (어댑터로): `infra:api`, `infra:persistence:postgresql`, `infra:persistence:redis`, `infra:persistence:clickhouse`, `infra:client:lol-repository`, `infra:client:oauth`, `infra:message:rabbitmq`, `infra:message:kafka`
 - 의존 방향은 항상 `infra → core` 단방향. 역방향 import 가 생기면 즉시 거절.
 
+## Quick Commands
+
+```bash
+./gradlew :module:core:lol-server-domain:test           # 도메인 + 애플리케이션 서비스 단위 테스트
+./gradlew :module:core:lol-server-domain:checkstyleMain # 헥사고날 경계 + 컨벤션 검증
+```
+
 ## See Also
 
 - [Root CLAUDE.md](../../../CLAUDE.md) — 전체 컴퍼스
