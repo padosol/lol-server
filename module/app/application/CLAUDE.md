@@ -52,6 +52,6 @@ Spring Boot 진입점 + 컴포지션 루트. **모든 인프라 모듈을 implem
 
 ## See Also
 
-- [Root CLAUDE.md](../../CLAUDE.md) — 전체 컴퍼스, build/run 명령어
+- [Root CLAUDE.md](../../../CLAUDE.md) — 전체 컴퍼스, build/run 명령어
 - 각 모듈 CLAUDE.md (의존 그래프 확인)
 - `src/main/resources/application.yml` — 활성 프로파일별 yaml import 목록

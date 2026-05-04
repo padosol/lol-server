@@ -71,7 +71,7 @@ PostgreSQL 영속성 어댑터 (driven adapter). 도메인의 `*PersistencePort`
 
 ## See Also
 
-- [core:lol-server-domain](../../core/lol-server-domain/CLAUDE.md) — 구현 대상 PersistencePort 의 출처
+- [core:lol-server-domain](../../../core/lol-server-domain/CLAUDE.md) — 구현 대상 PersistencePort 의 출처
 - [redis](../redis/CLAUDE.md) — 같은 도메인의 캐시 어댑터 (Cache vs DB 책임 분리 확인용)
 - [clickhouse](../clickhouse/CLAUDE.md) — 분석 쿼리용 어댑터
 - 테스트 명령: `./gradlew :module:infra:persistence:postgresql:test`

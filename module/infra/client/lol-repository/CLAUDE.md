@@ -65,6 +65,6 @@ Riot API 호출 어댑터 (driven adapter). 도메인의 `*ClientPort` 를 Sprin
 
 ## See Also
 
-- [core:lol-server-domain](../../core/lol-server-domain/CLAUDE.md) — `*ClientPort` 정의처
+- [core:lol-server-domain](../../../core/lol-server-domain/CLAUDE.md) — `*ClientPort` 정의처
 - [client/oauth](../oauth/CLAUDE.md) — 같은 client 카테고리, 인증/토큰 교환 담당
 - [persistence/redis](../../persistence/redis/CLAUDE.md) — `SummonerCacheAdapter` 가 외부 호출 전 캐시 hit 검증

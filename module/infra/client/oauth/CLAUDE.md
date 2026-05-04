@@ -56,7 +56,7 @@ OAuth2 / RSO (Riot Sign-On) 어댑터 (driven adapter). Authorization URL 생성
 
 ## See Also
 
-- [core:lol-server-domain](../../core/lol-server-domain/CLAUDE.md) — `domain/member/application/port/out/` 의 OAuth 관련 port
+- [core:lol-server-domain](../../../core/lol-server-domain/CLAUDE.md) — `domain/member/application/port/out/` 의 OAuth 관련 port
 - [infra/api](../../api/CLAUDE.md) — 실제 OAuth 진입점 (`controller/security/`)
 - [persistence/redis](../../persistence/redis/CLAUDE.md) — `OAuthStateRedisAdapter` (state 발급/검증)
 - [client/lol-repository](../lol-repository/CLAUDE.md) — Riot API 일반 호출 (인증 무관)
