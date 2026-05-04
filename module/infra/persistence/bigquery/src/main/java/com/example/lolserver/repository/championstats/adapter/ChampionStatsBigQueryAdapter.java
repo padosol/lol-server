@@ -29,6 +29,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -216,6 +217,7 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
 
         return rows.stream().collect(Collectors.groupingBy(
                 Map.Entry::getKey,
+                LinkedHashMap::new,
                 Collectors.mapping(Map.Entry::getValue, Collectors.toList())
         ));
     }
