@@ -24,7 +24,6 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.payload.JsonFieldType;
 
 import java.util.List;
-import java.util.Map;
 
 import com.example.lolserver.TierFilter;
 
