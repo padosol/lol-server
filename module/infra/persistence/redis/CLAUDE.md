@@ -53,6 +53,13 @@ Redis 어댑터 (driven adapter). 캐시, 세션 (Refresh Token, OAuth State), �
 - consumed by: `app:application` (런타임 빈 주입)
 - `infra:api` 는 직접 의존 안 하지만, JWT 인증 플로우가 `RefreshTokenPort` (이 모듈 구현체) 에 의존 — 빈이 빠지면 인증 깨짐
 
+## Quick Commands
+
+```bash
+./gradlew :module:infra:persistence:redis:test           # Redis 어댑터 테스트
+./gradlew :module:infra:persistence:redis:checkstyleMain # checkstyle 단독 실행
+```
+
 ## See Also
 
 - [core:lol-server-domain](../../../core/lol-server-domain/CLAUDE.md) — 캐시 port 의 출처

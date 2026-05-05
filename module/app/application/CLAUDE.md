@@ -50,6 +50,14 @@ Spring Boot 진입점 + 컴포지션 루트. **모든 인프라 모듈을 implem
 - consumed by: 없음 (terminal, bootJar 산출)
 - 빌드: `./gradlew bootRun -Dspring.profiles.active=local` — Postgres/Redis/RabbitMQ 등 Docker 서비스 필요
 
+## Quick Commands
+
+```bash
+./gradlew :module:app:application:bootRun -Dspring.profiles.active=local  # local 부트 (Docker 서비스 필요)
+./gradlew :module:app:application:bootJar                                 # 실행 가능 fat jar
+./gradlew :module:app:application:test                                    # 모듈 단위 테스트
+```
+
 ## See Also
 
 - [Root CLAUDE.md](../../../CLAUDE.md) — 전체 컴퍼스, build/run 명령어

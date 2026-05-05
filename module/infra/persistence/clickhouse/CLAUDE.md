@@ -44,6 +44,13 @@ ClickHouse 분석 어댑터 (driven adapter). 챔피언 통계 (승률/픽률/�
 - consumed by: `app:application` 만 (다른 인프라 모듈은 직접 의존 안 함)
 - ClickHouse 데이터는 외부 ETL 파이프라인이 적재 — 이 모듈은 read-only
 
+## Quick Commands
+
+```bash
+./gradlew :module:infra:persistence:clickhouse:test           # 어댑터 테스트 (Testcontainers/ClickHouse 필요)
+./gradlew :module:infra:persistence:clickhouse:checkstyleMain # checkstyle 단독 실행
+```
+
 ## See Also
 
 - [core:lol-server-domain](../../../core/lol-server-domain/CLAUDE.md) — `domain/championstats/` 가 호출자

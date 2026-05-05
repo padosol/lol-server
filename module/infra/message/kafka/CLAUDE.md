@@ -47,6 +47,13 @@ Kafka 메시지 어댑터 (driven adapter). 도메인 `*MessagePort` (현재는 
 - consumed by: `app:application` (런타임 빈 주입, `message.broker=kafka` 일 때)
 - 형제: [infra:message:rabbitmq](../rabbitmq/CLAUDE.md) — 같은 port 의 다른 broker 구현체
 
+## Quick Commands
+
+```bash
+./gradlew :module:infra:message:kafka:test           # Kafka 어댑터 테스트 (broker 없이 mock 기반)
+./gradlew :module:infra:message:kafka:checkstyleMain # checkstyle 단독 실행
+```
+
 ## See Also
 
 - [core:lol-server-domain](../../../core/lol-server-domain/CLAUDE.md) — `domain/summoner/application/port/out/SummonerMessagePort`
