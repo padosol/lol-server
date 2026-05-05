@@ -54,6 +54,13 @@ OAuth2 / RSO (Riot Sign-On) 어댑터 (driven adapter). Authorization URL 생성
 - consumed by: `app:application` (런타임 빈 주입)
 - 협력: `infra:persistence:redis` 의 `OAuthStateRedisAdapter` 가 state 토큰 저장/검증, `infra:api` 의 `OAuth2AuthenticationSuccessHandler` 가 이 어댑터들의 결과로 JWT 발급
 
+## Quick Commands
+
+```bash
+./gradlew :module:infra:client:oauth:test           # OAuth/RSO 어댑터 테스트
+./gradlew :module:infra:client:oauth:checkstyleMain # checkstyle 단독 실행
+```
+
 ## See Also
 
 - [core:lol-server-domain](../../../core/lol-server-domain/CLAUDE.md) — `domain/member/application/port/out/` 의 OAuth 관련 port

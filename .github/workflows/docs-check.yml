@@ -58,3 +58,34 @@ jobs:
             fi
           done < <(git ls-files '**/CLAUDE.md' 'CLAUDE.md')
           exit $fail
+
+  context-doc-freshness:
+    name: CLAUDE.md Freshness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Warn on stale CLAUDE.md (>180d)
+        shell: bash
+        run: |
+          set -euo pipefail
+          STALE_DAYS=180
+          now=$(date +%s)
+          stale=0
+          while IFS= read -r f; do
+            ts=$(git log -1 --format=%ct -- "$f" 2>/dev/null || echo "")
+            if [ -z "$ts" ]; then
+              echo "skip $f (no git history)"
+              continue
+            fi
+            age=$(( (now - ts) / 86400 ))
+            if [ "$age" -gt "$STALE_DAYS" ]; then
+              echo "::warning file=$f::CLAUDE.md last touched ${age}d ago (threshold ${STALE_DAYS}d). Quarterly review overdue — verify it still matches the code."
+              stale=$((stale + 1))
+            else
+              echo "ok  $f (${age}d)"
+            fi
+          done < <(git ls-files '**/CLAUDE.md' 'CLAUDE.md')
+          echo "stale_count=$stale"
