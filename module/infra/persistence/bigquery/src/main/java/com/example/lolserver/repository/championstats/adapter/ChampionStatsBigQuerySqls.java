@@ -300,6 +300,7 @@ final class ChampionStatsBigQuerySqls {
                    COALESCE(ROUND(pick_rate, 4), 0)               AS pick_rate,
                    COALESCE(ROUND(ban_rate, 4), 0)                AS ban_rate,
                    pick_count                                     AS total_games,
+                   (0.6 * pct_wilson_wr + 0.4 * pct_presence)     AS tier_score,
                    CASE
                        WHEN 0.6 * pct_wilson_wr + 0.4 * pct_presence >= 0.97 THEN 'S+'
                        WHEN 0.6 * pct_wilson_wr + 0.4 * pct_presence >= 0.90 THEN 'S'
@@ -309,7 +310,7 @@ final class ChampionStatsBigQuerySqls {
                        ELSE 'D'
                    END                                            AS tier
             FROM ranked
-            ORDER BY individual_position, pick_count DESC
+            ORDER BY individual_position, tier_score DESC
             """;
 
     private ChampionStatsBigQuerySqls() {
