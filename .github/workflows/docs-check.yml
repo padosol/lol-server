@@ -6,6 +6,10 @@ on:
     paths:
       - '**/*.md'
       - '.github/workflows/docs-check.yml'
+  schedule:
+    # Weekly Monday 09:00 UTC — surfaces stale CLAUDE.md on code-only PRs
+    # by running independently of doc changes.
+    - cron: '0 9 * * 1'
   workflow_dispatch:
 
 jobs:
@@ -73,7 +77,6 @@ jobs:
           set -euo pipefail
           STALE_DAYS=180
           now=$(date +%s)
-          stale=0
           while IFS= read -r f; do
             ts=$(git log -1 --format=%ct -- "$f" 2>/dev/null || echo "")
             if [ -z "$ts" ]; then
@@ -83,9 +86,7 @@ jobs:
             age=$(( (now - ts) / 86400 ))
             if [ "$age" -gt "$STALE_DAYS" ]; then
               echo "::warning file=$f::CLAUDE.md last touched ${age}d ago (threshold ${STALE_DAYS}d). Quarterly review overdue — verify it still matches the code."
-              stale=$((stale + 1))
             else
               echo "ok  $f (${age}d)"
             fi
           done < <(git ls-files '**/CLAUDE.md' 'CLAUDE.md')
-          echo "stale_count=$stale"

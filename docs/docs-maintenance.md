@@ -39,9 +39,9 @@ CLAUDE.md, ARCHITECTURE.md, `docs/*.md` 같은 AI/팀 공유 문서가 코드와
 |---|---|---|
 | `link-check` | lychee 로 `**/*.md` 파일 링크 — 깨진 file/URL refs | PR 차단 (`fail: true`) |
 | `context-doc-lint` | 모든 CLAUDE.md 가 80줄 이하 ("compass, not encyclopedia") | PR 차단 |
-| `context-doc-freshness` | CLAUDE.md 가 180일 넘게 미수정이면 `::warning` | 경고만 (차단 안 함) |
+| `context-doc-freshness` | CLAUDE.md 가 180일 넘게 미수정이면 `::warning` (PR + 매주 월 09:00 UTC cron) | 경고만 (차단 안 함) |
 
-freshness 경고가 PR 에 떴다면 분기 리뷰가 밀린 것 — section 2 절차 트리거.
+freshness 경고가 PR 또는 주간 cron run 에 떴다면 분기 리뷰가 밀린 것 — section 2 절차 트리거. PR 트리거는 markdown 변경 PR 한정이라 코드-only PR 의 stale 신호는 cron run 으로만 잡힌다.
 
 ## 4. 신규 모듈 체크리스트
 
