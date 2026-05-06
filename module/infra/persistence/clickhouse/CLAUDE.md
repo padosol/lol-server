@@ -1,6 +1,8 @@
 # infra:persistence:clickhouse
 
-ClickHouse 분석 어댑터 (driven adapter). 챔피언 통계 (승률/픽률/밴률, 룬/스펠/아이템/매치업) 같은 OLAP 쿼리만 담당한다. Postgres 와 별개의 데이터소스 (`clickHouseJdbcTemplate` qualifier).
+ClickHouse 분석 어댑터 (driven adapter). 챔피언 통계 (승률/픽률/밴률, 룬/스펠/아이템/매치업) OLAP 쿼리. Postgres 와 별개 데이터소스 (`clickHouseJdbcTemplate` qualifier).
+
+> **⚠️ Runtime status — fallback only.** MP-9 머지 이후 `STATS_DATASOURCE` 기본값이 `bigquery` 로 바뀌었다. BigQuery 어댑터가 `@Primary` 로 활성이면 이 모듈의 어댑터는 **runtime dead path** — `stats.datasource=clickhouse` 로 명시 override 한 환경에서만 호출된다 (BigQuery 장애 시 fallback 또는 비교 검증 용도). 코드/테스트는 유지하되 신규 통계 기능은 BigQuery 우선으로 작성하고 양쪽에 동일 메서드를 더한다 (port 일치 보장). 모듈 자체 제거 시점은 별도 결정 (MP-8 종료 후 N개월).
 
 ## Boundaries
 

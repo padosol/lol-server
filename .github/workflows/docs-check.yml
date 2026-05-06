@@ -5,6 +5,7 @@ on:
     branches: [main, develop]
     paths:
       - '**/*.md'
+      - 'module/**/build.gradle'
       - '.github/workflows/docs-check.yml'
   schedule:
     # Weekly Monday 09:00 UTC — surfaces stale CLAUDE.md on code-only PRs
@@ -61,6 +62,51 @@ jobs:
               echo "ok  $f ($lines lines)"
             fi
           done < <(git ls-files '**/CLAUDE.md' 'CLAUDE.md')
+          exit $fail
+
+  module-sync:
+    name: Root CLAUDE.md ↔ module build.gradle sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Verify root CLAUDE.md module table matches module/**/build.gradle inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          fail=0
+
+          # Module paths from the root CLAUDE.md '## 모듈' table.
+          # Restrict to table rows ('| ...') so 'What to read first' links and
+          # other prose don't pollute the inventory; strip trailing /CLAUDE.md.
+          table_modules=$(grep -E '^\| ' CLAUDE.md \
+            | grep -oE 'module/[a-zA-Z0-9/._-]+' \
+            | sed -E 's|/CLAUDE\.md$||' \
+            | sort -u)
+
+          # Forward: every module/**/build.gradle must appear in the root table.
+          # Catches: new module added but its row is missing from CLAUDE.md.
+          while IFS= read -r gradle; do
+            mod=$(dirname "$gradle")
+            if ! grep -qx "$mod" <<< "$table_modules"; then
+              echo "::error file=CLAUDE.md::module '$mod' has $gradle but is missing from root CLAUDE.md '## 모듈' table — 새 모듈을 추가했다면 표에 행도 추가해 주세요."
+              fail=1
+            fi
+          done < <(find module -maxdepth 6 -name build.gradle | sort)
+
+          # Backward: every module path referenced in CLAUDE.md must exist on disk.
+          # Catches: module removed but its row was left in CLAUDE.md.
+          while IFS= read -r mod; do
+            [ -z "$mod" ] && continue
+            if [ ! -d "$mod" ]; then
+              echo "::error file=CLAUDE.md::root CLAUDE.md references '$mod' but the directory does not exist — stale 행을 제거해 주세요."
+              fail=1
+            fi
+          done <<< "$table_modules"
+
+          if [ "$fail" -eq 0 ]; then
+            echo "ok  build.gradle ↔ CLAUDE.md '## 모듈' 표 sync 통과"
+          fi
           exit $fail
 
   context-doc-freshness:
