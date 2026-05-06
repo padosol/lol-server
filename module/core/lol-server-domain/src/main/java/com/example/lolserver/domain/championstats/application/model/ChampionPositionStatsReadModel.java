@@ -5,7 +5,11 @@ import java.util.List;
 public record ChampionPositionStatsReadModel(
     String teamPosition,
     double winRate,
+    double pickRate,
+    double banRate,
+    String tier,
     long totalGames,
+    ChampionAverageStatsReadModel averages,
     List<ChampionMatchupReadModel> matchups,
     List<ChampionRuneBuildReadModel> runeBuilds,
     List<ChampionSpellStatsReadModel> spellStats,

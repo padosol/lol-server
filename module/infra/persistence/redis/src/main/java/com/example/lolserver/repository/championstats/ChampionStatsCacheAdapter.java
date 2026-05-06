@@ -1,6 +1,7 @@
 package com.example.lolserver.repository.championstats;
 
 import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionTimelineReadModel;
 import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsCachePort;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +20,9 @@ public class ChampionStatsCacheAdapter implements ChampionStatsCachePort {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private static final String DETAIL_KEY_PREFIX = "champion-stats:v4:detail:";
+    private static final String DETAIL_KEY_PREFIX = "champion-stats:v7:detail:";
     private static final String POSITIONS_KEY_PREFIX = "champion-stats:v4:positions:";
+    private static final String TIMELINE_KEY_PREFIX = "champion-stats:v1:timeline:";
     private static final Duration CACHE_TTL = Duration.ofHours(6);
 
     @Override
@@ -89,11 +91,37 @@ public class ChampionStatsCacheAdapter implements ChampionStatsCachePort {
         }
     }
 
+    @Override
+    public ChampionTimelineReadModel findChampionTimeline(
+            int championId, String patch, String platformId, String tierDisplay) {
+        return tryGetFromCache(buildTimelineKey(championId, patch, platformId, tierDisplay));
+    }
+
+    @Override
+    public void saveChampionTimeline(int championId, String patch, String platformId,
+                                     String tierDisplay, ChampionTimelineReadModel timeline) {
+        if (timeline == null) {
+            return;
+        }
+        try {
+            String key = buildTimelineKey(championId, patch, platformId, tierDisplay);
+            log.debug("캐시 저장 - key: {}", key);
+            redisTemplate.opsForValue().set(key, timeline, CACHE_TTL);
+        } catch (Exception e) {
+            log.warn("캐시 저장 실패 - timeline championId: {}, patch: {}, tier: {}",
+                    championId, patch, tierDisplay, e);
+        }
+    }
+
     private String buildDetailKey(int championId, String patch, String platformId, String tierDisplay) {
         return DETAIL_KEY_PREFIX + platformId + ":" + championId + ":" + patch + ":" + tierDisplay;
     }
 
     private String buildPositionsKey(String patch, String platformId, String tierDisplay) {
         return POSITIONS_KEY_PREFIX + platformId + ":" + patch + ":" + tierDisplay;
+    }
+
+    private String buildTimelineKey(int championId, String patch, String platformId, String tierDisplay) {
+        return TIMELINE_KEY_PREFIX + platformId + ":" + championId + ":" + patch + ":" + tierDisplay;
     }
 }

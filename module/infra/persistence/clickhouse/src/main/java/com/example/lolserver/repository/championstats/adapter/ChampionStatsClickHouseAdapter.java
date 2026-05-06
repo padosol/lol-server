@@ -1,6 +1,7 @@
 package com.example.lolserver.repository.championstats.adapter;
 
 import com.example.lolserver.TierFilter;
+import com.example.lolserver.domain.championstats.application.model.ChampionAverageStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
@@ -88,6 +89,14 @@ public class ChampionStatsClickHouseAdapter implements ChampionStatsQueryPort {
                         rs.getLong("total_games"),
                         rs.getLong("total_wins"),
                         rs.getDouble("total_win_rate")));
+    }
+
+    @Override
+    public List<ChampionAverageStatsReadModel> getChampionAverageStats(
+            int championId, String patch, String platformId, TierFilter tierFilter) {
+        // ClickHouse match_participant_local 에는 kills/deaths/assists/gold_per_minute/cs 컬럼이 없어 평균 계산 불가.
+        // BigQuery adapter 가 @Primary 로 활성화되어 있어 prod 에서는 호출되지 않음.
+        return List.of();
     }
 
     @Override

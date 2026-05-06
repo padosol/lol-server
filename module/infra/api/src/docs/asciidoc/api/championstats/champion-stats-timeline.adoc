@@ -1,0 +1,11 @@
+[[champion-stats-timeline]]
+=== 챔피언 시간대별 평균 곡선 조회
+
+==== HTTP Request
+include::{snippets}/champion-stats-timeline/http-request.adoc[]
+include::{snippets}/champion-stats-timeline/path-parameters.adoc[]
+include::{snippets}/champion-stats-timeline/query-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/champion-stats-timeline/http-response.adoc[]
+include::{snippets}/champion-stats-timeline/response-fields.adoc[]

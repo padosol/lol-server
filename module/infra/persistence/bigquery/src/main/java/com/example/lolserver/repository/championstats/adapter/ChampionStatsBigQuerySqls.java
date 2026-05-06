@@ -225,6 +225,26 @@ final class ChampionStatsBigQuerySqls {
             LIMIT 5
             """;
 
+    static final String AVG_STATS = """
+            SELECT individual_position                                        AS team_position,
+                   AVG(kills)                                                 AS avg_kills,
+                   AVG(deaths)                                                AS avg_deaths,
+                   AVG(assists)                                               AS avg_assists,
+                   SAFE_DIVIDE(SUM(kills) + SUM(assists),
+                               GREATEST(SUM(deaths), 1))                      AS kda,
+                   AVG(gold_per_minute)                                       AS avg_gold_per_minute,
+                   AVG(lane_cs_10m)                                           AS avg_lane_cs_10m,
+                   AVG(jungle_cs_10m)                                         AS avg_jungle_cs_10m
+            FROM %s
+            WHERE patch_version_int = @patch
+              AND platform_id = @platform
+              AND tier_bucket IN UNNEST(@tierBuckets)
+              AND champion_id = @championId
+              AND individual_position IS NOT NULL
+            GROUP BY individual_position
+            HAVING COUNT(*) > 20
+            """;
+
     static final String STATS_BY_POSITION = """
             WITH
                 denom AS (

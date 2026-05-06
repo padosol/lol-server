@@ -1,5 +1,5 @@
 stats:
-  datasource: ${STATS_DATASOURCE:clickhouse}
+  datasource: ${STATS_DATASOURCE:bigquery}
 
 bigquery:
   project-id: ${BIGQUERY_PROJECT_ID}

@@ -67,6 +67,8 @@ include::api/championstats/champion-stats-get.adoc[]
 
 include::api/championstats/champion-stats-positions.adoc[]
 
+include::api/championstats/champion-stats-timeline.adoc[]
+
 [[Rank-API]]
 == Rank API
 

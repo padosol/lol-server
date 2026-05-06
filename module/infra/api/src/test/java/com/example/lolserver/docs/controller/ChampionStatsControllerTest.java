@@ -3,6 +3,7 @@ package com.example.lolserver.docs.controller;
 import com.example.lolserver.controller.championstats.ChampionStatsController;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.championstats.application.port.in.ChampionStatsQueryUseCase;
+import com.example.lolserver.domain.championstats.application.model.ChampionAverageStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
@@ -13,7 +14,10 @@ import com.example.lolserver.domain.championstats.application.model.ChampionSpel
 import com.example.lolserver.domain.championstats.application.model.ChampionStartItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionTimelineReadModel;
 import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.PositionTimelineReadModel;
+import com.example.lolserver.domain.championstats.application.model.TimelineFrameReadModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -83,8 +87,13 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                 List.of(3078, 3053, 3065), 300, 0.5667, 0.3
         );
 
+        ChampionAverageStatsReadModel averages = new ChampionAverageStatsReadModel(
+                "TOP", 6.2, 5.4, 7.8, 2.59, 380.5, 65.3, 12.1
+        );
+
         ChampionPositionStatsReadModel positionStats = new ChampionPositionStatsReadModel(
-                "TOP", 0.55, 1500,
+                "TOP", 0.55, 0.075, 0.04, "S", 1500,
+                averages,
                 List.of(topMatchup, bottomMatchup),
                 List.of(runeBuild),
                 List.of(spellStats),
@@ -130,7 +139,21 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.positions[]").type(JsonFieldType.ARRAY).description("포지션별 통계 목록"),
                                 fieldWithPath("data.positions[].teamPosition").type(JsonFieldType.STRING).description("포지션"),
                                 fieldWithPath("data.positions[].winRate").type(JsonFieldType.NUMBER).description("승률"),
+                                fieldWithPath("data.positions[].pickRate").type(JsonFieldType.NUMBER).description("픽률 (해당 라인 기준)"),
+                                fieldWithPath("data.positions[].banRate").type(JsonFieldType.NUMBER).description("밴률 (라인 무관)"),
+                                fieldWithPath("data.positions[].tier").type(JsonFieldType.STRING).description("티어 등급 (S+, S, A, B, C, D — /champion-stats/positions 와 동일 룰)"),
                                 fieldWithPath("data.positions[].totalGames").type(JsonFieldType.NUMBER).description("총 게임 수"),
+
+                                // averages (챔피언 단위 평균 통계)
+                                fieldWithPath("data.positions[].averages").type(JsonFieldType.OBJECT).description("챔피언 단위 평균 통계 (BQ 미적재 시 null)").optional(),
+                                fieldWithPath("data.positions[].averages.teamPosition").type(JsonFieldType.STRING).description("포지션").optional(),
+                                fieldWithPath("data.positions[].averages.avgKills").type(JsonFieldType.NUMBER).description("평균 킬").optional(),
+                                fieldWithPath("data.positions[].averages.avgDeaths").type(JsonFieldType.NUMBER).description("평균 데스").optional(),
+                                fieldWithPath("data.positions[].averages.avgAssists").type(JsonFieldType.NUMBER).description("평균 어시스트").optional(),
+                                fieldWithPath("data.positions[].averages.kda").type(JsonFieldType.NUMBER).description("KDA = (킬+어시) / max(데스, 1)").optional(),
+                                fieldWithPath("data.positions[].averages.avgGoldPerMinute").type(JsonFieldType.NUMBER).description("분당 평균 골드 (gold_per_minute)").optional(),
+                                fieldWithPath("data.positions[].averages.avgLaneCs10m").type(JsonFieldType.NUMBER).description("10분 시점 평균 라인 CS").optional(),
+                                fieldWithPath("data.positions[].averages.avgJungleCs10m").type(JsonFieldType.NUMBER).description("10분 시점 평균 정글 CS").optional(),
 
                                 // matchups (rankType=TOP: 잘 잡는 상대 / BOTTOM: 카운터)
                                 fieldWithPath("data.positions[].matchups[]").type(JsonFieldType.ARRAY).description("매치업 목록 (rankType=TOP: 잘 잡는 상대, BOTTOM: 카운터)"),
@@ -153,6 +176,9 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.positions[].runeBuilds[].games").type(JsonFieldType.NUMBER).description("게임 수"),
                                 fieldWithPath("data.positions[].runeBuilds[].winRate").type(JsonFieldType.NUMBER).description("승률"),
                                 fieldWithPath("data.positions[].runeBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
+                                fieldWithPath("data.positions[].runeBuilds[].sampleSize").type(JsonFieldType.NUMBER).description("이 빌드의 표본 크기 (= games)"),
+                                fieldWithPath("data.positions[].runeBuilds[].totalSampleSize").type(JsonFieldType.NUMBER).description("챔프-라인 총 표본 크기"),
+                                fieldWithPath("data.positions[].runeBuilds[].confidenceLowerBound").type(JsonFieldType.NUMBER).description("Wilson 신뢰구간(95%) 하한 — 추천 신뢰도 정렬 기준"),
 
                                 // spellStats
                                 fieldWithPath("data.positions[].spellStats[]").type(JsonFieldType.ARRAY).description("소환사 주문 조합 목록"),
@@ -161,6 +187,9 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.positions[].spellStats[].games").type(JsonFieldType.NUMBER).description("게임 수"),
                                 fieldWithPath("data.positions[].spellStats[].winRate").type(JsonFieldType.NUMBER).description("승률"),
                                 fieldWithPath("data.positions[].spellStats[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
+                                fieldWithPath("data.positions[].spellStats[].sampleSize").type(JsonFieldType.NUMBER).description("이 조합의 표본 크기 (= games)"),
+                                fieldWithPath("data.positions[].spellStats[].totalSampleSize").type(JsonFieldType.NUMBER).description("챔프-라인 총 표본 크기"),
+                                fieldWithPath("data.positions[].spellStats[].confidenceLowerBound").type(JsonFieldType.NUMBER).description("Wilson 신뢰구간(95%) 하한"),
 
                                 // skillBuilds
                                 fieldWithPath("data.positions[].skillBuilds[]").type(JsonFieldType.ARRAY).description("스킬 빌드 목록"),
@@ -168,6 +197,9 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.positions[].skillBuilds[].games").type(JsonFieldType.NUMBER).description("게임 수"),
                                 fieldWithPath("data.positions[].skillBuilds[].winRate").type(JsonFieldType.NUMBER).description("승률"),
                                 fieldWithPath("data.positions[].skillBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
+                                fieldWithPath("data.positions[].skillBuilds[].sampleSize").type(JsonFieldType.NUMBER).description("이 빌드의 표본 크기 (= games)"),
+                                fieldWithPath("data.positions[].skillBuilds[].totalSampleSize").type(JsonFieldType.NUMBER).description("챔프-라인 총 표본 크기"),
+                                fieldWithPath("data.positions[].skillBuilds[].confidenceLowerBound").type(JsonFieldType.NUMBER).description("Wilson 신뢰구간(95%) 하한"),
 
                                 // startItemBuilds
                                 fieldWithPath("data.positions[].startItemBuilds[]").type(JsonFieldType.ARRAY).description("시작 아이템 빌드 목록"),
@@ -175,6 +207,9 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.positions[].startItemBuilds[].games").type(JsonFieldType.NUMBER).description("게임 수"),
                                 fieldWithPath("data.positions[].startItemBuilds[].winRate").type(JsonFieldType.NUMBER).description("승률"),
                                 fieldWithPath("data.positions[].startItemBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
+                                fieldWithPath("data.positions[].startItemBuilds[].sampleSize").type(JsonFieldType.NUMBER).description("이 빌드의 표본 크기 (= games)"),
+                                fieldWithPath("data.positions[].startItemBuilds[].totalSampleSize").type(JsonFieldType.NUMBER).description("챔프-라인 총 표본 크기"),
+                                fieldWithPath("data.positions[].startItemBuilds[].confidenceLowerBound").type(JsonFieldType.NUMBER).description("Wilson 신뢰구간(95%) 하한"),
 
                                 // bootBuilds (신발)
                                 fieldWithPath("data.positions[].bootBuilds[]").type(JsonFieldType.ARRAY).description("신발 빌드 목록"),
@@ -182,13 +217,78 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.positions[].bootBuilds[].games").type(JsonFieldType.NUMBER).description("게임 수"),
                                 fieldWithPath("data.positions[].bootBuilds[].winRate").type(JsonFieldType.NUMBER).description("승률"),
                                 fieldWithPath("data.positions[].bootBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
+                                fieldWithPath("data.positions[].bootBuilds[].sampleSize").type(JsonFieldType.NUMBER).description("이 빌드의 표본 크기 (= games)"),
+                                fieldWithPath("data.positions[].bootBuilds[].totalSampleSize").type(JsonFieldType.NUMBER).description("챔프-라인 총 표본 크기"),
+                                fieldWithPath("data.positions[].bootBuilds[].confidenceLowerBound").type(JsonFieldType.NUMBER).description("Wilson 신뢰구간(95%) 하한"),
 
                                 // itemBuilds (3코어)
                                 fieldWithPath("data.positions[].itemBuilds[]").type(JsonFieldType.ARRAY).description("3코어 아이템 빌드 목록"),
                                 fieldWithPath("data.positions[].itemBuilds[].itemBuild").type(JsonFieldType.ARRAY).description("아이템 ID 배열 (number[], 빌드 순서)"),
                                 fieldWithPath("data.positions[].itemBuilds[].games").type(JsonFieldType.NUMBER).description("게임 수"),
                                 fieldWithPath("data.positions[].itemBuilds[].winRate").type(JsonFieldType.NUMBER).description("승률"),
-                                fieldWithPath("data.positions[].itemBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률")
+                                fieldWithPath("data.positions[].itemBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
+                                fieldWithPath("data.positions[].itemBuilds[].sampleSize").type(JsonFieldType.NUMBER).description("이 빌드의 표본 크기 (= games)"),
+                                fieldWithPath("data.positions[].itemBuilds[].totalSampleSize").type(JsonFieldType.NUMBER).description("챔프-라인 총 표본 크기"),
+                                fieldWithPath("data.positions[].itemBuilds[].confidenceLowerBound").type(JsonFieldType.NUMBER).description("Wilson 신뢰구간(95%) 하한")
+                        )
+                ));
+    }
+
+    @DisplayName("챔피언 시간대별 평균 곡선 조회 API")
+    @Test
+    void getChampionTimeline() throws Exception {
+        // given
+        String platformId = "kr";
+        ChampionTimelineReadModel response = new ChampionTimelineReadModel(
+                266,
+                "EMERALD",
+                List.of(
+                        new PositionTimelineReadModel("TOP", List.of(
+                                new TimelineFrameReadModel(10, 4520.5, 78.2, 4810.0, 1500),
+                                new TimelineFrameReadModel(15, 7210.4, 121.6, 7950.5, 1480),
+                                new TimelineFrameReadModel(20, 10210.7, 168.9, 11460.0, 1310),
+                                new TimelineFrameReadModel(25, 13150.0, 213.4, 15010.5, 980),
+                                new TimelineFrameReadModel(30, 16290.2, 259.1, 18790.5, 540)
+                        ))
+                ));
+
+        given(championStatsService.getChampionTimeline(anyInt(), anyString(), anyString(), any(TierFilter.class)))
+                .willReturn(response);
+
+        // when & then
+        mockMvc.perform(
+                        get("/api/v1/{platformId}/champion-stats/timeline", platformId)
+                                .param("championId", "266")
+                                .param("patch", "14.24")
+                                .param("tier", "EMERALD")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andDo(document("champion-stats-timeline",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)")
+                        ),
+                        queryParameters(
+                                parameterWithName("championId").description("챔피언 ID"),
+                                parameterWithName("patch").description("패치 버전 (e.g., 14.24)"),
+                                parameterWithName("tier").description("티어 필터. 단일 또는 범위 (e.g., MASTER+).")
+                        ),
+                        responseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
+                                fieldWithPath("data.championId").type(JsonFieldType.NUMBER).description("챔피언 ID"),
+                                fieldWithPath("data.tier").type(JsonFieldType.STRING).description("티어 표시 (e.g., EMERALD, MASTER+)"),
+                                fieldWithPath("data.positions[]").type(JsonFieldType.ARRAY).description("포지션별 시계열 목록"),
+                                fieldWithPath("data.positions[].teamPosition").type(JsonFieldType.STRING).description("포지션 (TOP/JUNGLE/MIDDLE/BOTTOM/UTILITY)"),
+                                fieldWithPath("data.positions[].frames[]").type(JsonFieldType.ARRAY).description("시간대별 프레임 (10/15/20/25/30분)"),
+                                fieldWithPath("data.positions[].frames[].minute").type(JsonFieldType.NUMBER).description("분 단위 시각 (10/15/20/25/30)"),
+                                fieldWithPath("data.positions[].frames[].avgGold").type(JsonFieldType.NUMBER).description("평균 누적 골드"),
+                                fieldWithPath("data.positions[].frames[].avgCs").type(JsonFieldType.NUMBER).description("평균 CS (라인 + 정글 미니언)"),
+                                fieldWithPath("data.positions[].frames[].avgXp").type(JsonFieldType.NUMBER).description("평균 누적 경험치"),
+                                fieldWithPath("data.positions[].frames[].sampleSize").type(JsonFieldType.NUMBER).description("이 프레임에 도달한 게임 수")
                         )
                 ));
     }
