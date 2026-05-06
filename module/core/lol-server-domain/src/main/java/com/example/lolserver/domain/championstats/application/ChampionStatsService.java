@@ -1,6 +1,7 @@
 package com.example.lolserver.domain.championstats.application;
 
 import com.example.lolserver.TierFilter;
+import com.example.lolserver.domain.championstats.application.model.ChampionAverageStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -65,9 +67,16 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
         Map<String, ChampionRateReadModel> rateByPosition =
                 lookupChampionRateByPosition(championId, patch, platformId, tierFilter);
 
+        Map<String, ChampionAverageStatsReadModel> averagesByPosition =
+                championStatsQueryPort.getChampionAverageStats(championId, patch, platformId, tierFilter)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                ChampionAverageStatsReadModel::teamPosition, a -> a));
+
         List<ChampionPositionStatsReadModel> positions = winRates.stream()
             .map(wr -> buildPositionStats(championId, patch, platformId, tierFilter, wr,
-                    rateByPosition.get(wr.teamPosition())))
+                    rateByPosition.get(wr.teamPosition()),
+                    averagesByPosition.get(wr.teamPosition())))
             .toList();
 
         ChampionStatsReadModel result = new ChampionStatsReadModel(tierDisplay, positions);
@@ -98,7 +107,8 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
 
     private ChampionPositionStatsReadModel buildPositionStats(
             int championId, String patch, String platformId, TierFilter tierFilter,
-            ChampionWinRateReadModel winRate, ChampionRateReadModel rate) {
+            ChampionWinRateReadModel winRate, ChampionRateReadModel rate,
+            ChampionAverageStatsReadModel averages) {
         String position = winRate.teamPosition();
 
         List<ChampionMatchupReadModel> matchups =
@@ -127,6 +137,7 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
             banRate,
             tier,
             winRate.totalGames(),
+            averages,
             matchups, runeBuilds, spellStats, skillBuilds,
             startItemBuilds, bootBuilds, itemBuilds
         );

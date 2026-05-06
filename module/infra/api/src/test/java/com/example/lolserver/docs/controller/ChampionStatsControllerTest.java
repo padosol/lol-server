@@ -3,6 +3,7 @@ package com.example.lolserver.docs.controller;
 import com.example.lolserver.controller.championstats.ChampionStatsController;
 import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.championstats.application.port.in.ChampionStatsQueryUseCase;
+import com.example.lolserver.domain.championstats.application.model.ChampionAverageStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
@@ -83,8 +84,13 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                 List.of(3078, 3053, 3065), 300, 0.5667, 0.3
         );
 
+        ChampionAverageStatsReadModel averages = new ChampionAverageStatsReadModel(
+                "TOP", 6.2, 5.4, 7.8, 2.59, 380.5, 65.3, 12.1
+        );
+
         ChampionPositionStatsReadModel positionStats = new ChampionPositionStatsReadModel(
                 "TOP", 0.55, 0.075, 0.04, "S", 1500,
+                averages,
                 List.of(topMatchup, bottomMatchup),
                 List.of(runeBuild),
                 List.of(spellStats),
@@ -134,6 +140,17 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.positions[].banRate").type(JsonFieldType.NUMBER).description("밴률 (라인 무관)"),
                                 fieldWithPath("data.positions[].tier").type(JsonFieldType.STRING).description("티어 등급 (S+, S, A, B, C, D — /champion-stats/positions 와 동일 룰)"),
                                 fieldWithPath("data.positions[].totalGames").type(JsonFieldType.NUMBER).description("총 게임 수"),
+
+                                // averages (챔피언 단위 평균 통계)
+                                fieldWithPath("data.positions[].averages").type(JsonFieldType.OBJECT).description("챔피언 단위 평균 통계 (BQ 미적재 시 null)").optional(),
+                                fieldWithPath("data.positions[].averages.teamPosition").type(JsonFieldType.STRING).description("포지션").optional(),
+                                fieldWithPath("data.positions[].averages.avgKills").type(JsonFieldType.NUMBER).description("평균 킬").optional(),
+                                fieldWithPath("data.positions[].averages.avgDeaths").type(JsonFieldType.NUMBER).description("평균 데스").optional(),
+                                fieldWithPath("data.positions[].averages.avgAssists").type(JsonFieldType.NUMBER).description("평균 어시스트").optional(),
+                                fieldWithPath("data.positions[].averages.kda").type(JsonFieldType.NUMBER).description("KDA = (킬+어시) / max(데스, 1)").optional(),
+                                fieldWithPath("data.positions[].averages.avgGoldPerMinute").type(JsonFieldType.NUMBER).description("분당 평균 골드 (gold_per_minute)").optional(),
+                                fieldWithPath("data.positions[].averages.avgLaneCs10m").type(JsonFieldType.NUMBER).description("10분 시점 평균 라인 CS").optional(),
+                                fieldWithPath("data.positions[].averages.avgJungleCs10m").type(JsonFieldType.NUMBER).description("10분 시점 평균 정글 CS").optional(),
 
                                 // matchups (rankType=TOP: 잘 잡는 상대 / BOTTOM: 카운터)
                                 fieldWithPath("data.positions[].matchups[]").type(JsonFieldType.ARRAY).description("매치업 목록 (rankType=TOP: 잘 잡는 상대, BOTTOM: 카운터)"),

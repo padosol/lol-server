@@ -1,6 +1,7 @@
 package com.example.lolserver.domain.championstats.application.port.out;
 
 import com.example.lolserver.TierFilter;
+import com.example.lolserver.domain.championstats.application.model.ChampionAverageStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
@@ -20,6 +21,9 @@ public interface ChampionStatsQueryPort {
             String patch, String platformId, TierFilter tierFilter);
 
     List<ChampionWinRateReadModel> getChampionWinRates(
+            int championId, String patch, String platformId, TierFilter tierFilter);
+
+    List<ChampionAverageStatsReadModel> getChampionAverageStats(
             int championId, String patch, String platformId, TierFilter tierFilter);
 
     List<ChampionMatchupReadModel> getChampionMatchups(

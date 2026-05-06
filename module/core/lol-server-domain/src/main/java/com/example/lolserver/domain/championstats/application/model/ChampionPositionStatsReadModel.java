@@ -9,6 +9,7 @@ public record ChampionPositionStatsReadModel(
     double banRate,
     String tier,
     long totalGames,
+    ChampionAverageStatsReadModel averages,
     List<ChampionMatchupReadModel> matchups,
     List<ChampionRuneBuildReadModel> runeBuilds,
     List<ChampionSpellStatsReadModel> spellStats,

@@ -3,6 +3,7 @@ package com.example.lolserver.repository.championstats.adapter;
 import com.example.lolserver.Tier;
 import com.example.lolserver.TierFilter;
 import com.example.lolserver.config.BigQueryProperties;
+import com.example.lolserver.domain.championstats.application.model.ChampionAverageStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionMatchupReadModel;
@@ -68,6 +69,27 @@ public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
                 row.get("total_games").getLongValue(),
                 row.get("total_wins").getLongValue(),
                 row.get("total_win_rate").getDoubleValue()
+        ));
+    }
+
+    @Override
+    public List<ChampionAverageStatsReadModel> getChampionAverageStats(
+            int championId, String patch, String platformId, TierFilter tierFilter) {
+        String sql = ChampionStatsBigQuerySqls.AVG_STATS.formatted(table("match_participant_fact"));
+
+        QueryJobConfiguration job = baseQuery(sql, patch, platformId, tierFilter)
+                .addNamedParameter("championId", QueryParameterValue.int64(championId))
+                .build();
+
+        return query(job, row -> new ChampionAverageStatsReadModel(
+                row.get("team_position").getStringValue(),
+                row.get("avg_kills").getDoubleValue(),
+                row.get("avg_deaths").getDoubleValue(),
+                row.get("avg_assists").getDoubleValue(),
+                row.get("kda").getDoubleValue(),
+                row.get("avg_gold_per_minute").getDoubleValue(),
+                row.get("avg_lane_cs_10m").getDoubleValue(),
+                row.get("avg_jungle_cs_10m").getDoubleValue()
         ));
     }
 
