@@ -157,7 +157,14 @@ flowchart LR
     chAdapter --> ch
 ```
 
-PostgreSQL OLTP 데이터를 외부 ETL 파이프라인이 BigQuery 로 적재하고, 도메인 서비스는 `ChampionStatsQueryPort` 를 통해서만 접근한다. **`STATS_DATASOURCE` (default `bigquery`)** 가 어느 어댑터가 `@Primary` 로 빈 컨텍스트에 들어갈지 결정 — `bigquery` 면 BigQuery 어댑터만, `clickhouse` 면 ClickHouse 어댑터만 활성 (`@ConditionalOnProperty`). ClickHouse 경로는 BigQuery 장애 시 fallback / 검증용으로만 남아있고, 신규 통계 기능은 BigQuery 우선으로 추가하되 port 일치를 위해 양쪽에 동일 메서드를 구현한다 ([clickhouse/CLAUDE.md](../module/infra/persistence/clickhouse/CLAUDE.md), [bigquery/CLAUDE.md](../module/infra/persistence/bigquery/CLAUDE.md) 참조).
+PostgreSQL OLTP 데이터를 외부 ETL 파이프라인이 BigQuery 로 적재하고, 도메인 서비스는 `ChampionStatsQueryPort` 를 통해서만 접근한다. 활성 어댑터 선택 메커니즘:
+
+- `BigQueryConfig` + `ChampionStatsBigQueryAdapter` 양쪽에 `@ConditionalOnProperty(name = "stats.datasource", havingValue = "bigquery")` 가 걸려있고, 어댑터에는 추가로 `@Primary`.
+- `ClickHouseConfig` 와 `ChampionStatsClickHouseAdapter` 는 조건 어노테이션 없는 평범한 `@Configuration`/`@Component` 라 **항상 로드**된다 (`matchIfMissing` 같은 기본값 분기 없음).
+- `application-{local,dev,prod}.yml` 의 `stats.datasource: ${STATS_DATASOURCE:bigquery}` 가 환경변수 미지정 시 default 값을 `bigquery` 로 채워준다 — 그 결과 두 어댑터 모두 빈으로 등록되지만 `@Primary` 가 BigQuery 어댑터를 단일 후보로 선택.
+- `STATS_DATASOURCE=clickhouse` 로 override 하면 BigQuery 어댑터/Config 의 조건이 깨져 빈 자체가 미생성 → ClickHouse 어댑터만 단일 후보로 주입된다 (`@Primary` 불필요).
+
+ClickHouse 경로는 BigQuery 장애 시 fallback / 검증용으로만 남아있고, 신규 통계 기능은 BigQuery 우선으로 추가하되 port 일치를 위해 양쪽에 동일 메서드를 구현한다 ([clickhouse/CLAUDE.md](../module/infra/persistence/clickhouse/CLAUDE.md), [bigquery/CLAUDE.md](../module/infra/persistence/bigquery/CLAUDE.md) 참조).
 
 ## "X 가 변경되면 어디가 영향받는가?" 빠른 답
 

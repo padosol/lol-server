@@ -6,7 +6,7 @@ BigQuery 분석 어댑터 (driven adapter). 챔피언 통계 (승률/픽률/밴�
 
 - 허용: `core:lol-server-domain`, `core:enum`, `spring-boot-starter`, `com.google.cloud:google-cloud-bigquery` (libraries-bom 26.43.0)
 - 금지: JPA / Spring Data, JdbcTemplate, 트랜잭션 (BigQuery 는 read-only 분석 전용)
-- 활성화: `@ConditionalOnProperty(name = "stats.datasource", havingValue = "bigquery")` — Config + Adapter 양쪽 모두에 걸려있음. Adapter 는 `@Primary` 로 ClickHouse 어댑터를 압도
+- 활성화: 이 모듈의 `BigQueryConfig` 와 `ChampionStatsBigQueryAdapter` 양쪽에 `@ConditionalOnProperty(name = "stats.datasource", havingValue = "bigquery")` 가 걸려있고, 어댑터에는 추가로 `@Primary`. ClickHouse 어댑터는 항상 로드되지만 default(`STATS_DATASOURCE` 미지정 시 yml 이 `bigquery` 로 채움)에서는 `@Primary` 가 BigQuery 를 단일 후보로 선택
 
 ## Layout
 

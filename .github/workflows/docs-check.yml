@@ -86,6 +86,9 @@ jobs:
 
           # Forward: every module/**/build.gradle must appear in the root table.
           # Catches: new module added but its row is missing from CLAUDE.md.
+          # Limitation: modules included via settings.gradle without their own
+          # build.gradle (e.g. module/core/enum) are NOT iterated here — they
+          # are protected only by the backward check (directory existence).
           while IFS= read -r gradle; do
             mod=$(dirname "$gradle")
             if ! grep -qx "$mod" <<< "$table_modules"; then
