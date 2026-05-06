@@ -99,7 +99,7 @@ module/
 - **match**: 매치 기록·검색·타임라인 분석
 - **league / rank / tiercutoff**: 리그·티어·랭킹·티어 컷오프
 - **spectator**: 실시간 게임 정보
-- **member / auth**: 회원 + RSO/OAuth2 로그인 (RefreshToken, JWT)
+- **member**: 회원 + RSO/OAuth2 로그인 (RefreshToken / JWT 포함)
 - **community**: 게시글 / 댓글 / 투표
 - **duo**: 듀오 모집글 / 신청
 - **patchnote / season / version / queue_type**: 메타 데이터 / 패치 노트
