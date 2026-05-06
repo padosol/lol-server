@@ -16,7 +16,6 @@ services:
       - "6379:6379"
 
   rabbitmq:
-    profiles: ["rabbitmq", "default"]
     image: rabbitmq:3-management-alpine
     ports:
       - "5672:5672"
