@@ -110,21 +110,28 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
             ChampionWinRateReadModel winRate, ChampionRateReadModel rate,
             ChampionAverageStatsReadModel averages) {
         String position = winRate.teamPosition();
+        long totalSamples = winRate.totalGames();
 
         List<ChampionMatchupReadModel> matchups =
             championStatsQueryPort.getChampionMatchups(championId, patch, platformId, tierFilter, position);
         List<ChampionRuneBuildReadModel> runeBuilds =
-            championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tierFilter, position);
+            championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tierFilter, position)
+                    .stream().map(b -> b.withConfidence(totalSamples, wilson(b.games(), b.winRate()))).toList();
         List<ChampionSpellStatsReadModel> spellStats =
-            championStatsQueryPort.getChampionSpellStats(championId, patch, platformId, tierFilter, position);
+            championStatsQueryPort.getChampionSpellStats(championId, patch, platformId, tierFilter, position)
+                    .stream().map(b -> b.withConfidence(totalSamples, wilson(b.games(), b.winRate()))).toList();
         List<ChampionSkillBuildReadModel> skillBuilds =
-            championStatsQueryPort.getChampionSkillBuilds(championId, patch, platformId, tierFilter, position);
+            championStatsQueryPort.getChampionSkillBuilds(championId, patch, platformId, tierFilter, position)
+                    .stream().map(b -> b.withConfidence(totalSamples, wilson(b.games(), b.winRate()))).toList();
         List<ChampionStartItemBuildReadModel> startItemBuilds =
-            championStatsQueryPort.getChampionStartItemBuilds(championId, patch, platformId, tierFilter, position);
+            championStatsQueryPort.getChampionStartItemBuilds(championId, patch, platformId, tierFilter, position)
+                    .stream().map(b -> b.withConfidence(totalSamples, wilson(b.games(), b.winRate()))).toList();
         List<ChampionBootBuildReadModel> bootBuilds =
-            championStatsQueryPort.getChampionBootBuilds(championId, patch, platformId, tierFilter, position);
+            championStatsQueryPort.getChampionBootBuilds(championId, patch, platformId, tierFilter, position)
+                    .stream().map(b -> b.withConfidence(totalSamples, wilson(b.games(), b.winRate()))).toList();
         List<ChampionItemBuildReadModel> itemBuilds =
-            championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tierFilter, position);
+            championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tierFilter, position)
+                    .stream().map(b -> b.withConfidence(totalSamples, wilson(b.games(), b.winRate()))).toList();
 
         double pickRate = rate != null ? rate.pickRate() : 0.0;
         double banRate = rate != null ? rate.banRate() : 0.0;
@@ -141,6 +148,11 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
             matchups, runeBuilds, spellStats, skillBuilds,
             startItemBuilds, bootBuilds, itemBuilds
         );
+    }
+
+    private static double wilson(long games, double winRate) {
+        long wins = Math.round(winRate * games);
+        return WilsonScore.lowerBound95(wins, games);
     }
 
     public List<PositionChampionStatsReadModel> getChampionStatsByPosition(

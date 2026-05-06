@@ -19,7 +19,7 @@ public class ChampionStatsCacheAdapter implements ChampionStatsCachePort {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private static final String DETAIL_KEY_PREFIX = "champion-stats:v6:detail:";
+    private static final String DETAIL_KEY_PREFIX = "champion-stats:v7:detail:";
     private static final String POSITIONS_KEY_PREFIX = "champion-stats:v4:positions:";
     private static final Duration CACHE_TTL = Duration.ofHours(6);
 

@@ -173,6 +173,9 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.positions[].runeBuilds[].games").type(JsonFieldType.NUMBER).description("게임 수"),
                                 fieldWithPath("data.positions[].runeBuilds[].winRate").type(JsonFieldType.NUMBER).description("승률"),
                                 fieldWithPath("data.positions[].runeBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
+                                fieldWithPath("data.positions[].runeBuilds[].sampleSize").type(JsonFieldType.NUMBER).description("이 빌드의 표본 크기 (= games)"),
+                                fieldWithPath("data.positions[].runeBuilds[].totalSampleSize").type(JsonFieldType.NUMBER).description("챔프-라인 총 표본 크기"),
+                                fieldWithPath("data.positions[].runeBuilds[].confidenceLowerBound").type(JsonFieldType.NUMBER).description("Wilson 신뢰구간(95%) 하한 — 추천 신뢰도 정렬 기준"),
 
                                 // spellStats
                                 fieldWithPath("data.positions[].spellStats[]").type(JsonFieldType.ARRAY).description("소환사 주문 조합 목록"),
@@ -181,6 +184,9 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.positions[].spellStats[].games").type(JsonFieldType.NUMBER).description("게임 수"),
                                 fieldWithPath("data.positions[].spellStats[].winRate").type(JsonFieldType.NUMBER).description("승률"),
                                 fieldWithPath("data.positions[].spellStats[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
+                                fieldWithPath("data.positions[].spellStats[].sampleSize").type(JsonFieldType.NUMBER).description("이 조합의 표본 크기 (= games)"),
+                                fieldWithPath("data.positions[].spellStats[].totalSampleSize").type(JsonFieldType.NUMBER).description("챔프-라인 총 표본 크기"),
+                                fieldWithPath("data.positions[].spellStats[].confidenceLowerBound").type(JsonFieldType.NUMBER).description("Wilson 신뢰구간(95%) 하한"),
 
                                 // skillBuilds
                                 fieldWithPath("data.positions[].skillBuilds[]").type(JsonFieldType.ARRAY).description("스킬 빌드 목록"),
@@ -188,6 +194,9 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.positions[].skillBuilds[].games").type(JsonFieldType.NUMBER).description("게임 수"),
                                 fieldWithPath("data.positions[].skillBuilds[].winRate").type(JsonFieldType.NUMBER).description("승률"),
                                 fieldWithPath("data.positions[].skillBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
+                                fieldWithPath("data.positions[].skillBuilds[].sampleSize").type(JsonFieldType.NUMBER).description("이 빌드의 표본 크기 (= games)"),
+                                fieldWithPath("data.positions[].skillBuilds[].totalSampleSize").type(JsonFieldType.NUMBER).description("챔프-라인 총 표본 크기"),
+                                fieldWithPath("data.positions[].skillBuilds[].confidenceLowerBound").type(JsonFieldType.NUMBER).description("Wilson 신뢰구간(95%) 하한"),
 
                                 // startItemBuilds
                                 fieldWithPath("data.positions[].startItemBuilds[]").type(JsonFieldType.ARRAY).description("시작 아이템 빌드 목록"),
@@ -195,6 +204,9 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.positions[].startItemBuilds[].games").type(JsonFieldType.NUMBER).description("게임 수"),
                                 fieldWithPath("data.positions[].startItemBuilds[].winRate").type(JsonFieldType.NUMBER).description("승률"),
                                 fieldWithPath("data.positions[].startItemBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
+                                fieldWithPath("data.positions[].startItemBuilds[].sampleSize").type(JsonFieldType.NUMBER).description("이 빌드의 표본 크기 (= games)"),
+                                fieldWithPath("data.positions[].startItemBuilds[].totalSampleSize").type(JsonFieldType.NUMBER).description("챔프-라인 총 표본 크기"),
+                                fieldWithPath("data.positions[].startItemBuilds[].confidenceLowerBound").type(JsonFieldType.NUMBER).description("Wilson 신뢰구간(95%) 하한"),
 
                                 // bootBuilds (신발)
                                 fieldWithPath("data.positions[].bootBuilds[]").type(JsonFieldType.ARRAY).description("신발 빌드 목록"),
@@ -202,13 +214,19 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.positions[].bootBuilds[].games").type(JsonFieldType.NUMBER).description("게임 수"),
                                 fieldWithPath("data.positions[].bootBuilds[].winRate").type(JsonFieldType.NUMBER).description("승률"),
                                 fieldWithPath("data.positions[].bootBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
+                                fieldWithPath("data.positions[].bootBuilds[].sampleSize").type(JsonFieldType.NUMBER).description("이 빌드의 표본 크기 (= games)"),
+                                fieldWithPath("data.positions[].bootBuilds[].totalSampleSize").type(JsonFieldType.NUMBER).description("챔프-라인 총 표본 크기"),
+                                fieldWithPath("data.positions[].bootBuilds[].confidenceLowerBound").type(JsonFieldType.NUMBER).description("Wilson 신뢰구간(95%) 하한"),
 
                                 // itemBuilds (3코어)
                                 fieldWithPath("data.positions[].itemBuilds[]").type(JsonFieldType.ARRAY).description("3코어 아이템 빌드 목록"),
                                 fieldWithPath("data.positions[].itemBuilds[].itemBuild").type(JsonFieldType.ARRAY).description("아이템 ID 배열 (number[], 빌드 순서)"),
                                 fieldWithPath("data.positions[].itemBuilds[].games").type(JsonFieldType.NUMBER).description("게임 수"),
                                 fieldWithPath("data.positions[].itemBuilds[].winRate").type(JsonFieldType.NUMBER).description("승률"),
-                                fieldWithPath("data.positions[].itemBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률")
+                                fieldWithPath("data.positions[].itemBuilds[].pickRate").type(JsonFieldType.NUMBER).description("픽률"),
+                                fieldWithPath("data.positions[].itemBuilds[].sampleSize").type(JsonFieldType.NUMBER).description("이 빌드의 표본 크기 (= games)"),
+                                fieldWithPath("data.positions[].itemBuilds[].totalSampleSize").type(JsonFieldType.NUMBER).description("챔프-라인 총 표본 크기"),
+                                fieldWithPath("data.positions[].itemBuilds[].confidenceLowerBound").type(JsonFieldType.NUMBER).description("Wilson 신뢰구간(95%) 하한")
                         )
                 ));
     }
