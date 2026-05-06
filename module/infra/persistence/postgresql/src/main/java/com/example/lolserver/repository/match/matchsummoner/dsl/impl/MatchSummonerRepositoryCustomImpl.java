@@ -114,7 +114,7 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
     }
 
     @Override
-    public List<MSChampionDTO> findAllMatchSummonerByPuuidAndSeason(String puuid, Integer season, Integer queueId) {
+    public List<MSChampionDTO> findAllRankedMatchSummonerByPuuidAndSeason(String puuid, Integer season) {
         // 1. 승리/패배 횟수를 계산할 CASE-SUM Expression 정의
         NumberExpression<Long> winCountExpr = new CaseBuilder()
                 .when(matchSummonerEntity.win.isTrue())
@@ -141,7 +141,8 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
             challengesEntity.laneMinionsFirst10Minutes.avg(),
             challengesEntity.damageTakenOnTeamPercentage.avg(),
             challengesEntity.goldPerMinute.avg(),
-            matchSummonerEntity.championId.count()
+            matchSummonerEntity.championId.count(),
+            matchEntity.queueId
         );
 
         JPAQuery<MSChampionDTO> query = jpaQueryFactory.select(qmsChampionDTO)
@@ -158,9 +159,11 @@ public class MatchSummonerRepositoryCustomImpl implements MatchSummonerRepositor
                 .where(
                         puuidEq(puuid),
                         seasonEq(season),
-                        queueIdEq(queueId)
+                        matchEntity.queueId.in(
+                                QueueType.RANKED_SOLO_5x5.getQueueId(),
+                                QueueType.RANKED_FLEX_SR.getQueueId())
                 )
-                .groupBy(matchSummonerEntity.championId, matchSummonerEntity.championName)
+                .groupBy(matchEntity.queueId, matchSummonerEntity.championId, matchSummonerEntity.championName)
                 .orderBy(matchSummonerEntity.championId.count().desc());
 
         return query.fetch();

@@ -19,9 +19,10 @@ public class MSChampionDTO {
     private Double damageTakenOnTeamPercentage;
     private Double goldPerMinute;
     private Long playCount;
+    private Integer queueId;
 
     @QueryProjection
-    public MSChampionDTO(Double assists, Double deaths, Double kills, int championId, String championName, Long win, Long losses, Double damagePerMinute, Double kda, Double laneMinionsFirst10Minutes, Double damageTakenOnTeamPercentage, Double goldPerMinute, Long playCount) {
+    public MSChampionDTO(Double assists, Double deaths, Double kills, int championId, String championName, Long win, Long losses, Double damagePerMinute, Double kda, Double laneMinionsFirst10Minutes, Double damageTakenOnTeamPercentage, Double goldPerMinute, Long playCount, Integer queueId) {
         this.assists = assists;
         this.deaths = deaths;
         this.kills = kills;
@@ -35,6 +36,7 @@ public class MSChampionDTO {
         this.damageTakenOnTeamPercentage = damageTakenOnTeamPercentage;
         this.goldPerMinute = goldPerMinute;
         this.playCount = playCount;
+        this.queueId = queueId;
         this.winRate = (this.playCount != null && this.playCount > 0) ? (this.win * 100.0 / this.playCount) : 0.0;
     }
 }

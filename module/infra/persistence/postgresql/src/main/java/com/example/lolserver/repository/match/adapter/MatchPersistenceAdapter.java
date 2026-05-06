@@ -1,9 +1,11 @@
 package com.example.lolserver.repository.match.adapter;
 
+import com.example.lolserver.QueueType;
 import com.example.lolserver.domain.match.application.port.out.MatchPersistencePort;
 import com.example.lolserver.domain.match.application.model.DailyGameCountReadModel;
 import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.MSChampion;
+import com.example.lolserver.domain.match.domain.MSChampionByQueue;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.domain.match.domain.gamedata.GameInfoData;
 import com.example.lolserver.domain.match.domain.gamedata.ParticipantData;
@@ -85,11 +87,20 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     }
 
     @Override
-    public List<MSChampion> getRankChampions(String puuid, Integer season, Integer queueId) {
-        return matchSummonerRepositoryCustom.findAllMatchSummonerByPuuidAndSeason(puuid, season, queueId)
+    public MSChampionByQueue getRankChampions(String puuid, Integer season) {
+        Map<Integer, List<MSChampion>> byQueue = matchSummonerRepositoryCustom
+                .findAllRankedMatchSummonerByPuuidAndSeason(puuid, season)
                 .stream()
-                .map(matchMapper::toDomain)
-                .toList();
+                .collect(Collectors.groupingBy(
+                        dto -> dto.getQueueId() == null ? 0 : dto.getQueueId(),
+                        Collectors.mapping(matchMapper::toDomain, Collectors.toList())));
+
+        List<MSChampion> solo = byQueue.getOrDefault(
+                QueueType.RANKED_SOLO_5x5.getQueueId(), Collections.emptyList());
+        List<MSChampion> flex = byQueue.getOrDefault(
+                QueueType.RANKED_FLEX_SR.getQueueId(), Collections.emptyList());
+
+        return new MSChampionByQueue(solo, flex);
     }
 
     @Override

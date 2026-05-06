@@ -1,7 +1,9 @@
 package com.example.lolserver.repository.match.adapter;
 
+import com.example.lolserver.QueueType;
 import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.MSChampion;
+import com.example.lolserver.domain.match.domain.MSChampionByQueue;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.domain.match.domain.gamedata.GameInfoData;
 import com.example.lolserver.domain.match.domain.gamedata.ParticipantData;
@@ -111,30 +113,51 @@ class MatchPersistenceAdapterTest {
         then(matchRepositoryCustom).should().getMatches(eq(puuid), eq(queueId), any(Pageable.class));
     }
 
-    @DisplayName("PUUID와 시즌, queueId로 랭크 챔피언 통계를 조회한다")
+    @DisplayName("PUUID와 시즌으로 랭크 챔피언 통계를 솔로/자유로 분리해 조회한다")
     @Test
-    void getRankChampions_validParams_returnsMSChampionList() {
+    void getRankChampions_validParams_returnsMSChampionByQueue() {
         // given
         String puuid = "test-puuid-123";
         Integer season = 14;
-        Integer queueId = 420;
 
-        MSChampionDTO dto = createMSChampionDTO(157, "Yasuo", 10L, 7L);
-        MSChampion expected = createMSChampion(157, "Yasuo", 10L, 7L);
+        MSChampionDTO soloDto = createMSChampionDTO(
+                157, "Yasuo", 10L, 7L, QueueType.RANKED_SOLO_5x5.getQueueId());
+        MSChampionDTO flexDto = createMSChampionDTO(
+                238, "Zed", 5L, 3L, QueueType.RANKED_FLEX_SR.getQueueId());
+        MSChampion soloDomain = createMSChampion(157, "Yasuo", 10L, 7L);
+        MSChampion flexDomain = createMSChampion(238, "Zed", 5L, 3L);
 
-        given(matchSummonerRepositoryCustom.findAllMatchSummonerByPuuidAndSeason(puuid, season, queueId))
-                .willReturn(List.of(dto));
-        given(matchMapper.toDomain(any(MSChampionDTO.class))).willReturn(expected);
+        given(matchSummonerRepositoryCustom.findAllRankedMatchSummonerByPuuidAndSeason(puuid, season))
+                .willReturn(List.of(soloDto, flexDto));
+        given(matchMapper.toDomain(soloDto)).willReturn(soloDomain);
+        given(matchMapper.toDomain(flexDto)).willReturn(flexDomain);
 
         // when
-        List<MSChampion> result = adapter.getRankChampions(puuid, season, queueId);
+        MSChampionByQueue result = adapter.getRankChampions(puuid, season);
 
         // then
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getChampionId()).isEqualTo(157);
-        assertThat(result.get(0).getPlayCount()).isEqualTo(10L);
-        assertThat(result.get(0).getWin()).isEqualTo(7L);
-        then(matchSummonerRepositoryCustom).should().findAllMatchSummonerByPuuidAndSeason(puuid, season, queueId);
+        assertThat(result.solo()).hasSize(1);
+        assertThat(result.solo().get(0).getChampionId()).isEqualTo(157);
+        assertThat(result.flex()).hasSize(1);
+        assertThat(result.flex().get(0).getChampionId()).isEqualTo(238);
+        then(matchSummonerRepositoryCustom).should().findAllRankedMatchSummonerByPuuidAndSeason(puuid, season);
+    }
+
+    @DisplayName("랭크 챔피언 통계 조회 결과가 비어 있으면 양쪽 모두 빈 리스트를 반환한다")
+    @Test
+    void getRankChampions_empty_returnsEmptyByQueue() {
+        // given
+        String puuid = "test-puuid-123";
+        Integer season = 14;
+        given(matchSummonerRepositoryCustom.findAllRankedMatchSummonerByPuuidAndSeason(puuid, season))
+                .willReturn(Collections.emptyList());
+
+        // when
+        MSChampionByQueue result = adapter.getRankChampions(puuid, season);
+
+        // then
+        assertThat(result.solo()).isEmpty();
+        assertThat(result.flex()).isEmpty();
     }
 
     @DisplayName("매치 ID로 게임 데이터를 조회하면 Optional<GameReadModel>를 반환한다")
@@ -395,6 +418,10 @@ class MatchPersistenceAdapterTest {
     }
 
     private MSChampionDTO createMSChampionDTO(int championId, String championName, Long playCount, Long win) {
+        return createMSChampionDTO(championId, championName, playCount, win, QueueType.RANKED_SOLO_5x5.getQueueId());
+    }
+
+    private MSChampionDTO createMSChampionDTO(int championId, String championName, Long playCount, Long win, Integer queueId) {
         return new MSChampionDTO(
                 8.0,  // assists
                 5.0,  // deaths
@@ -408,7 +435,8 @@ class MatchPersistenceAdapterTest {
                 70.0,  // laneMinionsFirst10Minutes
                 25.0,  // damageTakenOnTeamPercentage
                 400.0, // goldPerMinute
-                playCount
+                playCount,
+                queueId
         );
     }
 

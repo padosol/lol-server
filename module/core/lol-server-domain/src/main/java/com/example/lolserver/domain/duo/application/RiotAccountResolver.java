@@ -7,7 +7,7 @@ import com.example.lolserver.domain.duo.domain.vo.TierInfo;
 import com.example.lolserver.domain.league.application.port.LeaguePersistencePort;
 import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.application.port.out.MatchPersistencePort;
-import com.example.lolserver.domain.match.domain.MSChampion;
+import com.example.lolserver.domain.match.domain.MSChampionByQueue;
 import com.example.lolserver.domain.match.domain.gamedata.ParticipantData;
 import com.example.lolserver.domain.member.application.port.out.MemberPersistencePort;
 import com.example.lolserver.domain.member.domain.Member;
@@ -88,10 +88,9 @@ public class RiotAccountResolver {
     }
 
     public List<MostChampion> lookupMostChampions(String puuid) {
-        List<MSChampion> rankChampions = matchPersistencePort.getRankChampions(
-                puuid, null, QueueType.RANKED_SOLO_5x5.getQueueId());
+        MSChampionByQueue rankChampions = matchPersistencePort.getRankChampions(puuid, null);
 
-        return rankChampions.stream()
+        return rankChampions.solo().stream()
                 .limit(MOST_CHAMPION_LIMIT)
                 .map(mc -> new MostChampion(
                         mc.getChampionId(),

@@ -2,7 +2,7 @@ package com.example.lolserver.domain.match.application.port.out;
 
 import com.example.lolserver.domain.match.application.model.DailyGameCountReadModel;
 import com.example.lolserver.domain.match.application.model.GameReadModel;
-import com.example.lolserver.domain.match.domain.MSChampion;
+import com.example.lolserver.domain.match.domain.MSChampionByQueue;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.support.PaginationRequest;
 import com.example.lolserver.support.SliceResult;
@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface MatchPersistencePort {
     SliceResult<GameReadModel> getMatches(String puuid, Integer queueId, PaginationRequest paginationRequest);
 
-    List<MSChampion> getRankChampions(String puuid, Integer season, Integer queueId);
+    MSChampionByQueue getRankChampions(String puuid, Integer season);
 
     Optional<GameReadModel> getGameData(String matchId);
 
