@@ -12,7 +12,8 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
 | [`module/infra/api`](module/infra/api/CLAUDE.md) | REST 컨트롤러 + Spring Security/OAuth2 + RestDocs |
 | [`module/infra/persistence/postgresql`](module/infra/persistence/postgresql/CLAUDE.md) | JPA + QueryDSL + MapStruct + Flyway |
 | [`module/infra/persistence/redis`](module/infra/persistence/redis/CLAUDE.md) | 캐시, RefreshToken, OAuth State, Redisson 분산 락 |
-| [`module/infra/persistence/clickhouse`](module/infra/persistence/clickhouse/CLAUDE.md) | 챔피언 통계 OLAP 쿼리 |
+| [`module/infra/persistence/bigquery`](module/infra/persistence/bigquery/CLAUDE.md) | 챔피언 통계 OLAP — **`STATS_DATASOURCE=bigquery` (default)** |
+| [`module/infra/persistence/clickhouse`](module/infra/persistence/clickhouse/CLAUDE.md) | 챔피언 통계 OLAP — `STATS_DATASOURCE=clickhouse` 시 fallback (runtime dead by default) |
 | [`module/infra/client/lol-repository`](module/infra/client/lol-repository/CLAUDE.md) | Riot API `RestClient` + `@HttpExchange` + Bucket4j |
 | [`module/infra/client/oauth`](module/infra/client/oauth/CLAUDE.md) | RSO/OAuth2 토큰 교환 + 사용자 정보 조회 |
 | [`module/infra/message/rabbitmq`](module/infra/message/rabbitmq/CLAUDE.md) | 기본 메시지 broker (`message.broker=rabbitmq`) |
@@ -24,6 +25,7 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
 - 새 도메인/비즈니스 규칙 추가 → [`core/lol-server-domain/CLAUDE.md`](module/core/lol-server-domain/CLAUDE.md)
 - 새 REST 엔드포인트 → [`infra/api/CLAUDE.md`](module/infra/api/CLAUDE.md)
 - 새 영속화/쿼리 → [`infra/persistence/postgresql/CLAUDE.md`](module/infra/persistence/postgresql/CLAUDE.md)
+- 챔피언 통계 OLAP 쿼리 → [`infra/persistence/bigquery/CLAUDE.md`](module/infra/persistence/bigquery/CLAUDE.md) (default), [`clickhouse/CLAUDE.md`](module/infra/persistence/clickhouse/CLAUDE.md) (fallback)
 - 외부 Riot/OAuth API 호출 → [`infra/client/lol-repository/CLAUDE.md`](module/infra/client/lol-repository/CLAUDE.md), [`infra/client/oauth/CLAUDE.md`](module/infra/client/oauth/CLAUDE.md)
 - 모듈 조립/프로파일/실행 → [`app/application/CLAUDE.md`](module/app/application/CLAUDE.md)
 
