@@ -12,11 +12,15 @@ import com.example.lolserver.domain.championstats.application.model.ChampionSpel
 import com.example.lolserver.domain.championstats.application.model.ChampionStartItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionTimelineReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.PositionTimelineReadModel;
+import com.example.lolserver.domain.championstats.application.model.TimelineFrameReadModel;
 import com.example.lolserver.domain.championstats.application.port.in.ChampionStatsQueryUseCase;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsCachePort;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
+import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsTimelineQueryPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -33,14 +37,17 @@ import java.util.stream.Collectors;
 public class ChampionStatsService implements ChampionStatsQueryUseCase {
 
     private final ChampionStatsQueryPort championStatsQueryPort;
+    private final ChampionStatsTimelineQueryPort championStatsTimelineQueryPort;
     private final ChampionStatsCachePort championStatsCachePort;
     private final boolean cacheEnabled;
 
     public ChampionStatsService(
             ChampionStatsQueryPort championStatsQueryPort,
+            ChampionStatsTimelineQueryPort championStatsTimelineQueryPort,
             ChampionStatsCachePort championStatsCachePort,
             @Value("${champion-stats.cache.enabled:true}") boolean cacheEnabled) {
         this.championStatsQueryPort = championStatsQueryPort;
+        this.championStatsTimelineQueryPort = championStatsTimelineQueryPort;
         this.championStatsCachePort = championStatsCachePort;
         this.cacheEnabled = cacheEnabled;
     }
@@ -181,6 +188,40 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
 
         if (cacheEnabled) {
             championStatsCachePort.saveChampionStatsByPosition(patch, platformId, tierDisplay, result);
+        }
+
+        return result;
+    }
+
+    public ChampionTimelineReadModel getChampionTimeline(
+            int championId, String patch, String platformId, TierFilter tierFilter) {
+
+        String tierDisplay = tierFilter.toDisplayString();
+
+        if (cacheEnabled) {
+            ChampionTimelineReadModel cached = championStatsCachePort
+                    .findChampionTimeline(championId, patch, platformId, tierDisplay);
+            if (cached != null) {
+                log.debug("캐시 히트 - timeline championId: {}, patch: {}, tier: {}",
+                        championId, patch, tierDisplay);
+                return cached;
+            }
+        }
+
+        Map<String, List<TimelineFrameReadModel>> grouped =
+                championStatsTimelineQueryPort.aggregateChampionTimeline(
+                        championId, patch, platformId, tierFilter);
+
+        List<PositionTimelineReadModel> positions = grouped.entrySet().stream()
+                .map(entry -> new PositionTimelineReadModel(entry.getKey(), entry.getValue()))
+                .toList();
+
+        ChampionTimelineReadModel result =
+                new ChampionTimelineReadModel(championId, tierDisplay, positions);
+
+        if (cacheEnabled) {
+            championStatsCachePort.saveChampionTimeline(
+                    championId, patch, platformId, tierDisplay, result);
         }
 
         return result;

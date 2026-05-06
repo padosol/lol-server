@@ -1,6 +1,7 @@
 package com.example.lolserver.domain.championstats.application.port.out;
 
 import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionTimelineReadModel;
 import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
 
 import java.util.List;
@@ -18,4 +19,10 @@ public interface ChampionStatsCachePort {
     void saveChampionStatsByPosition(String patch, String platformId,
                                      String tierDisplay,
                                      List<PositionChampionStatsReadModel> stats);
+
+    ChampionTimelineReadModel findChampionTimeline(
+            int championId, String patch, String platformId, String tierDisplay);
+
+    void saveChampionTimeline(int championId, String patch, String platformId,
+                              String tierDisplay, ChampionTimelineReadModel timeline);
 }

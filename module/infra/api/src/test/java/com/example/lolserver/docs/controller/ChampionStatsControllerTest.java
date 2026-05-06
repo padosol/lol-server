@@ -14,7 +14,10 @@ import com.example.lolserver.domain.championstats.application.model.ChampionSpel
 import com.example.lolserver.domain.championstats.application.model.ChampionStartItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionTimelineReadModel;
 import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.PositionTimelineReadModel;
+import com.example.lolserver.domain.championstats.application.model.TimelineFrameReadModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -227,6 +230,65 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.positions[].itemBuilds[].sampleSize").type(JsonFieldType.NUMBER).description("이 빌드의 표본 크기 (= games)"),
                                 fieldWithPath("data.positions[].itemBuilds[].totalSampleSize").type(JsonFieldType.NUMBER).description("챔프-라인 총 표본 크기"),
                                 fieldWithPath("data.positions[].itemBuilds[].confidenceLowerBound").type(JsonFieldType.NUMBER).description("Wilson 신뢰구간(95%) 하한")
+                        )
+                ));
+    }
+
+    @DisplayName("챔피언 시간대별 평균 곡선 조회 API")
+    @Test
+    void getChampionTimeline() throws Exception {
+        // given
+        String platformId = "kr";
+        ChampionTimelineReadModel response = new ChampionTimelineReadModel(
+                266,
+                "EMERALD",
+                List.of(
+                        new PositionTimelineReadModel("TOP", List.of(
+                                new TimelineFrameReadModel(10, 4520.5, 78.2, 4810.0, 1500),
+                                new TimelineFrameReadModel(15, 7210.4, 121.6, 7950.5, 1480),
+                                new TimelineFrameReadModel(20, 10210.7, 168.9, 11460.0, 1310),
+                                new TimelineFrameReadModel(25, 13150.0, 213.4, 15010.5, 980),
+                                new TimelineFrameReadModel(30, 16290.2, 259.1, 18790.5, 540)
+                        ))
+                ));
+
+        given(championStatsService.getChampionTimeline(anyInt(), anyString(), anyString(), any(TierFilter.class)))
+                .willReturn(response);
+
+        // when & then
+        mockMvc.perform(
+                        get("/api/v1/{platformId}/champion-stats/timeline", platformId)
+                                .param("championId", "266")
+                                .param("patch", "14.24")
+                                .param("tier", "EMERALD")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andDo(document("champion-stats-timeline",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)")
+                        ),
+                        queryParameters(
+                                parameterWithName("championId").description("챔피언 ID"),
+                                parameterWithName("patch").description("패치 버전 (e.g., 14.24)"),
+                                parameterWithName("tier").description("티어 필터. 단일 또는 범위 (e.g., MASTER+).")
+                        ),
+                        responseFields(
+                                fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과"),
+                                fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
+                                fieldWithPath("data.championId").type(JsonFieldType.NUMBER).description("챔피언 ID"),
+                                fieldWithPath("data.tier").type(JsonFieldType.STRING).description("티어 표시 (e.g., EMERALD, MASTER+)"),
+                                fieldWithPath("data.positions[]").type(JsonFieldType.ARRAY).description("포지션별 시계열 목록"),
+                                fieldWithPath("data.positions[].teamPosition").type(JsonFieldType.STRING).description("포지션 (TOP/JUNGLE/MIDDLE/BOTTOM/UTILITY)"),
+                                fieldWithPath("data.positions[].frames[]").type(JsonFieldType.ARRAY).description("시간대별 프레임 (10/15/20/25/30분)"),
+                                fieldWithPath("data.positions[].frames[].minute").type(JsonFieldType.NUMBER).description("분 단위 시각 (10/15/20/25/30)"),
+                                fieldWithPath("data.positions[].frames[].avgGold").type(JsonFieldType.NUMBER).description("평균 누적 골드"),
+                                fieldWithPath("data.positions[].frames[].avgCs").type(JsonFieldType.NUMBER).description("평균 CS (라인 + 정글 미니언)"),
+                                fieldWithPath("data.positions[].frames[].avgXp").type(JsonFieldType.NUMBER).description("평균 누적 경험치"),
+                                fieldWithPath("data.positions[].frames[].sampleSize").type(JsonFieldType.NUMBER).description("이 프레임에 도달한 게임 수")
                         )
                 ));
     }

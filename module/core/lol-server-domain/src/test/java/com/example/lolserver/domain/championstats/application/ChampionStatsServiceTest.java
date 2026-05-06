@@ -15,6 +15,7 @@ import com.example.lolserver.domain.championstats.application.model.ChampionWinR
 import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsCachePort;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
+import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsTimelineQueryPort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -41,10 +42,14 @@ class ChampionStatsServiceTest {
     private ChampionStatsQueryPort championStatsQueryPort;
 
     @Mock
+    private ChampionStatsTimelineQueryPort championStatsTimelineQueryPort;
+
+    @Mock
     private ChampionStatsCachePort championStatsCachePort;
 
     private ChampionStatsService createService(boolean cacheEnabled) {
-        return new ChampionStatsService(championStatsQueryPort, championStatsCachePort, cacheEnabled);
+        return new ChampionStatsService(championStatsQueryPort, championStatsTimelineQueryPort,
+                championStatsCachePort, cacheEnabled);
     }
 
     @Nested
