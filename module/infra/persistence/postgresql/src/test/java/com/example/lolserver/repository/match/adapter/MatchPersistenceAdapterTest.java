@@ -186,8 +186,10 @@ class MatchPersistenceAdapterTest {
     void getTimelineData_validMatchId_returnsTimelineData() {
         // given
         String matchId = "KR_12345";
-        TimelineEventDTO itemEvent = new TimelineEventDTO(matchId, 1, 3006, "ITEM_PURCHASED", 60000L, "ITEM");
-        TimelineEventDTO skillEvent = new TimelineEventDTO(matchId, 1, 1, "NORMAL", 30000L, "SKILL");
+        TimelineEventDTO itemEvent = new TimelineEventDTO(
+                matchId, 1, "ITEM_PURCHASED", 3006, null, null, null, null, null, 60000L);
+        TimelineEventDTO skillEvent = new TimelineEventDTO(
+                matchId, 1, "SKILL_LEVEL_UP", null, 1, "NORMAL", null, null, null, 30000L);
 
         given(timelineRepositoryCustom.selectAllTimelineEventsByMatch(matchId))
                 .willReturn(List.of(itemEvent, skillEvent));

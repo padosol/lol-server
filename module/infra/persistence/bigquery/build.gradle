@@ -1,0 +1,9 @@
+dependencies {
+    implementation project(":module:core:lol-server-domain")
+    implementation project(":module:core:enum")
+
+    implementation 'org.springframework.boot:spring-boot-starter'
+
+    implementation platform('com.google.cloud:libraries-bom:26.43.0')
+    implementation 'com.google.cloud:google-cloud-bigquery'
+}

@@ -1,11 +1,13 @@
 package com.example.lolserver.repository.championstats;
 
 import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
+import com.example.lolserver.domain.championstats.application.model.ChampionTimelineReadModel;
 import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsCachePort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -18,21 +20,15 @@ public class ChampionStatsCacheAdapter implements ChampionStatsCachePort {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private static final String DETAIL_KEY_PREFIX = "champion-stats:detail:";
-    private static final String POSITIONS_KEY_PREFIX = "champion-stats:positions:";
+    private static final String DETAIL_KEY_PREFIX = "champion-stats:v7:detail:";
+    private static final String POSITIONS_KEY_PREFIX = "champion-stats:v4:positions:";
+    private static final String TIMELINE_KEY_PREFIX = "champion-stats:v1:timeline:";
     private static final Duration CACHE_TTL = Duration.ofHours(6);
 
     @Override
     public ChampionStatsReadModel findChampionStats(
             int championId, String patch, String platformId, String tierDisplay) {
-        try {
-            String key = buildDetailKey(championId, patch, platformId, tierDisplay);
-            log.debug("캐시 조회 - key: {}", key);
-            return (ChampionStatsReadModel) redisTemplate.opsForValue().get(key);
-        } catch (Exception e) {
-            log.warn("캐시 조회 실패 - championId: {}, patch: {}, tier: {}", championId, patch, tierDisplay, e);
-            return null;
-        }
+        return tryGetFromCache(buildDetailKey(championId, patch, platformId, tierDisplay));
     }
 
     @Override
@@ -52,17 +48,9 @@ public class ChampionStatsCacheAdapter implements ChampionStatsCachePort {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<PositionChampionStatsReadModel> findChampionStatsByPosition(
             String patch, String platformId, String tierDisplay) {
-        try {
-            String key = buildPositionsKey(patch, platformId, tierDisplay);
-            log.debug("캐시 조회 - key: {}", key);
-            return (List<PositionChampionStatsReadModel>) redisTemplate.opsForValue().get(key);
-        } catch (Exception e) {
-            log.warn("캐시 조회 실패 - positions, patch: {}, tier: {}", patch, tierDisplay, e);
-            return null;
-        }
+        return tryGetFromCache(buildPositionsKey(patch, platformId, tierDisplay));
     }
 
     @Override
@@ -81,11 +69,59 @@ public class ChampionStatsCacheAdapter implements ChampionStatsCachePort {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private <T> T tryGetFromCache(String key) {
+        try {
+            log.debug("캐시 조회 - key: {}", key);
+            return (T) redisTemplate.opsForValue().get(key);
+        } catch (SerializationException e) {
+            log.info("캐시 stale 감지 - 키 삭제 후 재생성: {}", key);
+            evictQuietly(key);
+            return null;
+        } catch (Exception e) {
+            log.debug("캐시 조회 실패 - key: {}, message: {}", key, e.getMessage());
+            return null;
+        }
+    }
+
+    private void evictQuietly(String key) {
+        try {
+            redisTemplate.delete(key);
+        } catch (Exception ignored) {
+        }
+    }
+
+    @Override
+    public ChampionTimelineReadModel findChampionTimeline(
+            int championId, String patch, String platformId, String tierDisplay) {
+        return tryGetFromCache(buildTimelineKey(championId, patch, platformId, tierDisplay));
+    }
+
+    @Override
+    public void saveChampionTimeline(int championId, String patch, String platformId,
+                                     String tierDisplay, ChampionTimelineReadModel timeline) {
+        if (timeline == null) {
+            return;
+        }
+        try {
+            String key = buildTimelineKey(championId, patch, platformId, tierDisplay);
+            log.debug("캐시 저장 - key: {}", key);
+            redisTemplate.opsForValue().set(key, timeline, CACHE_TTL);
+        } catch (Exception e) {
+            log.warn("캐시 저장 실패 - timeline championId: {}, patch: {}, tier: {}",
+                    championId, patch, tierDisplay, e);
+        }
+    }
+
     private String buildDetailKey(int championId, String patch, String platformId, String tierDisplay) {
         return DETAIL_KEY_PREFIX + platformId + ":" + championId + ":" + patch + ":" + tierDisplay;
     }
 
     private String buildPositionsKey(String patch, String platformId, String tierDisplay) {
         return POSITIONS_KEY_PREFIX + platformId + ":" + patch + ":" + tierDisplay;
+    }
+
+    private String buildTimelineKey(int championId, String patch, String platformId, String tierDisplay) {
+        return TIMELINE_KEY_PREFIX + platformId + ":" + championId + ":" + patch + ":" + tierDisplay;
     }
 }

@@ -13,5 +13,6 @@ include(
         "module:infra:persistence:postgresql",
         "module:infra:persistence:redis",
         "module:infra:persistence:clickhouse",
+        "module:infra:persistence:bigquery",
         "module:support:logging"
 )

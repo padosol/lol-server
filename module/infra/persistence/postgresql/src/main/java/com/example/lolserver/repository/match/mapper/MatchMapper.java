@@ -108,19 +108,27 @@ public interface MatchMapper {
 
     default ItemEvents toItemEventsFromTimelineDTO(TimelineEventDTO dto) {
         return ItemEvents.builder()
-                .itemId(dto.getEventId())
+                .itemId(orZero(dto.getItemId()))
                 .participantId(dto.getParticipantId())
                 .timestamp(dto.getTimestamp())
-                .type(dto.getEventType())
+                .type(dto.getType())
+                .beforeId(orZero(dto.getBeforeId()))
+                .afterId(orZero(dto.getAfterId()))
+                .goldGain(orZero(dto.getGoldGain()))
                 .build();
     }
 
     default SkillEvents toSkillEventsFromTimelineDTO(TimelineEventDTO dto) {
         return SkillEvents.builder()
-                .skillSlot(dto.getEventId())
+                .skillSlot(orZero(dto.getSkillSlot()))
                 .participantId(dto.getParticipantId())
                 .timestamp(dto.getTimestamp())
-                .levelUpType(dto.getEventType())
+                .levelUpType(dto.getLevelUpType())
+                .type(dto.getType())
                 .build();
+    }
+
+    private static int orZero(Integer value) {
+        return value == null ? 0 : value;
     }
 }

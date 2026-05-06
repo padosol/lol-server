@@ -53,20 +53,20 @@ class AuthControllerTest extends RestDocsSupport {
     void refreshToken() throws Exception {
         // given
         AuthTokenReadModel tokenReadModel = new AuthTokenReadModel(
-                "test-access-token",
-                "test-refresh-token",
+                "dummy-access-token-for-test",
+                "dummy-refresh-token-for-test",
                 3600
         );
 
         given(authCookieManager.extractRefreshToken(any()))
-                .willReturn("test-refresh-token");
+                .willReturn("dummy-refresh-token-for-test");
         given(memberAuthUseCase.refreshToken(any())).willReturn(tokenReadModel);
 
         // when & then
         mockMvc.perform(
                         post("/api/auth/refresh")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .cookie(new Cookie("refreshToken", "test-refresh-token"))
+                                .cookie(new Cookie("refreshToken", "dummy-refresh-token-for-test"))
                 )
                 .andDo(print())
                 .andExpect(status().isOk())

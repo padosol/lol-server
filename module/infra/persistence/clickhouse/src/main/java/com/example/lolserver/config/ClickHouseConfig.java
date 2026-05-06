@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+// TODO(MP-9): ChampionStatsBigQueryAdapter 가 @Primary 로 활성화된 이후 ClickHouse adapter 는 dead code at runtime.
+//             ClickHouseConfig + ChampionStatsClickHouseAdapter + clickhouse 모듈 의존성 정리는 별도 cleanup PR 로 트래킹.
 @Configuration
 public class ClickHouseConfig {
 

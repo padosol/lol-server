@@ -12,6 +12,9 @@
     <suppress files=".*DTO\.java$" checks="ParameterNumber"/>
     <suppress files=".*DTO\.java$" checks="LineLength"/>
 
+    <!-- ReadModel: 도메인 출력 record 의 다중 파라미터 허용 -->
+    <suppress files=".*ReadModel\.java$" checks="ParameterNumber"/>
+
     <!-- Test: 한글 메서드명, 긴 테스트 메서드, 긴 줄, RestDocs 스타 임포트, 파일 크기 허용 -->
     <suppress files=".*Test\.java$" checks="MethodName"/>
     <suppress files=".*Test\.java$" checks="MethodLength"/>

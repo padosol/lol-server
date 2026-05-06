@@ -1,0 +1,141 @@
+name: Docs Check
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - '**/*.md'
+      - 'module/**/build.gradle'
+      - '.github/workflows/docs-check.yml'
+  schedule:
+    # Weekly Monday 09:00 UTC — surfaces stale CLAUDE.md on code-only PRs
+    # by running independently of doc changes.
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  link-check:
+    name: Markdown Link Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run lychee link check
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --no-progress
+            --exclude '^https?://localhost'
+            --exclude '^https?://127\.0\.0\.1'
+            --exclude '^https?://example\.'
+            --exclude 'cdn\.discordapp\.com'
+            './**/*.md'
+          fail: true
+          format: markdown
+          output: ./lychee-report.md
+
+      - name: Upload link report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lychee-report
+          path: ./lychee-report.md
+
+  context-doc-lint:
+    name: CLAUDE.md Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check CLAUDE.md line counts
+        shell: bash
+        run: |
+          set -euo pipefail
+          MAX_LINES=80
+          fail=0
+          while IFS= read -r f; do
+            lines=$(wc -l < "$f")
+            if [ "$lines" -gt "$MAX_LINES" ]; then
+              echo "::error file=$f::CLAUDE.md is $lines lines (max $MAX_LINES). 'compass, not encyclopedia' — split or trim."
+              fail=1
+            else
+              echo "ok  $f ($lines lines)"
+            fi
+          done < <(git ls-files '**/CLAUDE.md' 'CLAUDE.md')
+          exit $fail
+
+  module-sync:
+    name: Root CLAUDE.md ↔ module build.gradle sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Verify root CLAUDE.md module table matches module/**/build.gradle inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          fail=0
+
+          # Module paths from the root CLAUDE.md '## 모듈' table.
+          # Restrict to table rows ('| ...') so 'What to read first' links and
+          # other prose don't pollute the inventory; strip trailing /CLAUDE.md.
+          table_modules=$(grep -E '^\| ' CLAUDE.md \
+            | grep -oE 'module/[a-zA-Z0-9/._-]+' \
+            | sed -E 's|/CLAUDE\.md$||' \
+            | sort -u)
+
+          # Forward: every module/**/build.gradle must appear in the root table.
+          # Catches: new module added but its row is missing from CLAUDE.md.
+          # Limitation: modules included via settings.gradle without their own
+          # build.gradle (e.g. module/core/enum) are NOT iterated here — they
+          # are protected only by the backward check (directory existence).
+          while IFS= read -r gradle; do
+            mod=$(dirname "$gradle")
+            if ! grep -qx "$mod" <<< "$table_modules"; then
+              echo "::error file=CLAUDE.md::module '$mod' has $gradle but is missing from root CLAUDE.md '## 모듈' table — 새 모듈을 추가했다면 표에 행도 추가해 주세요."
+              fail=1
+            fi
+          done < <(find module -maxdepth 6 -name build.gradle | sort)
+
+          # Backward: every module path referenced in CLAUDE.md must exist on disk.
+          # Catches: module removed but its row was left in CLAUDE.md.
+          while IFS= read -r mod; do
+            [ -z "$mod" ] && continue
+            if [ ! -d "$mod" ]; then
+              echo "::error file=CLAUDE.md::root CLAUDE.md references '$mod' but the directory does not exist — stale 행을 제거해 주세요."
+              fail=1
+            fi
+          done <<< "$table_modules"
+
+          if [ "$fail" -eq 0 ]; then
+            echo "ok  build.gradle ↔ CLAUDE.md '## 모듈' 표 sync 통과"
+          fi
+          exit $fail
+
+  context-doc-freshness:
+    name: CLAUDE.md Freshness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Warn on stale CLAUDE.md (>180d)
+        shell: bash
+        run: |
+          set -euo pipefail
+          STALE_DAYS=180
+          now=$(date +%s)
+          while IFS= read -r f; do
+            ts=$(git log -1 --format=%ct -- "$f" 2>/dev/null || echo "")
+            if [ -z "$ts" ]; then
+              echo "skip $f (no git history)"
+              continue
+            fi
+            age=$(( (now - ts) / 86400 ))
+            if [ "$age" -gt "$STALE_DAYS" ]; then
+              echo "::warning file=$f::CLAUDE.md last touched ${age}d ago (threshold ${STALE_DAYS}d). Quarterly review overdue — verify it still matches the code."
+            else
+              echo "ok  $f (${age}d)"
+            fi
+          done < <(git ls-files '**/CLAUDE.md' 'CLAUDE.md')
