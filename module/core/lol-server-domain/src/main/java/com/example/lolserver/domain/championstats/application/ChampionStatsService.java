@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -59,8 +60,14 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
         List<ChampionWinRateReadModel> winRates =
             championStatsQueryPort.getChampionWinRates(championId, patch, platformId, tierFilter);
 
+        // pickRate/banRate/tier 는 by-position 결과와 일관성 유지를 위해 같은 데이터를 lookup.
+        // by-position 쪽은 별도 캐시 키 — hit 시 무비용, miss 면 한 번 BQ 호출.
+        Map<String, ChampionRateReadModel> rateByPosition =
+                lookupChampionRateByPosition(championId, patch, platformId, tierFilter);
+
         List<ChampionPositionStatsReadModel> positions = winRates.stream()
-            .map(wr -> buildPositionStats(championId, patch, platformId, tierFilter, wr))
+            .map(wr -> buildPositionStats(championId, patch, platformId, tierFilter, wr,
+                    rateByPosition.get(wr.teamPosition())))
             .toList();
 
         ChampionStatsReadModel result = new ChampionStatsReadModel(tierDisplay, positions);
@@ -72,9 +79,26 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
         return result;
     }
 
+    private Map<String, ChampionRateReadModel> lookupChampionRateByPosition(
+            int championId, String patch, String platformId, TierFilter tierFilter) {
+        List<PositionChampionStatsReadModel> byPosition =
+                getChampionStatsByPosition(patch, platformId, tierFilter);
+
+        Map<String, ChampionRateReadModel> result = new HashMap<>();
+        for (PositionChampionStatsReadModel position : byPosition) {
+            for (ChampionRateReadModel rate : position.champions()) {
+                if (rate.championId() == championId) {
+                    result.put(position.teamPosition(), rate);
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
     private ChampionPositionStatsReadModel buildPositionStats(
             int championId, String patch, String platformId, TierFilter tierFilter,
-            ChampionWinRateReadModel winRate) {
+            ChampionWinRateReadModel winRate, ChampionRateReadModel rate) {
         String position = winRate.teamPosition();
 
         List<ChampionMatchupReadModel> matchups =
@@ -92,9 +116,16 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
         List<ChampionItemBuildReadModel> itemBuilds =
             championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tierFilter, position);
 
+        double pickRate = rate != null ? rate.pickRate() : 0.0;
+        double banRate = rate != null ? rate.banRate() : 0.0;
+        String tier = rate != null ? rate.tier() : null;
+
         return new ChampionPositionStatsReadModel(
             position,
             winRate.totalWinRate(),
+            pickRate,
+            banRate,
+            tier,
             winRate.totalGames(),
             matchups, runeBuilds, spellStats, skillBuilds,
             startItemBuilds, bootBuilds, itemBuilds

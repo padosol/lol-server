@@ -84,7 +84,7 @@ class ChampionStatsControllerTest extends RestDocsSupport {
         );
 
         ChampionPositionStatsReadModel positionStats = new ChampionPositionStatsReadModel(
-                "TOP", 0.55, 1500,
+                "TOP", 0.55, 0.075, 0.04, "S", 1500,
                 List.of(topMatchup, bottomMatchup),
                 List.of(runeBuild),
                 List.of(spellStats),
@@ -130,6 +130,9 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.positions[]").type(JsonFieldType.ARRAY).description("포지션별 통계 목록"),
                                 fieldWithPath("data.positions[].teamPosition").type(JsonFieldType.STRING).description("포지션"),
                                 fieldWithPath("data.positions[].winRate").type(JsonFieldType.NUMBER).description("승률"),
+                                fieldWithPath("data.positions[].pickRate").type(JsonFieldType.NUMBER).description("픽률 (해당 라인 기준)"),
+                                fieldWithPath("data.positions[].banRate").type(JsonFieldType.NUMBER).description("밴률 (라인 무관)"),
+                                fieldWithPath("data.positions[].tier").type(JsonFieldType.STRING).description("티어 등급 (S+, S, A, B, C, D — /champion-stats/positions 와 동일 룰)"),
                                 fieldWithPath("data.positions[].totalGames").type(JsonFieldType.NUMBER).description("총 게임 수"),
 
                                 // matchups (rankType=TOP: 잘 잡는 상대 / BOTTOM: 카운터)
