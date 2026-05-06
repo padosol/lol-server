@@ -16,7 +16,7 @@
 ### 요구사항
 
 - Java 21+
-- Docker (PostgreSQL / Redis / RabbitMQ 인프라용)
+- Docker (인프라 / 모니터링 스택용)
 - Riot Games API Key
 
 ### 인프라 의존
@@ -25,11 +25,30 @@
 
 - PostgreSQL: `localhost:5432` (DB `postgres`, user `postgres`, password `1234` 기본)
 - Redis: `localhost:6379`
-- RabbitMQ: `localhost:5672` (관리 UI: 15672)
+- RabbitMQ: `localhost:5672` (관리 UI: 15672) — `message.broker=rabbitmq` 기본
+- Kafka: `localhost:9092` — `message.broker=kafka` 사용 시 (compose `--profile kafka`)
+- ClickHouse: `localhost:8123` / `9000` — `stats.datasource=clickhouse` fallback 검증 시
 - Riot API local proxy (lol-repository): `http://localhost:8111`
 - BigQuery 자격증명 (`stats.datasource=bigquery` 사용 시)
 
-> 현재 저장소에 `docker-compose` 매니페스트는 포함되어 있지 않습니다. 위 서비스는 별도로 기동하세요. (운영 컨테이너 이미지는 `docker/Dockerfile` — JDK 21 멀티스테이지 빌드)
+로컬 인프라는 `docker/docker-compose-local.yml` 로 한 번에 기동할 수 있습니다.
+
+```bash
+# postgres / redis / rabbitmq / clickhouse (RabbitMQ 기본 broker)
+docker compose -f docker/docker-compose-local.yml up -d
+
+# Kafka 까지 함께 기동 (message.broker=kafka 환경)
+docker compose -f docker/docker-compose-local.yml --profile kafka up -d
+```
+
+모니터링 스택 (Prometheus / Grafana / Loki / Promtail + 앱 컨테이너 통합) 은 별도 compose 로 분리되어 있습니다.
+
+```bash
+docker compose -f docker/docker-compose.monitoring.yml up -d
+# Grafana http://localhost:3010 (admin/admin), Prometheus :9090, Loki :3100
+```
+
+> 운영 이미지는 `docker/Dockerfile` (JDK 21 멀티스테이지 빌드).
 
 ### 빌드 및 실행
 
