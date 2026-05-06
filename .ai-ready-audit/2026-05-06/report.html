@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>AI-Ready Audit · lol-server</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --panel-2: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --good: #22c55e;
+      --ok: #eab308;
+      --warn: #f97316;
+      --bad: #ef4444;
+      --border: #475569;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', 'Noto Sans KR', sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.55;
+    }
+    .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
+    h1, h2, h3 { margin: 0 0 12px; }
+    h1 { font-size: 28px; }
+    h2 { font-size: 22px; margin-top: 36px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    h3 { font-size: 18px; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .header {
+      display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end;
+      background: linear-gradient(135deg, var(--panel) 0%, var(--panel-2) 100%);
+      padding: 28px; border-radius: 16px; border: 1px solid var(--border);
+    }
+    .total-score {
+      font-size: 64px; font-weight: 700; line-height: 1; color: var(--accent);
+    }
+    .total-score small { font-size: 24px; color: var(--muted); }
+    .grade-badge {
+      display: inline-block; padding: 6px 14px; border-radius: 999px;
+      font-weight: 600; font-size: 14px; margin-top: 8px;
+    }
+    .grade-AI-Native { background: var(--good); color: #052e16; }
+    .grade-AI-Ready { background: var(--accent); color: #0c4a6e; }
+    .grade-AI-Assisted { background: var(--ok); color: #422006; }
+    .grade-AI-Fragile { background: var(--warn); color: #431407; }
+    .grade-AI-Hostile { background: var(--bad); color: #450a0a; }
+
+    .meta-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;
+      margin-top: 24px;
+    }
+    .meta { background: var(--panel); padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); }
+    .meta .label { color: var(--muted); font-size: 12px; }
+    .meta .value { font-size: 18px; font-weight: 600; margin-top: 4px; }
+
+    .cat-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;
+    }
+    .cat-card {
+      background: var(--panel); padding: 18px; border-radius: 12px; border: 1px solid var(--border);
+    }
+    .cat-card .cat-id { color: var(--muted); font-size: 12px; letter-spacing: 0.05em; }
+    .cat-card h3 { margin-top: 4px; }
+    .cat-card .scoreline {
+      display: flex; align-items: baseline; gap: 8px; margin-top: 8px;
+    }
+    .cat-card .score { font-size: 28px; font-weight: 700; }
+    .cat-card .max { color: var(--muted); }
+    .bar { height: 8px; background: var(--panel-2); border-radius: 999px; overflow: hidden; margin-top: 10px; }
+    .bar > div { height: 100%; transition: width .3s; }
+    .bar-good > div { background: var(--good); }
+    .bar-ok   > div { background: var(--ok); }
+    .bar-warn > div { background: var(--warn); }
+    .bar-bad  > div { background: var(--bad); }
+    .cat-card .desc { color: var(--muted); font-size: 13px; margin-top: 8px; }
+    .cat-card .reason { font-size: 13px; margin-top: 8px; padding: 8px 10px; background: rgba(56,189,248,.07); border-left: 2px solid var(--accent); border-radius: 4px; }
+
+    table {
+      width: 100%; border-collapse: collapse; margin-top: 12px;
+      background: var(--panel); border-radius: 12px; overflow: hidden;
+    }
+    th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    th { background: var(--panel-2); font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    tr:last-child td { border-bottom: none; }
+
+    .roi-rank {
+      display: inline-block; width: 24px; height: 24px; border-radius: 50%;
+      background: var(--accent); color: #0c4a6e; font-weight: 700; text-align: center; line-height: 24px;
+      font-size: 12px;
+    }
+    .effort-low    { color: var(--good); }
+    .effort-medium { color: var(--ok); }
+    .effort-high   { color: var(--warn); }
+
+    .warn-box {
+      background: rgba(249, 115, 22, .08); border: 1px solid var(--warn); padding: 14px;
+      border-radius: 10px; margin-top: 16px; font-size: 14px;
+    }
+    .ref-list { font-family: 'Menlo', 'Consolas', monospace; font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .ref-list li { margin: 2px 0; }
+
+    footer { color: var(--muted); font-size: 12px; margin-top: 60px; text-align: center; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div>
+      <div class="muted">AI-Ready Codebase Audit</div>
+      <h1>lol-server</h1>
+      <div class="muted">/home/padosol/lol/.orch/mp-23/worktrees/server · git 1c722319 · 2026-05-06T05:07:32.491699+00:00</div>
+      <div class="grade-badge grade-AI-Assisted">AI-Assisted</div>
+      <div class="muted" style="margin-top: 6px;">AI가 유용하지만 complex/domain-specific task에는 human context 필요</div>
+    </div>
+    <div style="text-align: right;">
+      <div class="total-score">66<small>/100</small></div>
+    </div>
+  </div>
+
+  <div class="meta-grid">
+    <div class="meta"><div class="label">Tracked files</div><div class="value">805</div></div>
+    <div class="meta"><div class="label">핵심 모듈</div><div class="value">5</div></div>
+    <div class="meta"><div class="label">CLAUDE.md / AGENTS.md</div><div class="value">11</div></div>
+    <div class="meta"><div class="label">Navigation Coverage</div><div class="value">0.0%</div></div>
+    <div class="meta"><div class="label">의심 broken refs</div><div class="value">50</div></div>
+  </div>
+
+  <h2>카테고리별 점수</h2>
+  <div class="cat-grid">
+    
+<div class="cat-card">
+  <div class="cat-id">A</div>
+  <h3>AI Navigation &amp; Coverage</h3>
+  <div class="scoreline"><span class="score">12</span><span class="max">/15</span></div>
+  <div class="bar bar-ok"><div style="width:80%"></div></div>
+  <div class="desc">AI가 전체 codebase/module/workflow를 빠르게 찾을 수 있는가</div>
+  <div class="reason">11개 등록 모듈(app/application, core/lol-server-domain, infra/api, infra/client/{lol-repository,oauth}, infra/message/{kafka,rabbitmq}, infra/persistence/{clickhouse,postgresql,redis}) 전부 CLAUDE.md 보유. 그러나 이번 사이클에 머지된 MP-9 (`STATS_DATASOURCE` 기본값 → bigquery) 로 사실상 OLAP 디폴트가 바뀌었음에도 신규 `module/infra/persistence/bigquery` 모듈에 CLAUDE.md 없고 루트 CLAUDE.md 모듈 표에 미등재 — navigation coverage 가 실제 OLAP 경로를 가리키지 못함. 직전 (15) 대비 -3.</div>
+  
+</div>
+
+
+<div class="cat-card">
+  <div class="cat-id">B</div>
+  <h3>Context Document Quality</h3>
+  <div class="scoreline"><span class="score">18</span><span class="max">/20</span></div>
+  <div class="bar bar-good"><div style="width:90%"></div></div>
+  <div class="desc">context files가 'compass, not encyclopedia' 원칙을 따르는가</div>
+  
+  <table style="margin-top:12px; font-size:13px;"><tr><td><strong>B1</strong> Conciseness</td><td style="text-align:right">3/4</td></tr><tr><td><strong>B2</strong> Quick Commands</td><td style="text-align:right">4/4</td></tr><tr><td><strong>B3</strong> Key Files</td><td style="text-align:right">4/4</td></tr><tr><td><strong>B4</strong> Non-Obvious Patterns</td><td style="text-align:right">4/4</td></tr><tr><td><strong>B5</strong> See Also / Cross References</td><td style="text-align:right">3/4</td></tr></table>
+</div>
+
+
+<div class="cat-card">
+  <div class="cat-id">C</div>
+  <h3>Tribal Knowledge Externalization</h3>
+  <div class="scoreline"><span class="score">14</span><span class="max">/20</span></div>
+  <div class="bar bar-ok"><div style="width:70%"></div></div>
+  <div class="desc">숨은 규칙, 실패 패턴, human-only knowledge가 구조화되었는가</div>
+  <div class="reason">11/11 등록 모듈 CLAUDE.md 가 Q1(owned) Q2(modification) Q3(failure) Q4(deps) Q5(tribal) 5질문에 답 (직접 module/core/lol-server-domain + module/infra/persistence/clickhouse 본문 검증 완료). 그러나 (1) 신규 bigquery 모듈은 0/5 질문 답 없음 — Q3 의 'BigQuery JDBC 어댑터 vs ClickHouse JDBC 어댑터 차이', Q5 의 'STATS_DATASOURCE 분기' tribal knowledge 가 코드 주석에만 존재. (2) clickhouse CLAUDE.md 가 'runtime dead, 신규 코드는 BigQuery 기준' 사실을 노출 안 함 — 새 컨트리뷰터가 clickhouse 어댑터를 수정해도 효과 없음을 모름. 직전 (17) 대비 -3.</div>
+  
+</div>
+
+
+<div class="cat-card">
+  <div class="cat-id">D</div>
+  <h3>Cross-Module Dependency &amp; Data Flow Mapping</h3>
+  <div class="scoreline"><span class="score">7</span><span class="max">/15</span></div>
+  <div class="bar bar-warn"><div style="width:47%"></div></div>
+  <div class="desc">변경 영향 범위를 AI가 추적할 수 있는가</div>
+  <div class="reason">docs/ARCHITECTURE.md 173줄, mermaid graph + 3개 sequence/flowchart + 'X 변경시 영향 범위' 표 모두 유지. 그러나 OLAP 데이터 플로우 다이어그램(섹션 3)이 ClickHouse 만 표기 (BigQuery 6회 미언급, ClickHouse 6회) — 실제 런타임 디폴트와 정반대. 의존 그래프(`module:persistence:bigquery`) 도 누락. 직전 (10) 대비 -3.</div>
+  
+</div>
+
+
+<div class="cat-card">
+  <div class="cat-id">E</div>
+  <h3>Verification &amp; Quality Gates</h3>
+  <div class="scoreline"><span class="score">12</span><span class="max">/15</span></div>
+  <div class="bar bar-ok"><div style="width:80%"></div></div>
+  <div class="desc">AI-generated context와 code changes를 검증하는 체계가 있는가</div>
+  
+  <table style="margin-top:12px; font-size:13px;"><tr><td><strong>E1</strong> Reference Accuracy</td><td style="text-align:right">3/5</td></tr><tr><td><strong>E2</strong> Independent Critic Review</td><td style="text-align:right">3/4</td></tr><tr><td><strong>E3</strong> Task Validation</td><td style="text-align:right">3/4</td></tr><tr><td><strong>E4</strong> Prompt/Workflow Tests</td><td style="text-align:right">3/2</td></tr></table>
+</div>
+
+
+<div class="cat-card">
+  <div class="cat-id">F</div>
+  <h3>Freshness &amp; Self-Maintenance</h3>
+  <div class="scoreline"><span class="score">3</span><span class="max">/10</span></div>
+  <div class="bar bar-warn"><div style="width:30%"></div></div>
+  <div class="desc">context가 stale해지지 않도록 자동 유지되는가. stale context는 없는 context보다 위험.</div>
+  <div class="reason">docs/docs-maintenance.md 가 (1) PR 시점 doc 동기화 표 (2) 분기별 정기 리뷰 (3) CI 게이트 (4) 신규 모듈 추가 체크리스트 명문화. docs-check.yml + lychee + line-cap + freshness 4중 CI 게이트 운영. 그러나 실증 실패: MP-8/MP-9 동안 bigquery 모듈이 신규 추가되었음에도 (a) 모듈 CLAUDE.md 미생성 (b) 루트 CLAUDE.md 모듈 표 미갱신 (c) ARCHITECTURE.md OLAP 다이어그램 미갱신 — '신규 모듈 추가 체크리스트' 가 PR 시점에 enforce 되지 않음. 절차는 문서화, 자동 enforcement 부재. 직전 (5) 대비 -2.</div>
+  
+</div>
+
+
+<div class="cat-card">
+  <div class="cat-id">G</div>
+  <h3>Agent Performance Outcomes</h3>
+  <div class="scoreline"><span class="score">0</span><span class="max">/5</span></div>
+  <div class="bar bar-bad"><div style="width:0%"></div></div>
+  <div class="desc">실제 AI task 성공률/효율 개선이 측정되는가</div>
+  <div class="reason">AI agent 성능 측정/리그레션 벤치마크 흔적 없음. before/after 대시보드, agent 답변 정확도 추적 미존재 — default 0 유지.</div>
+  
+</div>
+
+  </div>
+
+  <h2>ROI 우선순위 액션 리스트</h2>
+  <p class="muted">놓친 점수 / 추정 노력으로 정렬. 위에서부터 처리하면 점수 대비 효과가 큰 순서로 개선됩니다.</p>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>항목</th><th>현재</th><th>최대</th><th>놓친 점수</th><th>추정 노력</th><th>권장 액션</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+<tr>
+  <td><span class="roi-rank">1</span></td>
+  <td>F · Freshness &amp; Self-Maintenance</td>
+  <td>3</td>
+  <td>10</td>
+  <td><strong>+7</strong></td>
+  <td class="effort-medium">medium</td>
+  <td>docs-check.yml 에 'module/* 디렉토리 신규 추가 시 동일 경로 CLAUDE.md 존재 필수' 룰 추가. 루트 CLAUDE.md 모듈 표 ↔ 실제 module/ 디렉토리 sync 검사.</td>
+</tr>
+
+
+<tr>
+  <td><span class="roi-rank">2</span></td>
+  <td>A · AI Navigation &amp; Coverage</td>
+  <td>12</td>
+  <td>15</td>
+  <td><strong>+3</strong></td>
+  <td class="effort-medium">medium</td>
+  <td>module/infra/persistence/bigquery/CLAUDE.md 추가 + 루트 CLAUDE.md 모듈 표에 한 줄 추가 (또는 clickhouse 줄 교체).</td>
+</tr>
+
+
+<tr>
+  <td><span class="roi-rank">3</span></td>
+  <td>B1 · Conciseness</td>
+  <td>3</td>
+  <td>4</td>
+  <td><strong>+1</strong></td>
+  <td class="effort-low">low</td>
+  <td>25-35 lines 또는 약 1,000 tokens 내외</td>
+</tr>
+
+
+<tr>
+  <td><span class="roi-rank">4</span></td>
+  <td>B5 · See Also / Cross References</td>
+  <td>3</td>
+  <td>4</td>
+  <td><strong>+1</strong></td>
+  <td class="effort-low">low</td>
+  <td>관련 module/context file/dependency map으로 연결</td>
+</tr>
+
+
+<tr>
+  <td><span class="roi-rank">5</span></td>
+  <td>D · Cross-Module Dependency &amp; Data Flow Mapping</td>
+  <td>7</td>
+  <td>15</td>
+  <td><strong>+8</strong></td>
+  <td class="effort-high">high</td>
+  <td>ARCHITECTURE.md 섹션 3 OLAP 다이어그램에 BigQuery 어댑터 추가, `STATS_DATASOURCE` 분기 표시. 의존 그래프 노드에 bigquery 추가.</td>
+</tr>
+
+
+<tr>
+  <td><span class="roi-rank">6</span></td>
+  <td>E3 · Task Validation</td>
+  <td>3</td>
+  <td>4</td>
+  <td><strong>+1</strong></td>
+  <td class="effort-low">low</td>
+  <td>build/test/lint/typecheck/e2e 등 변경 유형별 검증 명령 제공</td>
+</tr>
+
+
+<tr>
+  <td><span class="roi-rank">7</span></td>
+  <td>C · Tribal Knowledge Externalization</td>
+  <td>14</td>
+  <td>20</td>
+  <td><strong>+6</strong></td>
+  <td class="effort-high">high</td>
+  <td>bigquery 모듈에 CLAUDE.md 추가 + clickhouse CLAUDE.md 첫 단락에 'STATS_DATASOURCE=bigquery 가 기본값, 이 어댑터는 fallback' 한 줄 추가.</td>
+</tr>
+
+
+<tr>
+  <td><span class="roi-rank">8</span></td>
+  <td>E1 · Reference Accuracy</td>
+  <td>3</td>
+  <td>5</td>
+  <td><strong>+2</strong></td>
+  <td class="effort-medium">medium</td>
+  <td>file path, API, command hallucination 0건</td>
+</tr>
+
+
+<tr>
+  <td><span class="roi-rank">9</span></td>
+  <td>G · Agent Performance Outcomes</td>
+  <td>0</td>
+  <td>5</td>
+  <td><strong>+5</strong></td>
+  <td class="effort-high">high</td>
+  <td>정성적으로 '도움 된다' 수준</td>
+</tr>
+
+
+<tr>
+  <td><span class="roi-rank">10</span></td>
+  <td>E2 · Independent Critic Review</td>
+  <td>3</td>
+  <td>4</td>
+  <td><strong>+1</strong></td>
+  <td class="effort-high">high</td>
+  <td>최소 2-3 round의 독립 review 또는 checklist</td>
+</tr>
+
+    </tbody>
+  </table>
+
+  
+<h2>문서 내 의심 참조 (50건)</h2>
+<div class="warn-box">
+  context 문서에서 백틱/링크로 참조된 경로 중 audit이 실제로 찾지 못한 항목입니다.
+  실제로는 깊은 경로에 존재할 수 있으니 <strong>샘플링 검증 필수</strong>.
+  (E1. Reference Accuracy 점수에 영향)
+</div>
+<ul class="ref-list"><li><code>CLAUDE.md</code> → <code>infra/client/lol-repository/CLAUDE.md</code></li><li><code>CLAUDE.md</code> → <code>infra/client/oauth/CLAUDE.md</code></li><li><code>CLAUDE.md</code> → <code>.claude/skills/build-validator/SKILL.md</code></li><li><code>CLAUDE.md</code> → <code>app/application/CLAUDE.md</code></li><li><code>CLAUDE.md</code> → <code>infra/persistence/postgresql/CLAUDE.md</code></li><li><code>CLAUDE.md</code> → <code>infra/api/CLAUDE.md</code></li><li><code>CLAUDE.md</code> → <code>core/lol-server-domain/CLAUDE.md</code></li><li><code>docs/ARCHITECTURE.md</code> → <code>core/lol-server-domain</code></li><li><code>docs/ARCHITECTURE.md</code> → <code>controller/security/</code></li><li><code>docs/docs-maintenance.md</code> → <code>/ai-ready-audit:audit-codebase</code></li><li><code>docs/docs-maintenance.md</code> → <code>application.yml</code></li><li><code>docs/docs-maintenance.md</code> → <code>app/application/build.gradle</code></li><li><code>docs/duo-api-spec.md</code> → <code>/api/duo</code></li><li><code>docs/oauth2-login.md</code> → <code>/oauth2/authorize</code></li><li><code>docs/oauth2-login.md</code> → <code>SecurityConfig.java</code></li><li><code>docs/oauth2-login.md</code> → <code>{Provider}OAuth2UserInfoExtractor.java</code></li><li><code>docs/oauth2-login.md</code> → <code>CustomOidcUserService.java</code></li><li><code>docs/oauth2-login.md</code> → <code>OAuthProvider.java</code></li><li><code>docs/oauth2-login.md</code> → <code>api-local.yml</code></li><li><code>docs/review/2026-03-17-oauth-member-review.md</code> → <code>OAuthLoginRequest.java</code></li></ul>
+
+
+  <footer>
+    Generated by ai-ready-audit · rubric v1.0 · scorecard 입력: /home/padosol/lol/.orch/mp-23/worktrees/server/.ai-ready-audit/2026-05-06/scorecard.json
+  </footer>
+
+</div>
+</body>
+</html>
