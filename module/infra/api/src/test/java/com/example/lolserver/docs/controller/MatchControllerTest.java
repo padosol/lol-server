@@ -5,6 +5,7 @@ import com.example.lolserver.docs.RestDocsSupport;
 import com.example.lolserver.domain.match.application.command.MSChampionCommand;
 import com.example.lolserver.domain.match.application.command.MatchCommand;
 import com.example.lolserver.domain.match.domain.MSChampion;
+import com.example.lolserver.domain.match.domain.MSChampionByQueue;
 import com.example.lolserver.domain.match.domain.gamedata.GameInfoData;
 import com.example.lolserver.domain.match.domain.gamedata.ParticipantData;
 import com.example.lolserver.domain.match.domain.gamedata.TeamInfoData;
@@ -459,7 +460,7 @@ class MatchControllerTest extends RestDocsSupport {
                 ));
     }
 
-    @DisplayName("랭크 챔피언 통계 조회 API")
+    @DisplayName("랭크 챔피언 통계 조회 API (솔로/자유 분리)")
     @Test
     void getRankChampions() throws Exception {
         // given
@@ -467,23 +468,40 @@ class MatchControllerTest extends RestDocsSupport {
         request.setPuuid("puuid-1234");
         request.setSeason(2024);
 
-        MSChampion champion = mock(MSChampion.class);
-        given(champion.getChampionId()).willReturn(266);
-        given(champion.getChampionName()).willReturn("Aatrox");
-        given(champion.getKills()).willReturn(10.5);
-        given(champion.getDeaths()).willReturn(5.5);
-        given(champion.getAssists()).willReturn(8.5);
-        given(champion.getWin()).willReturn(20L);
-        given(champion.getLosses()).willReturn(10L);
-        given(champion.getWinRate()).willReturn(66.7);
-        given(champion.getDamagePerMinute()).willReturn(850.0);
-        given(champion.getKda()).willReturn(3.45);
-        given(champion.getLaneMinionsFirst10Minutes()).willReturn(72.5);
-        given(champion.getDamageTakenOnTeamPercentage()).willReturn(22.5);
-        given(champion.getGoldPerMinute()).willReturn(420.0);
-        given(champion.getPlayCount()).willReturn(30L);
+        MSChampion solo = mock(MSChampion.class);
+        given(solo.getChampionId()).willReturn(266);
+        given(solo.getChampionName()).willReturn("Aatrox");
+        given(solo.getKills()).willReturn(10.5);
+        given(solo.getDeaths()).willReturn(5.5);
+        given(solo.getAssists()).willReturn(8.5);
+        given(solo.getWin()).willReturn(20L);
+        given(solo.getLosses()).willReturn(10L);
+        given(solo.getWinRate()).willReturn(66.7);
+        given(solo.getDamagePerMinute()).willReturn(850.0);
+        given(solo.getKda()).willReturn(3.45);
+        given(solo.getLaneMinionsFirst10Minutes()).willReturn(72.5);
+        given(solo.getDamageTakenOnTeamPercentage()).willReturn(22.5);
+        given(solo.getGoldPerMinute()).willReturn(420.0);
+        given(solo.getPlayCount()).willReturn(30L);
 
-        given(matchService.getRankChampions(any(MSChampionCommand.class))).willReturn(List.of(champion));
+        MSChampion flex = mock(MSChampion.class);
+        given(flex.getChampionId()).willReturn(157);
+        given(flex.getChampionName()).willReturn("Yasuo");
+        given(flex.getKills()).willReturn(8.0);
+        given(flex.getDeaths()).willReturn(6.0);
+        given(flex.getAssists()).willReturn(5.0);
+        given(flex.getWin()).willReturn(7L);
+        given(flex.getLosses()).willReturn(5L);
+        given(flex.getWinRate()).willReturn(58.3);
+        given(flex.getDamagePerMinute()).willReturn(720.0);
+        given(flex.getKda()).willReturn(2.17);
+        given(flex.getLaneMinionsFirst10Minutes()).willReturn(68.0);
+        given(flex.getDamageTakenOnTeamPercentage()).willReturn(20.0);
+        given(flex.getGoldPerMinute()).willReturn(395.0);
+        given(flex.getPlayCount()).willReturn(12L);
+
+        given(matchService.getRankChampions(any(MSChampionCommand.class)))
+                .willReturn(new MSChampionByQueue(List.of(solo), List.of(flex)));
 
         // when & then
         mockMvc.perform(
@@ -499,26 +517,39 @@ class MatchControllerTest extends RestDocsSupport {
                         preprocessResponse(prettyPrint()),
                         queryParameters(
                                 parameterWithName("puuid").description("조회할 유저의 PUUID"),
-                                parameterWithName("season").description("시즌").optional(),
-                                parameterWithName("queueId").description("큐 ID (e.g., 420:솔로랭크, 440:자유랭크)").optional()
+                                parameterWithName("season").description("시즌").optional()
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
-                                fieldWithPath("data[].championId").type(JsonFieldType.NUMBER).description("챔피언 ID"),
-                                fieldWithPath("data[].championName").type(JsonFieldType.STRING).description("챔피언 이름"),
-                                fieldWithPath("data[].kills").type(JsonFieldType.NUMBER).description("평균 킬"),
-                                fieldWithPath("data[].deaths").type(JsonFieldType.NUMBER).description("평균 데스"),
-                                fieldWithPath("data[].assists").type(JsonFieldType.NUMBER).description("평균 어시스트"),
-                                fieldWithPath("data[].win").type(JsonFieldType.NUMBER).description("승리 횟수"),
-                                fieldWithPath("data[].losses").type(JsonFieldType.NUMBER).description("패배 횟수"),
-                                fieldWithPath("data[].winRate").type(JsonFieldType.NUMBER).description("승률 (%)"),
-                                fieldWithPath("data[].damagePerMinute").type(JsonFieldType.NUMBER).description("분당 피해량"),
-                                fieldWithPath("data[].kda").type(JsonFieldType.NUMBER).description("KDA"),
-                                fieldWithPath("data[].laneMinionsFirst10Minutes").type(JsonFieldType.NUMBER).description("10분 CS"),
-                                fieldWithPath("data[].damageTakenOnTeamPercentage").type(JsonFieldType.NUMBER).description("팀 피해 분담률 (%)"),
-                                fieldWithPath("data[].goldPerMinute").type(JsonFieldType.NUMBER).description("분당 골드"),
-                                fieldWithPath("data[].playCount").type(JsonFieldType.NUMBER).description("플레이 횟수")
+                                fieldWithPath("data.solo[].championId").type(JsonFieldType.NUMBER).description("솔로 랭크 챔피언 ID"),
+                                fieldWithPath("data.solo[].championName").type(JsonFieldType.STRING).description("솔로 랭크 챔피언 이름"),
+                                fieldWithPath("data.solo[].kills").type(JsonFieldType.NUMBER).description("솔로 랭크 평균 킬"),
+                                fieldWithPath("data.solo[].deaths").type(JsonFieldType.NUMBER).description("솔로 랭크 평균 데스"),
+                                fieldWithPath("data.solo[].assists").type(JsonFieldType.NUMBER).description("솔로 랭크 평균 어시스트"),
+                                fieldWithPath("data.solo[].win").type(JsonFieldType.NUMBER).description("솔로 랭크 승리 횟수"),
+                                fieldWithPath("data.solo[].losses").type(JsonFieldType.NUMBER).description("솔로 랭크 패배 횟수"),
+                                fieldWithPath("data.solo[].winRate").type(JsonFieldType.NUMBER).description("솔로 랭크 승률 (%)"),
+                                fieldWithPath("data.solo[].damagePerMinute").type(JsonFieldType.NUMBER).description("솔로 랭크 분당 피해량"),
+                                fieldWithPath("data.solo[].kda").type(JsonFieldType.NUMBER).description("솔로 랭크 KDA"),
+                                fieldWithPath("data.solo[].laneMinionsFirst10Minutes").type(JsonFieldType.NUMBER).description("솔로 랭크 10분 CS"),
+                                fieldWithPath("data.solo[].damageTakenOnTeamPercentage").type(JsonFieldType.NUMBER).description("솔로 랭크 팀 피해 분담률 (%)"),
+                                fieldWithPath("data.solo[].goldPerMinute").type(JsonFieldType.NUMBER).description("솔로 랭크 분당 골드"),
+                                fieldWithPath("data.solo[].playCount").type(JsonFieldType.NUMBER).description("솔로 랭크 플레이 횟수"),
+                                fieldWithPath("data.flex[].championId").type(JsonFieldType.NUMBER).description("자유 랭크 챔피언 ID"),
+                                fieldWithPath("data.flex[].championName").type(JsonFieldType.STRING).description("자유 랭크 챔피언 이름"),
+                                fieldWithPath("data.flex[].kills").type(JsonFieldType.NUMBER).description("자유 랭크 평균 킬"),
+                                fieldWithPath("data.flex[].deaths").type(JsonFieldType.NUMBER).description("자유 랭크 평균 데스"),
+                                fieldWithPath("data.flex[].assists").type(JsonFieldType.NUMBER).description("자유 랭크 평균 어시스트"),
+                                fieldWithPath("data.flex[].win").type(JsonFieldType.NUMBER).description("자유 랭크 승리 횟수"),
+                                fieldWithPath("data.flex[].losses").type(JsonFieldType.NUMBER).description("자유 랭크 패배 횟수"),
+                                fieldWithPath("data.flex[].winRate").type(JsonFieldType.NUMBER).description("자유 랭크 승률 (%)"),
+                                fieldWithPath("data.flex[].damagePerMinute").type(JsonFieldType.NUMBER).description("자유 랭크 분당 피해량"),
+                                fieldWithPath("data.flex[].kda").type(JsonFieldType.NUMBER).description("자유 랭크 KDA"),
+                                fieldWithPath("data.flex[].laneMinionsFirst10Minutes").type(JsonFieldType.NUMBER).description("자유 랭크 10분 CS"),
+                                fieldWithPath("data.flex[].damageTakenOnTeamPercentage").type(JsonFieldType.NUMBER).description("자유 랭크 팀 피해 분담률 (%)"),
+                                fieldWithPath("data.flex[].goldPerMinute").type(JsonFieldType.NUMBER).description("자유 랭크 분당 골드"),
+                                fieldWithPath("data.flex[].playCount").type(JsonFieldType.NUMBER).description("자유 랭크 플레이 횟수")
                         )
                 ));
     }

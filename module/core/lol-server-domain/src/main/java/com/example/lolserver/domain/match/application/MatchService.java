@@ -5,7 +5,7 @@ import com.example.lolserver.domain.match.application.command.MatchCommand;
 import com.example.lolserver.domain.match.application.model.DailyGameCountReadModel;
 import com.example.lolserver.domain.match.application.model.DailyGameCountSummaryReadModel;
 import com.example.lolserver.domain.match.application.model.GameReadModel;
-import com.example.lolserver.domain.match.domain.MSChampion;
+import com.example.lolserver.domain.match.domain.MSChampionByQueue;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.domain.match.application.port.in.MatchQueryUseCase;
 import com.example.lolserver.domain.match.application.port.out.MatchPersistencePort;
@@ -41,8 +41,8 @@ public class MatchService implements MatchQueryUseCase {
         return matchPersistencePort.getMatches(matchCommand.getPuuid(), matchCommand.getQueueId(), paginationRequest);
     }
 
-    public List<MSChampion> getRankChampions(MSChampionCommand command) {
-        return matchPersistencePort.getRankChampions(command.getPuuid(), command.getSeason(), command.getQueueId());
+    public MSChampionByQueue getRankChampions(MSChampionCommand command) {
+        return matchPersistencePort.getRankChampions(command.getPuuid(), command.getSeason());
     }
 
     public GameReadModel getGameData(String matchId) {

@@ -5,6 +5,7 @@ import com.example.lolserver.domain.match.application.command.MatchCommand;
 import com.example.lolserver.domain.match.application.port.out.MatchPersistencePort;
 import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.MSChampion;
+import com.example.lolserver.domain.match.domain.MSChampionByQueue;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.support.PaginationRequest;
 import com.example.lolserver.support.SliceResult;
@@ -87,48 +88,52 @@ class MatchServiceTest {
         then(matchPersistencePort).should().getMatches(eq("test-puuid"), eq(420), any(PaginationRequest.class));
     }
 
-    @DisplayName("유효한 커맨드로 챔피언 통계 조회 시 챔피언 리스트를 반환한다")
+    @DisplayName("유효한 커맨드로 랭크 챔피언 통계 조회 시 솔로/자유 분리 결과를 반환한다")
     @Test
-    void getRankChampions_유효한커맨드_챔피언리스트반환() {
+    void getRankChampions_유효한커맨드_솔로자유분리반환() {
         // given
         MSChampionCommand command = new MSChampionCommand();
         command.setPuuid("test-puuid");
         command.setSeason(14);
-        command.setQueueId(420);
 
-        List<MSChampion> champions = List.of(
-                new MSChampion(5.0, 3.0, 10.0, 1, "Annie", 20L, 10L, 66.7, 500.0, 5.0, 80.0, 25.0, 300.0, 30L),
+        List<MSChampion> solo = List.of(
+                new MSChampion(5.0, 3.0, 10.0, 1, "Annie", 20L, 10L, 66.7, 500.0, 5.0, 80.0, 25.0, 300.0, 30L)
+        );
+        List<MSChampion> flex = List.of(
                 new MSChampion(6.0, 2.0, 8.0, 2, "Olaf", 15L, 5L, 75.0, 450.0, 7.0, 75.0, 30.0, 280.0, 20L)
         );
-        given(matchPersistencePort.getRankChampions("test-puuid", 14, 420)).willReturn(champions);
+        MSChampionByQueue expected = new MSChampionByQueue(solo, flex);
+        given(matchPersistencePort.getRankChampions("test-puuid", 14)).willReturn(expected);
 
         // when
-        List<MSChampion> result = matchService.getRankChampions(command);
+        MSChampionByQueue result = matchService.getRankChampions(command);
 
         // then
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).getChampionName()).isEqualTo("Annie");
-        assertThat(result.get(1).getChampionName()).isEqualTo("Olaf");
-        then(matchPersistencePort).should().getRankChampions("test-puuid", 14, 420);
+        assertThat(result.solo()).hasSize(1);
+        assertThat(result.solo().get(0).getChampionName()).isEqualTo("Annie");
+        assertThat(result.flex()).hasSize(1);
+        assertThat(result.flex().get(0).getChampionName()).isEqualTo("Olaf");
+        then(matchPersistencePort).should().getRankChampions("test-puuid", 14);
     }
 
-    @DisplayName("챔피언 통계 결과가 없으면 빈 리스트를 반환한다")
+    @DisplayName("랭크 챔피언 통계 결과가 없으면 양쪽 모두 빈 리스트를 반환한다")
     @Test
     void getRankChampions_결과없음_빈리스트반환() {
         // given
         MSChampionCommand command = new MSChampionCommand();
         command.setPuuid("test-puuid");
         command.setSeason(14);
-        command.setQueueId(420);
 
-        given(matchPersistencePort.getRankChampions("test-puuid", 14, 420)).willReturn(Collections.emptyList());
+        MSChampionByQueue empty = new MSChampionByQueue(Collections.emptyList(), Collections.emptyList());
+        given(matchPersistencePort.getRankChampions("test-puuid", 14)).willReturn(empty);
 
         // when
-        List<MSChampion> result = matchService.getRankChampions(command);
+        MSChampionByQueue result = matchService.getRankChampions(command);
 
         // then
-        assertThat(result).isEmpty();
-        then(matchPersistencePort).should().getRankChampions("test-puuid", 14, 420);
+        assertThat(result.solo()).isEmpty();
+        assertThat(result.flex()).isEmpty();
+        then(matchPersistencePort).should().getRankChampions("test-puuid", 14);
     }
 
     @DisplayName("존재하는 매치 ID로 조회 시 게임 데이터를 반환한다")

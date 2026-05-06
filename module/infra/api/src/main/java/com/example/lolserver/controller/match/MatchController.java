@@ -2,7 +2,7 @@ package com.example.lolserver.controller.match;
 
 import com.example.lolserver.domain.match.application.command.MSChampionCommand;
 import com.example.lolserver.domain.match.application.command.MatchCommand;
-import com.example.lolserver.domain.match.domain.MSChampion;
+import com.example.lolserver.domain.match.domain.MSChampionByQueue;
 import com.example.lolserver.domain.match.application.port.in.MatchQueryUseCase;
 import com.example.lolserver.domain.match.application.model.DailyGameCountSummaryReadModel;
 import com.example.lolserver.domain.match.application.model.GameReadModel;
@@ -19,8 +19,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -59,9 +57,9 @@ public class MatchController {
     }
 
     @GetMapping("/rank/champions")
-    public ResponseEntity<ApiResponse<List<MSChampion>>> getRankChampions(
+    public ResponseEntity<ApiResponse<MSChampionByQueue>> getRankChampions(
             @ModelAttribute MSChampionCommand request) {
-        List<MSChampion> result = matchService.getRankChampions(request);
+        MSChampionByQueue result = matchService.getRankChampions(request);
 
         return ResponseEntity.ok(ApiResponse.success(result));
     }

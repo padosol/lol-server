@@ -9,6 +9,5 @@ public class MSChampionCommand {
 
     private String puuid;
     private Integer season;
-    private Integer queueId;
 
 }

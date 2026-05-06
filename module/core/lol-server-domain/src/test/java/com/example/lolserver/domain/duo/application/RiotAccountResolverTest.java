@@ -8,6 +8,7 @@ import com.example.lolserver.domain.league.domain.League;
 import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.application.port.out.MatchPersistencePort;
 import com.example.lolserver.domain.match.domain.MSChampion;
+import com.example.lolserver.domain.match.domain.MSChampionByQueue;
 import com.example.lolserver.domain.match.domain.gamedata.ParticipantData;
 import com.example.lolserver.domain.member.application.port.out.MemberPersistencePort;
 import com.example.lolserver.domain.member.domain.Member;
@@ -163,8 +164,8 @@ class RiotAccountResolverTest {
                     MSChampion.builder().championId(3).championName("Lux").playCount(50L).win(30L).losses(20L).build(),
                     MSChampion.builder().championId(4).championName("Yasuo").playCount(30L).win(10L).losses(20L).build()
             );
-            given(matchPersistencePort.getRankChampions(puuid, null, 420))
-                    .willReturn(champions);
+            given(matchPersistencePort.getRankChampions(puuid, null))
+                    .willReturn(new MSChampionByQueue(champions, Collections.emptyList()));
 
             // when
             List<MostChampion> result = riotAccountResolver.lookupMostChampions(puuid);
@@ -181,8 +182,8 @@ class RiotAccountResolverTest {
         void noData_returnsEmptyList() {
             // given
             String puuid = "test-puuid";
-            given(matchPersistencePort.getRankChampions(puuid, null, 420))
-                    .willReturn(Collections.emptyList());
+            given(matchPersistencePort.getRankChampions(puuid, null))
+                    .willReturn(new MSChampionByQueue(Collections.emptyList(), Collections.emptyList()));
 
             // when
             List<MostChampion> result = riotAccountResolver.lookupMostChampions(puuid);
