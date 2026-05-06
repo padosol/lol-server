@@ -11,7 +11,8 @@ logs/
 !**/src/main/resources/*.yml
 !**/src/test/resources/*.yml
 !performance-tests/docker-compose.yml
-docker/
+!docker/docker-compose*.yml
+!docker/monitoring/**/*.yml
 
 ### STS ###
 .apt_generated
