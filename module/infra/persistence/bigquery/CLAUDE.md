@@ -6,7 +6,7 @@ BigQuery 분석 어댑터 (driven adapter). 챔피언 통계 (승률/픽률/밴�
 
 - 허용: `core:lol-server-domain`, `core:enum`, `spring-boot-starter`, `com.google.cloud:google-cloud-bigquery` (libraries-bom 26.43.0)
 - 금지: JPA / Spring Data, JdbcTemplate, 트랜잭션 (BigQuery 는 read-only 분석 전용)
-- 활성화: 이 모듈의 `BigQueryConfig` 와 `ChampionStatsBigQueryAdapter` 양쪽에 `@ConditionalOnProperty(name = "stats.datasource", havingValue = "bigquery")` 가 걸려있고, 어댑터에는 추가로 `@Primary`. `application-{local,dev,prod}.yml` 의 `stats.datasource: ${STATS_DATASOURCE:bigquery}` 가 default 로 채워지므로 환경변수 미지정 시에도 항상 활성화
+- 활성화: `ChampionStatsQueryPort` 의 단일 후보로 자동 주입되며, `BigQueryConfig` / `ChampionStatsBigQueryAdapter` 모두 무조건 로드 (별도 conditional 없음). `application-{local,dev,prod}.yml` 의 `stats.datasource: ${STATS_DATASOURCE:bigquery}` 는 환경변수 미지정 시 기본값을 채울 뿐 실제 빈 등록과는 분리
 
 ## Layout
 
