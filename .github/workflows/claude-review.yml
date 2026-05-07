@@ -1,0 +1,54 @@
+name: claude-review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code review
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          additional_permissions: |
+            actions: read
+          prompt: |
+            이 PR diff 를 리뷰하라.
+            - critical bug / 보안 이슈 / 명백한 회귀 / 테스트 실패 가능성을 우선 본다.
+            - 잘 짠 부분도 짧게 인정.
+            - 개선 제안은 우선순위 (critical / nit) 표시.
+
+            마지막 줄에 정확히 다음 중 하나만 적는다 (다른 텍스트와 섞지 말 것):
+              VERDICT: PASS    (머지해도 좋음)
+              VERDICT: FAIL    (수정 필요)
+
+      - name: Gate on verdict
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR=${{ github.event.pull_request.number }}
+          BODY=$(gh pr view "$PR" --json comments \
+            --jq '.comments | map(select(.author.login | test("claude|github-actions"))) | last.body // ""')
+          echo "----- last bot comment -----"
+          echo "$BODY"
+          echo "----------------------------"
+          if echo "$BODY" | grep -qE '^VERDICT:[[:space:]]*PASS[[:space:]]*$'; then
+            echo "::notice::Claude approved"
+            exit 0
+          fi
+          echo "::error::Claude did not approve (or verdict missing)"
+          exit 1
