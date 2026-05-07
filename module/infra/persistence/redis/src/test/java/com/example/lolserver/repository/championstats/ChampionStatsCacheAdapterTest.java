@@ -8,16 +8,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class ChampionStatsCacheAdapterTest {
@@ -28,13 +32,19 @@ class ChampionStatsCacheAdapterTest {
     @Mock
     private ValueOperations<String, Object> valueOperations;
 
+    @Mock
+    private RedissonClient redissonClient;
+
+    @Mock
+    private RLock rLock;
+
     private ChampionStatsCacheAdapter adapter;
 
     private static final Duration CACHE_TTL = Duration.ofHours(6);
 
     @BeforeEach
     void setUp() {
-        adapter = new ChampionStatsCacheAdapter(redisTemplate);
+        adapter = new ChampionStatsCacheAdapter(redisTemplate, redissonClient);
     }
 
     @DisplayName("챔피언 상세 통계 캐시 히트 시 데이터를 반환한다")
@@ -233,5 +243,97 @@ class ChampionStatsCacheAdapterTest {
 
         // when & then
         adapter.saveChampionStatsByPosition("16.1", "KR", "EMERALD", stats);
+    }
+
+    @DisplayName("tryLockDetail 은 단일 키 prefix 와 wait 3s / lease 30s 로 RLock 을 획득한다")
+    @Test
+    void tryLockDetail_acquiresRedissonLockWithExpectedKeyAndTimings() throws InterruptedException {
+        // given
+        String expectedLockKey = "champion-stats:lock:detail:KR:13:16.1:EMERALD";
+        given(redissonClient.getLock(expectedLockKey)).willReturn(rLock);
+        given(rLock.tryLock(3L, 30L, TimeUnit.SECONDS)).willReturn(true);
+
+        // when
+        boolean acquired = adapter.tryLockDetail(13, "16.1", "KR", "EMERALD");
+
+        // then
+        assertThat(acquired).isTrue();
+        then(rLock).should().tryLock(3L, 30L, TimeUnit.SECONDS);
+    }
+
+    @DisplayName("tryLockDetail 이 InterruptedException 을 받으면 false 를 반환하고 인터럽트 플래그를 복원한다")
+    @Test
+    void tryLockDetail_interruptedReturnsFalseAndRestoresFlag() throws InterruptedException {
+        // given
+        String expectedLockKey = "champion-stats:lock:detail:KR:13:16.1:EMERALD";
+        given(redissonClient.getLock(expectedLockKey)).willReturn(rLock);
+        given(rLock.tryLock(3L, 30L, TimeUnit.SECONDS)).willThrow(new InterruptedException("interrupted"));
+
+        // when
+        boolean acquired = adapter.tryLockDetail(13, "16.1", "KR", "EMERALD");
+
+        // then
+        assertThat(acquired).isFalse();
+        assertThat(Thread.interrupted()).isTrue();
+    }
+
+    @DisplayName("unlockDetail 은 현재 스레드가 락 보유자일 때만 unlock 을 호출한다")
+    @Test
+    void unlockDetail_releasesOnlyWhenHeldByCurrentThread() {
+        // given
+        String expectedLockKey = "champion-stats:lock:detail:KR:13:16.1:EMERALD";
+        given(redissonClient.getLock(expectedLockKey)).willReturn(rLock);
+        given(rLock.isHeldByCurrentThread()).willReturn(true);
+
+        // when
+        adapter.unlockDetail(13, "16.1", "KR", "EMERALD");
+
+        // then
+        then(rLock).should().unlock();
+    }
+
+    @DisplayName("unlockDetail 은 현재 스레드가 락 보유자가 아니면 unlock 을 호출하지 않는다")
+    @Test
+    void unlockDetail_skipsWhenNotHeld() {
+        // given
+        String expectedLockKey = "champion-stats:lock:detail:KR:13:16.1:EMERALD";
+        given(redissonClient.getLock(expectedLockKey)).willReturn(rLock);
+        given(rLock.isHeldByCurrentThread()).willReturn(false);
+
+        // when
+        adapter.unlockDetail(13, "16.1", "KR", "EMERALD");
+
+        // then
+        then(rLock).should(never()).unlock();
+    }
+
+    @DisplayName("tryLockByPosition 은 positions 락 키 prefix 를 사용한다")
+    @Test
+    void tryLockByPosition_acquiresRedissonLockWithPositionsKey() throws InterruptedException {
+        // given
+        String expectedLockKey = "champion-stats:lock:positions:KR:16.1:EMERALD";
+        given(redissonClient.getLock(expectedLockKey)).willReturn(rLock);
+        given(rLock.tryLock(3L, 30L, TimeUnit.SECONDS)).willReturn(true);
+
+        // when
+        boolean acquired = adapter.tryLockByPosition("16.1", "KR", "EMERALD");
+
+        // then
+        assertThat(acquired).isTrue();
+    }
+
+    @DisplayName("tryLockTimeline 은 timeline 락 키 prefix 를 사용한다")
+    @Test
+    void tryLockTimeline_acquiresRedissonLockWithTimelineKey() throws InterruptedException {
+        // given
+        String expectedLockKey = "champion-stats:lock:timeline:KR:13:16.1:EMERALD";
+        given(redissonClient.getLock(expectedLockKey)).willReturn(rLock);
+        given(rLock.tryLock(3L, 30L, TimeUnit.SECONDS)).willReturn(true);
+
+        // when
+        boolean acquired = adapter.tryLockTimeline(13, "16.1", "KR", "EMERALD");
+
+        // then
+        assertThat(acquired).isTrue();
     }
 }
