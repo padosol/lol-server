@@ -24,8 +24,6 @@ import com.google.cloud.bigquery.QueryParameterValue;
 import com.google.cloud.bigquery.StandardSQLTypeName;
 import com.google.cloud.bigquery.TableResult;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.AbstractMap;
@@ -38,8 +36,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Component
-@Primary
-@ConditionalOnProperty(name = "stats.datasource", havingValue = "bigquery")
 public class ChampionStatsBigQueryAdapter implements ChampionStatsQueryPort {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
