@@ -12,16 +12,12 @@ import com.example.lolserver.domain.championstats.application.model.ChampionSpel
 import com.example.lolserver.domain.championstats.application.model.ChampionStartItemBuildReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionRateReadModel;
-import com.example.lolserver.domain.championstats.application.model.ChampionTimelineReadModel;
 import com.example.lolserver.domain.championstats.application.model.ChampionWinRateReadModel;
 import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
-import com.example.lolserver.domain.championstats.application.model.PositionTimelineReadModel;
-import com.example.lolserver.domain.championstats.application.model.TimelineFrameReadModel;
 import com.example.lolserver.domain.championstats.application.port.in.ChampionStatsQueryUseCase;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsCachePort;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsMetricsPort;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
-import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsTimelineQueryPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,7 +43,6 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
     private static final long CACHE_POLL_INTERVAL_MS = 200L;
 
     private final ChampionStatsQueryPort championStatsQueryPort;
-    private final ChampionStatsTimelineQueryPort championStatsTimelineQueryPort;
     private final ChampionStatsCachePort championStatsCachePort;
     private final ChampionStatsMetricsPort championStatsMetricsPort;
     private final Executor queryExecutor;
@@ -55,13 +50,11 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
 
     public ChampionStatsService(
             ChampionStatsQueryPort championStatsQueryPort,
-            ChampionStatsTimelineQueryPort championStatsTimelineQueryPort,
             ChampionStatsCachePort championStatsCachePort,
             ChampionStatsMetricsPort championStatsMetricsPort,
             @Qualifier("queryExecutor") Executor queryExecutor,
             @Value("${champion-stats.cache.enabled:true}") boolean cacheEnabled) {
         this.championStatsQueryPort = championStatsQueryPort;
-        this.championStatsTimelineQueryPort = championStatsTimelineQueryPort;
         this.championStatsCachePort = championStatsCachePort;
         this.championStatsMetricsPort = championStatsMetricsPort;
         this.queryExecutor = queryExecutor;
@@ -103,25 +96,6 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
                 () -> computeChampionStatsByPosition(patch, platformId, tierFilter),
                 value -> championStatsCachePort.saveChampionStatsByPosition(patch, platformId, tierDisplay, value),
                 ChampionStatsMetricsPort.ENDPOINT_POSITIONS
-        );
-    }
-
-    public ChampionTimelineReadModel getChampionTimeline(
-            int championId, String patch, String platformId, TierFilter tierFilter) {
-
-        String tierDisplay = tierFilter.toDisplayString();
-
-        if (!cacheEnabled) {
-            return computeChampionTimeline(championId, patch, platformId, tierFilter, tierDisplay);
-        }
-
-        return loadWithSingleFlight(
-                () -> championStatsCachePort.findChampionTimeline(championId, patch, platformId, tierDisplay),
-                () -> championStatsCachePort.tryLockTimeline(championId, patch, platformId, tierDisplay),
-                () -> championStatsCachePort.unlockTimeline(championId, patch, platformId, tierDisplay),
-                () -> computeChampionTimeline(championId, patch, platformId, tierFilter, tierDisplay),
-                value -> championStatsCachePort.saveChampionTimeline(championId, patch, platformId, tierDisplay, value),
-                ChampionStatsMetricsPort.ENDPOINT_TIMELINE
         );
     }
 
@@ -246,20 +220,6 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
                         entry.getKey(),
                         assignTiersIfMissing(entry.getValue())))
                 .toList();
-    }
-
-    private ChampionTimelineReadModel computeChampionTimeline(
-            int championId, String patch, String platformId, TierFilter tierFilter, String tierDisplay) {
-
-        Map<String, List<TimelineFrameReadModel>> grouped =
-                championStatsTimelineQueryPort.aggregateChampionTimeline(
-                        championId, patch, platformId, tierFilter);
-
-        List<PositionTimelineReadModel> positions = grouped.entrySet().stream()
-                .map(entry -> new PositionTimelineReadModel(entry.getKey(), entry.getValue()))
-                .toList();
-
-        return new ChampionTimelineReadModel(championId, tierDisplay, positions);
     }
 
     private Map<String, ChampionRateReadModel> lookupChampionRateByPosition(

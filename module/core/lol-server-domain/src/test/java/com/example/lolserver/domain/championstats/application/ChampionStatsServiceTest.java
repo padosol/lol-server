@@ -16,7 +16,6 @@ import com.example.lolserver.domain.championstats.application.model.PositionCham
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsCachePort;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsMetricsPort;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
-import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsTimelineQueryPort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -44,9 +43,6 @@ class ChampionStatsServiceTest {
     private ChampionStatsQueryPort championStatsQueryPort;
 
     @Mock
-    private ChampionStatsTimelineQueryPort championStatsTimelineQueryPort;
-
-    @Mock
     private ChampionStatsCachePort championStatsCachePort;
 
     @Mock
@@ -55,7 +51,7 @@ class ChampionStatsServiceTest {
     private final Executor synchronousExecutor = Runnable::run;
 
     private ChampionStatsService createService(boolean cacheEnabled) {
-        return new ChampionStatsService(championStatsQueryPort, championStatsTimelineQueryPort,
+        return new ChampionStatsService(championStatsQueryPort,
                 championStatsCachePort, championStatsMetricsPort, synchronousExecutor, cacheEnabled);
     }
 

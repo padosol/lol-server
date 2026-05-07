@@ -322,18 +322,4 @@ class ChampionStatsCacheAdapterTest {
         assertThat(acquired).isTrue();
     }
 
-    @DisplayName("tryLockTimeline 은 timeline 락 키 prefix 를 사용한다")
-    @Test
-    void tryLockTimeline_acquiresRedissonLockWithTimelineKey() throws InterruptedException {
-        // given
-        String expectedLockKey = "champion-stats:lock:timeline:KR:13:16.1:EMERALD";
-        given(redissonClient.getLock(expectedLockKey)).willReturn(rLock);
-        given(rLock.tryLock(3L, 30L, TimeUnit.SECONDS)).willReturn(true);
-
-        // when
-        boolean acquired = adapter.tryLockTimeline(13, "16.1", "KR", "EMERALD");
-
-        // then
-        assertThat(acquired).isTrue();
-    }
 }
