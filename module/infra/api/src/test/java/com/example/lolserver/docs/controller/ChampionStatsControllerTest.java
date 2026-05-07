@@ -347,7 +347,7 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                                 fieldWithPath("data[].champions[].banRate").type(JsonFieldType.NUMBER)
                                         .description("밴률"),
                                 fieldWithPath("data[].champions[].tier").type(JsonFieldType.STRING)
-                                        .description("티어 등급 (BigQuery 모드: S+, S, A, B, C, D / ClickHouse 모드: OP, 1, 2, 3, 4, 5)")
+                                        .description("티어 등급 (S+, S, A, B, C, D)")
                         )
                 ));
     }

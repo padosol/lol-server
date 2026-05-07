@@ -6,7 +6,7 @@
 
 - **Java 21** (Gradle Toolchain), Spring Boot 3.3.6, Gradle Multi-Module
 - **PostgreSQL** + Flyway (영속·timeline 원본), **Redis / Redisson** (캐시 / RefreshToken / OAuth State / 분산 락)
-- **BigQuery** (챔피언 통계 OLAP — `STATS_DATASOURCE` 기본값) / ClickHouse (fallback, runtime dead by default)
+- **BigQuery** (챔피언 통계 OLAP — `STATS_DATASOURCE=bigquery`)
 - **RabbitMQ** (기본 메시지 broker — `message.broker=rabbitmq`) / Kafka (`message.broker=kafka` 시 활성)
 - QueryDSL 5.1.0, MapStruct (객체 매핑), Bucket4j (Riot API rate limiting), Spring Security + OAuth2 (RSO)
 - Spring RestDocs + Asciidoctor (API 문서화), JaCoCo (커버리지), Checkstyle 10.21.4
@@ -27,14 +27,13 @@
 - Redis: `localhost:6379`
 - RabbitMQ: `localhost:5672` (관리 UI: 15672) — `message.broker=rabbitmq` 기본
 - Kafka: `localhost:9092` — `message.broker=kafka` 사용 시 (compose `--profile kafka`)
-- ClickHouse: `localhost:8123` / `9000` — `stats.datasource=clickhouse` fallback 검증 시
 - Riot API local proxy (lol-repository): `http://localhost:8111`
 - BigQuery 자격증명 (`stats.datasource=bigquery` 사용 시)
 
 로컬 인프라는 `docker/docker-compose-local.yml` 로 한 번에 기동할 수 있습니다.
 
 ```bash
-# postgres / redis / rabbitmq / clickhouse (RabbitMQ 기본 broker)
+# postgres / redis / rabbitmq (RabbitMQ 기본 broker)
 docker compose -f docker/docker-compose-local.yml up -d
 
 # Kafka 까지 함께 기동 (message.broker=kafka 환경)
@@ -78,7 +77,7 @@ docker compose -f docker/docker-compose.monitoring.yml up -d
 
 - 활성 프로파일: `local`, `dev`, `prod`, `test`, `performance-test`
 - 모듈별 yaml (`<module>-<profile>.yml`) 을 `module/app/application/src/main/resources/application.yml` 에서 프로파일별로 import
-- 주요 환경변수: `STATS_DATASOURCE` (`bigquery` 기본 / `clickhouse` fallback), `DB_*`, Riot/RSO 클라이언트 자격증명, BigQuery 서비스 계정 경로
+- 주요 환경변수: `STATS_DATASOURCE=bigquery`, `DB_*`, Riot/RSO 클라이언트 자격증명, BigQuery 서비스 계정 경로
 - 메시지 broker 전환: `message.broker=rabbitmq` (기본) 또는 `kafka` — 한쪽만 활성. 어댑터에 `@ConditionalOnProperty` 가 걸려 있어 자동 분기
 
 ## 아키텍처
@@ -102,8 +101,7 @@ module/
 │   └── persistence/
 │       ├── postgresql/              # JPA + QueryDSL + MapStruct + Flyway
 │       ├── redis/                   # 캐시, RefreshToken, OAuth State, Redisson 분산 락
-│       ├── bigquery/                # 챔피언 통계 OLAP (STATS_DATASOURCE=bigquery, default)
-│       └── clickhouse/              # 챔피언 통계 OLAP fallback (runtime dead by default)
+│       └── bigquery/                # 챔피언 통계 OLAP (STATS_DATASOURCE=bigquery)
 └── support/logging/                 # @LogExecutionTime AOP 등 횡단 유틸
 ```
 
@@ -125,7 +123,7 @@ module/
 
 ### 데이터 소스 / 메시징 의사결정
 
-- **챔피언 통계 OLAP 은 BigQuery 가 default** (`STATS_DATASOURCE` 미지정 시 `bigquery` 로 채움). ClickHouse 어댑터·Config 코드는 잔존하지만 기본 환경에서는 **runtime dead path** — 신규 통계 기능은 BigQuery 우선으로 작성합니다 (port 일치 보장을 위해 양쪽에 동일 메서드 추가 권장). 모듈 제거 시점은 BigQuery 운영 안정성 확인 후 별도 결정.
+- **챔피언 통계 OLAP 은 BigQuery** (`STATS_DATASOURCE=bigquery`). 과거 ClickHouse 어댑터는 BigQuery 운영 안정화 후 MP-36 에서 폐기.
 - **Riot API 직접 호출은 `infra/client/lol-repository` 만 가능** — 도메인/다른 어댑터에서 직접 RestClient 호출 금지.
 - **메시지 broker 는 RabbitMQ 가 default**. Kafka 는 `message.broker=kafka` 환경에서만 활성화.
 
@@ -149,7 +147,7 @@ module/
 - [`docs/workflow.md`](docs/workflow.md) — Linear (`MP-*`) 키 기반 브랜치 / 커밋 / 이슈 생명주기
 - [`docs/docs-maintenance.md`](docs/docs-maintenance.md) — CLAUDE.md / 문서 동기화 절차 (PR 시점 / 분기 리뷰 / CI 게이트)
 - [`docs/oauth2-login.md`](docs/oauth2-login.md), [`docs/rso-oauth2-troubleshooting.md`](docs/rso-oauth2-troubleshooting.md) — OAuth/RSO 흐름 디테일
-- `docs/0[1-4]_*.sql` — ClickHouse 스키마 정의 / 뷰 / 쿼리 (legacy, 참고용)
+- `docs/0[1-4]_*.sql` — 과거 ClickHouse 스키마 / 뷰 / 쿼리 (Deprecated MP-36, BigQuery 로 이전 후 폐기 — 참고용)
 - `module/infra/api/src/docs/asciidoc/index.adoc` — 생성된 API 문서 entry
 
 ## 라이선스

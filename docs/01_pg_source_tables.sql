@@ -1,8 +1,8 @@
 -- =====================================================
 -- 01: PostgreSQL Engine 외부 테이블 (수동 실행)
 -- =====================================================
--- 이 파일은 PostgreSQL 접속 정보를 포함하므로 .gitignore 에 등록되어 있습니다.
--- docker exec -it clickhouse_analytics clickhouse-client 접속 후 수동 실행하세요.
+-- DEPRECATED (MP-36): 챔피언 통계 OLAP 은 BigQuery 로 이전됐고, ClickHouse 어댑터/모듈은 폐기됐습니다.
+-- 이 파일은 과거 ClickHouse 기반 운영 시점의 정의를 참고용으로만 남겨둡니다 — 현 운영에 사용되지 않습니다.
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS pg_match

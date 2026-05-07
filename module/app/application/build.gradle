@@ -13,7 +13,6 @@ dependencies {
     implementation project(":module:infra:message:kafka")
     implementation project(":module:infra:persistence:postgresql")
     implementation project(":module:infra:persistence:redis")
-    implementation project(":module:infra:persistence:clickhouse")
     implementation project(":module:infra:persistence:bigquery")
     implementation project(":module:support:logging")
 
