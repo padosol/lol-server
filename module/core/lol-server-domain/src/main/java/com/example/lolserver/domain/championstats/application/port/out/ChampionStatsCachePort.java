@@ -25,4 +25,16 @@ public interface ChampionStatsCachePort {
 
     void saveChampionTimeline(int championId, String patch, String platformId,
                               String tierDisplay, ChampionTimelineReadModel timeline);
+
+    boolean tryLockDetail(int championId, String patch, String platformId, String tierDisplay);
+
+    void unlockDetail(int championId, String patch, String platformId, String tierDisplay);
+
+    boolean tryLockByPosition(String patch, String platformId, String tierDisplay);
+
+    void unlockByPosition(String patch, String platformId, String tierDisplay);
+
+    boolean tryLockTimeline(int championId, String patch, String platformId, String tierDisplay);
+
+    void unlockTimeline(int championId, String patch, String platformId, String tierDisplay);
 }

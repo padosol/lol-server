@@ -7,4 +7,7 @@ dependencies {
 
     // redisson
     implementation 'org.redisson:redisson-spring-boot-starter:3.46.0'
+
+    // micrometer (single-flight fallback counter)
+    implementation 'io.micrometer:micrometer-core'
 }
