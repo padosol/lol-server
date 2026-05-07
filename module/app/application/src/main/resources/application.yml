@@ -21,7 +21,6 @@ spring:
       - kafka-local.yml
       - postgresql-local.yml
       - redis-local.yml
-      - clickhouse-local.yml
       - bigquery-local.yml
       - logging-local.yml
 
@@ -38,7 +37,6 @@ spring:
       - kafka-dev.yml
       - postgresql-dev.yml
       - redis-dev.yml
-      - clickhouse-dev.yml
       - bigquery-dev.yml
 
 ---
@@ -54,5 +52,4 @@ spring:
       - kafka-prod.yml
       - postgresql-prod.yml
       - redis-prod.yml
-      - clickhouse-prod.yml
       - bigquery-prod.yml

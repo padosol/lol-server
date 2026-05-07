@@ -26,8 +26,7 @@ flowchart TB
       api["infra:api<br/>REST + Spring Security + RestDocs"]
       pg["infra:persistence:postgresql<br/>JPA + QueryDSL + MapStruct + Flyway"]
       redis["infra:persistence:redis<br/>Cache + RefreshToken + Redisson Lock"]
-      bq["infra:persistence:bigquery<br/>OLAP 챔피언 통계 (default, @Primary)"]
-      ch["infra:persistence:clickhouse<br/>OLAP fallback (runtime dead by default)"]
+      bq["infra:persistence:bigquery<br/>OLAP 챔피언 통계"]
       lolClient["infra:client:lol-repository<br/>Riot API RestClient + Bucket4j"]
       oauth["infra:client:oauth<br/>RSO/OAuth2 토큰 교환"]
       rabbit["infra:message:rabbitmq<br/>기본 broker"]
@@ -38,7 +37,6 @@ flowchart TB
     application --> pg
     application --> redis
     application --> bq
-    application --> ch
     application --> lolClient
     application --> oauth
     application --> rabbit
@@ -48,7 +46,6 @@ flowchart TB
     pg --> domain
     redis --> domain
     bq --> domain
-    ch --> domain
     lolClient --> domain
     oauth --> domain
     rabbit --> domain
@@ -67,7 +64,7 @@ flowchart TB
     classDef infraStyle fill:#e1eeff,stroke:#2d6cbf,color:#000
     classDef appStyle fill:#fff4d6,stroke:#bf922d,color:#000
     class domain,coreEnum,logging coreStyle
-    class api,pg,redis,bq,ch,lolClient,oauth,rabbit,kafka infraStyle
+    class api,pg,redis,bq,lolClient,oauth,rabbit,kafka infraStyle
     class application appStyle
 ```
 
@@ -134,37 +131,25 @@ sequenceDiagram
 
 자세한 시나리오·트러블슈팅은 [`docs/oauth2-login.md`](oauth2-login.md), [`docs/rso-oauth2-troubleshooting.md`](rso-oauth2-troubleshooting.md).
 
-### 3. 챔피언 통계 (BigQuery OLAP — default, ClickHouse fallback)
+### 3. 챔피언 통계 (BigQuery OLAP)
 
 ```mermaid
 flowchart LR
     pg[("PostgreSQL<br/>matches, participants")]
-    bq[("BigQuery<br/>materialized views<br/>(default)")]
-    ch[("ClickHouse<br/>materialized views<br/>(legacy fallback)")]
-    sqlLegacy["docs/0[1-4]_*.sql<br/>ClickHouse 스키마/뷰/쿼리 (legacy)"]
-    bqAdapter["infra:persistence:bigquery<br/>ChampionStatsBigQueryAdapter<br/>@Primary @ConditionalOnProperty(stats.datasource=bigquery)"]
-    chAdapter["infra:persistence:clickhouse<br/>ChampionStatsClickHouseAdapter<br/>(runtime dead unless stats.datasource=clickhouse)"]
+    bq[("BigQuery<br/>materialized views")]
+    bqAdapter["infra:persistence:bigquery<br/>ChampionStatsBigQueryAdapter"]
     svc["core:domain<br/>ChampionStatsService<br/>(ChampionStatsQueryPort)"]
     api["infra:api<br/>StatsController"]
 
     pg -.consumer ETL.-> bq
-    pg -.consumer ETL (legacy).-> ch
-    sqlLegacy -.정의.-> ch
     api --> svc
     svc --> bqAdapter
-    svc -. fallback only .-> chAdapter
     bqAdapter --> bq
-    chAdapter --> ch
 ```
 
-PostgreSQL OLTP 데이터를 외부 ETL 파이프라인이 BigQuery 로 적재하고, 도메인 서비스는 `ChampionStatsQueryPort` 를 통해서만 접근한다. 활성 어댑터 선택 메커니즘:
+PostgreSQL OLTP 데이터를 외부 ETL 파이프라인이 BigQuery 로 적재하고, 도메인 서비스는 `ChampionStatsQueryPort` 를 통해 BigQuery 어댑터를 호출한다. 신규 통계 기능은 `infra:persistence:bigquery` 에 추가한다 ([bigquery/CLAUDE.md](../module/infra/persistence/bigquery/CLAUDE.md) 참조).
 
-- `BigQueryConfig` + `ChampionStatsBigQueryAdapter` 양쪽에 `@ConditionalOnProperty(name = "stats.datasource", havingValue = "bigquery")` 가 걸려있고, 어댑터에는 추가로 `@Primary`.
-- `ClickHouseConfig` 와 `ChampionStatsClickHouseAdapter` 는 조건 어노테이션 없는 평범한 `@Configuration`/`@Component` 라 **항상 로드**된다 (`matchIfMissing` 같은 기본값 분기 없음).
-- `application-{local,dev,prod}.yml` 의 `stats.datasource: ${STATS_DATASOURCE:bigquery}` 가 환경변수 미지정 시 default 값을 `bigquery` 로 채워준다 — 그 결과 두 어댑터 모두 빈으로 등록되지만 `@Primary` 가 BigQuery 어댑터를 단일 후보로 선택.
-- `STATS_DATASOURCE=clickhouse` 로 override 하면 BigQuery 어댑터/Config 의 조건이 깨져 빈 자체가 미생성 → ClickHouse 어댑터만 단일 후보로 주입된다 (`@Primary` 불필요).
-
-ClickHouse 경로는 BigQuery 장애 시 fallback / 검증용으로만 남아있고, 신규 통계 기능은 BigQuery 우선으로 추가하되 port 일치를 위해 양쪽에 동일 메서드를 구현한다 ([clickhouse/CLAUDE.md](../module/infra/persistence/clickhouse/CLAUDE.md), [bigquery/CLAUDE.md](../module/infra/persistence/bigquery/CLAUDE.md) 참조).
+> 과거 ClickHouse 어댑터(`infra:persistence:clickhouse`) 는 BigQuery 마이그레이션 안정화 이후 MP-36 에서 폐기됐다. `docs/0[1-4]_*.sql` 의 스키마/쿼리는 참고용으로만 남겨둔다.
 
 ## "X 가 변경되면 어디가 영향받는가?" 빠른 답
 
@@ -178,8 +163,8 @@ ClickHouse 경로는 BigQuery 장애 시 fallback / 검증용으로만 남아있
 | Riot API VO (`restclient/.../model/*VO.java`) | `infra:client:lol-repository` 만 | Mapper 단위 테스트 (도메인은 모름) |
 | `application-*.yml` (프로파일) | `app:application` 런타임 | `local`/`dev`/`prod` 환경 차이 검증 |
 | `message.broker` 프로퍼티 | `app:application` | `infra:message:rabbitmq` ↔ `kafka` 활성 분기 |
-| `stats.datasource` (`STATS_DATASOURCE`, default `bigquery`) | `infra:persistence:bigquery` ↔ `clickhouse` 활성 분기 | 통계 API 응답 동등성 (양쪽 어댑터의 `ChampionStatsQueryPort` 메서드 일치) |
-| `ChampionStatsQueryPort` 메서드 추가/시그니처 | `infra:persistence:bigquery` (primary), `infra:persistence:clickhouse` (fallback) 양쪽 모두 | 한 쪽만 구현 시 fallback 전환 즉시 런타임 실패 |
+| `stats.datasource` (`STATS_DATASOURCE=bigquery`) | `infra:persistence:bigquery` 활성 | 통계 API 응답 |
+| `ChampionStatsQueryPort` 메서드 추가/시그니처 | `infra:persistence:bigquery` 어댑터 | 어댑터 단위 테스트 |
 | `SecurityConfig` (`controller/security/`) | `infra:api` | 보호된 엔드포인트 화이트리스트, JWT 필터 체인 |
 
 ## See Also
@@ -187,4 +172,4 @@ ClickHouse 경로는 BigQuery 장애 시 fallback / 검증용으로만 남아있
 - [Root CLAUDE.md](../CLAUDE.md) — 모듈 표 + 코드 컨벤션 요약
 - 모듈별 디테일: 각 `module/<x>/CLAUDE.md`
 - [`docs/workflow.md`](workflow.md) — Linear(`MP-*`) 키 기반 브랜치/커밋 룰
-- [`docs/01_pg_source_tables.sql`](01_pg_source_tables.sql) ~ [`04_queries.sql`](04_queries.sql) — ClickHouse 스키마/뷰/쿼리
+- [`docs/01_pg_source_tables.sql`](01_pg_source_tables.sql) ~ [`04_queries.sql`](04_queries.sql) — 과거 ClickHouse 스키마/뷰/쿼리 (Deprecated MP-36, BigQuery 로 이전 후 폐기 — 참고용)

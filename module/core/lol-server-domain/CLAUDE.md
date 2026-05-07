@@ -49,7 +49,7 @@
 ## Cross-Module Dependencies
 
 - depends on: `core:enum`, `support:logging`
-- consumed by (어댑터로): `infra:api`, `infra:persistence:postgresql`, `infra:persistence:redis`, `infra:persistence:clickhouse`, `infra:client:lol-repository`, `infra:client:oauth`, `infra:message:rabbitmq`, `infra:message:kafka`
+- consumed by (어댑터로): `infra:api`, `infra:persistence:postgresql`, `infra:persistence:redis`, `infra:persistence:bigquery`, `infra:client:lol-repository`, `infra:client:oauth`, `infra:message:rabbitmq`, `infra:message:kafka`
 - 의존 방향은 항상 `infra → core` 단방향. 역방향 import 가 생기면 즉시 거절.
 
 ## Quick Commands
