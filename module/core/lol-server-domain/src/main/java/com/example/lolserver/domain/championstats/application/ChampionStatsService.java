@@ -154,7 +154,9 @@ public class ChampionStatsService implements ChampionStatsQueryUseCase {
                         ChampionSpellStatsReadModel::winRate, ChampionSpellStatsReadModel::withConfidence));
         CompletableFuture<List<ChampionSkillBuildReadModel>> skillBuildsF = async(() ->
                 withConfidence(championStatsQueryPort.getChampionSkillBuilds(
-                        championId, patch, platformId, tierFilter, position),
+                                championId, patch, platformId, tierFilter, position).stream()
+                                .filter(b -> b.skillBuild() != null && !b.skillBuild().isBlank())
+                                .toList(),
                         totalSamples, ChampionSkillBuildReadModel::games,
                         ChampionSkillBuildReadModel::winRate, ChampionSkillBuildReadModel::withConfidence));
         CompletableFuture<List<ChampionStartItemBuildReadModel>> startItemBuildsF = async(() ->

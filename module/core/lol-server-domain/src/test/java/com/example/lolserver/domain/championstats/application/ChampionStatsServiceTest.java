@@ -183,6 +183,53 @@ class ChampionStatsServiceTest {
             then(championStatsMetricsPort).should(never()).recordSingleFlightFallback(anyString());
         }
 
+        @DisplayName("skillBuild 가 null/공백인 항목은 응답에서 제외한다")
+        @Test
+        void getChampionStats_filtersNullOrBlankSkillBuilds() {
+            // given
+            ChampionStatsService service = createService(false);
+            int championId = 13;
+            String patch = "16.1";
+            String platformId = "KR";
+            TierFilter tierFilter = TierFilter.of("EMERALD");
+
+            ChampionWinRateReadModel middleWinRate = new ChampionWinRateReadModel("MIDDLE", 1000, 520, 0.52);
+            given(championStatsQueryPort.getChampionWinRates(championId, patch, platformId, tierFilter))
+                .willReturn(List.of(middleWinRate));
+
+            // skillBuilds: 정상 1건 + null 1건 + 공백 1건 → 정상 1건만 남아야 함
+            List<ChampionSkillBuildReadModel> skillBuildsWithNoise = List.of(
+                new ChampionSkillBuildReadModel("QWEQEEREQEQWWWW", 400, 0.525, 0.4),
+                new ChampionSkillBuildReadModel(null, 100, 0.5, 0.1),
+                new ChampionSkillBuildReadModel("   ", 50, 0.48, 0.05)
+            );
+
+            given(championStatsQueryPort.getChampionMatchups(championId, patch, platformId, tierFilter, "MIDDLE"))
+                .willReturn(List.of());
+            given(championStatsQueryPort.getChampionRuneBuilds(championId, patch, platformId, tierFilter, "MIDDLE"))
+                .willReturn(List.of());
+            given(championStatsQueryPort.getChampionSpellStats(championId, patch, platformId, tierFilter, "MIDDLE"))
+                .willReturn(List.of());
+            given(championStatsQueryPort.getChampionSkillBuilds(championId, patch, platformId, tierFilter, "MIDDLE"))
+                .willReturn(skillBuildsWithNoise);
+            given(championStatsQueryPort.getChampionStartItemBuilds(championId, patch, platformId, tierFilter, "MIDDLE"))
+                .willReturn(List.of());
+            given(championStatsQueryPort.getChampionBootBuilds(championId, patch, platformId, tierFilter, "MIDDLE"))
+                .willReturn(List.of());
+            given(championStatsQueryPort.getChampionItemBuilds(championId, patch, platformId, tierFilter, "MIDDLE"))
+                .willReturn(List.of());
+
+            // when
+            ChampionStatsReadModel result = service.getChampionStats(
+                championId, patch, platformId, tierFilter);
+
+            // then
+            assertThat(result.positions()).hasSize(1);
+            ChampionPositionStatsReadModel middleStats = result.positions().get(0);
+            assertThat(middleStats.skillBuilds()).hasSize(1);
+            assertThat(middleStats.skillBuilds().get(0).skillBuild()).isEqualTo("QWEQEEREQEQWWWW");
+        }
+
         @DisplayName("승률 데이터가 없으면 빈 포지션 리스트를 반환한다")
         @Test
         void getChampionStats_returnsEmptyPositions_whenNoWinRateData() {
