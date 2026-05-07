@@ -48,7 +48,16 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
 - ReadModel 변환은 `*ReadModel.of(domain)` 정적 팩토리에서만
 - 매직 스트링 금지: `OAuthProvider.RIOT.name()`, `QueueType.RANKED_SOLO_5x5.name()` 등 enum 사용
 - 커밋 메시지: `<type>: MP-<번호> <한글 설명>` (Linear 키 필수; 타입 `feat`, `fix`, `refactor`, `docs`, `chore`)
-- 브랜치: `feature/MP-<번호>-*`, `fix/MP-<번호>-*`, `refactor/MP-<번호>-*` → `develop` → `main`; hotfix 는 `hotfix/MP-<번호>-* → main → develop`
+- 브랜치: `<type>/MP-<번호>-*` 형식. 기본 흐름은 `develop` → `main`, `hotfix`만 `main` → `develop` 역반영. type 6종:
+
+  | prefix | 용도 |
+  |---|---|
+  | `feature` | 새 기능·요구사항 추가 |
+  | `fix` | 버그 수정 |
+  | `refactor` | 동작 변화 없는 내부 구조 개선 |
+  | `chore` | 코드 영향 없는 산출물·문서·CI·도구 변경 (예: 의존 업그레이드, audit 산출물, lint 룰 추가) |
+  | `docs` | 문서 추가·갱신 |
+  | `hotfix` | 긴급 수정 (`main` 직접 → `develop` 역반영) |
 
 ## See Also
 
