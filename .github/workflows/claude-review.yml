@@ -27,14 +27,22 @@ jobs:
           additional_permissions: |
             actions: read
           prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
             이 PR diff 를 리뷰하라.
             - critical bug / 보안 이슈 / 명백한 회귀 / 테스트 실패 가능성을 우선 본다.
             - 잘 짠 부분도 짧게 인정.
-            - 개선 제안은 우선순위 (critical / nit) 표시.
+            - 개선 제안은 우선순위 (critical / nit) 로 표시.
 
-            마지막 줄에 정확히 다음 중 하나만 적는다 (다른 텍스트와 섞지 말 것):
+            **반드시 `gh pr comment` 로 PR top-level 코멘트를 작성**하라. 메시지로만 답하지 말 것.
+            인라인 지적이 필요하면 `mcp__github_inline_comment__create_inline_comment` 사용 (선택).
+
+            top-level 코멘트 본문 **마지막 줄**에 정확히 다음 중 하나만 적는다 (다른 텍스트와 섞지 말 것):
               VERDICT: PASS    (머지해도 좋음)
               VERDICT: FAIL    (수정 필요)
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
 
       - name: Gate on verdict
         env:
