@@ -5,7 +5,6 @@ import com.example.lolserver.TierFilter;
 import com.example.lolserver.controller.support.response.ApiResponse;
 import com.example.lolserver.domain.championstats.application.port.in.ChampionStatsQueryUseCase;
 import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
-import com.example.lolserver.domain.championstats.application.model.ChampionTimelineReadModel;
 import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
 import com.example.lolserver.support.error.CoreException;
 import com.example.lolserver.support.error.ErrorType;
@@ -38,20 +37,6 @@ public class ChampionStatsController {
         String riotPlatformId = Platform.valueOfName(platformId).getPlatformId();
         TierFilter tierFilter = parseTierFilter(tier);
         ChampionStatsReadModel response = championStatsService.getChampionStats(
-                championId, patch, riotPlatformId, tierFilter);
-        return ResponseEntity.ok(ApiResponse.success(response));
-    }
-
-    @GetMapping("/timeline")
-    public ResponseEntity<ApiResponse<ChampionTimelineReadModel>> getChampionTimeline(
-            @PathVariable("platformId") String platformId,
-            @RequestParam("championId") int championId,
-            @RequestParam("patch") String patch,
-            @RequestParam("tier") String tier
-    ) {
-        String riotPlatformId = Platform.valueOfName(platformId).getPlatformId();
-        TierFilter tierFilter = parseTierFilter(tier);
-        ChampionTimelineReadModel response = championStatsService.getChampionTimeline(
                 championId, patch, riotPlatformId, tierFilter);
         return ResponseEntity.ok(ApiResponse.success(response));
     }

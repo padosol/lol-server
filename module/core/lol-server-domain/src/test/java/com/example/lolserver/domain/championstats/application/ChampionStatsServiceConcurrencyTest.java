@@ -2,12 +2,10 @@ package com.example.lolserver.domain.championstats.application;
 
 import com.example.lolserver.TierFilter;
 import com.example.lolserver.domain.championstats.application.model.ChampionStatsReadModel;
-import com.example.lolserver.domain.championstats.application.model.ChampionTimelineReadModel;
 import com.example.lolserver.domain.championstats.application.model.PositionChampionStatsReadModel;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsCachePort;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsMetricsPort;
 import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsQueryPort;
-import com.example.lolserver.domain.championstats.application.port.out.ChampionStatsTimelineQueryPort;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,9 +30,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ChampionStatsServiceConcurrencyTest {
 
     @Mock
-    private ChampionStatsTimelineQueryPort championStatsTimelineQueryPort;
-
-    @Mock
     private ChampionStatsMetricsPort championStatsMetricsPort;
 
     private CountingQueryPort queryPort;
@@ -47,7 +42,7 @@ class ChampionStatsServiceConcurrencyTest {
         queryPort = new CountingQueryPort();
         cachePort = new InMemoryCachePort();
         service = new ChampionStatsService(
-                queryPort, championStatsTimelineQueryPort, cachePort, championStatsMetricsPort,
+                queryPort, cachePort, championStatsMetricsPort,
                 Runnable::run, true);
         callerExecutor = Executors.newFixedThreadPool(16);
     }
@@ -170,7 +165,6 @@ class ChampionStatsServiceConcurrencyTest {
     private static class InMemoryCachePort implements ChampionStatsCachePort {
         private final ConcurrentHashMap<String, ChampionStatsReadModel> detailCache = new ConcurrentHashMap<>();
         private final ConcurrentHashMap<String, List<PositionChampionStatsReadModel>> positionsCache = new ConcurrentHashMap<>();
-        private final ConcurrentHashMap<String, ChampionTimelineReadModel> timelineCache = new ConcurrentHashMap<>();
         private final ConcurrentHashMap<String, ReentrantLock> locks = new ConcurrentHashMap<>();
 
         void seedByPosition(String patch, String platformId, String tierDisplay,
@@ -203,18 +197,6 @@ class ChampionStatsServiceConcurrencyTest {
         }
 
         @Override
-        public ChampionTimelineReadModel findChampionTimeline(
-                int championId, String patch, String platformId, String tierDisplay) {
-            return timelineCache.get(timelineKey(championId, patch, platformId, tierDisplay));
-        }
-
-        @Override
-        public void saveChampionTimeline(int championId, String patch, String platformId,
-                                          String tierDisplay, ChampionTimelineReadModel timeline) {
-            timelineCache.put(timelineKey(championId, patch, platformId, tierDisplay), timeline);
-        }
-
-        @Override
         public boolean tryLockDetail(int championId, String patch, String platformId, String tierDisplay) {
             return tryLock("detail:" + detailKey(championId, patch, platformId, tierDisplay));
         }
@@ -232,16 +214,6 @@ class ChampionStatsServiceConcurrencyTest {
         @Override
         public void unlockByPosition(String patch, String platformId, String tierDisplay) {
             unlock("positions:" + positionsKey(patch, platformId, tierDisplay));
-        }
-
-        @Override
-        public boolean tryLockTimeline(int championId, String patch, String platformId, String tierDisplay) {
-            return tryLock("timeline:" + timelineKey(championId, patch, platformId, tierDisplay));
-        }
-
-        @Override
-        public void unlockTimeline(int championId, String patch, String platformId, String tierDisplay) {
-            unlock("timeline:" + timelineKey(championId, patch, platformId, tierDisplay));
         }
 
         private boolean tryLock(String key) {
@@ -267,10 +239,6 @@ class ChampionStatsServiceConcurrencyTest {
 
         private String positionsKey(String patch, String platformId, String tierDisplay) {
             return platformId + ":" + patch + ":" + tierDisplay;
-        }
-
-        private String timelineKey(int championId, String patch, String platformId, String tierDisplay) {
-            return platformId + ":" + championId + ":" + patch + ":" + tierDisplay;
         }
     }
 }
