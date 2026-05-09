@@ -54,7 +54,7 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
   | `feature` | 새 기능·요구사항 추가 | `feature/MP-7-summoner-search` |
   | `fix` | 버그 수정 | `fix/MP-12-match-null-check` |
   | `refactor` | 동작 변화 없는 내부 구조 개선 | `refactor/MP-7-mapper-cleanup` |
-  | `chore` | 코드 영향 없는 산출물·문서·CI·도구 변경 (예: 의존 업그레이드, audit 산출물, lint 룰 추가) | `chore/MP-41` |
+  | `chore` | 코드 영향 없는 산출물·문서·CI·도구 변경 (예: 의존 업그레이드, audit 산출물, lint 룰 추가) | `chore/MP-41-claude-md-prefix-table` |
   | `docs` | 문서 추가·갱신 | `docs/MP-20-workflow-guide` |
   | `hotfix` | 긴급 수정 (`main` 직접 → `develop` 역반영) | `hotfix/MP-34-login-500` |
 
