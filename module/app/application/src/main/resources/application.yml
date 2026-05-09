@@ -48,6 +48,7 @@ spring:
       - core-prod.yml
       - api-prod.yml
       - client-repository-prod.yml
+      - oauth-prod.yml
       - rabbitmq-prod.yml
       - kafka-prod.yml
       - postgresql-prod.yml
