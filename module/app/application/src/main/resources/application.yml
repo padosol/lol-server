@@ -2,54 +2,21 @@ message:
   broker: rabbitmq
 
 spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
-
----
-spring:
   config:
-    activate:
-      on-profile: local
     import:
-      - core-local.yml
-      - api-local.yml
-      - client-repository-local.yml
-      - oauth-local.yml
-      - rabbitmq-local.yml
-      - kafka-local.yml
-      - postgresql-local.yml
-      - redis-local.yml
-      - bigquery-local.yml
-      - logging-local.yml
-
----
-spring:
-  config:
-    activate:
-      on-profile: dev
-    import:
-      - core-dev.yml
-      - api-dev.yml
-      - client-repository-dev.yml
-      - rabbitmq-dev.yml
-      - kafka-dev.yml
-      - postgresql-dev.yml
-      - redis-dev.yml
-      - bigquery-dev.yml
-
----
-spring:
-  config:
-    activate:
-      on-profile: prod
-    import:
-      - core-prod.yml
-      - api-prod.yml
-      - client-repository-prod.yml
-      - rabbitmq-prod.yml
-      - kafka-prod.yml
-      - postgresql-prod.yml
-      - redis-prod.yml
-      - bigquery-prod.yml
+      - core.yml
+      - api.yml
+      - oauth.yml
+      - client-repository.yml
+      - rabbitmq.yml
+      - kafka.yml
+      - postgresql.yml
+      - redis.yml
+      - bigquery.yml
+      - logging.yml
