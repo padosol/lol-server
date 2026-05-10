@@ -1,0 +1,7 @@
+stats:
+  datasource: bigquery
+
+bigquery:
+  project-id: lol-server-local
+  dataset: lol_analytics
+  credentials-location: ""

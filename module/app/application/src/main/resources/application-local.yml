@@ -1,0 +1,13 @@
+spring:
+  config:
+    import:
+      - core-local.yml
+      - api-local.yml
+      - client-repository-local.yml
+      - oauth-local.yml
+      - rabbitmq-local.yml
+      - kafka-local.yml
+      - postgresql-local.yml
+      - redis-local.yml
+      - bigquery-local.yml
+      - logging-local.yml

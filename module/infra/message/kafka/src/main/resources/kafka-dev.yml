@@ -1,0 +1,7 @@
+spring:
+  kafka:
+    bootstrap-servers: lol-kafka:9092
+
+kafka:
+  topic:
+    summoner-renewal: mmrtr.summoner.renewal
