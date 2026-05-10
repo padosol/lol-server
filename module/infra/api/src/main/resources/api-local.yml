@@ -1,5 +1,5 @@
 server:
-  port: ${SERVER_PORT:8085}
+  port: 8085
   tomcat:
     basedir: .
     accesslog:
@@ -12,15 +12,15 @@ spring:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
+            client-id: ""
+            client-secret: ""
             scope: openid, email, profile
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
           riot:
-            client-id: ${RIOT_RSO_CLIENT_ID}
-            client-secret: ${RIOT_RSO_CLIENT_SECRET}
+            client-id: ""
+            client-secret: ""
             scope: openid, cpid
-            redirect-uri: ${OAUTH_REDIRECT_BASE_URL:http://local.metapick.me}/login/oauth2/code/riot
+            redirect-uri: http://local.metapick.me/login/oauth2/code/riot
             client-authentication-method: client_secret_basic
             authorization-grant-type: authorization_code
         provider:
@@ -37,16 +37,16 @@ spring:
             user-name-attribute: sub
 
 jwt:
-  secret-key: ${JWT_SECRET_KEY}
-  access-token-expiry: ${JWT_ACCESS_TOKEN_EXPIRY:1800}
-  refresh-token-expiry: ${JWT_REFRESH_TOKEN_EXPIRY:1209600}
+  secret-key: ""
+  access-token-expiry: 1800
+  refresh-token-expiry: 1209600
 
 app:
-  frontend-callback-url: ${APP_FRONTEND_CALLBACK_URL:http://localhost:3000/auth/callback}
+  frontend-callback-url: http://localhost:3000/auth/callback
 
 cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:8080,http://lol-ui:3000,https://metapick.me}
+  allowed-origins: http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:8080,http://lol-ui:3000,https://metapick.me
 
 cookie:
-  secure: ${COOKIE_SECURE:true}
-  same-site: ${COOKIE_SAME_SITE:None}
+  secure: false
+  same-site: Lax

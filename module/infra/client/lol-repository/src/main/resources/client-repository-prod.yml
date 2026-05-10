@@ -1,0 +1,3 @@
+lol:
+  repository:
+    url: ${LOL_REPOSITORY_URL}
