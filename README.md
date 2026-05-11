@@ -123,7 +123,7 @@ module/
 
 ### 데이터 소스 / 메시징 의사결정
 
-- **챔피언 통계 OLAP 은 BigQuery** (`STATS_DATASOURCE=bigquery`). 과거 ClickHouse 어댑터는 BigQuery 운영 안정화 후 MP-36 에서 폐기.
+- **챔피언 통계 OLAP 은 BigQuery** (`STATS_DATASOURCE=bigquery`).
 - **Riot API 직접 호출은 `infra/client/lol-repository` 만 가능** — 도메인/다른 어댑터에서 직접 RestClient 호출 금지.
 - **메시지 broker 는 RabbitMQ 가 default**. Kafka 는 `message.broker=kafka` 환경에서만 활성화.
 
@@ -147,7 +147,6 @@ module/
 - [`docs/workflow.md`](docs/workflow.md) — Linear (`MP-*`) 키 기반 브랜치 / 커밋 / 이슈 생명주기
 - [`docs/docs-maintenance.md`](docs/docs-maintenance.md) — CLAUDE.md / 문서 동기화 절차 (PR 시점 / 분기 리뷰 / CI 게이트)
 - [`docs/oauth2-login.md`](docs/oauth2-login.md), [`docs/rso-oauth2-troubleshooting.md`](docs/rso-oauth2-troubleshooting.md) — OAuth/RSO 흐름 디테일
-- `docs/0[1-4]_*.sql` — 과거 ClickHouse 스키마 / 뷰 / 쿼리 (Deprecated MP-36, BigQuery 로 이전 후 폐기 — 참고용)
 - `module/infra/api/src/docs/asciidoc/index.adoc` — 생성된 API 문서 entry
 
 ## 라이선스

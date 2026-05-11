@@ -149,8 +149,6 @@ flowchart LR
 
 PostgreSQL OLTP 데이터를 외부 ETL 파이프라인이 BigQuery 로 적재하고, 도메인 서비스는 `ChampionStatsQueryPort` 를 통해 BigQuery 어댑터를 호출한다. 신규 통계 기능은 `infra:persistence:bigquery` 에 추가한다 ([bigquery/CLAUDE.md](../module/infra/persistence/bigquery/CLAUDE.md) 참조).
 
-> 과거 ClickHouse 어댑터(`infra:persistence:clickhouse`) 는 BigQuery 마이그레이션 안정화 이후 MP-36 에서 폐기됐다. `docs/0[1-4]_*.sql` 의 스키마/쿼리는 참고용으로만 남겨둔다.
-
 ## "X 가 변경되면 어디가 영향받는가?" 빠른 답
 
 | 변경 대상 | 직접 영향 모듈 | 간접 검증 필요 |
@@ -172,4 +170,3 @@ PostgreSQL OLTP 데이터를 외부 ETL 파이프라인이 BigQuery 로 적재�
 - [Root CLAUDE.md](../CLAUDE.md) — 모듈 표 + 코드 컨벤션 요약
 - 모듈별 디테일: 각 `module/<x>/CLAUDE.md`
 - [`docs/workflow.md`](workflow.md) — Linear(`MP-*`) 키 기반 브랜치/커밋 룰
-- [`docs/01_pg_source_tables.sql`](01_pg_source_tables.sql) ~ [`04_queries.sql`](04_queries.sql) — 과거 ClickHouse 스키마/뷰/쿼리 (Deprecated MP-36, BigQuery 로 이전 후 폐기 — 참고용)
