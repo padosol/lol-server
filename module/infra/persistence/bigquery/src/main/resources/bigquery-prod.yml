@@ -4,4 +4,4 @@ stats:
 bigquery:
   project-id: ${BIGQUERY_PROJECT_ID}
   dataset: ${BIGQUERY_DATASET}
-  credentials-location: ""
+  credentials-location: ${BIGQUERY_CREDENTIALS}
