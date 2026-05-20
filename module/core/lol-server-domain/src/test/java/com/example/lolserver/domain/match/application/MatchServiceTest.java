@@ -2,6 +2,7 @@ package com.example.lolserver.domain.match.application;
 
 import com.example.lolserver.domain.match.application.command.MSChampionCommand;
 import com.example.lolserver.domain.match.application.command.MatchCommand;
+import com.example.lolserver.domain.match.application.port.out.MatchCachePort;
 import com.example.lolserver.domain.match.application.port.out.MatchPersistencePort;
 import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.MSChampion;
@@ -29,12 +30,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class MatchServiceTest {
 
     @Mock
     private MatchPersistencePort matchPersistencePort;
+
+    @Mock
+    private MatchCachePort matchCachePort;
 
     @InjectMocks
     private MatchService matchService;
@@ -210,5 +215,75 @@ class MatchServiceTest {
         assertThat(result.getContent()).containsExactly("KR_111", "KR_222", "KR_333");
         assertThat(result.isHasNext()).isTrue();
         then(matchPersistencePort).should().findAllMatchIds(eq("test-puuid"), eq(420), any(PaginationRequest.class));
+    }
+
+    @DisplayName("getMatchesBatch 캐시 히트 시 DB 조회 없이 캐시 결과를 반환한다")
+    @Test
+    void getMatchesBatch_cacheHit_returnsCachedWithoutDbCall() {
+        // given
+        MatchCommand command = MatchCommand.builder()
+                .puuid("test-puuid")
+                .season(14)
+                .queueId(420)
+                .pageNo(0)
+                .build();
+
+        SliceResult<GameReadModel> cached = new SliceResult<>(List.of(new GameReadModel()), false);
+        given(matchCachePort.findMatchesBatch("test-puuid", 14, 420, 0)).willReturn(cached);
+
+        // when
+        SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);
+
+        // then
+        assertThat(result).isSameAs(cached);
+        then(matchPersistencePort).should(never()).getMatchesBatch(any(), any(), any(), any(PaginationRequest.class));
+        then(matchCachePort).should(never()).saveMatchesBatch(any(), any(), any(), any(), any());
+    }
+
+    @DisplayName("getMatchesBatch 캐시 미스 시 DB 조회 후 캐시에 저장한다")
+    @Test
+    void getMatchesBatch_cacheMiss_loadsFromDbAndCaches() {
+        // given
+        MatchCommand command = MatchCommand.builder()
+                .puuid("test-puuid")
+                .season(14)
+                .queueId(420)
+                .pageNo(0)
+                .build();
+
+        SliceResult<GameReadModel> dbResult = new SliceResult<>(List.of(new GameReadModel(), new GameReadModel()), true);
+        given(matchCachePort.findMatchesBatch("test-puuid", 14, 420, 0)).willReturn(null);
+        given(matchPersistencePort.getMatchesBatch(eq("test-puuid"), eq(14), eq(420), any(PaginationRequest.class)))
+                .willReturn(dbResult);
+
+        // when
+        SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);
+
+        // then
+        assertThat(result).isSameAs(dbResult);
+        then(matchCachePort).should().saveMatchesBatch("test-puuid", 14, 420, 0, dbResult);
+    }
+
+    @DisplayName("getMatchesBatch 는 season/queueId 가 null 이어도 캐시 포트에 그대로 전달한다")
+    @Test
+    void getMatchesBatch_nullSeasonAndQueueId_passesNullsToCachePort() {
+        // given
+        MatchCommand command = MatchCommand.builder()
+                .puuid("test-puuid")
+                .pageNo(2)
+                .build();
+
+        SliceResult<GameReadModel> dbResult = new SliceResult<>(Collections.emptyList(), false);
+        given(matchCachePort.findMatchesBatch("test-puuid", null, null, 2)).willReturn(null);
+        given(matchPersistencePort.getMatchesBatch(eq("test-puuid"), eq(null), eq(null), any(PaginationRequest.class)))
+                .willReturn(dbResult);
+
+        // when
+        SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);
+
+        // then
+        assertThat(result).isSameAs(dbResult);
+        then(matchCachePort).should().findMatchesBatch("test-puuid", null, null, 2);
+        then(matchCachePort).should().saveMatchesBatch("test-puuid", null, null, 2, dbResult);
     }
 }
