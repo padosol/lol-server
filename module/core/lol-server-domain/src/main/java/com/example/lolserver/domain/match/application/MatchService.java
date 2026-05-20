@@ -8,6 +8,7 @@ import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.MSChampionByQueue;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.domain.match.application.port.in.MatchQueryUseCase;
+import com.example.lolserver.domain.match.application.port.out.MatchCachePort;
 import com.example.lolserver.domain.match.application.port.out.MatchPersistencePort;
 import com.example.lolserver.support.PaginationRequest;
 import com.example.lolserver.support.SliceResult;
@@ -33,6 +34,7 @@ public class MatchService implements MatchQueryUseCase {
     private static final String DEFAULT_SORT_FIELD = "match";
 
     private final MatchPersistencePort matchPersistencePort;
+    private final MatchCachePort matchCachePort;
 
     public SliceResult<GameReadModel> getMatches(MatchCommand matchCommand) {
         PaginationRequest paginationRequest = new PaginationRequest(
@@ -56,11 +58,24 @@ public class MatchService implements MatchQueryUseCase {
 
     @LogExecutionTime
     public SliceResult<GameReadModel> getMatchesBatch(MatchCommand matchCommand) {
-        PaginationRequest paginationRequest = new PaginationRequest(
-                matchCommand.getPageNo(), DEFAULT_PAGE_SIZE, DEFAULT_SORT_FIELD, PaginationRequest.SortDirection.DESC);
+        String puuid = matchCommand.getPuuid();
+        Integer season = matchCommand.getSeason();
+        Integer queueId = matchCommand.getQueueId();
+        Integer pageNo = matchCommand.getPageNo();
 
-        return matchPersistencePort.getMatchesBatch(
-                matchCommand.getPuuid(), matchCommand.getSeason(), matchCommand.getQueueId(), paginationRequest);
+        SliceResult<GameReadModel> cached = matchCachePort.findMatchesBatch(puuid, season, queueId, pageNo);
+        if (cached != null) {
+            return cached;
+        }
+
+        PaginationRequest paginationRequest = new PaginationRequest(
+                pageNo, DEFAULT_PAGE_SIZE, DEFAULT_SORT_FIELD, PaginationRequest.SortDirection.DESC);
+
+        SliceResult<GameReadModel> result = matchPersistencePort.getMatchesBatch(
+                puuid, season, queueId, paginationRequest);
+
+        matchCachePort.saveMatchesBatch(puuid, season, queueId, pageNo, result);
+        return result;
     }
 
     public SliceResult<String> findAllMatchIds(MatchCommand matchCommand) {
