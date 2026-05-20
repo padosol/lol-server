@@ -19,6 +19,8 @@ import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import static com.example.lolserver.repository.match.entity.QMatchSummonerEntity.matchSummonerEntity;
@@ -121,6 +123,36 @@ public class MatchRepositoryCustomImpl implements MatchRepositoryCustom {
                 ? result.subList(0, pageSize) : result;
 
         return new SliceImpl<>(content, pageable, hasNext);
+    }
+
+    @LogExecutionTime
+    @Override
+    public List<MatchDTO> getMatchDTOsByIds(Collection<String> matchIds) {
+        if (matchIds == null || matchIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return jpaQueryFactory
+                .select(new QMatchDTO(
+                        matchEntity.matchId,
+                        matchEntity.dataVersion,
+                        matchEntity.gameCreation,
+                        matchEntity.gameDuration,
+                        matchEntity.gameEndTimestamp,
+                        matchEntity.gameStartTimestamp,
+                        matchEntity.gameMode,
+                        matchEntity.gameType,
+                        matchEntity.gameVersion,
+                        matchEntity.mapId,
+                        matchEntity.queueId,
+                        matchEntity.platformId,
+                        matchEntity.tournamentCode,
+                        matchEntity.averageTier
+                ))
+                .from(matchEntity)
+                .where(matchEntity.matchId.in(matchIds))
+                .orderBy(matchEntity.gameEndTimestamp.desc())
+                .fetch();
     }
 
     @LogExecutionTime

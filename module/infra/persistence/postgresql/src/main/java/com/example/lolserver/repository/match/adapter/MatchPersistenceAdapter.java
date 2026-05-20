@@ -35,6 +35,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -297,6 +298,62 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
                 .filter(t -> t != null && t.length > 0)
                 .findFirst()
                 .orElse(null);
+    }
+
+    @Override
+    public List<String> findRecentMatchIds(String puuid, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        return matchSummonerRepositoryCustom
+                .findAllMatchIdsByPuuidWithPage(puuid, null, pageable)
+                .getContent();
+    }
+
+    @Override
+    public List<GameReadModel> findMatchesByIds(Collection<String> matchIds) {
+        if (matchIds == null || matchIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<MatchDTO> matchDTOs = matchRepositoryCustom.getMatchDTOsByIds(matchIds);
+        if (matchDTOs.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<String> foundIds = matchDTOs.stream()
+                .map(MatchDTO::getMatchId)
+                .toList();
+
+        CompletableFuture<Map<String, List<MatchSummonerDTO>>> summonersFuture =
+                CompletableFuture.supplyAsync(() ->
+                        matchRepositoryCustom.getMatchSummoners(foundIds)
+                                .stream()
+                                .collect(Collectors.groupingBy(
+                                        MatchSummonerDTO::getMatchId)),
+                        queryExecutor);
+
+        CompletableFuture<Map<String, List<TimelineEventDTO>>> timelineEventsFuture =
+                CompletableFuture.supplyAsync(() ->
+                        timelineRepositoryCustom
+                                .selectTimelineEventsByMatchIds(foundIds)
+                                .stream()
+                                .collect(Collectors.groupingBy(
+                                        TimelineEventDTO::getMatchId)),
+                        queryExecutor);
+
+        Map<String, List<MatchSummonerDTO>> participantsByMatch = summonersFuture.join();
+        Map<String, List<TimelineEventDTO>> timelineEventsByMatch = timelineEventsFuture.join();
+
+        return matchDTOs.stream()
+                .map(matchDTO -> assembleGameDataFromDTO(
+                        matchDTO,
+                        participantsByMatch.getOrDefault(
+                                matchDTO.getMatchId(),
+                                Collections.emptyList()),
+                        timelineEventsByMatch.getOrDefault(
+                                matchDTO.getMatchId(),
+                                Collections.emptyList())
+                ))
+                .toList();
     }
 
     @Override
