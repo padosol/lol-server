@@ -8,8 +8,9 @@ import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.domain.MSChampionByQueue;
 import com.example.lolserver.domain.match.domain.TimelineData;
 import com.example.lolserver.domain.match.application.port.in.MatchQueryUseCase;
-import com.example.lolserver.domain.match.application.port.out.MatchCachePort;
+import com.example.lolserver.domain.match.application.port.out.MatchIdsCachePort;
 import com.example.lolserver.domain.match.application.port.out.MatchPersistencePort;
+import com.example.lolserver.domain.match.application.port.out.MatchSingleCachePort;
 import com.example.lolserver.support.PaginationRequest;
 import com.example.lolserver.support.SliceResult;
 import com.example.lolserver.support.logging.LogExecutionTime;
@@ -22,7 +23,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -34,7 +42,8 @@ public class MatchService implements MatchQueryUseCase {
     private static final String DEFAULT_SORT_FIELD = "match";
 
     private final MatchPersistencePort matchPersistencePort;
-    private final MatchCachePort matchCachePort;
+    private final MatchIdsCachePort matchIdsCachePort;
+    private final MatchSingleCachePort matchSingleCachePort;
 
     public SliceResult<GameReadModel> getMatches(MatchCommand matchCommand) {
         PaginationRequest paginationRequest = new PaginationRequest(
@@ -61,21 +70,122 @@ public class MatchService implements MatchQueryUseCase {
         String puuid = matchCommand.getPuuid();
         Integer season = matchCommand.getSeason();
         Integer queueId = matchCommand.getQueueId();
-        Integer pageNo = matchCommand.getPageNo();
+        int pageNo = matchCommand.getPageNo() == null ? 0 : matchCommand.getPageNo();
 
-        SliceResult<GameReadModel> cached = matchCachePort.findMatchesBatch(puuid, season, queueId, pageNo);
-        if (cached != null) {
-            return cached;
+        if (season != null) {
+            return loadFromDbDirect(puuid, season, queueId, pageNo);
         }
 
+        Optional<List<String>> cachedIds = matchIdsCachePort.findIds(puuid);
+        boolean fromCache = cachedIds.isPresent();
+
+        List<String> matchIds = fromCache
+                ? cachedIds.get()
+                : matchPersistencePort.findRecentMatchIds(puuid, DEFAULT_PAGE_SIZE);
+        if (matchIds.isEmpty()) {
+            return new SliceResult<>(Collections.emptyList(), false);
+        }
+
+        Map<String, GameReadModel> matchesById = fromCache
+                ? resolveMatchesByIds(matchIds)
+                : loadAndCacheGames(puuid, matchIds);
+
+        List<GameReadModel> ordered = filterAndOrder(matchIds, matchesById, queueId);
+        return pageSlice(ordered, pageNo);
+    }
+
+    private SliceResult<GameReadModel> loadFromDbDirect(
+            String puuid, Integer season, Integer queueId, int pageNo) {
         PaginationRequest paginationRequest = new PaginationRequest(
                 pageNo, DEFAULT_PAGE_SIZE, DEFAULT_SORT_FIELD, PaginationRequest.SortDirection.DESC);
+        return matchPersistencePort.getMatchesBatch(puuid, season, queueId, paginationRequest);
+    }
 
-        SliceResult<GameReadModel> result = matchPersistencePort.getMatchesBatch(
-                puuid, season, queueId, paginationRequest);
+    private Map<String, GameReadModel> resolveMatchesByIds(List<String> matchIds) {
+        Map<String, GameReadModel> cached = matchSingleCachePort.findByIds(matchIds);
+        List<String> missingIds = new ArrayList<>();
+        for (String id : matchIds) {
+            if (!cached.containsKey(id)) {
+                missingIds.add(id);
+            }
+        }
 
-        matchCachePort.saveMatchesBatch(puuid, season, queueId, pageNo, result);
-        return result;
+        if (missingIds.isEmpty()) {
+            return new HashMap<>(cached);
+        }
+
+        Map<String, GameReadModel> matchesById = new HashMap<>(cached);
+        matchesById.putAll(fetchAndCacheFromDb(missingIds));
+        return matchesById;
+    }
+
+    private Map<String, GameReadModel> loadAndCacheGames(String puuid, List<String> matchIds) {
+        Map<String, GameReadModel> matchesById = fetchAndCacheFromDb(matchIds);
+        List<Map.Entry<String, Long>> entries = new ArrayList<>(matchesById.size());
+        for (Map.Entry<String, GameReadModel> e : matchesById.entrySet()) {
+            Long score = gameCreationOf(e.getValue());
+            if (score != null) {
+                entries.add(new AbstractMap.SimpleEntry<>(e.getKey(), score));
+            }
+        }
+        if (!entries.isEmpty()) {
+            matchIdsCachePort.saveIds(puuid, entries);
+        }
+        return matchesById;
+    }
+
+    private Map<String, GameReadModel> fetchAndCacheFromDb(List<String> ids) {
+        List<GameReadModel> games = matchPersistencePort.findMatchesByIds(ids);
+        Map<String, GameReadModel> dbMap = new LinkedHashMap<>();
+        for (GameReadModel game : games) {
+            String id = matchIdOf(game);
+            if (id != null) {
+                dbMap.put(id, game);
+            }
+        }
+        if (!dbMap.isEmpty()) {
+            matchSingleCachePort.saveAll(dbMap);
+        }
+        return dbMap;
+    }
+
+    private List<GameReadModel> filterAndOrder(
+            List<String> matchIds, Map<String, GameReadModel> matchesById, Integer queueId) {
+        List<GameReadModel> ordered = new ArrayList<>(matchIds.size());
+        for (String id : matchIds) {
+            GameReadModel game = matchesById.get(id);
+            if (game == null) {
+                continue;
+            }
+            if (queueId != null && !queueIdMatches(game, queueId)) {
+                continue;
+            }
+            ordered.add(game);
+        }
+        return ordered;
+    }
+
+    private SliceResult<GameReadModel> pageSlice(List<GameReadModel> ordered, int pageNo) {
+        int fromIndex = Math.min(pageNo * DEFAULT_PAGE_SIZE, ordered.size());
+        int toIndex = Math.min(fromIndex + DEFAULT_PAGE_SIZE, ordered.size());
+        List<GameReadModel> pageContent = ordered.subList(fromIndex, toIndex);
+        boolean hasNext = toIndex < ordered.size();
+        return new SliceResult<>(new ArrayList<>(pageContent), hasNext);
+    }
+
+    private boolean queueIdMatches(GameReadModel game, int queueId) {
+        if (game.getGameInfoData() == null) {
+            return false;
+        }
+        return game.getGameInfoData().getQueueId() == queueId;
+    }
+
+    private String matchIdOf(GameReadModel game) {
+        return game.getGameInfoData() == null ? null : game.getGameInfoData().getMatchId();
+    }
+
+    private Long gameCreationOf(GameReadModel game) {
+        return game.getGameInfoData() == null ? null : game.getGameInfoData().getGameCreation();
     }
 
     public SliceResult<String> findAllMatchIds(MatchCommand matchCommand) {
