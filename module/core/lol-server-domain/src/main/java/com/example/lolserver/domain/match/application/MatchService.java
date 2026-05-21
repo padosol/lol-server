@@ -27,8 +27,10 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -70,19 +72,24 @@ public class MatchService implements MatchQueryUseCase {
         Integer queueId = matchCommand.getQueueId();
         int pageNo = matchCommand.getPageNo() == null ? 0 : matchCommand.getPageNo();
 
-        // season → epoch ms 변환 헬퍼가 없어 ZSET 범위 조회 시 score 산정 불가.
-        // 이 경우 cache 를 우회하고 기존 DB 경로로 fallback 한다.
         if (season != null) {
             return loadFromDbDirect(puuid, season, queueId, pageNo);
         }
 
-        List<String> matchIds = matchIdsCachePort.findIds(puuid, null, null)
-                .orElseGet(() -> loadMatchIdsFromDbAndCache(puuid));
+        Optional<List<String>> cachedIds = matchIdsCachePort.findIds(puuid);
+        boolean fromCache = cachedIds.isPresent();
+
+        List<String> matchIds = fromCache
+                ? cachedIds.get()
+                : matchPersistencePort.findRecentMatchIds(puuid, DEFAULT_PAGE_SIZE);
         if (matchIds.isEmpty()) {
             return new SliceResult<>(Collections.emptyList(), false);
         }
 
-        Map<String, GameReadModel> matchesById = resolveMatchesByIds(matchIds);
+        Map<String, GameReadModel> matchesById = fromCache
+                ? resolveMatchesByIds(matchIds)
+                : loadAndCacheGames(puuid, matchIds);
+
         List<GameReadModel> ordered = filterAndOrder(matchIds, matchesById, queueId);
         return pageSlice(ordered, pageNo);
     }
@@ -103,14 +110,34 @@ public class MatchService implements MatchQueryUseCase {
             }
         }
 
-        Map<String, GameReadModel> matchesById = new HashMap<>(cached);
         if (missingIds.isEmpty()) {
-            return matchesById;
+            return new HashMap<>(cached);
         }
 
-        List<GameReadModel> fromDb = matchPersistencePort.findMatchesByIds(missingIds);
-        Map<String, GameReadModel> dbMap = new HashMap<>();
-        for (GameReadModel game : fromDb) {
+        Map<String, GameReadModel> matchesById = new HashMap<>(cached);
+        matchesById.putAll(fetchAndCacheFromDb(missingIds));
+        return matchesById;
+    }
+
+    private Map<String, GameReadModel> loadAndCacheGames(String puuid, List<String> matchIds) {
+        Map<String, GameReadModel> matchesById = fetchAndCacheFromDb(matchIds);
+        List<Map.Entry<String, Long>> entries = new ArrayList<>(matchesById.size());
+        for (Map.Entry<String, GameReadModel> e : matchesById.entrySet()) {
+            Long score = gameCreationOf(e.getValue());
+            if (score != null) {
+                entries.add(new AbstractMap.SimpleEntry<>(e.getKey(), score));
+            }
+        }
+        if (!entries.isEmpty()) {
+            matchIdsCachePort.saveIds(puuid, entries);
+        }
+        return matchesById;
+    }
+
+    private Map<String, GameReadModel> fetchAndCacheFromDb(List<String> ids) {
+        List<GameReadModel> games = matchPersistencePort.findMatchesByIds(ids);
+        Map<String, GameReadModel> dbMap = new LinkedHashMap<>();
+        for (GameReadModel game : games) {
             String id = matchIdOf(game);
             if (id != null) {
                 dbMap.put(id, game);
@@ -118,9 +145,8 @@ public class MatchService implements MatchQueryUseCase {
         }
         if (!dbMap.isEmpty()) {
             matchSingleCachePort.saveAll(dbMap);
-            matchesById.putAll(dbMap);
         }
-        return matchesById;
+        return dbMap;
     }
 
     private List<GameReadModel> filterAndOrder(
@@ -145,28 +171,6 @@ public class MatchService implements MatchQueryUseCase {
         List<GameReadModel> pageContent = ordered.subList(fromIndex, toIndex);
         boolean hasNext = toIndex < ordered.size();
         return new SliceResult<>(new ArrayList<>(pageContent), hasNext);
-    }
-
-    private List<String> loadMatchIdsFromDbAndCache(String puuid) {
-        List<String> matchIds = matchPersistencePort.findRecentMatchIds(puuid, DEFAULT_PAGE_SIZE);
-        if (matchIds.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        // ZSET 저장을 위한 score 산정: DB 매치 헤더로부터 gameCreation 을 가져온다.
-        List<GameReadModel> games = matchPersistencePort.findMatchesByIds(matchIds);
-        List<Map.Entry<String, Long>> entries = new ArrayList<>(games.size());
-        for (GameReadModel game : games) {
-            String id = matchIdOf(game);
-            Long score = gameCreationOf(game);
-            if (id != null && score != null) {
-                entries.add(new AbstractMap.SimpleEntry<>(id, score));
-            }
-        }
-        if (!entries.isEmpty()) {
-            matchIdsCachePort.saveIds(puuid, entries);
-        }
-        return matchIds;
     }
 
     private boolean queueIdMatches(GameReadModel game, int queueId) {

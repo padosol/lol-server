@@ -5,13 +5,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,29 +28,13 @@ public class MatchIdsCacheAdapter implements MatchIdsCachePort {
     private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
-    public Optional<List<String>> findIds(String puuid, Long seasonStartMs, Long seasonEndMs) {
+    public Optional<List<String>> findIds(String puuid) {
         String key = buildKey(puuid);
         try {
-            Boolean exists = redisTemplate.hasKey(key);
-            if (Boolean.FALSE.equals(exists)) {
+            Set<Object> raw = redisTemplate.opsForZSet().reverseRange(key, 0, -1);
+            if (raw == null || raw.isEmpty()) {
                 return Optional.empty();
             }
-
-            ZSetOperations<String, Object> ops = redisTemplate.opsForZSet();
-            Set<Object> raw;
-            if (seasonStartMs == null && seasonEndMs == null) {
-                raw = ops.reverseRange(key, 0, -1);
-            } else if (seasonStartMs != null && seasonEndMs != null) {
-                raw = ops.reverseRangeByScore(key, seasonStartMs, seasonEndMs);
-            } else {
-                // 한 쪽만 값이 있으면 contract 위반 — 보수적으로 전체 범위 조회
-                raw = ops.reverseRange(key, 0, -1);
-            }
-
-            if (raw == null) {
-                return Optional.of(Collections.emptyList());
-            }
-
             List<String> ids = new ArrayList<>(raw.size());
             for (Object o : raw) {
                 if (o instanceof String s) {
@@ -96,7 +78,6 @@ public class MatchIdsCacheAdapter implements MatchIdsCachePort {
                     }
                     connection.zSetCommands().zAdd(rawKey, entry.getValue(), member);
                 }
-                // 최신 CAP 개만 유지: 오래된 인덱스 0 ~ -(CAP+1) 제거
                 connection.zSetCommands().zRemRange(rawKey, 0, -(CAP + 1L));
                 connection.keyCommands().expire(rawKey, CACHE_TTL_SECONDS);
                 return null;

@@ -182,7 +182,7 @@ class MatchServiceTest {
                 .build();
 
         List<String> ids = List.of("KR_1", "KR_2");
-        given(matchIdsCachePort.findIds("test-puuid", null, null)).willReturn(Optional.of(ids));
+        given(matchIdsCachePort.findIds("test-puuid")).willReturn(Optional.of(ids));
 
         Map<String, GameReadModel> cached = new HashMap<>();
         cached.put("KR_1", gameOf("KR_1", 420, 1000L));
@@ -210,15 +210,13 @@ class MatchServiceTest {
                 .pageNo(0)
                 .build();
 
-        given(matchIdsCachePort.findIds("test-puuid", null, null)).willReturn(Optional.empty());
+        given(matchIdsCachePort.findIds("test-puuid")).willReturn(Optional.empty());
         List<String> dbIds = List.of("KR_A", "KR_B");
         given(matchPersistencePort.findRecentMatchIds("test-puuid", 20)).willReturn(dbIds);
 
         GameReadModel gameA = gameOf("KR_A", 420, 1000L);
         GameReadModel gameB = gameOf("KR_B", 420, 2000L);
         given(matchPersistencePort.findMatchesByIds(dbIds)).willReturn(List.of(gameA, gameB));
-
-        given(matchSingleCachePort.findByIds(dbIds)).willReturn(Collections.emptyMap());
 
         // when
         SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);
@@ -230,6 +228,11 @@ class MatchServiceTest {
         List<Map.Entry<String, Long>> saved = captor.getValue();
         assertThat(saved).hasSize(2);
         assertThat(saved).extracting(Map.Entry::getKey).containsExactly("KR_A", "KR_B");
+
+        ArgumentCaptor<Map<String, GameReadModel>> singleSaveCaptor = ArgumentCaptor.forClass(Map.class);
+        then(matchSingleCachePort).should().saveAll(singleSaveCaptor.capture());
+        assertThat(singleSaveCaptor.getValue()).containsKeys("KR_A", "KR_B");
+        then(matchSingleCachePort).should(never()).findByIds(anyCollection());
     }
 
     @DisplayName("getMatchesBatch ZSET 캐시 hit + 단건 캐시 partial miss 시 DB IN 조회 후 saveAll 호출")
@@ -242,7 +245,7 @@ class MatchServiceTest {
                 .build();
 
         List<String> ids = List.of("KR_1", "KR_2", "KR_3");
-        given(matchIdsCachePort.findIds("test-puuid", null, null)).willReturn(Optional.of(ids));
+        given(matchIdsCachePort.findIds("test-puuid")).willReturn(Optional.of(ids));
 
         Map<String, GameReadModel> cached = new HashMap<>();
         cached.put("KR_1", gameOf("KR_1", 420, 1000L));
@@ -276,7 +279,7 @@ class MatchServiceTest {
                 .build();
 
         List<String> ids = List.of("KR_1", "KR_2", "KR_3");
-        given(matchIdsCachePort.findIds("test-puuid", null, null)).willReturn(Optional.of(ids));
+        given(matchIdsCachePort.findIds("test-puuid")).willReturn(Optional.of(ids));
 
         Map<String, GameReadModel> cached = new HashMap<>();
         cached.put("KR_1", gameOf("KR_1", 420, 1000L));
@@ -315,7 +318,7 @@ class MatchServiceTest {
 
         // then
         assertThat(result).isSameAs(dbResult);
-        then(matchIdsCachePort).should(never()).findIds(any(), any(), any());
+        then(matchIdsCachePort).should(never()).findIds(any());
         then(matchSingleCachePort).should(never()).findByIds(any());
     }
 
@@ -328,7 +331,7 @@ class MatchServiceTest {
                 .pageNo(0)
                 .build();
 
-        given(matchIdsCachePort.findIds("test-puuid", null, null)).willReturn(Optional.of(Collections.emptyList()));
+        given(matchIdsCachePort.findIds("test-puuid")).willReturn(Optional.of(Collections.emptyList()));
 
         // when
         SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);

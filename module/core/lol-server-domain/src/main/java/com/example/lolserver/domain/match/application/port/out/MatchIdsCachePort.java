@@ -7,18 +7,14 @@ import java.util.Optional;
 public interface MatchIdsCachePort {
 
     /**
-     * ZSET match:ids:v1:{puuid} 에서 puuid 의 최근 matchId 목록을 조회한다.
-     * <p>
-     * - seasonStartMs/seasonEndMs 가 모두 null → ZREVRANGE 0 -1 (전체)
-     * - seasonStartMs/seasonEndMs 가 모두 값 → ZREVRANGEBYSCORE end start (시즌 범위)
-     * <p>
-     * 키 자체가 없으면 Optional.empty() 를 반환 (캐시 미스). 빈 ZSET 은 Optional.of(emptyList()) 로 구분한다.
+     * 유저의 최근 매치 ID 목록을 정렬 순(최신 → 과거)으로 반환한다.
+     * 캐시 미스이면 {@code Optional.empty()} 를 반환한다.
      */
-    Optional<List<String>> findIds(String puuid, Long seasonStartMs, Long seasonEndMs);
+    Optional<List<String>> findIds(String puuid);
 
     /**
-     * ZSET match:ids:v1:{puuid} 에 matchId-score (gameCreation epoch ms) 쌍을 pipeline 으로 저장한다.
-     * 저장 후 ZREMRANGEBYRANK 0 -21 로 최신 20개만 유지하고 EXPIRE 86400 (24h) 를 갱신한다.
+     * 매치 ID 와 정렬 기준 (gameCreation epoch ms) 쌍을 캐시에 저장한다.
+     * 캐시는 최신 N 개만 유지하며 일정 시간 후 만료된다.
      */
     void saveIds(String puuid, List<Map.Entry<String, Long>> matchIdToScore);
 }
