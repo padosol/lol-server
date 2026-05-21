@@ -4,8 +4,3 @@ spring:
     port: 5672
     username: guest
     password: guest
-
-rabbitmq:
-  queue.name: mmrtr.queue
-  exchange.name: mmrtr.exchange
-  routing.key: mmrtr.key

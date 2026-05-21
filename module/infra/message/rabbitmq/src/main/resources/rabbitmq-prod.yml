@@ -4,8 +4,3 @@ spring:
     port: ${RABBITMQ_PORT}
     username: ${RABBITMQ_USERNAME}
     password: ${RABBITMQ_PASSWORD}
-
-rabbitmq:
-  queue.name: mmrtr.queue
-  exchange.name: mmrtr.exchange
-  routing.key: mmrtr.key
