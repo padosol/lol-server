@@ -4,7 +4,6 @@ import com.example.lolserver.domain.summoner.application.port.out.SummonerMessag
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -16,11 +15,8 @@ import java.time.LocalDateTime;
 @ConditionalOnProperty(name = "message.broker", havingValue = "rabbitmq", matchIfMissing = true)
 public class SummonerMessageAdapter implements SummonerMessagePort {
 
-    @Value("${rabbitmq.exchange.name}")
-    private String exchangeName;
-
-    @Value("${rabbitmq.routing.key}")
-    private String routingKey;
+    private static final String EXCHANGE_NAME = "mmrtr.exchange";
+    private static final String ROUTING_KEY = "mmrtr.key";
 
     private final RabbitTemplate rabbitTemplate;
 
@@ -29,6 +25,6 @@ public class SummonerMessageAdapter implements SummonerMessagePort {
         SummonerMessage summonerMessage = new SummonerMessage(
                 platformId, puuid, revisionDate);
 
-        rabbitTemplate.convertAndSend(exchangeName, routingKey, summonerMessage);
+        rabbitTemplate.convertAndSend(EXCHANGE_NAME, ROUTING_KEY, summonerMessage);
     }
 }

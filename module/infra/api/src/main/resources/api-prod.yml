@@ -4,6 +4,10 @@ server:
     basedir: .
     accesslog:
       enabled: true
+      directory: /dev
+      prefix: stdout
+      suffix: ""
+      file-date-format: ""
       pattern: "%{yyyy-MM-dd HH:mm:ss}t %s [%r] [Remote: %a] [Size: %b]"
 
 spring:
