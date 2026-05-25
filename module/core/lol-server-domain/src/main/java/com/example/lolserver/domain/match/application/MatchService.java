@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -77,19 +76,16 @@ public class MatchService implements MatchQueryUseCase {
         }
 
         Optional<List<String>> cachedIds = matchIdsCachePort.findIds(puuid);
-        boolean fromCache = cachedIds.isPresent();
+        if (cachedIds.isEmpty()) {
+            return loadFromDbDirect(puuid, null, queueId, pageNo);
+        }
 
-        List<String> matchIds = fromCache
-                ? cachedIds.get()
-                : matchPersistencePort.findRecentMatchIds(puuid, DEFAULT_PAGE_SIZE);
+        List<String> matchIds = cachedIds.get();
         if (matchIds.isEmpty()) {
             return new SliceResult<>(Collections.emptyList(), false);
         }
 
-        Map<String, GameReadModel> matchesById = fromCache
-                ? resolveMatchesByIds(matchIds)
-                : loadAndCacheGames(puuid, matchIds);
-
+        Map<String, GameReadModel> matchesById = resolveMatchesByIds(matchIds);
         List<GameReadModel> ordered = filterAndOrder(matchIds, matchesById, queueId);
         return pageSlice(ordered, pageNo);
     }
@@ -115,26 +111,11 @@ public class MatchService implements MatchQueryUseCase {
         }
 
         Map<String, GameReadModel> matchesById = new HashMap<>(cached);
-        matchesById.putAll(fetchAndCacheFromDb(missingIds));
+        matchesById.putAll(fetchFromDb(missingIds));
         return matchesById;
     }
 
-    private Map<String, GameReadModel> loadAndCacheGames(String puuid, List<String> matchIds) {
-        Map<String, GameReadModel> matchesById = fetchAndCacheFromDb(matchIds);
-        List<Map.Entry<String, Long>> entries = new ArrayList<>(matchesById.size());
-        for (Map.Entry<String, GameReadModel> e : matchesById.entrySet()) {
-            Long score = gameCreationOf(e.getValue());
-            if (score != null) {
-                entries.add(new AbstractMap.SimpleEntry<>(e.getKey(), score));
-            }
-        }
-        if (!entries.isEmpty()) {
-            matchIdsCachePort.saveIds(puuid, entries);
-        }
-        return matchesById;
-    }
-
-    private Map<String, GameReadModel> fetchAndCacheFromDb(List<String> ids) {
+    private Map<String, GameReadModel> fetchFromDb(List<String> ids) {
         List<GameReadModel> games = matchPersistencePort.findMatchesByIds(ids);
         Map<String, GameReadModel> dbMap = new LinkedHashMap<>();
         for (GameReadModel game : games) {
@@ -142,9 +123,6 @@ public class MatchService implements MatchQueryUseCase {
             if (id != null) {
                 dbMap.put(id, game);
             }
-        }
-        if (!dbMap.isEmpty()) {
-            matchSingleCachePort.saveAll(dbMap);
         }
         return dbMap;
     }
@@ -182,10 +160,6 @@ public class MatchService implements MatchQueryUseCase {
 
     private String matchIdOf(GameReadModel game) {
         return game.getGameInfoData() == null ? null : game.getGameInfoData().getMatchId();
-    }
-
-    private Long gameCreationOf(GameReadModel game) {
-        return game.getGameInfoData() == null ? null : game.getGameInfoData().getGameCreation();
     }
 
     public SliceResult<String> findAllMatchIds(MatchCommand matchCommand) {

@@ -61,10 +61,4 @@ class MatchIdsCacheAdapterTest {
         assertThat(result.get()).containsExactly("KR_3", "KR_2", "KR_1");
     }
 
-    @DisplayName("saveIds 빈 입력은 Redis 와 상호작용하지 않는다")
-    @Test
-    void saveIds_emptyInput_noInteraction() {
-        adapter.saveIds("test-puuid", List.of());
-        // RedisTemplate.executePipelined 호출 없음
-    }
 }
