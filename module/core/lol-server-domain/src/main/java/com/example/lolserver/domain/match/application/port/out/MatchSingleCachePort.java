@@ -12,9 +12,4 @@ public interface MatchSingleCachePort {
      * 누락된 matchId 는 결과 맵에 포함하지 않는다.
      */
     Map<String, GameReadModel> findByIds(Collection<String> matchIds);
-
-    /**
-     * 각 매치를 match:v1:{matchId} = JSON 으로 1시간 TTL 적용해 pipeline 으로 저장한다.
-     */
-    void saveAll(Map<String, GameReadModel> matches);
 }

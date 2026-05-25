@@ -1,14 +1,13 @@
 package com.example.lolserver.repository.match;
 
 import com.example.lolserver.domain.match.application.model.GameReadModel;
-import com.example.lolserver.domain.match.domain.gamedata.GameInfoData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
 import java.util.Arrays;
@@ -23,39 +22,63 @@ import static org.mockito.BDDMockito.given;
 class MatchSingleCacheAdapterTest {
 
     @Mock
-    private RedisTemplate<String, Object> redisTemplate;
+    private StringRedisTemplate stringRedisTemplate;
 
     @Mock
-    private ValueOperations<String, Object> valueOperations;
+    private ValueOperations<String, String> valueOperations;
 
     private MatchSingleCacheAdapter adapter;
 
     @BeforeEach
     void setUp() {
-        adapter = new MatchSingleCacheAdapter(redisTemplate);
+        adapter = new MatchSingleCacheAdapter(stringRedisTemplate);
     }
 
-    @DisplayName("findByIds 는 match:v1:{matchId} 키로 MGET 하여 hit 항목만 맵으로 반환한다")
+    @DisplayName("findByIds 는 match:v1:{matchId} 로 MGET 한 JSON 을 GameReadModel 로 역직렬화한다")
     @Test
-    void findByIds_returnsOnlyHitEntries() {
-        // given
+    void findByIds_deserializesJson() {
         List<String> ids = List.of("KR_1", "KR_2", "KR_3");
         List<String> expectedKeys = List.of("match:v1:KR_1", "match:v1:KR_2", "match:v1:KR_3");
 
-        GameReadModel g1 = gameOf("KR_1");
-        GameReadModel g3 = gameOf("KR_3");
+        String json1 = "{\"gameInfoData\":{\"matchId\":\"KR_1\",\"queueId\":420}}";
+        String json3 = """
+                {"gameInfoData":{"matchId":"KR_3"},
+                 "participantData":[{"puuid":"p0","championName":"Ahri",
+                   "item":{"item0":3006},"statValue":{"offense":5005}}],
+                 "teamInfoData":{"blueTeam":{"teamId":100,"baronKills":2},
+                   "redTeam":{"teamId":200}}}
+                """;
 
-        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(stringRedisTemplate.opsForValue()).willReturn(valueOperations);
         given(valueOperations.multiGet(expectedKeys))
-                .willReturn(Arrays.asList(g1, null, g3));
+                .willReturn(Arrays.asList(json1, null, json3));
 
-        // when
         Map<String, GameReadModel> result = adapter.findByIds(ids);
 
-        // then
         assertThat(result).containsOnlyKeys("KR_1", "KR_3");
-        assertThat(result.get("KR_1")).isSameAs(g1);
-        assertThat(result.get("KR_3")).isSameAs(g3);
+        assertThat(result.get("KR_1").getGameInfoData().getMatchId()).isEqualTo("KR_1");
+        assertThat(result.get("KR_1").getGameInfoData().getQueueId()).isEqualTo(420);
+
+        GameReadModel g3 = result.get("KR_3");
+        assertThat(g3.getParticipantData()).hasSize(1);
+        assertThat(g3.getParticipantData().get(0).getChampionName()).isEqualTo("Ahri");
+        // setter 없는 값 객체도 필드 가시성으로 역직렬화된다
+        assertThat(g3.getParticipantData().get(0).getItem().getItem0()).isEqualTo(3006);
+        assertThat(g3.getParticipantData().get(0).getStatValue().getOffense()).isEqualTo(5005);
+        assertThat(g3.getTeamInfoData().getBlueTeam().getBaronKills()).isEqualTo(2);
+        assertThat(g3.getTeamInfoData().getRedTeam().getTeamId()).isEqualTo(200);
+    }
+
+    @DisplayName("역직렬화 실패(malformed) 항목은 결과에서 제외된다")
+    @Test
+    void findByIds_skipsMalformed() {
+        given(stringRedisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.multiGet(List.of("match:v1:KR_1")))
+                .willReturn(List.of("{not-json"));
+
+        Map<String, GameReadModel> result = adapter.findByIds(List.of("KR_1"));
+
+        assertThat(result).isEmpty();
     }
 
     @DisplayName("findByIds 빈 입력은 곧바로 빈 맵을 반환한다")
@@ -68,24 +91,9 @@ class MatchSingleCacheAdapterTest {
     @DisplayName("findByIds Redis 장애 시 빈 맵을 반환한다")
     @Test
     void findByIds_redisFailure_returnsEmpty() {
-        given(redisTemplate.opsForValue()).willThrow(new RuntimeException("Redis down"));
+        given(stringRedisTemplate.opsForValue()).willThrow(new RuntimeException("Redis down"));
 
         Map<String, GameReadModel> result = adapter.findByIds(List.of("KR_1"));
         assertThat(result).isEmpty();
-    }
-
-    @DisplayName("saveAll 빈 입력은 Redis 와 상호작용하지 않는다")
-    @Test
-    void saveAll_emptyInput_noInteraction() {
-        adapter.saveAll(Collections.emptyMap());
-        // RedisTemplate 와의 어떤 상호작용도 없어야 한다 (executePipelined 호출되지 않음)
-    }
-
-    private GameReadModel gameOf(String matchId) {
-        GameReadModel game = new GameReadModel();
-        GameInfoData info = new GameInfoData();
-        info.setMatchId(matchId);
-        game.setGameInfoData(info);
-        return game;
     }
 }

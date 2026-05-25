@@ -17,7 +17,6 @@ import com.example.lolserver.support.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,8 +31,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
@@ -195,49 +194,41 @@ class MatchServiceTest {
         // then
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.isHasNext()).isFalse();
-        then(matchPersistencePort).should(never()).findRecentMatchIds(any(), anyInt());
         then(matchPersistencePort).should(never()).findMatchesByIds(anyCollection());
-        then(matchSingleCachePort).should(never()).saveAll(any());
-        then(matchIdsCachePort).should(never()).saveIds(any(), any());
+        then(matchPersistencePort).should(never())
+                .getMatchesBatch(any(), any(), any(), any(PaginationRequest.class));
     }
 
-    @DisplayName("getMatchesBatch ZSET 캐시 miss 시 DB 에서 matchIds 를 조회하고 ZSET 에 저장한다")
+    @DisplayName("getMatchesBatch ZSET 캐시 miss 시 DB 직조회로 떨어지고 캐시를 채우지 않는다")
     @Test
-    void getMatchesBatch_zsetMiss_loadsFromDbAndSavesZset() {
+    void getMatchesBatch_zsetMiss_loadsFromDbDirectAndDoesNotWriteCache() {
         // given
         MatchCommand command = MatchCommand.builder()
                 .puuid("test-puuid")
+                .queueId(420)
                 .pageNo(0)
                 .build();
 
         given(matchIdsCachePort.findIds("test-puuid")).willReturn(Optional.empty());
-        List<String> dbIds = List.of("KR_A", "KR_B");
-        given(matchPersistencePort.findRecentMatchIds("test-puuid", 20)).willReturn(dbIds);
 
-        GameReadModel gameA = gameOf("KR_A", 420, 1000L);
-        GameReadModel gameB = gameOf("KR_B", 420, 2000L);
-        given(matchPersistencePort.findMatchesByIds(dbIds)).willReturn(List.of(gameA, gameB));
+        SliceResult<GameReadModel> dbResult = new SliceResult<>(
+                List.of(gameOf("KR_A", 420, 1000L), gameOf("KR_B", 420, 2000L)), false);
+        given(matchPersistencePort.getMatchesBatch(
+                eq("test-puuid"), isNull(), eq(420), any(PaginationRequest.class)))
+                .willReturn(dbResult);
 
         // when
         SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);
 
         // then
-        assertThat(result.getContent()).hasSize(2);
-        ArgumentCaptor<List<Map.Entry<String, Long>>> captor = ArgumentCaptor.forClass(List.class);
-        then(matchIdsCachePort).should().saveIds(eq("test-puuid"), captor.capture());
-        List<Map.Entry<String, Long>> saved = captor.getValue();
-        assertThat(saved).hasSize(2);
-        assertThat(saved).extracting(Map.Entry::getKey).containsExactly("KR_A", "KR_B");
-
-        ArgumentCaptor<Map<String, GameReadModel>> singleSaveCaptor = ArgumentCaptor.forClass(Map.class);
-        then(matchSingleCachePort).should().saveAll(singleSaveCaptor.capture());
-        assertThat(singleSaveCaptor.getValue()).containsKeys("KR_A", "KR_B");
+        assertThat(result).isSameAs(dbResult);
         then(matchSingleCachePort).should(never()).findByIds(anyCollection());
+        then(matchPersistencePort).should(never()).findMatchesByIds(anyCollection());
     }
 
-    @DisplayName("getMatchesBatch ZSET 캐시 hit + 단건 캐시 partial miss 시 DB IN 조회 후 saveAll 호출")
+    @DisplayName("getMatchesBatch ZSET hit + 단건 캐시 partial miss 시 누락분만 DB IN 조회로 보강하고 캐시는 채우지 않는다")
     @Test
-    void getMatchesBatch_zsetHitAndSinglePartialMiss_loadsMissingAndSaves() {
+    void getMatchesBatch_zsetHitAndSinglePartialMiss_loadsMissingNoCacheWrite() {
         // given
         MatchCommand command = MatchCommand.builder()
                 .puuid("test-puuid")
@@ -261,11 +252,7 @@ class MatchServiceTest {
 
         // then
         assertThat(result.getContent()).hasSize(3);
-        ArgumentCaptor<Map<String, GameReadModel>> captor = ArgumentCaptor.forClass(Map.class);
-        then(matchSingleCachePort).should().saveAll(captor.capture());
-        Map<String, GameReadModel> saved = captor.getValue();
-        assertThat(saved).containsKeys("KR_2", "KR_3");
-        assertThat(saved).doesNotContainKey("KR_1");
+        then(matchPersistencePort).should().findMatchesByIds(List.of("KR_2", "KR_3"));
     }
 
     @DisplayName("getMatchesBatch queueId 필터는 in-memory 로 동작한다")

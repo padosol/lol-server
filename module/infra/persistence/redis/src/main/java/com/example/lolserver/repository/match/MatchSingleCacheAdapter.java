@@ -2,14 +2,15 @@ package com.example.lolserver.repository.match;
 
 import com.example.lolserver.domain.match.application.model.GameReadModel;
 import com.example.lolserver.domain.match.application.port.out.MatchSingleCachePort;
-import lombok.RequiredArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.connection.RedisConnection;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -17,16 +18,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * lol-repository 가 Redis `match:v1:{matchId}` 에 {@link GameReadModel} 형태로 직렬화해 둔 JSON 을 읽는다.
+ * 변환은 쓰기 측(lol-repository)에서 끝나므로 여기서는 raw JSON 을 그대로 역직렬화만 한다.
+ * <p>
+ * {@link GameReadModel} 트리의 값 객체 (ItemValue/StatValue/TeamData 등) 는 setter 가 없어
+ * 필드 직접 접근 가시성을 켠 전용 {@link ObjectMapper} 를 사용한다.
+ */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class MatchSingleCacheAdapter implements MatchSingleCachePort {
 
     static final String KEY_PREFIX = "match:v1:";
-    private static final Duration CACHE_TTL = Duration.ofHours(1);
-    private static final long CACHE_TTL_SECONDS = CACHE_TTL.toSeconds();
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
+    private final ObjectMapper objectMapper;
+
+    public MatchSingleCacheAdapter(StringRedisTemplate stringRedisTemplate) {
+        this.stringRedisTemplate = stringRedisTemplate;
+        this.objectMapper = JsonMapper.builder()
+                .visibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .build();
+    }
 
     @Override
     public Map<String, GameReadModel> findByIds(Collection<String> matchIds) {
@@ -38,15 +52,19 @@ public class MatchSingleCacheAdapter implements MatchSingleCachePort {
         List<String> keys = ids.stream().map(this::buildKey).toList();
 
         try {
-            List<Object> values = redisTemplate.opsForValue().multiGet(keys);
+            List<String> values = stringRedisTemplate.opsForValue().multiGet(keys);
             if (values == null) {
                 return Collections.emptyMap();
             }
 
             Map<String, GameReadModel> result = new HashMap<>();
             for (int i = 0; i < ids.size(); i++) {
-                Object raw = i < values.size() ? values.get(i) : null;
-                if (raw instanceof GameReadModel game) {
+                String json = i < values.size() ? values.get(i) : null;
+                if (json == null) {
+                    continue;
+                }
+                GameReadModel game = deserialize(json);
+                if (game != null) {
                     result.put(ids.get(i), game);
                 }
             }
@@ -57,33 +75,12 @@ public class MatchSingleCacheAdapter implements MatchSingleCachePort {
         }
     }
 
-    @Override
-    public void saveAll(Map<String, GameReadModel> matches) {
-        if (matches == null || matches.isEmpty()) {
-            return;
-        }
-
+    private GameReadModel deserialize(String json) {
         try {
-            RedisSerializer<String> keySerializer = redisTemplate.getStringSerializer();
-            @SuppressWarnings("unchecked")
-            RedisSerializer<Object> valueSerializer = (RedisSerializer<Object>) redisTemplate.getValueSerializer();
-
-            redisTemplate.executePipelined((RedisConnection connection) -> {
-                for (Map.Entry<String, GameReadModel> entry : matches.entrySet()) {
-                    if (entry.getKey() == null || entry.getValue() == null) {
-                        continue;
-                    }
-                    byte[] rawKey = keySerializer.serialize(buildKey(entry.getKey()));
-                    byte[] rawValue = valueSerializer.serialize(entry.getValue());
-                    if (rawKey == null || rawValue == null) {
-                        continue;
-                    }
-                    connection.stringCommands().setEx(rawKey, CACHE_TTL_SECONDS, rawValue);
-                }
-                return null;
-            });
+            return objectMapper.readValue(json, GameReadModel.class);
         } catch (Exception e) {
-            log.warn("매치 단건 캐시 pipeline 저장 실패 - count: {}, message: {}", matches.size(), e.getMessage());
+            log.warn("매치 단건 캐시 역직렬화 실패 - message: {}", e.getMessage());
+            return null;
         }
     }
 
