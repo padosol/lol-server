@@ -1,0 +1,10 @@
+[[league-lp-timeline]]
+=== 유저 LP 변화 시계열 (솔로/자유랭크 그래프)
+
+==== HTTP Request
+include::{snippets}/league-lp-timeline/http-request.adoc[]
+include::{snippets}/league-lp-timeline/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/league-lp-timeline/http-response.adoc[]
+include::{snippets}/league-lp-timeline/response-fields.adoc[]

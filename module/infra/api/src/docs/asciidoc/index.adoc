@@ -54,6 +54,8 @@ include::api/match/match-daily-count.adoc[]
 
 include::api/league/league-detail.adoc[]
 
+include::api/league/lp-timeline.adoc[]
+
 
 [[Champion-API]]
 == Champion API

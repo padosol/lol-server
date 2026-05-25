@@ -3,12 +3,15 @@ package com.example.lolserver.controller.league.mapper;
 import com.example.lolserver.QueueType;
 import com.example.lolserver.controller.league.response.LeagueResponse;
 import com.example.lolserver.controller.league.response.LeagueSummonerResponse;
+import com.example.lolserver.controller.league.response.LpTimelinePoint;
+import com.example.lolserver.controller.league.response.LpTimelineResponse;
 import com.example.lolserver.domain.league.domain.League;
 import com.example.lolserver.domain.league.domain.vo.LeagueHistory;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public final class LeagueMapper {
@@ -63,6 +66,42 @@ public final class LeagueMapper {
         return new LeagueResponse(
                 soloLeague, flexLeague, soloLeagueHistory, flexLeagueHistory
         );
+    }
+
+    /**
+     * 솔로/자유 랭크 history 스냅샷을 LP 시계열 그래프 데이터로 변환한다.
+     * 각 시계열은 시간 오름차순(과거 → 현재)으로 정렬한다.
+     */
+    public static LpTimelineResponse domainToLpTimeline(List<League> leagues) {
+        List<LpTimelinePoint> soloRankTimeline = new ArrayList<>();
+        List<LpTimelinePoint> flexRankTimeline = new ArrayList<>();
+
+        for (League league : leagues) {
+            for (LeagueHistory history : league.getLeagueHistory()) {
+                LpTimelinePoint point = new LpTimelinePoint(
+                        history.createdAt(),
+                        history.leaguePoints(),
+                        history.absolutePoints(),
+                        history.tier(),
+                        history.rank()
+                );
+
+                if (history.queue().equals(QueueType.RANKED_SOLO_5x5.name())) {
+                    soloRankTimeline.add(point);
+                } else {
+                    flexRankTimeline.add(point);
+                }
+            }
+        }
+
+        Comparator<LpTimelinePoint> byTimestamp = Comparator.comparing(
+                LpTimelinePoint::timestamp,
+                Comparator.nullsLast(Comparator.naturalOrder())
+        );
+        soloRankTimeline.sort(byTimestamp);
+        flexRankTimeline.sort(byTimestamp);
+
+        return new LpTimelineResponse(soloRankTimeline, flexRankTimeline);
     }
 
     private static BigDecimal calculateWinRate(int wins, int losses) {

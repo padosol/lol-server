@@ -1,6 +1,7 @@
 package com.example.lolserver.controller.league;
 
 import com.example.lolserver.controller.league.response.LeagueResponse;
+import com.example.lolserver.controller.league.response.LpTimelineResponse;
 import com.example.lolserver.controller.league.mapper.LeagueMapper;
 import com.example.lolserver.domain.league.domain.League;
 import com.example.lolserver.domain.league.application.port.in.LeagueQueryUseCase;
@@ -35,5 +36,20 @@ public class LeagueController {
 
         return new ResponseEntity<>(ApiResponse.success(
                 LeagueMapper.domainToResponse(leagues)), HttpStatus.OK);
+    }
+
+    /**
+     * 소환사 LP 변화 시계열 조회 API (솔로랭크/자유랭크 그래프 데이터)
+     * @param puuid 소환사 puuid
+     * @return 큐별 LP 시계열 (시간 오름차순)
+     */
+    @GetMapping("/v1/leagues/by-puuid/{puuid}/lp-timeline")
+    public ResponseEntity<ApiResponse<LpTimelineResponse>> fetchLpTimeline(
+            @PathVariable("puuid") String puuid
+    ) {
+        List<League> leagues = leagueService.getLpTimeline(puuid);
+
+        return new ResponseEntity<>(ApiResponse.success(
+                LeagueMapper.domainToLpTimeline(leagues)), HttpStatus.OK);
     }
 }

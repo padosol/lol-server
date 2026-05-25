@@ -36,4 +36,18 @@ public class LeagueService implements LeagueQueryUseCase {
             return league;
         }).toList();
     }
+
+    @Override
+    public List<League> getLpTimeline(String puuid) {
+        List<League> leagues = leaguePersistencePort.findAllLeaguesByPuuid(puuid);
+
+        for (League league : leagues) {
+            List<LeagueHistory> recentHistories = leaguePersistencePort
+                    .findRecentHistoryByLeagueSummonerId(league.getId());
+
+            league.addAllHistoryDomain(recentHistories);
+        }
+
+        return leagues;
+    }
 }
