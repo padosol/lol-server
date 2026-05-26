@@ -6,6 +6,8 @@ import com.example.lolserver.match.application.port.out.MatchIdsCachePort;
 import com.example.lolserver.match.application.port.out.MatchPersistencePort;
 import com.example.lolserver.match.application.port.out.MatchSingleCachePort;
 import com.example.lolserver.match.application.model.GameReadModel;
+import com.example.lolserver.match.application.model.MSChampionByQueueReadModel;
+import com.example.lolserver.match.application.model.TimelineReadModel;
 import com.example.lolserver.match.domain.MSChampion;
 import com.example.lolserver.match.domain.MSChampionByQueue;
 import com.example.lolserver.match.domain.TimelineData;
@@ -96,11 +98,13 @@ class MatchServiceTest {
         given(matchPersistencePort.getRankChampions("test-puuid", 14)).willReturn(expected);
 
         // when
-        MSChampionByQueue result = matchService.getRankChampions(command);
+        MSChampionByQueueReadModel result = matchService.getRankChampions(command);
 
         // then
         assertThat(result.solo()).hasSize(1);
         assertThat(result.flex()).hasSize(1);
+        assertThat(result.solo().get(0).getChampionName()).isEqualTo("Annie");
+        assertThat(result.flex().get(0).getChampionName()).isEqualTo("Olaf");
     }
 
     @DisplayName("존재하는 매치 ID로 조회 시 게임 데이터를 반환한다")
@@ -141,10 +145,11 @@ class MatchServiceTest {
         given(matchPersistencePort.getTimelineData(matchId)).willReturn(timelineData);
 
         // when
-        TimelineData result = matchService.getTimelineData(matchId);
+        TimelineReadModel result = matchService.getTimelineData(matchId);
 
         // then
-        assertThat(result).isEqualTo(timelineData);
+        assertThat(result).isNotNull();
+        assertThat(result.participants()).isEmpty();
     }
 
     @DisplayName("유효한 커맨드로 매치 ID 목록 조회 시 페이징된 결과를 반환한다")

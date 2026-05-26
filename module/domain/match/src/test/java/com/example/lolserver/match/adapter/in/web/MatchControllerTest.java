@@ -9,7 +9,6 @@ import com.example.lolserver.match.domain.gamedata.GameInfoData;
 import com.example.lolserver.match.domain.gamedata.ParticipantData;
 import com.example.lolserver.match.domain.gamedata.TeamInfoData;
 import com.example.lolserver.match.domain.gamedata.timeline.ItemSeqData;
-import com.example.lolserver.match.domain.gamedata.timeline.ParticipantTimeline;
 import com.example.lolserver.match.domain.gamedata.timeline.SkillSeqData;
 import com.example.lolserver.match.domain.gamedata.value.ItemValue;
 import com.example.lolserver.match.domain.gamedata.value.StatValue;
@@ -19,7 +18,11 @@ import com.example.lolserver.match.application.port.in.MatchQueryUseCase;
 import com.example.lolserver.match.application.model.DailyGameCountReadModel;
 import com.example.lolserver.match.application.model.DailyGameCountSummaryReadModel;
 import com.example.lolserver.match.application.model.GameReadModel;
-import com.example.lolserver.match.domain.TimelineData;
+import com.example.lolserver.match.application.model.ItemSeqReadModel;
+import com.example.lolserver.match.application.model.MSChampionByQueueReadModel;
+import com.example.lolserver.match.application.model.ParticipantTimelineReadModel;
+import com.example.lolserver.match.application.model.SkillSeqReadModel;
+import com.example.lolserver.match.application.model.TimelineReadModel;
 import com.example.lolserver.common.support.SliceResult;
 
 
@@ -499,8 +502,10 @@ class MatchControllerTest extends RestDocsSupport {
         given(flex.getGoldPerMinute()).willReturn(395.0);
         given(flex.getPlayCount()).willReturn(12L);
 
+        MSChampionByQueueReadModel rankChampions =
+                MSChampionByQueueReadModel.of(new MSChampionByQueue(List.of(solo), List.of(flex)));
         given(matchService.getRankChampions(any(MSChampionCommand.class)))
-                .willReturn(new MSChampionByQueue(List.of(solo), List.of(flex)));
+                .willReturn(rankChampions);
 
         // when & then
         mockMvc.perform(
@@ -605,25 +610,13 @@ class MatchControllerTest extends RestDocsSupport {
         // given
         String matchId = "KR_123456789";
 
-        ItemSeqData itemSeq = mock(ItemSeqData.class);
-        given(itemSeq.getItemId()).willReturn(1001);
-        given(itemSeq.getType()).willReturn("ITEM_PURCHASED");
-        given(itemSeq.getMinute()).willReturn(1L);
+        List<ItemSeqReadModel> itemSeq = List.of(new ItemSeqReadModel(1001, 1L, "ITEM_PURCHASED"));
+        List<SkillSeqReadModel> skillSeq = List.of(new SkillSeqReadModel(1, 0L, "SKILL_LEVEL_UP"));
 
-        SkillSeqData skillSeq = mock(SkillSeqData.class);
-        given(skillSeq.getSkillSlot()).willReturn(1);
-        given(skillSeq.getType()).willReturn("SKILL_LEVEL_UP");
-        given(skillSeq.getMinute()).willReturn(0L);
+        Map<Integer, ParticipantTimelineReadModel> participants = new HashMap<>();
+        participants.put(1, new ParticipantTimelineReadModel(itemSeq, skillSeq));
 
-        ParticipantTimeline participantTimeline = mock(ParticipantTimeline.class);
-        given(participantTimeline.getItemSeq()).willReturn(List.of(itemSeq));
-        given(participantTimeline.getSkillSeq()).willReturn(List.of(skillSeq));
-
-        Map<Integer, ParticipantTimeline> participants = new HashMap<>();
-        participants.put(1, participantTimeline);
-
-        TimelineData timelineData = mock(TimelineData.class);
-        given(timelineData.getParticipants()).willReturn(participants);
+        TimelineReadModel timelineData = new TimelineReadModel(participants);
 
         given(matchService.getTimelineData(anyString())).willReturn(timelineData);
 

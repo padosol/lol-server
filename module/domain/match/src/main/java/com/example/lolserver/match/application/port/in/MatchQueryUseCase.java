@@ -4,10 +4,10 @@ import com.example.lolserver.match.application.command.MSChampionCommand;
 import com.example.lolserver.match.application.command.MatchCommand;
 import com.example.lolserver.match.application.model.DailyGameCountSummaryReadModel;
 import com.example.lolserver.match.application.model.GameReadModel;
+import com.example.lolserver.match.application.model.MSChampionByQueueReadModel;
 import com.example.lolserver.match.application.model.MSChampionReadModel;
 import com.example.lolserver.match.application.model.PlayerMatchReadModel;
-import com.example.lolserver.match.domain.MSChampionByQueue;
-import com.example.lolserver.match.domain.TimelineData;
+import com.example.lolserver.match.application.model.TimelineReadModel;
 import com.example.lolserver.common.support.SliceResult;
 
 import java.util.List;
@@ -16,7 +16,7 @@ public interface MatchQueryUseCase {
 
     SliceResult<GameReadModel> getMatches(MatchCommand matchCommand);
 
-    MSChampionByQueue getRankChampions(MSChampionCommand command);
+    MSChampionByQueueReadModel getRankChampions(MSChampionCommand command);
 
     /**
      * 다른 컨텍스트에 노출하기 위한 모스트 챔피언 요약 조회.
@@ -31,7 +31,7 @@ public interface MatchQueryUseCase {
 
     GameReadModel getGameData(String matchId);
 
-    TimelineData getTimelineData(String matchId);
+    TimelineReadModel getTimelineData(String matchId);
 
     SliceResult<GameReadModel> getMatchesBatch(MatchCommand matchCommand);
 

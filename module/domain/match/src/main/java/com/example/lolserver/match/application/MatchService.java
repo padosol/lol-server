@@ -5,10 +5,10 @@ import com.example.lolserver.match.application.command.MatchCommand;
 import com.example.lolserver.match.application.model.DailyGameCountReadModel;
 import com.example.lolserver.match.application.model.DailyGameCountSummaryReadModel;
 import com.example.lolserver.match.application.model.GameReadModel;
+import com.example.lolserver.match.application.model.MSChampionByQueueReadModel;
 import com.example.lolserver.match.application.model.MSChampionReadModel;
 import com.example.lolserver.match.application.model.PlayerMatchReadModel;
-import com.example.lolserver.match.domain.MSChampionByQueue;
-import com.example.lolserver.match.domain.TimelineData;
+import com.example.lolserver.match.application.model.TimelineReadModel;
 import com.example.lolserver.match.application.port.in.MatchQueryUseCase;
 import com.example.lolserver.match.application.port.out.MatchIdsCachePort;
 import com.example.lolserver.match.application.port.out.MatchPersistencePort;
@@ -53,8 +53,9 @@ public class MatchService implements MatchQueryUseCase {
         return matchPersistencePort.getMatches(matchCommand.getPuuid(), matchCommand.getQueueId(), paginationRequest);
     }
 
-    public MSChampionByQueue getRankChampions(MSChampionCommand command) {
-        return matchPersistencePort.getRankChampions(command.getPuuid(), command.getSeason());
+    public MSChampionByQueueReadModel getRankChampions(MSChampionCommand command) {
+        return MSChampionByQueueReadModel.of(
+                matchPersistencePort.getRankChampions(command.getPuuid(), command.getSeason()));
     }
 
     public List<MSChampionReadModel> getRankChampionSummaries(MSChampionCommand command) {
@@ -89,8 +90,8 @@ public class MatchService implements MatchQueryUseCase {
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_MATCH_ID, "존재하지 않는 MatchId 입니다. " + matchId));
     }
 
-    public TimelineData getTimelineData(String matchId) {
-        return matchPersistencePort.getTimelineData(matchId);
+    public TimelineReadModel getTimelineData(String matchId) {
+        return TimelineReadModel.of(matchPersistencePort.getTimelineData(matchId));
     }
 
     @LogExecutionTime
