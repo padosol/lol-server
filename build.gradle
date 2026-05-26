@@ -130,6 +130,18 @@ subprojects {
         useJUnitPlatform()
     }
 
+    tasks.register('archTest', Test) {
+        description = 'ArchUnit 아키텍처 규칙 테스트(*ArchitectureTest)만 실행'
+        group = 'verification'
+        useJUnitPlatform()
+        testClassesDirs = sourceSets.test.output.classesDirs
+        classpath = sourceSets.test.runtimeClasspath
+        filter {
+            includeTestsMatching '*ArchitectureTest'
+            failOnNoMatchingTests = false
+        }
+    }
+
     bootRun {
         String activeProfile = System.properties['spring.profiles.active']
         systemProperty "spring.profiles.active", activeProfile
