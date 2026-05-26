@@ -1,5 +1,13 @@
+## 관련 이슈
+<!-- Linear 키 필수: MP-<번호> -->
+- MP-
+
 ## 변경 유형
-<!-- feat / fix / refactor / docs / chore 중 선택 -->
+- [ ] feat
+- [ ] fix
+- [ ] refactor
+- [ ] docs
+- [ ] chore
 
 ## 변경 사항
 -
