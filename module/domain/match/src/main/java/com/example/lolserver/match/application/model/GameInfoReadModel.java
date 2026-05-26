@@ -1,15 +1,18 @@
-package com.example.lolserver.match.domain.gamedata;
+package com.example.lolserver.match.application.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * 게임 정보 읽기 모델. 필드명은 캐시(match:v1) / API JSON 계약이므로 변경 금지.
+ */
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class GameInfoData {
+public class GameInfoReadModel {
 
     private String dataVersion;
     private long gameCreation;
@@ -26,5 +29,4 @@ public class GameInfoData {
     private String matchId;
     private String averageTier;
     private String averageRank;
-
 }

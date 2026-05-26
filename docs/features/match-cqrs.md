@@ -79,8 +79,54 @@ domain/*                              -> 불변 (빌드/행위 책임 유지)
 - [x] 검증: `:module:domain:match:test`(78 PASS) + checkstyleMain/Test 그린 + 전체 모듈 compile 그린
       RestDocs `responseFields` 명세 전부 불변 = 7개 엔드포인트 JSON 응답 보존(AC1~AC4 충족)
 
-## 기록할 만한 사항 / 후속 (out of scope)
+## 기록할 만한 사항 / 후속 (out of scope of Phase 1)
 
-- `MatchPersistencePort`는 ReadModel(getGameData)과 도메인(getRankChampions/getTimelineData)을
-  섞어 반환 — 본 작업은 port.in만 정리. port.out 일원화는 별도 후속으로 둘 수 있음.
 - ResultModel 컨벤션은 command 보유 도메인(community/duo/member 등)에 적용 시 별도 ADR 권장.
+
+---
+
+# Phase 2 — match `domain/` 패키지 제거 (query-only → 도메인 계층 불필요)
+
+## 배경 / 결정
+
+match는 query-only라 `domain/`에 애그리거트·불변식이 없다(anemic 캐리어 13 + 사소한 영속정형화 4).
+사실상 persistence↔ReadModel 사이 중간 DTO다. **전체 제거**하고 모든 읽기 모델을
+`application/model`에 두며, **영속 어댑터가 ReadModel을 직접 빌드**(duo/community 컨벤션)한다.
+port.out도 ReadModel을 반환하도록 일원화한다.
+
+**제약(불변):** `GameReadModel` 그래프는 lol-repository와의 **크로스-서비스 JSON 계약**
+(캐시 `match:v1:{id}`, 필드명 기준 역직렬화). + API RestDocs 계약. → **클래스명/패키지는 바꿔도
+필드명은 절대 불변.**
+
+**네이밍:** C그룹은 `*ReadModel`로 일괄 명명, 필드명 유지.
+
+## 단계 (각 단계 빌드+테스트 그린 → 커밋)
+
+- [x] **Step 1 (A·죽은코드):** `domain/Match`, `domain/gamedata/seqtype/SeqType`,
+      `MatchMapper.toDomain(MatchEntity)`/`toEntity(Match)` 삭제 + 관련 테스트 제거.
+- [x] **Step 2 (C·game 그래프 이동+개명):** GameInfoData→GameInfoReadModel, ParticipantData→
+      ParticipantReadModel, TeamData→TeamReadModel, TeamInfoData→TeamInfoReadModel,
+      ItemValue→ItemValueReadModel, StatValue→StatValueReadModel, Style→StyleReadModel 를
+      `application/model`로(필드명 유지). ParticipantReadModel.itemSeq/skillSeq는 기존
+      ItemSeqReadModel/SkillSeqReadModel 재사용(leaf 일원화). MapStruct·어댑터·GameReadModel·
+      Response·테스트 갱신.
+- [x] **Step 3 (B·중복 흡수):** 영속 어댑터가 MSChampionByQueueReadModel·TimelineReadModel을
+      직접 빌드(`buildParticipantTimelines`로 이벤트→시퀀스 분 변환·그룹핑 이전).
+      port.out(getRankChampions/getTimelineData) → ReadModel 반환, 서비스 패스스루.
+      삭제: MSChampion, MSChampionByQueue, TimelineData, ParticipantTimeline, ItemSeqData,
+      SkillSeqData, ItemEvents, SkillEvents. MSChampionReadModel.of(MSChampionDetailReadModel).
+      ReadModel들의 도메인 기반 `.of(domain)` 팩토리 제거. TimelineDataTest→어댑터 테스트로 흡수.
+- [x] **Step 4 (정리):** `domain/` 패키지 전체 제거됨. ArchitectureTest 도메인 규칙 정리
+      (match=query 전용→도메인 계층 없음). ItemSeqResponse/SkillSeqResponse from(domain) 제거.
+- [x] 검증: `:module:domain:match:test` 그린 + checkstyleMain/Test + 전체 모듈 compile 그린.
+      RestDocs `responseFields` 명세 전부 불변 = 7개 엔드포인트 JSON 응답 + 캐시(match:v1) 필드명 보존.
+
+## Phase 2 결과
+
+`domain/` 패키지 완전 제거. match는 이제 `application/model`(읽기 모델) + `application/port`
++ `adapter`(web·persistence)만 가진다. 영속 어댑터가 Entity/DTO→ReadModel을 직접 빌드(MapStruct
+`toReadModel`/`toGameInfoReadModel` + `buildParticipantTimelines`). 17개 도메인 클래스 제거,
+중복 해소. 캐시/ API JSON 필드명은 전부 보존(클래스명·패키지만 변경).
+
+> 문서 드리프트: 루트 `CLAUDE.md`의 "각 컨텍스트는 domain+application+adapter 구조" 서술은
+> match에 한해 더 이상 맞지 않음(domain 없음). 별도 docs 동기화에서 보정 권장.

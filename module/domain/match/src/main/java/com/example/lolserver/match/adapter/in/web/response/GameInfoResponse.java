@@ -1,6 +1,6 @@
 package com.example.lolserver.match.adapter.in.web.response;
 
-import com.example.lolserver.match.domain.gamedata.GameInfoData;
+import com.example.lolserver.match.application.model.GameInfoReadModel;
 
 /**
  * 매치 API 응답 - 게임 정보.
@@ -22,7 +22,7 @@ public record GameInfoResponse(
         String averageTier,
         String averageRank
 ) {
-    public static GameInfoResponse from(GameInfoData data) {
+    public static GameInfoResponse from(GameInfoReadModel data) {
         return new GameInfoResponse(
                 data.getDataVersion(),
                 data.getGameCreation(),

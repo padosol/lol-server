@@ -1,6 +1,6 @@
 package com.example.lolserver.match.adapter.in.web.response;
 
-import com.example.lolserver.match.domain.gamedata.value.Style;
+import com.example.lolserver.match.application.model.StyleReadModel;
 
 /**
  * 매치 API 응답 - 참가자 룬 스타일.
@@ -15,7 +15,7 @@ public record StyleResponse(
         int subPerk0,
         int subPerk1
 ) {
-    public static StyleResponse from(Style style) {
+    public static StyleResponse from(StyleReadModel style) {
         return new StyleResponse(
                 style.getPrimaryStyleId(),
                 style.getPrimaryPerk0(),

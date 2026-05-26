@@ -3,17 +3,17 @@ package com.example.lolserver.match.adapter.out.persistence.adapter;
 import com.example.lolserver.QueueType;
 import com.example.lolserver.match.application.port.out.MatchPersistencePort;
 import com.example.lolserver.match.application.model.DailyGameCountReadModel;
+import com.example.lolserver.match.application.model.GameInfoReadModel;
 import com.example.lolserver.match.application.model.GameReadModel;
-import com.example.lolserver.match.domain.MSChampion;
-import com.example.lolserver.match.domain.MSChampionByQueue;
-import com.example.lolserver.match.domain.TimelineData;
-import com.example.lolserver.match.domain.gamedata.GameInfoData;
-import com.example.lolserver.match.domain.gamedata.ParticipantData;
-import com.example.lolserver.match.domain.gamedata.TeamInfoData;
-import com.example.lolserver.match.domain.TeamData;
-import com.example.lolserver.match.domain.gamedata.timeline.ParticipantTimeline;
-import com.example.lolserver.match.domain.gamedata.timeline.events.ItemEvents;
-import com.example.lolserver.match.domain.gamedata.timeline.events.SkillEvents;
+import com.example.lolserver.match.application.model.ItemSeqReadModel;
+import com.example.lolserver.match.application.model.MSChampionByQueueReadModel;
+import com.example.lolserver.match.application.model.MSChampionDetailReadModel;
+import com.example.lolserver.match.application.model.ParticipantReadModel;
+import com.example.lolserver.match.application.model.ParticipantTimelineReadModel;
+import com.example.lolserver.match.application.model.SkillSeqReadModel;
+import com.example.lolserver.match.application.model.TeamInfoReadModel;
+import com.example.lolserver.match.application.model.TeamReadModel;
+import com.example.lolserver.match.application.model.TimelineReadModel;
 import com.example.lolserver.match.adapter.out.persistence.dto.MatchDTO;
 import com.example.lolserver.match.adapter.out.persistence.dto.MatchSummonerDTO;
 import com.example.lolserver.match.adapter.out.persistence.dto.TimelineEventDTO;
@@ -38,15 +38,20 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 @Component
 public class MatchPersistenceAdapter implements MatchPersistencePort {
+
+    private static final String TYPE_ITEM_PURCHASED = "ITEM_PURCHASED";
 
     private final MatchSummonerRepositoryCustom matchSummonerRepositoryCustom;
     private final MatchSummonerRepository matchSummonerRepository;
@@ -88,20 +93,20 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     }
 
     @Override
-    public MSChampionByQueue getRankChampions(String puuid, Integer season) {
-        Map<Integer, List<MSChampion>> byQueue = matchSummonerRepositoryCustom
+    public MSChampionByQueueReadModel getRankChampions(String puuid, Integer season) {
+        Map<Integer, List<MSChampionDetailReadModel>> byQueue = matchSummonerRepositoryCustom
                 .findAllRankedMatchSummonerByPuuidAndSeason(puuid, season)
                 .stream()
                 .collect(Collectors.groupingBy(
                         dto -> dto.getQueueId() == null ? 0 : dto.getQueueId(),
-                        Collectors.mapping(matchMapper::toDomain, Collectors.toList())));
+                        Collectors.mapping(dto -> matchMapper.toReadModel(dto), Collectors.toList())));
 
-        List<MSChampion> solo = byQueue.getOrDefault(
+        List<MSChampionDetailReadModel> solo = byQueue.getOrDefault(
                 QueueType.RANKED_SOLO_5x5.getQueueId(), Collections.emptyList());
-        List<MSChampion> flex = byQueue.getOrDefault(
+        List<MSChampionDetailReadModel> flex = byQueue.getOrDefault(
                 QueueType.RANKED_FLEX_SR.getQueueId(), Collections.emptyList());
 
-        return new MSChampionByQueue(solo, flex);
+        return new MSChampionByQueueReadModel(solo, flex);
     }
 
     @Override
@@ -111,9 +116,9 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     }
 
     @Override
-    public TimelineData getTimelineData(String matchId) {
+    public TimelineReadModel getTimelineData(String matchId) {
         List<TimelineEventDTO> events = timelineRepositoryCustom.selectAllTimelineEventsByMatch(matchId);
-        return buildTimelineData(events);
+        return new TimelineReadModel(buildParticipantTimelines(events));
     }
 
     @Override
@@ -186,43 +191,31 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
     ) {
         GameReadModel gameData = new GameReadModel();
 
-        GameInfoData gameInfoData = matchMapper.toGameInfoData(matchDTO);
+        GameInfoReadModel gameInfoData = matchMapper.toGameInfoReadModel(matchDTO);
         gameData.setGameInfoData(gameInfoData);
 
-        List<ParticipantData> participantDataList =
+        List<ParticipantReadModel> participantDataList =
                 new ArrayList<>(summonerDTOs.stream()
-                        .map(matchMapper::toDomain)
+                        .map(dto -> matchMapper.toReadModel(dto))
                         .toList());
         gameData.setParticipantData(participantDataList);
 
         int queueId = gameInfoData.getQueueId();
         if (queueId == 1700 || queueId == 1710) {
             participantDataList.sort(
-                    Comparator.comparingInt(ParticipantData::getPlacement));
+                    Comparator.comparingInt(ParticipantReadModel::getPlacement));
         }
 
-        TimelineData timelineData = buildTimelineData(timelineEventDTOs);
-
-        for (ParticipantData participant : participantDataList) {
-            int participantId = participant.getParticipantId();
-            ParticipantTimeline participantTimeline =
-                    timelineData.getParticipantTimeline(participantId);
-            if (participantTimeline != null) {
-                participant.setItemSeq(
-                        participantTimeline.getItemSeq());
-                participant.setSkillSeq(
-                        participantTimeline.getSkillSeq());
-            }
-        }
+        applyParticipantTimelines(participantDataList, timelineEventDTOs);
 
         if (!summonerDTOs.isEmpty()) {
             Map<Integer, List<MatchSummonerDTO>> byTeam = summonerDTOs.stream()
                     .collect(Collectors.groupingBy(MatchSummonerDTO::getTeamId));
 
-            TeamInfoData blueTeam = buildTeamInfoData(byTeam.get(100));
-            TeamInfoData redTeam = buildTeamInfoData(byTeam.get(200));
+            TeamInfoReadModel blueTeam = buildTeamInfoData(byTeam.get(100));
+            TeamInfoReadModel redTeam = buildTeamInfoData(byTeam.get(200));
 
-            gameData.setTeamInfoData(TeamData.builder()
+            gameData.setTeamInfoData(TeamReadModel.builder()
                     .blueTeam(blueTeam)
                     .redTeam(redTeam)
                     .build());
@@ -231,27 +224,63 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         return gameData;
     }
 
-    private TimelineData buildTimelineData(List<TimelineEventDTO> events) {
-        List<ItemEvents> itemEvents = new ArrayList<>();
-        List<SkillEvents> skillEvents = new ArrayList<>();
+    /**
+     * 참가자별 타임라인(아이템/스킬 시퀀스)을 조립해 각 ParticipantReadModel 에 채운다.
+     */
+    private void applyParticipantTimelines(
+            List<ParticipantReadModel> participants, List<TimelineEventDTO> timelineEventDTOs) {
+        Map<Integer, ParticipantTimelineReadModel> timelines =
+                buildParticipantTimelines(timelineEventDTOs);
+        for (ParticipantReadModel participant : participants) {
+            ParticipantTimelineReadModel timeline = timelines.get(participant.getParticipantId());
+            if (timeline != null) {
+                participant.setItemSeq(timeline.itemSeq());
+                participant.setSkillSeq(timeline.skillSeq());
+            }
+        }
+    }
+
+    /**
+     * 타임라인 이벤트 DTO 를 참가자별 아이템(ITEM_PURCHASED) / 스킬(SKILL_LEVEL_UP) 시퀀스로 정형화한다.
+     * minute 은 timestamp(ms) → 분 변환.
+     */
+    private Map<Integer, ParticipantTimelineReadModel> buildParticipantTimelines(
+            List<TimelineEventDTO> events) {
+        Map<Integer, List<ItemSeqReadModel>> itemsByParticipant = new LinkedHashMap<>();
+        Map<Integer, List<SkillSeqReadModel>> skillsByParticipant = new LinkedHashMap<>();
 
         for (TimelineEventDTO event : events) {
-            if (event.isItemEvent()) {
-                itemEvents.add(matchMapper.toItemEventsFromTimelineDTO(event));
+            int participantId = event.getParticipantId();
+            if (TYPE_ITEM_PURCHASED.equalsIgnoreCase(event.getType())) {
+                itemsByParticipant.computeIfAbsent(participantId, k -> new ArrayList<>())
+                        .add(new ItemSeqReadModel(
+                                orZero(event.getItemId()), toMinute(event.getTimestamp()), event.getType()));
             } else if (event.isSkillEvent()) {
-                skillEvents.add(matchMapper.toSkillEventsFromTimelineDTO(event));
+                skillsByParticipant.computeIfAbsent(participantId, k -> new ArrayList<>())
+                        .add(new SkillSeqReadModel(
+                                orZero(event.getSkillSlot()), toMinute(event.getTimestamp()), event.getType()));
             }
         }
 
-        return new TimelineData(itemEvents, skillEvents);
+        Set<Integer> participantIds = new LinkedHashSet<>();
+        participantIds.addAll(itemsByParticipant.keySet());
+        participantIds.addAll(skillsByParticipant.keySet());
+
+        Map<Integer, ParticipantTimelineReadModel> result = new LinkedHashMap<>();
+        for (Integer participantId : participantIds) {
+            result.put(participantId, new ParticipantTimelineReadModel(
+                    itemsByParticipant.getOrDefault(participantId, new ArrayList<>()),
+                    skillsByParticipant.getOrDefault(participantId, new ArrayList<>())));
+        }
+        return result;
     }
 
-    private TeamInfoData buildTeamInfoData(List<MatchSummonerDTO> teamMembers) {
+    private TeamInfoReadModel buildTeamInfoData(List<MatchSummonerDTO> teamMembers) {
         if (teamMembers == null || teamMembers.isEmpty()) {
             return null;
         }
         MatchSummonerDTO first = teamMembers.get(0);
-        TeamInfoData teamInfo = new TeamInfoData();
+        TeamInfoReadModel teamInfo = new TeamInfoReadModel();
         teamInfo.setTeamId(first.getTeamId());
         teamInfo.setWin(first.isWin());
         teamInfo.setChampionKills(first.getTeamChampionKills());
@@ -376,48 +405,46 @@ public class MatchPersistenceAdapter implements MatchPersistencePort {
         GameReadModel gameData = new GameReadModel();
 
         // GameInfoData
-        GameInfoData gameInfoData = matchMapper.toGameInfoData(matchEntity);
+        GameInfoReadModel gameInfoData = matchMapper.toGameInfoReadModel(matchEntity);
         gameData.setGameInfoData(gameInfoData);
 
         // ParticipantsData
         List<MatchSummonerDTO> summonerDTOs =
                 matchRepositoryCustom.getMatchSummoners(matchEntity.getMatchId());
-        List<ParticipantData> participantDataList = new ArrayList<>(
+        List<ParticipantReadModel> participantDataList = new ArrayList<>(
                 summonerDTOs.stream()
-                        .map(matchMapper::toDomain)
+                        .map(dto -> matchMapper.toReadModel(dto))
                         .toList());
         gameData.setParticipantData(participantDataList);
 
         // Sorting for specific queue types
         if (gameData.getGameInfoData().getQueueId() == 1700 || gameData.getGameInfoData().getQueueId() == 1710) {
-            participantDataList.sort(Comparator.comparingInt(ParticipantData::getPlacement));
+            participantDataList.sort(Comparator.comparingInt(ParticipantReadModel::getPlacement));
         }
 
-        // TimelineData
+        // TimelineData → 참가자별 시퀀스 채우기
         List<TimelineEventDTO> timelineEvents =
                 timelineRepositoryCustom.selectAllTimelineEventsByMatch(
                         matchEntity.getMatchId());
-        TimelineData timelineData = buildTimelineData(timelineEvents);
-        // Integrate timeline data into ParticipantData
-        for (ParticipantData participant : participantDataList) {
-            int participantId = participant.getParticipantId();
-            ParticipantTimeline participantTimeline = timelineData.getParticipantTimeline(participantId);
-
-            if (participantTimeline != null) {
-                participant.setItemSeq(participantTimeline.getItemSeq());
-                participant.setSkillSeq(participantTimeline.getSkillSeq());
-            }
-        }
+        applyParticipantTimelines(participantDataList, timelineEvents);
 
         // TeamInfoData
         Map<Integer, List<MatchSummonerDTO>> byTeam = summonerDTOs.stream()
                 .collect(Collectors.groupingBy(MatchSummonerDTO::getTeamId));
 
-        gameData.setTeamInfoData(TeamData.builder()
+        gameData.setTeamInfoData(TeamReadModel.builder()
                 .blueTeam(buildTeamInfoData(byTeam.get(100)))
                 .redTeam(buildTeamInfoData(byTeam.get(200)))
                 .build());
 
         return gameData;
+    }
+
+    private static long toMinute(long timestamp) {
+        return timestamp / 1000 / 60;
+    }
+
+    private static int orZero(Integer value) {
+        return value == null ? 0 : value;
     }
 }

@@ -1,11 +1,11 @@
 package com.example.lolserver.match.application.model;
 
-import com.example.lolserver.match.domain.MSChampion;
 import lombok.Builder;
 import lombok.Getter;
 
 /**
  * 랭크 챔피언 통계 상세 읽기 모델 (rank/champions API 용 풀 통계).
+ * 영속 어댑터가 MapStruct(MSChampionDTO→)로 직접 빌드한다.
  * 다른 컨텍스트 노출용 요약 모델은 {@link MSChampionReadModel} 참고.
  */
 @Getter
@@ -26,23 +26,4 @@ public class MSChampionDetailReadModel {
     private Double damageTakenOnTeamPercentage;
     private Double goldPerMinute;
     private Long playCount;
-
-    public static MSChampionDetailReadModel of(MSChampion champion) {
-        return MSChampionDetailReadModel.builder()
-                .assists(champion.getAssists())
-                .deaths(champion.getDeaths())
-                .kills(champion.getKills())
-                .championId(champion.getChampionId())
-                .championName(champion.getChampionName())
-                .win(champion.getWin())
-                .losses(champion.getLosses())
-                .winRate(champion.getWinRate())
-                .damagePerMinute(champion.getDamagePerMinute())
-                .kda(champion.getKda())
-                .laneMinionsFirst10Minutes(champion.getLaneMinionsFirst10Minutes())
-                .damageTakenOnTeamPercentage(champion.getDamageTakenOnTeamPercentage())
-                .goldPerMinute(champion.getGoldPerMinute())
-                .playCount(champion.getPlayCount())
-                .build();
-    }
 }

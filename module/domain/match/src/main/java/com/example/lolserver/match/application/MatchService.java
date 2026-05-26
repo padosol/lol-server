@@ -54,8 +54,7 @@ public class MatchService implements MatchQueryUseCase {
     }
 
     public MSChampionByQueueReadModel getRankChampions(MSChampionCommand command) {
-        return MSChampionByQueueReadModel.of(
-                matchPersistencePort.getRankChampions(command.getPuuid(), command.getSeason()));
+        return matchPersistencePort.getRankChampions(command.getPuuid(), command.getSeason());
     }
 
     public List<MSChampionReadModel> getRankChampionSummaries(MSChampionCommand command) {
@@ -91,7 +90,7 @@ public class MatchService implements MatchQueryUseCase {
     }
 
     public TimelineReadModel getTimelineData(String matchId) {
-        return TimelineReadModel.of(matchPersistencePort.getTimelineData(matchId));
+        return matchPersistencePort.getTimelineData(matchId);
     }
 
     @LogExecutionTime

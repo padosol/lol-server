@@ -1,6 +1,6 @@
 package com.example.lolserver.match.adapter.in.web.response;
 
-import com.example.lolserver.match.domain.gamedata.TeamInfoData;
+import com.example.lolserver.match.application.model.TeamInfoReadModel;
 
 /**
  * 매치 API 응답 - 팀 단건 정보.
@@ -16,7 +16,7 @@ public record TeamInfoResponse(
         Integer[] goldTimeline,
         Integer[] timestamps
 ) {
-    public static TeamInfoResponse from(TeamInfoData data) {
+    public static TeamInfoResponse from(TeamInfoReadModel data) {
         return new TeamInfoResponse(
                 data.getTeamId(),
                 data.isWin(),

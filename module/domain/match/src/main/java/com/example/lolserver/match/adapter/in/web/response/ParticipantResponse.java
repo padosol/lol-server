@@ -1,6 +1,6 @@
 package com.example.lolserver.match.adapter.in.web.response;
 
-import com.example.lolserver.match.domain.gamedata.ParticipantData;
+import com.example.lolserver.match.application.model.ParticipantReadModel;
 
 import java.util.List;
 
@@ -66,7 +66,7 @@ public record ParticipantResponse(
         List<ItemSeqResponse> itemSeq,
         List<SkillSeqResponse> skillSeq
 ) {
-    public static ParticipantResponse from(ParticipantData p) {
+    public static ParticipantResponse from(ParticipantReadModel p) {
         return new ParticipantResponse(
                 p.getProfileIcon(), p.getRiotIdGameName(), p.getRiotIdTagline(), p.getPuuid(),
                 p.getSummonerLevel(), p.getSummonerId(), p.getTier(), p.getTierRank(), p.getAbsolutePoints(),

@@ -1,10 +1,5 @@
-package com.example.lolserver.match.domain.gamedata;
+package com.example.lolserver.match.application.model;
 
-import com.example.lolserver.match.domain.gamedata.timeline.ItemSeqData;
-import com.example.lolserver.match.domain.gamedata.timeline.SkillSeqData;
-import com.example.lolserver.match.domain.gamedata.value.ItemValue;
-import com.example.lolserver.match.domain.gamedata.value.StatValue;
-import com.example.lolserver.match.domain.gamedata.value.Style;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,12 +8,15 @@ import lombok.Setter;
 
 import java.util.List;
 
+/**
+ * 매치 참가자 1명의 읽기 모델. 필드명은 캐시(match:v1)/API JSON 계약이므로 변경 금지.
+ */
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ParticipantData {
+public class ParticipantReadModel {
 
     // 유저 정보
     private int profileIcon;
@@ -42,13 +40,13 @@ public class ParticipantData {
     private String championName;
     private int consumablesPurchased;
     private int goldEarned;
-    private ItemValue item;
+    private ItemValueReadModel item;
     private int summoner1Id;
     private int summoner2Id;
     private int itemsPurchased;
     private int participantId;
-    private StatValue statValue;
-    private Style style;
+    private StatValueReadModel statValue;
+    private StyleReadModel style;
     private int visionScore;
     private int totalMinionsKilled;
     private int neutralMinionsKilled;
@@ -85,6 +83,6 @@ public class ParticipantData {
     private int playerAugment3;
     private int playerAugment4;
 
-    private List<ItemSeqData> itemSeq;
-    private List<SkillSeqData> skillSeq;
+    private List<ItemSeqReadModel> itemSeq;
+    private List<SkillSeqReadModel> skillSeq;
 }

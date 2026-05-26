@@ -1,6 +1,6 @@
 package com.example.lolserver.match.adapter.in.web.response;
 
-import com.example.lolserver.match.domain.gamedata.value.ItemValue;
+import com.example.lolserver.match.application.model.ItemValueReadModel;
 
 /**
  * 매치 API 응답 - 참가자 아이템 슬롯.
@@ -14,7 +14,7 @@ public record ItemValueResponse(
         int item5,
         int item6
 ) {
-    public static ItemValueResponse from(ItemValue value) {
+    public static ItemValueResponse from(ItemValueReadModel value) {
         return new ItemValueResponse(
                 value.getItem0(),
                 value.getItem1(),

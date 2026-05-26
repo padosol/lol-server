@@ -1,15 +1,18 @@
-package com.example.lolserver.match.domain.gamedata.value;
+package com.example.lolserver.match.application.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * 참가자 룬 스타일 읽기 모델. 필드명은 캐시/API 계약이므로 변경 금지.
+ */
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Style {
+public class StyleReadModel {
 
     private int primaryStyleId;
     private int primaryPerk0;
@@ -20,5 +23,4 @@ public class Style {
     private int subStyleId;
     private int subPerk0;
     private int subPerk1;
-
 }
