@@ -1,0 +1,15 @@
+package com.example.lolserver.duo.application.port.out;
+
+import com.example.lolserver.duo.application.command.DuoPostSearchCommand;
+import com.example.lolserver.duo.application.model.DuoPostListReadModel;
+import com.example.lolserver.duo.domain.DuoPost;
+import com.example.lolserver.common.support.SliceResult;
+
+import java.util.Optional;
+
+public interface DuoPostPersistencePort {
+    DuoPost save(DuoPost duoPost);
+    Optional<DuoPost> findById(Long id);
+    SliceResult<DuoPostListReadModel> findActivePosts(DuoPostSearchCommand command);
+    SliceResult<DuoPostListReadModel> findByMemberId(Long memberId, int page);
+}
