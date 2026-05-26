@@ -1,0 +1,12 @@
+// 웹(driving adapter) 컨텍스트 공통 빌드 설정: REST 컨트롤러 + 검증 + OpenAPI.
+// baseline 및 RestDocs(spring-restdocs-mockmvc testImplementation)는 루트 subprojects {} 블록이 제공한다.
+plugins {
+    id 'java'
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.data:spring-data-commons'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+}

@@ -1,0 +1,16 @@
+plugins {
+    id 'lolserver.web-conventions'
+    id 'lolserver.persistence-conventions'
+}
+
+dependencies {
+    implementation project(':module:common')
+    implementation project(':module:core:enum')
+    implementation project(':module:support:logging')
+
+    // match 2-tier 캐시(ZSET ids + 단건 JSON) Redis 어댑터
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    testImplementation(testFixtures(project(':module:common')))
+    testImplementation 'com.tngtech.archunit:archunit-junit5:1.3.0'
+}

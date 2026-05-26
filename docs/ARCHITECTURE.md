@@ -147,7 +147,7 @@ flowchart LR
     bqAdapter --> bq
 ```
 
-PostgreSQL OLTP 데이터를 외부 ETL 파이프라인이 BigQuery 로 적재하고, 도메인 서비스는 `ChampionStatsQueryPort` 를 통해 BigQuery 어댑터를 호출한다. 신규 통계 기능은 `infra:persistence:bigquery` 에 추가한다 ([bigquery/CLAUDE.md](../module/infra/persistence/bigquery/CLAUDE.md) 참조).
+PostgreSQL OLTP 데이터를 외부 ETL 파이프라인이 BigQuery 로 적재하고, 도메인 서비스는 `ChampionStatsQueryPort` 를 통해 BigQuery 어댑터를 호출한다. 신규 통계 기능은 `infra:persistence:bigquery` 에 추가한다.
 
 ## "X 가 변경되면 어디가 영향받는가?" 빠른 답
 
