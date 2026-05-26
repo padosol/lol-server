@@ -1,6 +1,5 @@
 package com.example.lolserver.match.application.model;
 
-import com.example.lolserver.match.domain.MSChampion;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -17,7 +16,7 @@ public class MSChampionReadModel {
     private Long win;
     private Long losses;
 
-    public static MSChampionReadModel of(MSChampion champion) {
+    public static MSChampionReadModel of(MSChampionDetailReadModel champion) {
         return MSChampionReadModel.builder()
                 .championId(champion.getChampionId())
                 .championName(champion.getChampionName())

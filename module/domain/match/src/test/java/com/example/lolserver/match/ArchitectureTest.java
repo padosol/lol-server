@@ -20,14 +20,8 @@ class ArchitectureTest {
             .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
             .importPackages("com.example.lolserver.match");
 
-    @Test
-    void domain은_application이나_adapter에_의존하지_않는다() {
-        ArchRule rule = noClasses()
-                .that().resideInAPackage("..match.domain..")
-                .should().dependOnClassesThat()
-                .resideInAnyPackage("..match.application..", "..match.adapter..");
-        rule.check(classes);
-    }
+    // match 는 query 전용 컨텍스트라 도메인 계층이 없다(읽기 모델은 application.model).
+    // 따라서 도메인 순수성 규칙 대신 application 계층 규칙만 둔다.
 
     @Test
     void application은_adapter에_의존하지_않는다() {
@@ -39,16 +33,16 @@ class ArchitectureTest {
     }
 
     @Test
-    void domain과_application은_인프라_기술타입에_의존하지_않는다() {
+    void application은_인프라_기술타입에_의존하지_않는다() {
         ArchRule rule = noClasses()
-                .that().resideInAnyPackage("..match.domain..", "..match.application..")
+                .that().resideInAPackage("..match.application..")
                 .should().dependOnClassesThat()
                 .resideInAnyPackage(
                         "jakarta.persistence..",
                         "org.springframework.web..",
                         "org.springframework.data.jpa..",
                         "com.querydsl..")
-                .as("도메인/애플리케이션은 JPA·웹·QueryDSL 같은 인프라 타입을 몰라야 한다");
+                .as("애플리케이션(읽기 모델/포트)은 JPA·웹·QueryDSL 같은 인프라 타입을 몰라야 한다");
         rule.check(classes);
     }
 

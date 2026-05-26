@@ -1,15 +1,17 @@
-package com.example.lolserver.match.domain;
+package com.example.lolserver.match.application.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
+/**
+ * 랭크 챔피언 통계 상세 읽기 모델 (rank/champions API 용 풀 통계).
+ * 영속 어댑터가 MapStruct(MSChampionDTO→)로 직접 빌드한다.
+ * 다른 컨텍스트 노출용 요약 모델은 {@link MSChampionReadModel} 참고.
+ */
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
-public class MSChampion {
+public class MSChampionDetailReadModel {
+
     private Double assists;
     private Double deaths;
     private Double kills;

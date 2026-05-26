@@ -3,23 +3,23 @@ package com.example.lolserver.match.adapter.in.web;
 import com.example.lolserver.common.test.RestDocsSupport;
 import com.example.lolserver.match.application.command.MSChampionCommand;
 import com.example.lolserver.match.application.command.MatchCommand;
-import com.example.lolserver.match.domain.MSChampion;
-import com.example.lolserver.match.domain.MSChampionByQueue;
-import com.example.lolserver.match.domain.gamedata.GameInfoData;
-import com.example.lolserver.match.domain.gamedata.ParticipantData;
-import com.example.lolserver.match.domain.gamedata.TeamInfoData;
-import com.example.lolserver.match.domain.gamedata.timeline.ItemSeqData;
-import com.example.lolserver.match.domain.gamedata.timeline.ParticipantTimeline;
-import com.example.lolserver.match.domain.gamedata.timeline.SkillSeqData;
-import com.example.lolserver.match.domain.gamedata.value.ItemValue;
-import com.example.lolserver.match.domain.gamedata.value.StatValue;
-import com.example.lolserver.match.domain.gamedata.value.Style;
-import com.example.lolserver.match.domain.TeamData;
 import com.example.lolserver.match.application.port.in.MatchQueryUseCase;
 import com.example.lolserver.match.application.model.DailyGameCountReadModel;
 import com.example.lolserver.match.application.model.DailyGameCountSummaryReadModel;
+import com.example.lolserver.match.application.model.GameInfoReadModel;
 import com.example.lolserver.match.application.model.GameReadModel;
-import com.example.lolserver.match.domain.TimelineData;
+import com.example.lolserver.match.application.model.ItemSeqReadModel;
+import com.example.lolserver.match.application.model.ItemValueReadModel;
+import com.example.lolserver.match.application.model.MSChampionByQueueReadModel;
+import com.example.lolserver.match.application.model.MSChampionDetailReadModel;
+import com.example.lolserver.match.application.model.ParticipantReadModel;
+import com.example.lolserver.match.application.model.ParticipantTimelineReadModel;
+import com.example.lolserver.match.application.model.SkillSeqReadModel;
+import com.example.lolserver.match.application.model.StatValueReadModel;
+import com.example.lolserver.match.application.model.StyleReadModel;
+import com.example.lolserver.match.application.model.TeamInfoReadModel;
+import com.example.lolserver.match.application.model.TeamReadModel;
+import com.example.lolserver.match.application.model.TimelineReadModel;
 import com.example.lolserver.common.support.SliceResult;
 
 
@@ -71,35 +71,28 @@ class MatchControllerTest extends RestDocsSupport {
         // given
         String matchId = "KR_123456789";
 
-        ParticipantData participant = mock(ParticipantData.class);
+        ParticipantReadModel participant = mock(ParticipantReadModel.class);
         given(participant.getChampionName()).willReturn("Ahri");
         given(participant.getKills()).willReturn(10);
         given(participant.getDeaths()).willReturn(2);
         given(participant.getAssists()).willReturn(5);
         given(participant.isWin()).willReturn(true);
 
-        ItemSeqData itemSeqData = mock(ItemSeqData.class);
-        given(itemSeqData.getItemId()).willReturn(3157);
-        given(itemSeqData.getType()).willReturn("ITEM_PURCHASED");
-        given(itemSeqData.getMinute()).willReturn(12L);
-
-        SkillSeqData skillSeqData = mock(SkillSeqData.class);
-        given(skillSeqData.getSkillSlot()).willReturn(1);
-        given(skillSeqData.getType()).willReturn("SKILL_LEVEL_UP");
-        given(skillSeqData.getMinute()).willReturn(1L);
+        ItemSeqReadModel itemSeqData = new ItemSeqReadModel(3157, 12L, "ITEM_PURCHASED");
+        SkillSeqReadModel skillSeqData = new SkillSeqReadModel(1, 1L, "SKILL_LEVEL_UP");
 
         given(participant.getItemSeq()).willReturn(List.of(itemSeqData));
         given(participant.getSkillSeq()).willReturn(List.of(skillSeqData));
 
-        GameInfoData gameInfoData = mock(GameInfoData.class);
+        GameInfoReadModel gameInfoData = mock(GameInfoReadModel.class);
         given(gameInfoData.getGameMode()).willReturn("CLASSIC");
         given(gameInfoData.getGameDuration()).willReturn(1800L);
 
-        TeamInfoData team100 = mock(TeamInfoData.class);
+        TeamInfoReadModel team100 = mock(TeamInfoReadModel.class);
         given(team100.getTeamId()).willReturn(100);
         given(team100.isWin()).willReturn(true);
         given(team100.getChampionKills()).willReturn(25);
-        TeamInfoData team200 = mock(TeamInfoData.class);
+        TeamInfoReadModel team200 = mock(TeamInfoReadModel.class);
         given(team200.getTeamId()).willReturn(200);
         given(team200.isWin()).willReturn(false);
         given(team200.getChampionKills()).willReturn(15);
@@ -107,7 +100,7 @@ class MatchControllerTest extends RestDocsSupport {
         GameReadModel gameData = mock(GameReadModel.class);
         given(gameData.getGameInfoData()).willReturn(gameInfoData);
         given(gameData.getParticipantData()).willReturn(List.of(participant));
-        given(gameData.getTeamInfoData()).willReturn(TeamData.builder().blueTeam(team100).redTeam(team200).build());
+        given(gameData.getTeamInfoData()).willReturn(TeamReadModel.builder().blueTeam(team100).redTeam(team200).build());
 
         given(matchService.getGameData(anyString())).willReturn(gameData);
 
@@ -222,35 +215,31 @@ class MatchControllerTest extends RestDocsSupport {
         // given
         String puuid = "puuid-1234";
 
-        GameInfoData gameInfoData = new GameInfoData(
+        GameInfoReadModel gameInfoData = new GameInfoReadModel(
                 "2", 1700000000000L, 1800L, 1700001800000L,
                 "CLASSIC", 1700000000000L, "MATCHED_GAME",
                 "14.1.1", 11, "KR", 420, "", "KR_7123456789", "IRON", "IV"
         );
 
-        ItemValue itemValue = ItemValue.builder()
+        ItemValueReadModel itemValue = ItemValueReadModel.builder()
                 .item0(3157).item1(3020).item2(3089).item3(3135)
                 .item4(3116).item5(3165).item6(3340)
                 .build();
 
-        StatValue statValue = StatValue.builder()
+        StatValueReadModel statValue = StatValueReadModel.builder()
                 .defense(5002).flex(5008).offense(5005)
                 .build();
 
-        Style style = new Style(
+        StyleReadModel style = new StyleReadModel(
                 8100, 8112, 8126, 8138, 8135,
                 8300, 8304, 8347
         );
 
-        ItemSeqData itemSeqData = ItemSeqData.builder()
-                .itemId(3157).minute(12L).type("ITEM_PURCHASED")
-                .build();
+        ItemSeqReadModel itemSeqData = new ItemSeqReadModel(3157, 12L, "ITEM_PURCHASED");
 
-        SkillSeqData skillSeqData = SkillSeqData.builder()
-                .skillSlot(1).minute(1L).type("SKILL_LEVEL_UP")
-                .build();
+        SkillSeqReadModel skillSeqData = new SkillSeqReadModel(1, 1L, "SKILL_LEVEL_UP");
 
-        ParticipantData participant = ParticipantData.builder()
+        ParticipantReadModel participant = ParticipantReadModel.builder()
                 .profileIcon(4892)
                 .riotIdGameName("TestSummoner").riotIdTagline("KR1")
                 .puuid("test-puuid-1234").summonerLevel(350).summonerId("summoner-id-1234")
@@ -278,13 +267,13 @@ class MatchControllerTest extends RestDocsSupport {
                 .skillSeq(List.of(skillSeqData))
                 .build();
 
-        TeamInfoData blueTeam = new TeamInfoData(
+        TeamInfoReadModel blueTeam = new TeamInfoReadModel(
                 100, true, 35, 2, 3, 9, 2,
                 new Integer[]{500, 3000, 8000, 15000, 25000},
                 new Integer[]{60000, 120000, 180000, 240000, 300000}
         );
 
-        TeamInfoData redTeam = new TeamInfoData(
+        TeamInfoReadModel redTeam = new TeamInfoReadModel(
                 200, false, 20, 1, 1, 3, 0,
                 new Integer[]{450, 2800, 7500, 14000, 23000},
                 new Integer[]{60000, 120000, 180000, 240000, 300000}
@@ -293,7 +282,7 @@ class MatchControllerTest extends RestDocsSupport {
         GameReadModel gameData = new GameReadModel();
         gameData.setGameInfoData(gameInfoData);
         gameData.setParticipantData(List.of(participant));
-        gameData.setTeamInfoData(TeamData.builder().blueTeam(blueTeam).redTeam(redTeam).build());
+        gameData.setTeamInfoData(TeamReadModel.builder().blueTeam(blueTeam).redTeam(redTeam).build());
 
         SliceResult<GameReadModel> pageOfGameData = new SliceResult<>(List.of(gameData), false);
 
@@ -326,7 +315,7 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL).description("에러 메시지 (정상 응답 시 null)"),
                                 fieldWithPath("data.hasNext").type(JsonFieldType.BOOLEAN).description("다음 페이지 존재 여부"),
 
-                                // GameInfoData
+                                // GameInfoReadModel
                                 fieldWithPath("data.content[].gameInfoData.dataVersion").type(JsonFieldType.STRING).description("데이터 버전"),
                                 fieldWithPath("data.content[].gameInfoData.gameCreation").type(JsonFieldType.NUMBER).description("게임 생성 타임스탬프 (epoch ms)"),
                                 fieldWithPath("data.content[].gameInfoData.gameDuration").type(JsonFieldType.NUMBER).description("게임 지속 시간 (초)"),
@@ -343,7 +332,7 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].gameInfoData.averageTier").type(JsonFieldType.STRING).description("평균 티어 (IRON, BRONZE, SILVER, GOLD, PLATINUM, EMERALD, DIAMOND, MASTER, GRANDMASTER, CHALLENGER)"),
                                 fieldWithPath("data.content[].gameInfoData.averageRank").type(JsonFieldType.STRING).description("평균 티어 등급 (I, II, III, IV / MASTER 이상은 null)"),
 
-                                // ParticipantData - 유저 정보
+                                // ParticipantReadModel - 유저 정보
                                 fieldWithPath("data.content[].participantData[].profileIcon").type(JsonFieldType.NUMBER).description("프로필 아이콘 ID"),
                                 fieldWithPath("data.content[].participantData[].riotIdGameName").type(JsonFieldType.STRING).description("Riot ID 게임 이름"),
                                 fieldWithPath("data.content[].participantData[].riotIdTagline").type(JsonFieldType.STRING).description("Riot ID 태그라인"),
@@ -354,7 +343,7 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].participantData[].tierRank").type(JsonFieldType.STRING).description("소환사 티어 등급 (I~IV)").optional(),
                                 fieldWithPath("data.content[].participantData[].absolutePoints").type(JsonFieldType.NUMBER).description("절대 포인트 (티어+등급+LP 수치화)").optional(),
 
-                                // ParticipantData - 게임 정보
+                                // ParticipantReadModel - 게임 정보
                                 fieldWithPath("data.content[].participantData[].individualPosition").type(JsonFieldType.STRING).description("개인 포지션 (TOP, JUNGLE, MIDDLE, BOTTOM, UTILITY)"),
                                 fieldWithPath("data.content[].participantData[].kills").type(JsonFieldType.NUMBER).description("킬 수"),
                                 fieldWithPath("data.content[].participantData[].deaths").type(JsonFieldType.NUMBER).description("데스 수"),
@@ -386,7 +375,7 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].participantData[].goldPerMinute").type(JsonFieldType.NUMBER).description("분당 골드"),
                                 fieldWithPath("data.content[].participantData[].killParticipation").type(JsonFieldType.NUMBER).description("킬 관여율 (%)"),
 
-                                // ParticipantData - 아이템
+                                // ParticipantReadModel - 아이템
                                 fieldWithPath("data.content[].participantData[].item.item0").type(JsonFieldType.NUMBER).description("아이템 슬롯 0"),
                                 fieldWithPath("data.content[].participantData[].item.item1").type(JsonFieldType.NUMBER).description("아이템 슬롯 1"),
                                 fieldWithPath("data.content[].participantData[].item.item2").type(JsonFieldType.NUMBER).description("아이템 슬롯 2"),
@@ -395,12 +384,12 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].participantData[].item.item5").type(JsonFieldType.NUMBER).description("아이템 슬롯 5"),
                                 fieldWithPath("data.content[].participantData[].item.item6").type(JsonFieldType.NUMBER).description("아이템 슬롯 6 (장신구)"),
 
-                                // ParticipantData - 스탯
+                                // ParticipantReadModel - 스탯
                                 fieldWithPath("data.content[].participantData[].statValue.defense").type(JsonFieldType.NUMBER).description("룬 방어 스탯"),
                                 fieldWithPath("data.content[].participantData[].statValue.flex").type(JsonFieldType.NUMBER).description("룬 유연 스탯"),
                                 fieldWithPath("data.content[].participantData[].statValue.offense").type(JsonFieldType.NUMBER).description("룬 공격 스탯"),
 
-                                // ParticipantData - 룬 스타일
+                                // ParticipantReadModel - 룬 스타일
                                 fieldWithPath("data.content[].participantData[].style.primaryStyleId").type(JsonFieldType.NUMBER).description("주 룬 트리 ID"),
                                 fieldWithPath("data.content[].participantData[].style.primaryPerk0").type(JsonFieldType.NUMBER).description("주 룬 0"),
                                 fieldWithPath("data.content[].participantData[].style.primaryPerk1").type(JsonFieldType.NUMBER).description("주 룬 1"),
@@ -410,7 +399,7 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].participantData[].style.subPerk0").type(JsonFieldType.NUMBER).description("부 룬 0"),
                                 fieldWithPath("data.content[].participantData[].style.subPerk1").type(JsonFieldType.NUMBER).description("부 룬 1"),
 
-                                // ParticipantData - 팀 정보
+                                // ParticipantReadModel - 팀 정보
                                 fieldWithPath("data.content[].participantData[].teamId").type(JsonFieldType.NUMBER).description("팀 ID (100: 블루, 200: 레드)"),
                                 fieldWithPath("data.content[].participantData[].teamPosition").type(JsonFieldType.STRING).description("팀 내 포지션"),
                                 fieldWithPath("data.content[].participantData[].win").type(JsonFieldType.BOOLEAN).description("승리 여부"),
@@ -419,14 +408,14 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].participantData[].lane").type(JsonFieldType.STRING).description("라인"),
                                 fieldWithPath("data.content[].participantData[].role").type(JsonFieldType.STRING).description("역할"),
 
-                                // ParticipantData - 아레나
+                                // ParticipantReadModel - 아레나
                                 fieldWithPath("data.content[].participantData[].placement").type(JsonFieldType.NUMBER).description("아레나 배치 순위 (일반 게임: 0)"),
                                 fieldWithPath("data.content[].participantData[].playerAugment1").type(JsonFieldType.NUMBER).description("아레나 증강 1 (일반 게임: 0)"),
                                 fieldWithPath("data.content[].participantData[].playerAugment2").type(JsonFieldType.NUMBER).description("아레나 증강 2 (일반 게임: 0)"),
                                 fieldWithPath("data.content[].participantData[].playerAugment3").type(JsonFieldType.NUMBER).description("아레나 증강 3 (일반 게임: 0)"),
                                 fieldWithPath("data.content[].participantData[].playerAugment4").type(JsonFieldType.NUMBER).description("아레나 증강 4 (일반 게임: 0)"),
 
-                                // ParticipantData - 타임라인
+                                // ParticipantReadModel - 타임라인
                                 fieldWithPath("data.content[].participantData[].itemSeq[].itemId").type(JsonFieldType.NUMBER).description("아이템 ID"),
                                 fieldWithPath("data.content[].participantData[].itemSeq[].minute").type(JsonFieldType.NUMBER).description("구매 시간 (분)"),
                                 fieldWithPath("data.content[].participantData[].itemSeq[].type").type(JsonFieldType.STRING).description("이벤트 타입 (ITEM_PURCHASED 등)"),
@@ -434,7 +423,7 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].participantData[].skillSeq[].minute").type(JsonFieldType.NUMBER).description("레벨업 시간 (분)"),
                                 fieldWithPath("data.content[].participantData[].skillSeq[].type").type(JsonFieldType.STRING).description("이벤트 타입 (SKILL_LEVEL_UP 등)"),
 
-                                // TeamInfoData - 블루팀
+                                // TeamInfoReadModel - 블루팀
                                 fieldWithPath("data.content[].teamInfoData.blueTeam.teamId").type(JsonFieldType.NUMBER).description("블루팀 ID (100)"),
                                 fieldWithPath("data.content[].teamInfoData.blueTeam.win").type(JsonFieldType.BOOLEAN).description("블루팀 승리 여부"),
                                 fieldWithPath("data.content[].teamInfoData.blueTeam.championKills").type(JsonFieldType.NUMBER).description("블루팀 총 킬 수"),
@@ -445,7 +434,7 @@ class MatchControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.content[].teamInfoData.blueTeam.goldTimeline[]").type(JsonFieldType.ARRAY).description("블루팀 타임라인별 누적 골드"),
                                 fieldWithPath("data.content[].teamInfoData.blueTeam.timestamps[]").type(JsonFieldType.ARRAY).description("블루팀 골드 타임라인 타임스탬프 (ms)"),
 
-                                // TeamInfoData - 레드팀
+                                // TeamInfoReadModel - 레드팀
                                 fieldWithPath("data.content[].teamInfoData.redTeam.teamId").type(JsonFieldType.NUMBER).description("레드팀 ID (200)"),
                                 fieldWithPath("data.content[].teamInfoData.redTeam.win").type(JsonFieldType.BOOLEAN).description("레드팀 승리 여부"),
                                 fieldWithPath("data.content[].teamInfoData.redTeam.championKills").type(JsonFieldType.NUMBER).description("레드팀 총 킬 수"),
@@ -467,40 +456,28 @@ class MatchControllerTest extends RestDocsSupport {
         request.setPuuid("puuid-1234");
         request.setSeason(2024);
 
-        MSChampion solo = mock(MSChampion.class);
-        given(solo.getChampionId()).willReturn(266);
-        given(solo.getChampionName()).willReturn("Aatrox");
-        given(solo.getKills()).willReturn(10.5);
-        given(solo.getDeaths()).willReturn(5.5);
-        given(solo.getAssists()).willReturn(8.5);
-        given(solo.getWin()).willReturn(20L);
-        given(solo.getLosses()).willReturn(10L);
-        given(solo.getWinRate()).willReturn(66.7);
-        given(solo.getDamagePerMinute()).willReturn(850.0);
-        given(solo.getKda()).willReturn(3.45);
-        given(solo.getLaneMinionsFirst10Minutes()).willReturn(72.5);
-        given(solo.getDamageTakenOnTeamPercentage()).willReturn(22.5);
-        given(solo.getGoldPerMinute()).willReturn(420.0);
-        given(solo.getPlayCount()).willReturn(30L);
+        MSChampionDetailReadModel solo = MSChampionDetailReadModel.builder()
+                .championId(266).championName("Aatrox")
+                .kills(10.5).deaths(5.5).assists(8.5)
+                .win(20L).losses(10L).winRate(66.7)
+                .damagePerMinute(850.0).kda(3.45)
+                .laneMinionsFirst10Minutes(72.5).damageTakenOnTeamPercentage(22.5)
+                .goldPerMinute(420.0).playCount(30L)
+                .build();
 
-        MSChampion flex = mock(MSChampion.class);
-        given(flex.getChampionId()).willReturn(157);
-        given(flex.getChampionName()).willReturn("Yasuo");
-        given(flex.getKills()).willReturn(8.0);
-        given(flex.getDeaths()).willReturn(6.0);
-        given(flex.getAssists()).willReturn(5.0);
-        given(flex.getWin()).willReturn(7L);
-        given(flex.getLosses()).willReturn(5L);
-        given(flex.getWinRate()).willReturn(58.3);
-        given(flex.getDamagePerMinute()).willReturn(720.0);
-        given(flex.getKda()).willReturn(2.17);
-        given(flex.getLaneMinionsFirst10Minutes()).willReturn(68.0);
-        given(flex.getDamageTakenOnTeamPercentage()).willReturn(20.0);
-        given(flex.getGoldPerMinute()).willReturn(395.0);
-        given(flex.getPlayCount()).willReturn(12L);
+        MSChampionDetailReadModel flex = MSChampionDetailReadModel.builder()
+                .championId(157).championName("Yasuo")
+                .kills(8.0).deaths(6.0).assists(5.0)
+                .win(7L).losses(5L).winRate(58.3)
+                .damagePerMinute(720.0).kda(2.17)
+                .laneMinionsFirst10Minutes(68.0).damageTakenOnTeamPercentage(20.0)
+                .goldPerMinute(395.0).playCount(12L)
+                .build();
 
+        MSChampionByQueueReadModel rankChampions =
+                new MSChampionByQueueReadModel(List.of(solo), List.of(flex));
         given(matchService.getRankChampions(any(MSChampionCommand.class)))
-                .willReturn(new MSChampionByQueue(List.of(solo), List.of(flex)));
+                .willReturn(rankChampions);
 
         // when & then
         mockMvc.perform(
@@ -605,25 +582,13 @@ class MatchControllerTest extends RestDocsSupport {
         // given
         String matchId = "KR_123456789";
 
-        ItemSeqData itemSeq = mock(ItemSeqData.class);
-        given(itemSeq.getItemId()).willReturn(1001);
-        given(itemSeq.getType()).willReturn("ITEM_PURCHASED");
-        given(itemSeq.getMinute()).willReturn(1L);
+        List<ItemSeqReadModel> itemSeq = List.of(new ItemSeqReadModel(1001, 1L, "ITEM_PURCHASED"));
+        List<SkillSeqReadModel> skillSeq = List.of(new SkillSeqReadModel(1, 0L, "SKILL_LEVEL_UP"));
 
-        SkillSeqData skillSeq = mock(SkillSeqData.class);
-        given(skillSeq.getSkillSlot()).willReturn(1);
-        given(skillSeq.getType()).willReturn("SKILL_LEVEL_UP");
-        given(skillSeq.getMinute()).willReturn(0L);
+        Map<Integer, ParticipantTimelineReadModel> participants = new HashMap<>();
+        participants.put(1, new ParticipantTimelineReadModel(itemSeq, skillSeq));
 
-        ParticipantTimeline participantTimeline = mock(ParticipantTimeline.class);
-        given(participantTimeline.getItemSeq()).willReturn(List.of(itemSeq));
-        given(participantTimeline.getSkillSeq()).willReturn(List.of(skillSeq));
-
-        Map<Integer, ParticipantTimeline> participants = new HashMap<>();
-        participants.put(1, participantTimeline);
-
-        TimelineData timelineData = mock(TimelineData.class);
-        given(timelineData.getParticipants()).willReturn(participants);
+        TimelineReadModel timelineData = new TimelineReadModel(participants);
 
         given(matchService.getTimelineData(anyString())).willReturn(timelineData);
 

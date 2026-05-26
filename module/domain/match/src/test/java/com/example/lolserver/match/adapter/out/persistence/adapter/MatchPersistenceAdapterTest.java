@@ -2,13 +2,12 @@ package com.example.lolserver.match.adapter.out.persistence.adapter;
 
 import com.example.lolserver.QueueType;
 import com.example.lolserver.match.application.model.GameReadModel;
-import com.example.lolserver.match.domain.MSChampion;
-import com.example.lolserver.match.domain.MSChampionByQueue;
-import com.example.lolserver.match.domain.TimelineData;
-import com.example.lolserver.match.domain.gamedata.GameInfoData;
-import com.example.lolserver.match.domain.gamedata.ParticipantData;
-import com.example.lolserver.match.domain.gamedata.timeline.events.ItemEvents;
-import com.example.lolserver.match.domain.gamedata.timeline.events.SkillEvents;
+import com.example.lolserver.match.application.model.GameInfoReadModel;
+import com.example.lolserver.match.application.model.MSChampionByQueueReadModel;
+import com.example.lolserver.match.application.model.MSChampionDetailReadModel;
+import com.example.lolserver.match.application.model.ParticipantReadModel;
+import com.example.lolserver.match.application.model.ParticipantTimelineReadModel;
+import com.example.lolserver.match.application.model.TimelineReadModel;
 import com.example.lolserver.match.adapter.out.persistence.dto.TimelineEventDTO;
 import com.example.lolserver.match.adapter.out.persistence.dto.MSChampionDTO;
 import com.example.lolserver.match.adapter.out.persistence.dto.MatchSummonerDTO;
@@ -99,8 +98,8 @@ class MatchPersistenceAdapterTest {
 
         given(matchRepositoryCustom.getMatches(eq(puuid), eq(queueId), any(Pageable.class))).willReturn(slice);
         given(matchRepositoryCustom.getMatchSummoners("KR_12345")).willReturn(List.of(summonerDTO));
-        given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(queueId));
-        given(matchMapper.toDomain(any(MatchSummonerDTO.class))).willReturn(createParticipantData(puuid));
+        given(matchMapper.toGameInfoReadModel(any(MatchEntity.class))).willReturn(createGameInfoData(queueId));
+        given(matchMapper.toReadModel(any(MatchSummonerDTO.class))).willReturn(createParticipantData(puuid));
         given(timelineRepositoryCustom.selectAllTimelineEventsByMatch(anyString())).willReturn(Collections.emptyList());
 
         // when
@@ -124,16 +123,16 @@ class MatchPersistenceAdapterTest {
                 157, "Yasuo", 10L, 7L, QueueType.RANKED_SOLO_5x5.getQueueId());
         MSChampionDTO flexDto = createMSChampionDTO(
                 238, "Zed", 5L, 3L, QueueType.RANKED_FLEX_SR.getQueueId());
-        MSChampion soloDomain = createMSChampion(157, "Yasuo", 10L, 7L);
-        MSChampion flexDomain = createMSChampion(238, "Zed", 5L, 3L);
+        MSChampionDetailReadModel soloDomain = createMSChampion(157, "Yasuo", 10L, 7L);
+        MSChampionDetailReadModel flexDomain = createMSChampion(238, "Zed", 5L, 3L);
 
         given(matchSummonerRepositoryCustom.findAllRankedMatchSummonerByPuuidAndSeason(puuid, season))
                 .willReturn(List.of(soloDto, flexDto));
-        given(matchMapper.toDomain(soloDto)).willReturn(soloDomain);
-        given(matchMapper.toDomain(flexDto)).willReturn(flexDomain);
+        given(matchMapper.toReadModel(soloDto)).willReturn(soloDomain);
+        given(matchMapper.toReadModel(flexDto)).willReturn(flexDomain);
 
         // when
-        MSChampionByQueue result = adapter.getRankChampions(puuid, season);
+        MSChampionByQueueReadModel result = adapter.getRankChampions(puuid, season);
 
         // then
         assertThat(result.solo()).hasSize(1);
@@ -153,7 +152,7 @@ class MatchPersistenceAdapterTest {
                 .willReturn(Collections.emptyList());
 
         // when
-        MSChampionByQueue result = adapter.getRankChampions(puuid, season);
+        MSChampionByQueueReadModel result = adapter.getRankChampions(puuid, season);
 
         // then
         assertThat(result.solo()).isEmpty();
@@ -176,8 +175,8 @@ class MatchPersistenceAdapterTest {
 
         given(matchRepository.findByMatchId(matchId)).willReturn(Optional.of(matchEntity));
         given(matchRepositoryCustom.getMatchSummoners(matchId)).willReturn(List.of(summonerDTO));
-        given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(420));
-        given(matchMapper.toDomain(any(MatchSummonerDTO.class))).willReturn(createParticipantData("test-puuid"));
+        given(matchMapper.toGameInfoReadModel(any(MatchEntity.class))).willReturn(createGameInfoData(420));
+        given(matchMapper.toReadModel(any(MatchSummonerDTO.class))).willReturn(createParticipantData("test-puuid"));
         given(timelineRepositoryCustom.selectAllTimelineEventsByMatch(matchId)).willReturn(Collections.emptyList());
 
         // when
@@ -217,19 +216,19 @@ class MatchPersistenceAdapterTest {
         given(timelineRepositoryCustom.selectAllTimelineEventsByMatch(matchId))
                 .willReturn(List.of(itemEvent, skillEvent));
 
-        ItemEvents domainItemEvents = ItemEvents.builder()
-                .participantId(1).itemId(3006).timestamp(60000L).type("ITEM_PURCHASED").build();
-        SkillEvents domainSkillEvents = SkillEvents.builder()
-                .participantId(1).skillSlot(1).timestamp(30000L).levelUpType("NORMAL").build();
-
-        given(matchMapper.toItemEventsFromTimelineDTO(itemEvent)).willReturn(domainItemEvents);
-        given(matchMapper.toSkillEventsFromTimelineDTO(skillEvent)).willReturn(domainSkillEvents);
-
         // when
-        TimelineData result = adapter.getTimelineData(matchId);
+        TimelineReadModel result = adapter.getTimelineData(matchId);
 
         // then
         assertThat(result).isNotNull();
+        ParticipantTimelineReadModel timeline = result.participants().get(1);
+        assertThat(timeline).isNotNull();
+        assertThat(timeline.itemSeq()).hasSize(1);
+        assertThat(timeline.itemSeq().get(0).itemId()).isEqualTo(3006);
+        assertThat(timeline.itemSeq().get(0).minute()).isEqualTo(1L); // 60000ms → 1분
+        assertThat(timeline.skillSeq()).hasSize(1);
+        assertThat(timeline.skillSeq().get(0).skillSlot()).isEqualTo(1);
+        assertThat(timeline.skillSeq().get(0).minute()).isEqualTo(0L); // 30000ms → 0분
         then(timelineRepositoryCustom).should().selectAllTimelineEventsByMatch(matchId);
     }
 
@@ -279,13 +278,13 @@ class MatchPersistenceAdapterTest {
 
         given(matchRepositoryCustom.getMatches(eq(puuid), eq(queueId), any(Pageable.class))).willReturn(slice);
         given(matchRepositoryCustom.getMatchSummoners("KR_12345")).willReturn(List.of(summonerDTO1, summonerDTO2));
-        given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(queueId));
+        given(matchMapper.toGameInfoReadModel(any(MatchEntity.class))).willReturn(createGameInfoData(queueId));
 
-        ParticipantData participant1 = createParticipantDataWithPlacement(puuid, 3);
-        ParticipantData participant2 = createParticipantDataWithPlacement("other-puuid", 1);
+        ParticipantReadModel participant1 = createParticipantDataWithPlacement(puuid, 3);
+        ParticipantReadModel participant2 = createParticipantDataWithPlacement("other-puuid", 1);
 
-        given(matchMapper.toDomain(summonerDTO1)).willReturn(participant1);
-        given(matchMapper.toDomain(summonerDTO2)).willReturn(participant2);
+        given(matchMapper.toReadModel(summonerDTO1)).willReturn(participant1);
+        given(matchMapper.toReadModel(summonerDTO2)).willReturn(participant2);
         given(timelineRepositoryCustom.selectAllTimelineEventsByMatch(anyString())).willReturn(Collections.emptyList());
 
         // when
@@ -323,8 +322,8 @@ class MatchPersistenceAdapterTest {
 
         given(matchRepository.findByMatchId(matchId)).willReturn(Optional.of(matchEntity));
         given(matchRepositoryCustom.getMatchSummoners(matchId)).willReturn(List.of(blueSummoner, redSummoner));
-        given(matchMapper.toGameInfoData(any(MatchEntity.class))).willReturn(createGameInfoData(420));
-        given(matchMapper.toDomain(any(MatchSummonerDTO.class))).willReturn(createParticipantData("test-puuid"));
+        given(matchMapper.toGameInfoReadModel(any(MatchEntity.class))).willReturn(createGameInfoData(420));
+        given(matchMapper.toReadModel(any(MatchSummonerDTO.class))).willReturn(createParticipantData("test-puuid"));
         given(timelineRepositoryCustom.selectAllTimelineEventsByMatch(matchId)).willReturn(Collections.emptyList());
 
         // when
@@ -389,8 +388,8 @@ class MatchPersistenceAdapterTest {
                 .build();
     }
 
-    private GameInfoData createGameInfoData(int queueId) {
-        GameInfoData gameInfoData = new GameInfoData();
+    private GameInfoReadModel createGameInfoData(int queueId) {
+        GameInfoReadModel gameInfoData = new GameInfoReadModel();
         gameInfoData.setMatchId("KR_12345");
         gameInfoData.setQueueId(queueId);
         gameInfoData.setGameDuration(1800L);
@@ -398,8 +397,8 @@ class MatchPersistenceAdapterTest {
         return gameInfoData;
     }
 
-    private ParticipantData createParticipantData(String puuid) {
-        ParticipantData data = new ParticipantData();
+    private ParticipantReadModel createParticipantData(String puuid) {
+        ParticipantReadModel data = new ParticipantReadModel();
         data.setPuuid(puuid);
         data.setParticipantId(1);
         data.setChampionId(157);
@@ -411,8 +410,8 @@ class MatchPersistenceAdapterTest {
         return data;
     }
 
-    private ParticipantData createParticipantDataWithPlacement(String puuid, int placement) {
-        ParticipantData data = createParticipantData(puuid);
+    private ParticipantReadModel createParticipantDataWithPlacement(String puuid, int placement) {
+        ParticipantReadModel data = createParticipantData(puuid);
         data.setPlacement(placement);
         return data;
     }
@@ -440,23 +439,23 @@ class MatchPersistenceAdapterTest {
         );
     }
 
-    private MSChampion createMSChampion(int championId, String championName, Long playCount, Long win) {
-        return new MSChampion(
-                8.0,  // assists
-                5.0,  // deaths
-                10.0, // kills
-                championId,
-                championName,
-                win,
-                playCount - win, // losses
-                70.0, // winRate
-                500.0, // damagePerMinute
-                3.6,   // kda
-                70.0,  // laneMinionsFirst10Minutes
-                25.0,  // damageTakenOnTeamPercentage
-                400.0, // goldPerMinute
-                playCount
-        );
+    private MSChampionDetailReadModel createMSChampion(int championId, String championName, Long playCount, Long win) {
+        return MSChampionDetailReadModel.builder()
+                .assists(8.0)
+                .deaths(5.0)
+                .kills(10.0)
+                .championId(championId)
+                .championName(championName)
+                .win(win)
+                .losses(playCount - win)
+                .winRate(70.0)
+                .damagePerMinute(500.0)
+                .kda(3.6)
+                .laneMinionsFirst10Minutes(70.0)
+                .damageTakenOnTeamPercentage(25.0)
+                .goldPerMinute(400.0)
+                .playCount(playCount)
+                .build();
     }
 
 }

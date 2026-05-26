@@ -6,10 +6,10 @@ import com.example.lolserver.match.application.port.out.MatchIdsCachePort;
 import com.example.lolserver.match.application.port.out.MatchPersistencePort;
 import com.example.lolserver.match.application.port.out.MatchSingleCachePort;
 import com.example.lolserver.match.application.model.GameReadModel;
-import com.example.lolserver.match.domain.MSChampion;
-import com.example.lolserver.match.domain.MSChampionByQueue;
-import com.example.lolserver.match.domain.TimelineData;
-import com.example.lolserver.match.domain.gamedata.GameInfoData;
+import com.example.lolserver.match.application.model.GameInfoReadModel;
+import com.example.lolserver.match.application.model.MSChampionByQueueReadModel;
+import com.example.lolserver.match.application.model.MSChampionDetailReadModel;
+import com.example.lolserver.match.application.model.TimelineReadModel;
 import com.example.lolserver.common.support.PaginationRequest;
 import com.example.lolserver.common.support.SliceResult;
 import com.example.lolserver.common.error.CoreException;
@@ -86,21 +86,25 @@ class MatchServiceTest {
         command.setPuuid("test-puuid");
         command.setSeason(14);
 
-        List<MSChampion> solo = List.of(
-                new MSChampion(5.0, 3.0, 10.0, 1, "Annie", 20L, 10L, 66.7, 500.0, 5.0, 80.0, 25.0, 300.0, 30L)
+        List<MSChampionDetailReadModel> solo = List.of(
+                MSChampionDetailReadModel.builder().championId(1).championName("Annie")
+                        .win(20L).losses(10L).playCount(30L).build()
         );
-        List<MSChampion> flex = List.of(
-                new MSChampion(6.0, 2.0, 8.0, 2, "Olaf", 15L, 5L, 75.0, 450.0, 7.0, 75.0, 30.0, 280.0, 20L)
+        List<MSChampionDetailReadModel> flex = List.of(
+                MSChampionDetailReadModel.builder().championId(2).championName("Olaf")
+                        .win(15L).losses(5L).playCount(20L).build()
         );
-        MSChampionByQueue expected = new MSChampionByQueue(solo, flex);
+        MSChampionByQueueReadModel expected = new MSChampionByQueueReadModel(solo, flex);
         given(matchPersistencePort.getRankChampions("test-puuid", 14)).willReturn(expected);
 
         // when
-        MSChampionByQueue result = matchService.getRankChampions(command);
+        MSChampionByQueueReadModel result = matchService.getRankChampions(command);
 
         // then
         assertThat(result.solo()).hasSize(1);
         assertThat(result.flex()).hasSize(1);
+        assertThat(result.solo().get(0).getChampionName()).isEqualTo("Annie");
+        assertThat(result.flex().get(0).getChampionName()).isEqualTo("Olaf");
     }
 
     @DisplayName("존재하는 매치 ID로 조회 시 게임 데이터를 반환한다")
@@ -137,14 +141,15 @@ class MatchServiceTest {
     void getTimelineData_존재하는매치_타임라인반환() {
         // given
         String matchId = "KR_1234567890";
-        TimelineData timelineData = new TimelineData(new HashMap<>());
+        TimelineReadModel timelineData = new TimelineReadModel(new HashMap<>());
         given(matchPersistencePort.getTimelineData(matchId)).willReturn(timelineData);
 
         // when
-        TimelineData result = matchService.getTimelineData(matchId);
+        TimelineReadModel result = matchService.getTimelineData(matchId);
 
         // then
-        assertThat(result).isEqualTo(timelineData);
+        assertThat(result).isNotNull();
+        assertThat(result.participants()).isEmpty();
     }
 
     @DisplayName("유효한 커맨드로 매치 ID 목록 조회 시 페이징된 결과를 반환한다")
@@ -331,7 +336,7 @@ class MatchServiceTest {
 
     private GameReadModel gameOf(String matchId, int queueId, long gameCreation) {
         GameReadModel game = new GameReadModel();
-        GameInfoData info = new GameInfoData();
+        GameInfoReadModel info = new GameInfoReadModel();
         info.setMatchId(matchId);
         info.setQueueId(queueId);
         info.setGameCreation(gameCreation);

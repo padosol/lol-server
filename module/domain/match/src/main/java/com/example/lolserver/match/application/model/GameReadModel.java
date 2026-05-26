@@ -1,8 +1,5 @@
 package com.example.lolserver.match.application.model;
 
-import com.example.lolserver.match.domain.gamedata.GameInfoData;
-import com.example.lolserver.match.domain.gamedata.ParticipantData;
-import com.example.lolserver.match.domain.TeamData;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,12 +11,12 @@ import java.util.List;
 public class GameReadModel {
 
     // 게임정보
-    private GameInfoData gameInfoData;
+    private GameInfoReadModel gameInfoData;
 
     // 참가자 정보
-    private List<ParticipantData> participantData = new ArrayList<>();
+    private List<ParticipantReadModel> participantData = new ArrayList<>();
 
     // 게임 팀 정보
-    private TeamData teamInfoData;
+    private TeamReadModel teamInfoData;
 
 }
