@@ -7,25 +7,27 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
 | 모듈 | 역할 |
 |---|---|
 | [`module/app/application`](module/app/application/CLAUDE.md) | Spring Boot 진입점, 컴포지션 루트, bootJar |
-| [`module/core/lol-server-domain`](module/core/lol-server-domain/CLAUDE.md) | 도메인 + 애플리케이션 서비스 + in/out 포트 (인프라 무지) |
+| `module/common` | 공유 커널 (web·error·support·security + persistence·redis·client config, testFixtures) — 도메인 아님 |
 | `module/core/enum` | `QueueType`, `Tier`, `Platform` 등 공유 enum |
-| [`module/infra/api`](module/infra/api/CLAUDE.md) | REST 컨트롤러 + Spring Security/OAuth2 + RestDocs |
-| [`module/infra/persistence/postgresql`](module/infra/persistence/postgresql/CLAUDE.md) | JPA + QueryDSL + MapStruct + Flyway |
-| [`module/infra/persistence/redis`](module/infra/persistence/redis/CLAUDE.md) | 캐시, RefreshToken, OAuth State, Redisson 분산 락 |
-| [`module/infra/persistence/bigquery`](module/infra/persistence/bigquery/CLAUDE.md) | 챔피언 통계 OLAP (BigQuery) |
-| [`module/infra/client/lol-repository`](module/infra/client/lol-repository/CLAUDE.md) | Riot API `RestClient` + `@HttpExchange` + Bucket4j |
-| [`module/infra/client/oauth`](module/infra/client/oauth/CLAUDE.md) | RSO/OAuth2 토큰 교환 + 사용자 정보 조회 |
-| [`module/infra/message/rabbitmq`](module/infra/message/rabbitmq/CLAUDE.md) | 기본 메시지 broker (`message.broker=rabbitmq`) |
-| [`module/infra/message/kafka`](module/infra/message/kafka/CLAUDE.md) | Kafka producer (`message.broker=kafka` 시 활성) |
 | `module/support/logging` | `@LogExecutionTime` AOP 등 횡단 유틸 |
+| `module/domain/leaderboard` | 랭킹 리더보드 조회 |
+| `module/domain/match` | 전적/매치·타임라인 조회 + 2-tier Redis 캐시 |
+| `module/domain/championstats` | 챔피언 통계 OLAP (BigQuery) + Redisson single-flight 캐시 |
+| `module/domain/gamedata` | 게임 정적 데이터 (챔피언·버전·시즌·패치노트·티어컷오프·큐타입) |
+| `module/domain/summoner` | 소환사·리그(티어)·관전 조회 (Riot client + JPA + Redis) |
+| `module/domain/member` | 회원·인증 (OAuth/RSO 연동) |
+| `module/domain/community` | 커뮤니티 게시글·댓글·투표 |
+| `module/domain/duo` | 듀오 모집글·신청 + Riot 계정 통계 집계 |
 
 ## What to read first
 
-- 새 도메인/비즈니스 규칙 추가 → [`core/lol-server-domain/CLAUDE.md`](module/core/lol-server-domain/CLAUDE.md)
-- 새 REST 엔드포인트 → [`infra/api/CLAUDE.md`](module/infra/api/CLAUDE.md)
-- 새 영속화/쿼리 → [`infra/persistence/postgresql/CLAUDE.md`](module/infra/persistence/postgresql/CLAUDE.md)
-- 챔피언 통계 OLAP 쿼리 → [`infra/persistence/bigquery/CLAUDE.md`](module/infra/persistence/bigquery/CLAUDE.md)
-- 외부 Riot/OAuth API 호출 → [`infra/client/lol-repository/CLAUDE.md`](module/infra/client/lol-repository/CLAUDE.md), [`infra/client/oauth/CLAUDE.md`](module/infra/client/oauth/CLAUDE.md)
+각 컨텍스트는 `domain` + `application`(port.in·port.out·model·command) + `adapter`(in/web · out) 내부 구조를 가진다.
+
+- 새 도메인/비즈니스 규칙 추가 → 해당 컨텍스트 `module/domain/<ctx>/`의 `domain` + `application`
+- 새 REST 엔드포인트 → 해당 컨텍스트의 `adapter/in/web`
+- 새 영속화/쿼리 → 해당 컨텍스트의 `adapter/out/persistence` (JPA + QueryDSL + MapStruct)
+- 챔피언 통계 OLAP 쿼리 → `module/domain/championstats/adapter/out/bigquery`
+- 외부 Riot/OAuth API 호출 → `module/domain/summoner/adapter/out/client`, `module/domain/member/adapter/out/oauth`
 - 모듈 조립/프로파일/실행 → [`app/application/CLAUDE.md`](module/app/application/CLAUDE.md)
 
 ## 빌드 / 실행
