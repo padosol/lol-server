@@ -64,3 +64,6 @@ performance-tests/results/*.txt
 
 ### AI-Ready Audit ###
 .ai-ready-audit/
+
+### Embedded Tomcat ###
+work/
