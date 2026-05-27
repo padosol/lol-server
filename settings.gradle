@@ -4,7 +4,7 @@ include(
         "module:app:application",
 
         // 공유 모듈
-        "module:core:enum",
+        "module:shared",
         "module:support:logging",
 
         // 공유 커널 (도메인 아님)

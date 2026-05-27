@@ -17,7 +17,7 @@ dependencies {
     implementation project(":module:domain:duo")
 
     // 공유 모듈
-    implementation project(":module:core:enum")
+    implementation project(":module:shared")
     implementation project(":module:support:logging")
 
     implementation 'org.springframework.boot:spring-boot-starter'

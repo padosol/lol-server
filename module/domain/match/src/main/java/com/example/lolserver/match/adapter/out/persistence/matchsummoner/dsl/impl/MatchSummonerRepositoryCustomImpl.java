@@ -1,6 +1,6 @@
 package com.example.lolserver.match.adapter.out.persistence.matchsummoner.dsl.impl;
 
-import com.example.lolserver.QueueType;
+import com.example.lolserver.shared.QueueType;
 import com.example.lolserver.match.adapter.out.persistence.dto.DailyGameCountDTO;
 import com.example.lolserver.match.adapter.out.persistence.dto.LinePositionDTO;
 import com.example.lolserver.match.adapter.out.persistence.dto.MSChampionDTO;

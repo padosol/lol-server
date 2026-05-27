@@ -1,6 +1,6 @@
 package com.example.lolserver.duo.application;
 
-import com.example.lolserver.QueueType;
+import com.example.lolserver.shared.QueueType;
 import com.example.lolserver.duo.domain.vo.MostChampion;
 import com.example.lolserver.duo.domain.vo.RecentGameSummary;
 import com.example.lolserver.duo.domain.vo.RiotAccountStats;

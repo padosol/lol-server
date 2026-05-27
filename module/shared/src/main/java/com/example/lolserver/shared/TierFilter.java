@@ -1,4 +1,4 @@
-package com.example.lolserver;
+package com.example.lolserver.shared;
 
 import java.util.Arrays;
 import java.util.List;

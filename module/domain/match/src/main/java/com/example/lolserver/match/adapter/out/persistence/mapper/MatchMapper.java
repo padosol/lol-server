@@ -1,7 +1,7 @@
 package com.example.lolserver.match.adapter.out.persistence.mapper;
 
-import com.example.lolserver.Division;
-import com.example.lolserver.Tier;
+import com.example.lolserver.shared.Division;
+import com.example.lolserver.shared.Tier;
 import com.example.lolserver.match.application.model.GameInfoReadModel;
 import com.example.lolserver.match.application.model.ItemValueReadModel;
 import com.example.lolserver.match.application.model.MSChampionDetailReadModel;

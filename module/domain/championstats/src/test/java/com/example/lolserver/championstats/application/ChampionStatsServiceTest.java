@@ -1,6 +1,6 @@
 package com.example.lolserver.championstats.application;
 
-import com.example.lolserver.TierFilter;
+import com.example.lolserver.shared.TierFilter;
 import com.example.lolserver.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.championstats.application.model.ChampionItemBuildReadModel;
 import com.example.lolserver.championstats.application.model.ChampionMatchupReadModel;

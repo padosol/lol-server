@@ -5,7 +5,7 @@ plugins {
 
 dependencies {
     implementation project(':module:common')
-    implementation project(':module:core:enum')
+    implementation project(':module:shared')
 
     // 상위 컨텍스트: published port.in(UseCase) + application.model(ReadModel)만 사용한다.
     // 경계는 ArchitectureTest 가 강제한다(각 컨텍스트의 domain/adapter/port.out 의존 금지).

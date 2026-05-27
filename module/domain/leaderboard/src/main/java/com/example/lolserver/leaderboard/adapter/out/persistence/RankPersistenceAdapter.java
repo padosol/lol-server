@@ -1,6 +1,6 @@
 package com.example.lolserver.leaderboard.adapter.out.persistence;
 
-import com.example.lolserver.QueueType;
+import com.example.lolserver.shared.QueueType;
 import com.example.lolserver.leaderboard.application.port.out.RankPersistencePort;
 import com.example.lolserver.leaderboard.domain.Rank;
 import com.example.lolserver.leaderboard.application.dto.RankSearchDto;

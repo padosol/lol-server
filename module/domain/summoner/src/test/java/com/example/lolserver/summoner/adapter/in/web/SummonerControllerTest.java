@@ -5,7 +5,7 @@ import com.example.lolserver.common.test.RestDocsSupport;
 import com.example.lolserver.summoner.application.port.in.SummonerQueryUseCase;
 import com.example.lolserver.summoner.application.port.in.SummonerUseCase;
 import com.example.lolserver.summoner.domain.SummonerRenewal;
-import com.example.lolserver.RenewalStatus;
+import com.example.lolserver.shared.RenewalStatus;
 
 import com.example.lolserver.summoner.application.model.SummonerAutoReadModel;
 import com.example.lolserver.summoner.domain.vo.GameName;

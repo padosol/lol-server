@@ -1,6 +1,6 @@
 package com.example.lolserver.match.adapter.out.persistence.adapter;
 
-import com.example.lolserver.QueueType;
+import com.example.lolserver.shared.QueueType;
 import com.example.lolserver.match.application.port.out.MatchPersistencePort;
 import com.example.lolserver.match.application.model.DailyGameCountReadModel;
 import com.example.lolserver.match.application.model.GameInfoReadModel;

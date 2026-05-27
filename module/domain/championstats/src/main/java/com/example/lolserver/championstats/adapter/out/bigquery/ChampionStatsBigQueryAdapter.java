@@ -1,7 +1,7 @@
 package com.example.lolserver.championstats.adapter.out.bigquery;
 
-import com.example.lolserver.Tier;
-import com.example.lolserver.TierFilter;
+import com.example.lolserver.shared.Tier;
+import com.example.lolserver.shared.TierFilter;
 import com.example.lolserver.championstats.application.model.ChampionAverageStatsReadModel;
 import com.example.lolserver.championstats.application.model.ChampionBootBuildReadModel;
 import com.example.lolserver.championstats.application.model.ChampionItemBuildReadModel;
