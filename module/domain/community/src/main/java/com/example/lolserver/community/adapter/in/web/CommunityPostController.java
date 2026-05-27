@@ -10,8 +10,9 @@ import com.example.lolserver.common.web.response.SliceResponse;
 import com.example.lolserver.community.application.command.CreatePostCommand;
 import com.example.lolserver.community.application.command.PostSearchCommand;
 import com.example.lolserver.community.application.command.UpdatePostCommand;
-import com.example.lolserver.community.application.model.PostDetailReadModel;
-import com.example.lolserver.community.application.model.PostListReadModel;
+import com.example.lolserver.community.application.model.readmodel.PostDetailReadModel;
+import com.example.lolserver.community.application.model.readmodel.PostListReadModel;
+import com.example.lolserver.community.application.model.resultmodel.PostDetailResultModel;
 import com.example.lolserver.community.application.port.in.PostQueryUseCase;
 import com.example.lolserver.community.application.port.in.PostUseCase;
 import com.example.lolserver.community.domain.vo.SortType;
@@ -50,7 +51,7 @@ public class CommunityPostController {
                 .category(request.category())
                 .build();
 
-        PostDetailReadModel readModel =
+        PostDetailResultModel readModel =
                 postUseCase.createPost(member.memberId(), command);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(PostResponse.from(readModel)));
@@ -96,7 +97,7 @@ public class CommunityPostController {
                 .category(request.category())
                 .build();
 
-        PostDetailReadModel readModel = postUseCase.updatePost(
+        PostDetailResultModel readModel = postUseCase.updatePost(
                 member.memberId(), postId, command);
         return ResponseEntity.ok(
                 ApiResponse.success(PostResponse.from(readModel)));

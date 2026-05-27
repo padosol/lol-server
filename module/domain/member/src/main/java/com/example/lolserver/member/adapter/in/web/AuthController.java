@@ -4,7 +4,7 @@ import com.example.lolserver.member.adapter.in.web.security.AuthCookieManager;
 import com.example.lolserver.common.web.security.AuthenticatedMember;
 import com.example.lolserver.common.web.response.ApiResponse;
 import com.example.lolserver.member.application.dto.TokenRefreshCommand;
-import com.example.lolserver.member.application.model.AuthTokenReadModel;
+import com.example.lolserver.member.application.model.resultmodel.AuthTokenResultModel;
 import com.example.lolserver.member.application.port.in.MemberAuthUseCase;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
@@ -35,7 +35,7 @@ public class AuthController {
                 .refreshToken(refreshToken)
                 .build();
 
-        AuthTokenReadModel result = memberAuthUseCase.refreshToken(command);
+        AuthTokenResultModel result = memberAuthUseCase.refreshToken(command);
         authCookieManager.addAuthCookies(response, result);
         return ApiResponse.success();
     }

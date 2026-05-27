@@ -1,6 +1,6 @@
 package com.example.lolserver.summoner.application;
 
-import com.example.lolserver.summoner.application.model.LeagueReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.LeagueReadModel;
 import com.example.lolserver.summoner.application.port.out.LeaguePersistencePort;
 import com.example.lolserver.summoner.domain.League;
 import com.example.lolserver.summoner.domain.vo.LeagueHistory;

@@ -1,6 +1,6 @@
 package com.example.lolserver.gamedata.adapter.out.cache;
 
-import com.example.lolserver.gamedata.application.model.VersionReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.VersionReadModel;
 import com.example.lolserver.gamedata.application.port.out.VersionCachePort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

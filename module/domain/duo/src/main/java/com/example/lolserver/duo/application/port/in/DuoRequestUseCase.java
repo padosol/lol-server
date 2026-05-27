@@ -1,14 +1,14 @@
 package com.example.lolserver.duo.application.port.in;
 
 import com.example.lolserver.duo.application.command.CreateDuoRequestCommand;
-import com.example.lolserver.duo.application.model.DuoMatchResultReadModel;
-import com.example.lolserver.duo.application.model.DuoRequestReadModel;
+import com.example.lolserver.duo.application.model.resultmodel.DuoMatchResultModel;
+import com.example.lolserver.duo.application.model.resultmodel.DuoRequestResultModel;
 
 public interface DuoRequestUseCase {
-    DuoRequestReadModel createDuoRequest(Long memberId, Long duoPostId,
+    DuoRequestResultModel createDuoRequest(Long memberId, Long duoPostId,
             CreateDuoRequestCommand command);
-    DuoMatchResultReadModel acceptDuoRequest(Long memberId, Long requestId);
-    DuoMatchResultReadModel confirmDuoRequest(Long memberId, Long requestId);
+    DuoMatchResultModel acceptDuoRequest(Long memberId, Long requestId);
+    DuoMatchResultModel confirmDuoRequest(Long memberId, Long requestId);
     void rejectDuoRequest(Long memberId, Long requestId);
     void cancelDuoRequest(Long memberId, Long requestId);
 }

@@ -1,6 +1,6 @@
 package com.example.lolserver.community.adapter.in.web.response;
 
-import com.example.lolserver.community.application.model.PostListReadModel;
+import com.example.lolserver.community.application.model.readmodel.PostListReadModel;
 
 import java.time.LocalDateTime;
 

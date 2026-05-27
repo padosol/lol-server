@@ -1,7 +1,7 @@
 package com.example.lolserver.championstats.adapter.out.cache;
 
-import com.example.lolserver.championstats.application.model.ChampionStatsReadModel;
-import com.example.lolserver.championstats.application.model.PositionChampionStatsReadModel;
+import com.example.lolserver.championstats.application.model.readmodel.ChampionStatsReadModel;
+import com.example.lolserver.championstats.application.model.readmodel.PositionChampionStatsReadModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

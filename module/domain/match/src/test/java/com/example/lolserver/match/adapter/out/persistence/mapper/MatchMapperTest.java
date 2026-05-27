@@ -1,11 +1,11 @@
 package com.example.lolserver.match.adapter.out.persistence.mapper;
 
-import com.example.lolserver.match.application.model.GameInfoReadModel;
-import com.example.lolserver.match.application.model.ItemValueReadModel;
-import com.example.lolserver.match.application.model.MSChampionDetailReadModel;
-import com.example.lolserver.match.application.model.ParticipantReadModel;
-import com.example.lolserver.match.application.model.StatValueReadModel;
-import com.example.lolserver.match.application.model.StyleReadModel;
+import com.example.lolserver.match.application.model.readmodel.GameInfoReadModel;
+import com.example.lolserver.match.application.model.readmodel.ItemValueReadModel;
+import com.example.lolserver.match.application.model.readmodel.MSChampionDetailReadModel;
+import com.example.lolserver.match.application.model.readmodel.ParticipantReadModel;
+import com.example.lolserver.match.application.model.readmodel.StatValueReadModel;
+import com.example.lolserver.match.application.model.readmodel.StyleReadModel;
 import com.example.lolserver.match.adapter.out.persistence.dto.MSChampionDTO;
 import com.example.lolserver.match.adapter.out.persistence.entity.MatchEntity;
 import com.example.lolserver.match.adapter.out.persistence.entity.MatchSummonerEntity;

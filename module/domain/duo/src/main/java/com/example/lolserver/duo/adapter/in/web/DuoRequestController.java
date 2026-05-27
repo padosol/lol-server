@@ -6,8 +6,9 @@ import com.example.lolserver.duo.adapter.in.web.response.DuoRequestResponse;
 import com.example.lolserver.common.web.security.AuthenticatedMember;
 import com.example.lolserver.common.web.response.ApiResponse;
 import com.example.lolserver.common.web.response.SliceResponse;
-import com.example.lolserver.duo.application.model.DuoMatchResultReadModel;
-import com.example.lolserver.duo.application.model.DuoRequestReadModel;
+import com.example.lolserver.duo.application.model.resultmodel.DuoMatchResultModel;
+import com.example.lolserver.duo.application.model.readmodel.DuoRequestReadModel;
+import com.example.lolserver.duo.application.model.resultmodel.DuoRequestResultModel;
 import com.example.lolserver.duo.application.port.in.DuoRequestQueryUseCase;
 import com.example.lolserver.duo.application.port.in.DuoRequestUseCase;
 import com.example.lolserver.common.support.SliceResult;
@@ -40,7 +41,7 @@ public class DuoRequestController {
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long postId,
             @Valid @RequestBody CreateDuoRequestRequest request) {
-        DuoRequestReadModel result = duoRequestUseCase.createDuoRequest(
+        DuoRequestResultModel result = duoRequestUseCase.createDuoRequest(
                 member.memberId(), postId, request.toCommand());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(DuoRequestResponse.from(result)));
@@ -63,7 +64,7 @@ public class DuoRequestController {
     public ResponseEntity<ApiResponse<DuoMatchResultResponse>> acceptDuoRequest(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long requestId) {
-        DuoMatchResultReadModel result =
+        DuoMatchResultModel result =
                 duoRequestUseCase.acceptDuoRequest(
                         member.memberId(), requestId);
         return ResponseEntity.ok(
@@ -74,7 +75,7 @@ public class DuoRequestController {
     public ResponseEntity<ApiResponse<DuoMatchResultResponse>> confirmDuoRequest(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long requestId) {
-        DuoMatchResultReadModel result =
+        DuoMatchResultModel result =
                 duoRequestUseCase.confirmDuoRequest(
                         member.memberId(), requestId);
         return ResponseEntity.ok(

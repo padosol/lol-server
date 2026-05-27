@@ -1,6 +1,6 @@
 package com.example.lolserver.gamedata.application.port.out;
 
-import com.example.lolserver.gamedata.application.model.TierCutoffReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.TierCutoffReadModel;
 
 import java.util.List;
 import java.util.Optional;

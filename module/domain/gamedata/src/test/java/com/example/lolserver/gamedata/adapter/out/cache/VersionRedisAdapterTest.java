@@ -1,6 +1,6 @@
 package com.example.lolserver.gamedata.adapter.out.cache;
 
-import com.example.lolserver.gamedata.application.model.VersionReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.VersionReadModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

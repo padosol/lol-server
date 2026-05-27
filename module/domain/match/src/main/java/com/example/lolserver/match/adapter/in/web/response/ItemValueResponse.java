@@ -1,6 +1,6 @@
 package com.example.lolserver.match.adapter.in.web.response;
 
-import com.example.lolserver.match.application.model.ItemValueReadModel;
+import com.example.lolserver.match.application.model.readmodel.ItemValueReadModel;
 
 /**
  * 매치 API 응답 - 참가자 아이템 슬롯.

@@ -2,7 +2,7 @@ package com.example.lolserver.gamedata.adapter.in.web;
 
 import com.example.lolserver.common.web.response.ApiResponse;
 import com.example.lolserver.gamedata.application.port.in.VersionQueryUseCase;
-import com.example.lolserver.gamedata.application.model.VersionReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.VersionReadModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

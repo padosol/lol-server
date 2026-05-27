@@ -1,7 +1,7 @@
 package com.example.lolserver.community.application.port.out;
 
 import com.example.lolserver.community.application.command.PostSearchCommand;
-import com.example.lolserver.community.application.model.PostListReadModel;
+import com.example.lolserver.community.application.model.readmodel.PostListReadModel;
 import com.example.lolserver.community.domain.Post;
 import com.example.lolserver.common.support.SliceResult;
 

@@ -2,8 +2,8 @@ package com.example.lolserver.duo.application;
 
 import com.example.lolserver.duo.application.command.CreateDuoPostCommand;
 import com.example.lolserver.duo.application.command.UpdateDuoPostCommand;
-import com.example.lolserver.duo.application.model.DuoPostDetailReadModel;
-import com.example.lolserver.duo.application.model.DuoPostReadModel;
+import com.example.lolserver.duo.application.model.readmodel.DuoPostDetailReadModel;
+import com.example.lolserver.duo.application.model.resultmodel.DuoPostResultModel;
 import com.example.lolserver.duo.application.port.out.DuoPostPersistencePort;
 import com.example.lolserver.duo.application.port.out.DuoRequestPersistencePort;
 import com.example.lolserver.duo.domain.DuoPost;
@@ -125,7 +125,7 @@ class DuoServiceTest {
                     });
 
             // when
-            DuoPostReadModel result = duoService.createDuoPost(memberId, command);
+            DuoPostResultModel result = duoService.createDuoPost(memberId, command);
 
             // then
             assertThat(result).isNotNull();
@@ -186,7 +186,7 @@ class DuoServiceTest {
                     });
 
             // when
-            DuoPostReadModel result = duoService.createDuoPost(memberId, command);
+            DuoPostResultModel result = duoService.createDuoPost(memberId, command);
 
             // then
             assertThat(result).isNotNull();
@@ -371,7 +371,7 @@ class DuoServiceTest {
                     .willAnswer(invocation -> invocation.getArgument(0));
 
             // when
-            DuoPostReadModel result = duoService.updateDuoPost(memberId, duoPostId, command);
+            DuoPostResultModel result = duoService.updateDuoPost(memberId, duoPostId, command);
 
             // then
             assertThat(result).isNotNull();

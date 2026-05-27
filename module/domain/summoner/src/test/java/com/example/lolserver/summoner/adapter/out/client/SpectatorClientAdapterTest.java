@@ -1,7 +1,7 @@
 package com.example.lolserver.summoner.adapter.out.client;
 
-import com.example.lolserver.summoner.application.model.CurrentGameInfoReadModel;
-import com.example.lolserver.summoner.application.model.ParticipantReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.CurrentGameInfoReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.ParticipantReadModel;
 import com.example.lolserver.summoner.application.port.out.SpectatorCachePort;
 import com.example.lolserver.summoner.adapter.out.client.mapper.SpectatorClientMapper;
 import com.example.lolserver.summoner.adapter.out.client.restclient.spectator.SpectatorRestClient;

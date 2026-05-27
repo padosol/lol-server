@@ -1,7 +1,7 @@
 package com.example.lolserver.member.application;
 
-import com.example.lolserver.member.application.model.MemberProfileReadModel;
-import com.example.lolserver.member.application.model.MemberReadModel;
+import com.example.lolserver.member.application.model.readmodel.MemberProfileReadModel;
+import com.example.lolserver.member.application.model.readmodel.MemberReadModel;
 import com.example.lolserver.member.application.port.out.MemberPersistencePort;
 import com.example.lolserver.member.domain.Member;
 import com.example.lolserver.member.domain.SocialAccount;

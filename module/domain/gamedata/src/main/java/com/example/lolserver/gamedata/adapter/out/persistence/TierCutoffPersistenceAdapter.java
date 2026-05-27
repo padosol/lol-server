@@ -1,6 +1,6 @@
 package com.example.lolserver.gamedata.adapter.out.persistence;
 
-import com.example.lolserver.gamedata.application.model.TierCutoffReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.TierCutoffReadModel;
 import com.example.lolserver.gamedata.application.port.out.TierCutoffPersistencePort;
 import com.example.lolserver.gamedata.adapter.out.persistence.mapper.TierCutoffMapper;
 import lombok.RequiredArgsConstructor;

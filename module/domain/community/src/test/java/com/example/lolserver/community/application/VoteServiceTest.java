@@ -1,7 +1,7 @@
 package com.example.lolserver.community.application;
 
 import com.example.lolserver.community.application.command.VoteCommand;
-import com.example.lolserver.community.application.model.VoteReadModel;
+import com.example.lolserver.community.application.model.resultmodel.VoteResultModel;
 import com.example.lolserver.community.application.port.out.CommentPersistencePort;
 import com.example.lolserver.community.application.port.out.PostPersistencePort;
 import com.example.lolserver.community.application.port.out.VotePersistencePort;
@@ -73,7 +73,7 @@ class VoteServiceTest {
                 .willReturn(0);
 
         // when
-        VoteReadModel result = voteService.vote(memberId, command);
+        VoteResultModel result = voteService.vote(memberId, command);
 
         // then
         assertThat(result.newUpvoteCount()).isEqualTo(1);
@@ -113,7 +113,7 @@ class VoteServiceTest {
                 .willReturn(0);
 
         // when
-        VoteReadModel result = voteService.vote(memberId, command);
+        VoteResultModel result = voteService.vote(memberId, command);
 
         // then
         assertThat(result.voteType()).isEqualTo(VoteType.UPVOTE);
@@ -156,7 +156,7 @@ class VoteServiceTest {
                 .willReturn(1);
 
         // when
-        VoteReadModel result = voteService.vote(memberId, command);
+        VoteResultModel result = voteService.vote(memberId, command);
 
         // then
         assertThat(result.voteType()).isEqualTo(VoteType.DOWNVOTE);

@@ -1,6 +1,6 @@
 package com.example.lolserver.community.adapter.in.web.response;
 
-import com.example.lolserver.community.application.model.AuthorReadModel;
+import com.example.lolserver.community.application.model.readmodel.AuthorReadModel;
 
 public record AuthorResponse(
         Long id,

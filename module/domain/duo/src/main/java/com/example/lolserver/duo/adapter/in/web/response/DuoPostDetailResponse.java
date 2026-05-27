@@ -1,6 +1,6 @@
 package com.example.lolserver.duo.adapter.in.web.response;
 
-import com.example.lolserver.duo.application.model.DuoPostDetailReadModel;
+import com.example.lolserver.duo.application.model.readmodel.DuoPostDetailReadModel;
 import com.example.lolserver.duo.domain.vo.MostChampion;
 import com.example.lolserver.duo.domain.vo.RecentGameSummary;
 

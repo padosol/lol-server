@@ -1,8 +1,9 @@
 package com.example.lolserver.member.application;
 
 import com.example.lolserver.member.application.dto.UpdateNicknameCommand;
-import com.example.lolserver.member.application.model.MemberProfileReadModel;
-import com.example.lolserver.member.application.model.MemberReadModel;
+import com.example.lolserver.member.application.model.readmodel.MemberProfileReadModel;
+import com.example.lolserver.member.application.model.readmodel.MemberReadModel;
+import com.example.lolserver.member.application.model.resultmodel.MemberResultModel;
 import com.example.lolserver.member.application.port.in.MemberCommandUseCase;
 import com.example.lolserver.member.application.port.in.MemberQueryUseCase;
 import com.example.lolserver.member.application.port.out.MemberPersistencePort;
@@ -31,14 +32,14 @@ public class MemberProfileService
 
     @Override
     @Transactional
-    public MemberReadModel updateNickname(
+    public MemberResultModel updateNickname(
             Long memberId, UpdateNicknameCommand command) {
         Member member = findActiveMember(memberId);
 
         member.updateNickname(command.getNickname());
         memberPersistencePort.save(member);
 
-        return MemberReadModel.of(member);
+        return MemberResultModel.of(member);
     }
 
     @Override

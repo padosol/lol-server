@@ -1,6 +1,6 @@
 package com.example.lolserver.duo.application.port.in;
 
-import com.example.lolserver.duo.application.model.DuoRequestReadModel;
+import com.example.lolserver.duo.application.model.readmodel.DuoRequestReadModel;
 import com.example.lolserver.common.support.SliceResult;
 
 import java.util.List;

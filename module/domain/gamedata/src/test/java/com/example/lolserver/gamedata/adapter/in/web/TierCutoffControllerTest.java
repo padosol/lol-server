@@ -2,7 +2,7 @@ package com.example.lolserver.gamedata.adapter.in.web;
 
 import com.example.lolserver.common.test.RestDocsSupport;
 import com.example.lolserver.gamedata.application.port.in.TierCutoffQueryUseCase;
-import com.example.lolserver.gamedata.application.model.TierCutoffReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.TierCutoffReadModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

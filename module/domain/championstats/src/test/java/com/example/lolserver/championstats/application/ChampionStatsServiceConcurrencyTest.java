@@ -1,8 +1,8 @@
 package com.example.lolserver.championstats.application;
 
 import com.example.lolserver.shared.TierFilter;
-import com.example.lolserver.championstats.application.model.ChampionStatsReadModel;
-import com.example.lolserver.championstats.application.model.PositionChampionStatsReadModel;
+import com.example.lolserver.championstats.application.model.readmodel.ChampionStatsReadModel;
+import com.example.lolserver.championstats.application.model.readmodel.PositionChampionStatsReadModel;
 import com.example.lolserver.championstats.application.port.out.ChampionStatsCachePort;
 import com.example.lolserver.championstats.application.port.out.ChampionStatsMetricsPort;
 import com.example.lolserver.championstats.application.port.out.ChampionStatsQueryPort;
@@ -95,7 +95,7 @@ class ChampionStatsServiceConcurrencyTest {
         final AtomicInteger winRatesCalls = new AtomicInteger();
 
         @Override
-        public List<com.example.lolserver.championstats.application.model.ChampionWinRateReadModel>
+        public List<com.example.lolserver.championstats.application.model.readmodel.ChampionWinRateReadModel>
                 getChampionWinRates(int championId, String patch, String platformId, TierFilter tierFilter) {
             winRatesCalls.incrementAndGet();
             // 모방: BQ 호출이 잠시 걸린다고 가정 — 다른 caller 들이 폴링/락 대기에 진입하도록
@@ -108,55 +108,55 @@ class ChampionStatsServiceConcurrencyTest {
         }
 
         @Override
-        public List<com.example.lolserver.championstats.application.model.ChampionAverageStatsReadModel>
+        public List<com.example.lolserver.championstats.application.model.readmodel.ChampionAverageStatsReadModel>
                 getChampionAverageStats(int championId, String patch, String platformId, TierFilter tierFilter) {
             return List.of();
         }
 
         @Override
-        public List<com.example.lolserver.championstats.application.model.ChampionMatchupReadModel>
+        public List<com.example.lolserver.championstats.application.model.readmodel.ChampionMatchupReadModel>
                 getChampionMatchups(int championId, String patch, String platformId, TierFilter tierFilter, String position) {
             return List.of();
         }
 
         @Override
-        public List<com.example.lolserver.championstats.application.model.ChampionRuneBuildReadModel>
+        public List<com.example.lolserver.championstats.application.model.readmodel.ChampionRuneBuildReadModel>
                 getChampionRuneBuilds(int championId, String patch, String platformId, TierFilter tierFilter, String position) {
             return List.of();
         }
 
         @Override
-        public List<com.example.lolserver.championstats.application.model.ChampionSpellStatsReadModel>
+        public List<com.example.lolserver.championstats.application.model.readmodel.ChampionSpellStatsReadModel>
                 getChampionSpellStats(int championId, String patch, String platformId, TierFilter tierFilter, String position) {
             return List.of();
         }
 
         @Override
-        public List<com.example.lolserver.championstats.application.model.ChampionSkillBuildReadModel>
+        public List<com.example.lolserver.championstats.application.model.readmodel.ChampionSkillBuildReadModel>
                 getChampionSkillBuilds(int championId, String patch, String platformId, TierFilter tierFilter, String position) {
             return List.of();
         }
 
         @Override
-        public List<com.example.lolserver.championstats.application.model.ChampionStartItemBuildReadModel>
+        public List<com.example.lolserver.championstats.application.model.readmodel.ChampionStartItemBuildReadModel>
                 getChampionStartItemBuilds(int championId, String patch, String platformId, TierFilter tierFilter, String position) {
             return List.of();
         }
 
         @Override
-        public List<com.example.lolserver.championstats.application.model.ChampionBootBuildReadModel>
+        public List<com.example.lolserver.championstats.application.model.readmodel.ChampionBootBuildReadModel>
                 getChampionBootBuilds(int championId, String patch, String platformId, TierFilter tierFilter, String position) {
             return List.of();
         }
 
         @Override
-        public List<com.example.lolserver.championstats.application.model.ChampionItemBuildReadModel>
+        public List<com.example.lolserver.championstats.application.model.readmodel.ChampionItemBuildReadModel>
                 getChampionItemBuilds(int championId, String patch, String platformId, TierFilter tierFilter, String position) {
             return List.of();
         }
 
         @Override
-        public Map<String, List<com.example.lolserver.championstats.application.model.ChampionRateReadModel>>
+        public Map<String, List<com.example.lolserver.championstats.application.model.readmodel.ChampionRateReadModel>>
                 getChampionStatsByPosition(String patch, String platformId, TierFilter tierFilter) {
             return Map.of();
         }

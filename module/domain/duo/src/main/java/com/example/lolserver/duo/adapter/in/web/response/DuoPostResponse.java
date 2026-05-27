@@ -1,6 +1,6 @@
 package com.example.lolserver.duo.adapter.in.web.response;
 
-import com.example.lolserver.duo.application.model.DuoPostReadModel;
+import com.example.lolserver.duo.application.model.resultmodel.DuoPostResultModel;
 import com.example.lolserver.duo.domain.vo.MostChampion;
 import com.example.lolserver.duo.domain.vo.RecentGameSummary;
 
@@ -23,7 +23,7 @@ public record DuoPostResponse(
         LocalDateTime expiresAt,
         LocalDateTime createdAt
 ) {
-    public static DuoPostResponse from(DuoPostReadModel readModel) {
+    public static DuoPostResponse from(DuoPostResultModel readModel) {
         return new DuoPostResponse(
                 readModel.getId(),
                 readModel.getPrimaryLane(),

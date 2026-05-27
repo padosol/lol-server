@@ -1,6 +1,6 @@
 package com.example.lolserver.community.application.port.in;
 
-import com.example.lolserver.community.application.model.CommentTreeReadModel;
+import com.example.lolserver.community.application.model.readmodel.CommentTreeReadModel;
 
 import java.util.List;
 

@@ -2,7 +2,7 @@ package com.example.lolserver.summoner.application;
 
 import java.util.List;
 
-import com.example.lolserver.summoner.application.model.LeagueReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.LeagueReadModel;
 import com.example.lolserver.summoner.domain.League;
 import com.example.lolserver.summoner.domain.vo.LeagueHistory;
 import com.example.lolserver.summoner.application.port.out.LeaguePersistencePort;

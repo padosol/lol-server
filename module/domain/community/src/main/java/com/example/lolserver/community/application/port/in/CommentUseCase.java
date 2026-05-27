@@ -2,13 +2,13 @@ package com.example.lolserver.community.application.port.in;
 
 import com.example.lolserver.community.application.command.CreateCommentCommand;
 import com.example.lolserver.community.application.command.UpdateCommentCommand;
-import com.example.lolserver.community.application.model.CommentTreeReadModel;
+import com.example.lolserver.community.application.model.resultmodel.CommentTreeResultModel;
 
 public interface CommentUseCase {
 
-    CommentTreeReadModel createComment(Long memberId, Long postId, CreateCommentCommand command);
+    CommentTreeResultModel createComment(Long memberId, Long postId, CreateCommentCommand command);
 
-    CommentTreeReadModel updateComment(Long memberId, Long commentId, UpdateCommentCommand command);
+    CommentTreeResultModel updateComment(Long memberId, Long commentId, UpdateCommentCommand command);
 
     void deleteComment(Long memberId, Long commentId);
 }

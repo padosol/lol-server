@@ -1,6 +1,6 @@
 package com.example.lolserver.match.adapter.in.web.response;
 
-import com.example.lolserver.match.application.model.MSChampionDetailReadModel;
+import com.example.lolserver.match.application.model.readmodel.MSChampionDetailReadModel;
 
 /**
  * rank/champions API 응답 - 챔피언 단건 통계.

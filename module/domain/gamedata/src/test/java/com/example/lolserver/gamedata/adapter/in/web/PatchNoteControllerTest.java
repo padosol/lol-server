@@ -2,9 +2,9 @@ package com.example.lolserver.gamedata.adapter.in.web;
 
 import com.example.lolserver.common.test.RestDocsSupport;
 import com.example.lolserver.gamedata.application.port.in.PatchNoteQueryUseCase;
-import com.example.lolserver.gamedata.application.model.PatchNoteReadModel;
-import com.example.lolserver.gamedata.application.model.PatchNoteSummaryReadModel;
-import com.example.lolserver.gamedata.application.model.patchnote.*;
+import com.example.lolserver.gamedata.application.model.readmodel.PatchNoteReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.PatchNoteSummaryReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.patchnote.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

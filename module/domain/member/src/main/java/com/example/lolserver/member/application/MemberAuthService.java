@@ -2,7 +2,7 @@ package com.example.lolserver.member.application;
 
 import com.example.lolserver.member.application.dto.OAuthLoginCommand;
 import com.example.lolserver.member.application.dto.TokenRefreshCommand;
-import com.example.lolserver.member.application.model.AuthTokenReadModel;
+import com.example.lolserver.member.application.model.resultmodel.AuthTokenResultModel;
 import com.example.lolserver.member.application.model.OAuthUserInfo;
 import com.example.lolserver.member.application.port.in.MemberAuthUseCase;
 import com.example.lolserver.member.application.port.out.MemberPersistencePort;
@@ -52,7 +52,7 @@ public class MemberAuthService implements MemberAuthUseCase {
 
     @Override
     @Transactional
-    public AuthTokenReadModel loginWithOAuth(OAuthLoginCommand command) {
+    public AuthTokenResultModel loginWithOAuth(OAuthLoginCommand command) {
         if (command.getState() != null) {
             if (!oAuthStatePort.validateAndDelete(command.getState())) {
                 throw new CoreException(ErrorType.INVALID_OAUTH_STATE);
@@ -68,14 +68,14 @@ public class MemberAuthService implements MemberAuthUseCase {
 
     @Override
     @Transactional
-    public AuthTokenReadModel loginWithOAuthUserInfo(
+    public AuthTokenResultModel loginWithOAuthUserInfo(
             OAuthUserInfo userInfo) {
         return findOrCreateMemberAndGenerateTokens(userInfo);
     }
 
     @Override
     @Transactional
-    public AuthTokenReadModel refreshToken(
+    public AuthTokenResultModel refreshToken(
             TokenRefreshCommand command) {
         String refreshToken = command.getRefreshToken();
 
@@ -158,7 +158,7 @@ public class MemberAuthService implements MemberAuthUseCase {
         refreshTokenPort.delete(memberId);
     }
 
-    private AuthTokenReadModel findOrCreateMemberAndGenerateTokens(
+    private AuthTokenResultModel findOrCreateMemberAndGenerateTokens(
             OAuthUserInfo userInfo) {
         SocialAccount socialAccount = socialAccountPersistencePort
                 .findByProviderAndProviderId(
@@ -214,7 +214,7 @@ public class MemberAuthService implements MemberAuthUseCase {
         return member;
     }
 
-    private AuthTokenReadModel generateTokens(Member member) {
+    private AuthTokenResultModel generateTokens(Member member) {
         String accessToken = tokenPort.generateAccessToken(
                 member.getId(), member.getRole());
         String refreshToken = tokenPort.generateRefreshToken(
@@ -223,7 +223,7 @@ public class MemberAuthService implements MemberAuthUseCase {
         refreshTokenPort.save(member.getId(), refreshToken,
                 tokenPort.getRefreshTokenExpiry());
 
-        return new AuthTokenReadModel(accessToken, refreshToken,
+        return new AuthTokenResultModel(accessToken, refreshToken,
                 tokenPort.getAccessTokenExpiry());
     }
 }

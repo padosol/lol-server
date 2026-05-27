@@ -2,7 +2,7 @@ package com.example.lolserver.member.adapter.in.web.security;
 
 import com.example.lolserver.member.config.CookieProperties;
 import com.example.lolserver.member.config.JwtProperties;
-import com.example.lolserver.member.application.model.AuthTokenReadModel;
+import com.example.lolserver.member.application.model.resultmodel.AuthTokenResultModel;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,7 +23,7 @@ public class AuthCookieManager {
     private final JwtProperties jwtProperties;
     private final CookieProperties cookieProperties;
 
-    public void addAuthCookies(HttpServletResponse response, AuthTokenReadModel tokenReadModel) {
+    public void addAuthCookies(HttpServletResponse response, AuthTokenResultModel tokenReadModel) {
         addCookie(response, ACCESS_TOKEN_COOKIE, tokenReadModel.accessToken(),
                 "/", (int) jwtProperties.getAccessTokenExpiry());
         addCookie(response, REFRESH_TOKEN_COOKIE, tokenReadModel.refreshToken(),

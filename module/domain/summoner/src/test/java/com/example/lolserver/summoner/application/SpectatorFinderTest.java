@@ -1,6 +1,6 @@
 package com.example.lolserver.summoner.application;
 
-import com.example.lolserver.summoner.application.model.CurrentGameInfoReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.CurrentGameInfoReadModel;
 import com.example.lolserver.summoner.application.port.out.SpectatorCachePort;
 import com.example.lolserver.summoner.application.port.out.SpectatorClientPort;
 import com.example.lolserver.summoner.application.port.out.SummonerPersistencePort;

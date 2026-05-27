@@ -1,6 +1,6 @@
 package com.example.lolserver.match.adapter.in.web.response;
 
-import com.example.lolserver.match.application.model.GameReadModel;
+import com.example.lolserver.match.application.model.readmodel.GameReadModel;
 
 import java.util.List;
 

@@ -1,7 +1,7 @@
 package com.example.lolserver.gamedata.application.port.in;
 
-import com.example.lolserver.gamedata.application.model.PatchNoteReadModel;
-import com.example.lolserver.gamedata.application.model.PatchNoteSummaryReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.PatchNoteReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.PatchNoteSummaryReadModel;
 
 import java.util.List;
 

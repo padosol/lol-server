@@ -1,7 +1,7 @@
 package com.example.lolserver.duo.application.port.out;
 
 import com.example.lolserver.duo.application.command.DuoPostSearchCommand;
-import com.example.lolserver.duo.application.model.DuoPostListReadModel;
+import com.example.lolserver.duo.application.model.readmodel.DuoPostListReadModel;
 import com.example.lolserver.duo.domain.DuoPost;
 import com.example.lolserver.common.support.SliceResult;
 

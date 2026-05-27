@@ -1,6 +1,6 @@
 package com.example.lolserver.match.adapter.out.cache;
 
-import com.example.lolserver.match.application.model.GameReadModel;
+import com.example.lolserver.match.application.model.readmodel.GameReadModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

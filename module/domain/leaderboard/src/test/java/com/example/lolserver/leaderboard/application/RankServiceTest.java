@@ -1,6 +1,6 @@
 package com.example.lolserver.leaderboard.application;
 
-import com.example.lolserver.leaderboard.application.model.RankReadModel;
+import com.example.lolserver.leaderboard.application.model.readmodel.RankReadModel;
 import com.example.lolserver.leaderboard.application.dto.RankSearchDto;
 import com.example.lolserver.leaderboard.application.port.out.RankPersistencePort;
 import com.example.lolserver.leaderboard.domain.Rank;

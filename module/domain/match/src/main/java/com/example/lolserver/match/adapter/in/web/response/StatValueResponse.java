@@ -1,6 +1,6 @@
 package com.example.lolserver.match.adapter.in.web.response;
 
-import com.example.lolserver.match.application.model.StatValueReadModel;
+import com.example.lolserver.match.application.model.readmodel.StatValueReadModel;
 
 /**
  * 매치 API 응답 - 참가자 룬 스탯.

@@ -1,6 +1,6 @@
 package com.example.lolserver.gamedata.application;
 
-import com.example.lolserver.gamedata.application.model.VersionReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.VersionReadModel;
 import com.example.lolserver.gamedata.application.port.in.VersionQueryUseCase;
 import com.example.lolserver.gamedata.application.port.out.VersionPersistencePort;
 import lombok.RequiredArgsConstructor;

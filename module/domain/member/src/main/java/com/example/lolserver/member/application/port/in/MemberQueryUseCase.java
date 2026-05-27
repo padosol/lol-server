@@ -1,7 +1,7 @@
 package com.example.lolserver.member.application.port.in;
 
-import com.example.lolserver.member.application.model.MemberProfileReadModel;
-import com.example.lolserver.member.application.model.MemberReadModel;
+import com.example.lolserver.member.application.model.readmodel.MemberProfileReadModel;
+import com.example.lolserver.member.application.model.readmodel.MemberReadModel;
 
 import java.util.Collection;
 import java.util.List;

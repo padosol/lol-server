@@ -1,6 +1,6 @@
 package com.example.lolserver.gamedata.adapter.out.persistence.mapper;
 
-import com.example.lolserver.gamedata.application.model.TierCutoffReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.TierCutoffReadModel;
 import com.example.lolserver.gamedata.adapter.out.persistence.entity.TierCutoffEntity;
 import org.springframework.stereotype.Component;
 

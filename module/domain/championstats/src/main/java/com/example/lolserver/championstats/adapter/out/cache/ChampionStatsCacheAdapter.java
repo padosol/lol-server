@@ -1,7 +1,7 @@
 package com.example.lolserver.championstats.adapter.out.cache;
 
-import com.example.lolserver.championstats.application.model.ChampionStatsReadModel;
-import com.example.lolserver.championstats.application.model.PositionChampionStatsReadModel;
+import com.example.lolserver.championstats.application.model.readmodel.ChampionStatsReadModel;
+import com.example.lolserver.championstats.application.model.readmodel.PositionChampionStatsReadModel;
 import com.example.lolserver.championstats.application.port.out.ChampionStatsCachePort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

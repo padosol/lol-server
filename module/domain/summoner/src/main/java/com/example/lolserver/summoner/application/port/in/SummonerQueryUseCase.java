@@ -1,8 +1,8 @@
 package com.example.lolserver.summoner.application.port.in;
 
-import com.example.lolserver.summoner.application.model.SummonerAutoReadModel;
-import com.example.lolserver.summoner.application.model.SummonerReadModel;
-import com.example.lolserver.summoner.application.model.SummonerRenewalInfoReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.SummonerAutoReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.SummonerReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.SummonerRenewalInfoReadModel;
 import com.example.lolserver.summoner.domain.SummonerRenewal;
 import com.example.lolserver.summoner.domain.vo.GameName;
 

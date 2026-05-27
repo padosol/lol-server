@@ -1,13 +1,13 @@
 package com.example.lolserver.match.adapter.out.persistence.adapter;
 
 import com.example.lolserver.shared.QueueType;
-import com.example.lolserver.match.application.model.GameReadModel;
-import com.example.lolserver.match.application.model.GameInfoReadModel;
-import com.example.lolserver.match.application.model.MSChampionByQueueReadModel;
-import com.example.lolserver.match.application.model.MSChampionDetailReadModel;
-import com.example.lolserver.match.application.model.ParticipantReadModel;
-import com.example.lolserver.match.application.model.ParticipantTimelineReadModel;
-import com.example.lolserver.match.application.model.TimelineReadModel;
+import com.example.lolserver.match.application.model.readmodel.GameReadModel;
+import com.example.lolserver.match.application.model.readmodel.GameInfoReadModel;
+import com.example.lolserver.match.application.model.readmodel.MSChampionByQueueReadModel;
+import com.example.lolserver.match.application.model.readmodel.MSChampionDetailReadModel;
+import com.example.lolserver.match.application.model.readmodel.ParticipantReadModel;
+import com.example.lolserver.match.application.model.readmodel.ParticipantTimelineReadModel;
+import com.example.lolserver.match.application.model.readmodel.TimelineReadModel;
 import com.example.lolserver.match.adapter.out.persistence.dto.TimelineEventDTO;
 import com.example.lolserver.match.adapter.out.persistence.dto.MSChampionDTO;
 import com.example.lolserver.match.adapter.out.persistence.dto.MatchSummonerDTO;
