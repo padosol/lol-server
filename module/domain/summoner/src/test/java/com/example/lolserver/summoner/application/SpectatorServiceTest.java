@@ -1,6 +1,6 @@
 package com.example.lolserver.summoner.application;
 
-import com.example.lolserver.summoner.application.model.CurrentGameInfoReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.CurrentGameInfoReadModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

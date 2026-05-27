@@ -1,6 +1,6 @@
 package com.example.lolserver.match.adapter.in.web.response;
 
-import com.example.lolserver.match.application.model.TimelineReadModel;
+import com.example.lolserver.match.application.model.readmodel.TimelineReadModel;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

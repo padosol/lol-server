@@ -7,7 +7,7 @@ import com.example.lolserver.match.adapter.in.web.response.GameResponse;
 import com.example.lolserver.match.adapter.in.web.response.RankChampionsResponse;
 import com.example.lolserver.match.adapter.in.web.response.TimelineResponse;
 import com.example.lolserver.match.application.port.in.MatchQueryUseCase;
-import com.example.lolserver.match.application.model.GameReadModel;
+import com.example.lolserver.match.application.model.readmodel.GameReadModel;
 import com.example.lolserver.common.web.response.ApiResponse;
 import com.example.lolserver.common.web.response.SliceResponse;
 import com.example.lolserver.common.support.SliceResult;

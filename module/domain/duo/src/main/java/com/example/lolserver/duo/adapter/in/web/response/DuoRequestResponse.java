@@ -1,6 +1,7 @@
 package com.example.lolserver.duo.adapter.in.web.response;
 
-import com.example.lolserver.duo.application.model.DuoRequestReadModel;
+import com.example.lolserver.duo.application.model.readmodel.DuoRequestReadModel;
+import com.example.lolserver.duo.application.model.resultmodel.DuoRequestResultModel;
 import com.example.lolserver.duo.domain.vo.MostChampion;
 import com.example.lolserver.duo.domain.vo.RecentGameSummary;
 
@@ -37,6 +38,24 @@ public record DuoRequestResponse(
                 readModel.getMostChampions(),
                 readModel.getRecentGameSummary(),
                 readModel.getCreatedAt()
+        );
+    }
+
+    public static DuoRequestResponse from(DuoRequestResultModel resultModel) {
+        return new DuoRequestResponse(
+                resultModel.getId(),
+                resultModel.getDuoPostId(),
+                resultModel.getPrimaryLane(),
+                resultModel.getDesiredLane(),
+                resultModel.isHasMicrophone(),
+                resultModel.getTier(),
+                resultModel.getRank(),
+                resultModel.getLeaguePoints(),
+                resultModel.getMemo(),
+                resultModel.getStatus(),
+                resultModel.getMostChampions(),
+                resultModel.getRecentGameSummary(),
+                resultModel.getCreatedAt()
         );
     }
 }

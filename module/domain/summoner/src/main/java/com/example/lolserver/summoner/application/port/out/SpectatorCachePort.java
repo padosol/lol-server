@@ -1,6 +1,6 @@
 package com.example.lolserver.summoner.application.port.out;
 
-import com.example.lolserver.summoner.application.model.CurrentGameInfoReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.CurrentGameInfoReadModel;
 
 /**
  * Spectator 캐시 포트 - Redis 어댑터에서 구현

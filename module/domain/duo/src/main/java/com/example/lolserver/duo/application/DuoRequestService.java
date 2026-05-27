@@ -1,8 +1,9 @@
 package com.example.lolserver.duo.application;
 
 import com.example.lolserver.duo.application.command.CreateDuoRequestCommand;
-import com.example.lolserver.duo.application.model.DuoMatchResultReadModel;
-import com.example.lolserver.duo.application.model.DuoRequestReadModel;
+import com.example.lolserver.duo.application.model.resultmodel.DuoMatchResultModel;
+import com.example.lolserver.duo.application.model.readmodel.DuoRequestReadModel;
+import com.example.lolserver.duo.application.model.resultmodel.DuoRequestResultModel;
 import com.example.lolserver.duo.application.port.in.DuoRequestQueryUseCase;
 import com.example.lolserver.duo.application.port.in.DuoRequestUseCase;
 import com.example.lolserver.duo.application.port.out.DuoPostPersistencePort;
@@ -12,7 +13,7 @@ import com.example.lolserver.duo.domain.DuoRequest;
 import com.example.lolserver.duo.domain.vo.DuoRequestStatus;
 import com.example.lolserver.duo.domain.vo.Lane;
 import com.example.lolserver.duo.domain.vo.RiotAccountStats;
-import com.example.lolserver.summoner.application.model.SummonerReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.SummonerReadModel;
 import com.example.lolserver.summoner.application.port.in.SummonerQueryUseCase;
 import com.example.lolserver.common.support.SliceResult;
 import com.example.lolserver.common.error.CoreException;
@@ -37,7 +38,7 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
 
     @Override
     @Transactional
-    public DuoRequestReadModel createDuoRequest(Long memberId, Long duoPostId,
+    public DuoRequestResultModel createDuoRequest(Long memberId, Long duoPostId,
             CreateDuoRequestCommand command) {
         String puuid = riotAccountResolver.extractRiotPuuid(memberId);
 
@@ -67,12 +68,12 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
         );
 
         DuoRequest saved = duoRequestPersistencePort.save(duoRequest);
-        return DuoRequestReadModel.of(saved);
+        return DuoRequestResultModel.of(saved);
     }
 
     @Override
     @Transactional
-    public DuoMatchResultReadModel acceptDuoRequest(Long memberId, Long requestId) {
+    public DuoMatchResultModel acceptDuoRequest(Long memberId, Long requestId) {
         DuoRequest duoRequest = duoRequestPersistencePort.findById(requestId)
                 .orElseThrow(() -> new CoreException(ErrorType.DUO_REQUEST_NOT_FOUND));
 
@@ -84,12 +85,12 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
         duoRequest.accept();
         duoRequestPersistencePort.save(duoRequest);
 
-        return DuoMatchResultReadModel.of(duoPost, duoRequest);
+        return DuoMatchResultModel.of(duoPost, duoRequest);
     }
 
     @Override
     @Transactional
-    public DuoMatchResultReadModel confirmDuoRequest(Long memberId, Long requestId) {
+    public DuoMatchResultModel confirmDuoRequest(Long memberId, Long requestId) {
         DuoRequest duoRequest = duoRequestPersistencePort.findById(requestId)
                 .orElseThrow(() -> new CoreException(ErrorType.DUO_REQUEST_NOT_FOUND));
 
@@ -110,7 +111,7 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
         SummonerReadModel partnerSummoner = summonerQueryUseCase
                 .findSummonerByPuuid(duoPost.getPuuid()).orElse(null);
 
-        return DuoMatchResultReadModel.of(duoPost, duoRequest, partnerSummoner);
+        return DuoMatchResultModel.of(duoPost, duoRequest, partnerSummoner);
     }
 
     @Override

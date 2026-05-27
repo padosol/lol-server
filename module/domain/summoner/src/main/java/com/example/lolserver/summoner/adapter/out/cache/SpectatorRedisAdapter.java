@@ -1,7 +1,7 @@
 package com.example.lolserver.summoner.adapter.out.cache;
 
-import com.example.lolserver.summoner.application.model.CurrentGameInfoReadModel;
-import com.example.lolserver.summoner.application.model.ParticipantReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.CurrentGameInfoReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.ParticipantReadModel;
 import com.example.lolserver.summoner.application.port.out.SpectatorCachePort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

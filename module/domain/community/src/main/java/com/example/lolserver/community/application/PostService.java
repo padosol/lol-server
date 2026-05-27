@@ -3,9 +3,10 @@ package com.example.lolserver.community.application;
 import com.example.lolserver.community.application.command.CreatePostCommand;
 import com.example.lolserver.community.application.command.PostSearchCommand;
 import com.example.lolserver.community.application.command.UpdatePostCommand;
-import com.example.lolserver.community.application.model.AuthorReadModel;
-import com.example.lolserver.community.application.model.PostDetailReadModel;
-import com.example.lolserver.community.application.model.PostListReadModel;
+import com.example.lolserver.community.application.model.readmodel.AuthorReadModel;
+import com.example.lolserver.community.application.model.readmodel.PostDetailReadModel;
+import com.example.lolserver.community.application.model.readmodel.PostListReadModel;
+import com.example.lolserver.community.application.model.resultmodel.PostDetailResultModel;
 import com.example.lolserver.community.application.port.in.PostQueryUseCase;
 import com.example.lolserver.community.application.port.in.PostUseCase;
 import com.example.lolserver.community.application.port.out.PostPersistencePort;
@@ -14,7 +15,7 @@ import com.example.lolserver.community.domain.Post;
 import com.example.lolserver.community.domain.Vote;
 import com.example.lolserver.community.domain.vo.PostCategory;
 import com.example.lolserver.community.domain.vo.VoteTargetType;
-import com.example.lolserver.member.application.model.MemberProfileReadModel;
+import com.example.lolserver.member.application.model.readmodel.MemberProfileReadModel;
 import com.example.lolserver.member.application.port.in.MemberQueryUseCase;
 import com.example.lolserver.common.support.SliceResult;
 import com.example.lolserver.common.error.CoreException;
@@ -42,7 +43,7 @@ public class PostService implements PostUseCase, PostQueryUseCase {
 
     @Override
     @Transactional
-    public PostDetailReadModel createPost(Long memberId, CreatePostCommand command) {
+    public PostDetailResultModel createPost(Long memberId, CreatePostCommand command) {
         validateCategory(command.getCategory());
 
         MemberProfileReadModel author = memberQueryUseCase.getMemberProfile(memberId);
@@ -52,12 +53,12 @@ public class PostService implements PostUseCase, PostQueryUseCase {
 
         Post saved = postPersistencePort.save(post);
 
-        return PostDetailReadModel.of(saved, author, null);
+        return PostDetailResultModel.of(saved, author, null);
     }
 
     @Override
     @Transactional
-    public PostDetailReadModel updatePost(Long memberId, Long postId, UpdatePostCommand command) {
+    public PostDetailResultModel updatePost(Long memberId, Long postId, UpdatePostCommand command) {
         validateCategory(command.getCategory());
 
         Post post = postPersistencePort.findById(postId)
@@ -70,7 +71,7 @@ public class PostService implements PostUseCase, PostQueryUseCase {
 
         MemberProfileReadModel author = memberQueryUseCase.getMemberProfile(memberId);
 
-        return PostDetailReadModel.of(saved, author, null);
+        return PostDetailResultModel.of(saved, author, null);
     }
 
     @Override

@@ -4,7 +4,7 @@ import com.example.lolserver.common.test.TestAuthenticatedMemberResolver;
 
 import com.example.lolserver.member.adapter.in.web.security.AuthCookieManager;
 import com.example.lolserver.common.test.RestDocsSupport;
-import com.example.lolserver.member.application.model.AuthTokenReadModel;
+import com.example.lolserver.member.application.model.resultmodel.AuthTokenResultModel;
 import com.example.lolserver.member.application.port.in.MemberAuthUseCase;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
@@ -52,7 +52,7 @@ class AuthControllerTest extends RestDocsSupport {
     @Test
     void refreshToken() throws Exception {
         // given
-        AuthTokenReadModel tokenReadModel = new AuthTokenReadModel(
+        AuthTokenResultModel tokenReadModel = new AuthTokenResultModel(
                 "dummy-access-token-for-test",
                 "dummy-refresh-token-for-test",
                 3600

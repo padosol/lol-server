@@ -2,7 +2,7 @@ package com.example.lolserver.member.adapter.in.web.security;
 
 import com.example.lolserver.member.config.CookieProperties;
 import com.example.lolserver.member.config.JwtProperties;
-import com.example.lolserver.member.application.model.AuthTokenReadModel;
+import com.example.lolserver.member.application.model.resultmodel.AuthTokenResultModel;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -39,7 +39,7 @@ class AuthCookieManagerTest {
     void addAuthCookies() {
         // given
         MockHttpServletResponse response = new MockHttpServletResponse();
-        AuthTokenReadModel tokenReadModel = new AuthTokenReadModel("access-token-value", "refresh-token-value", 1800);
+        AuthTokenResultModel tokenReadModel = new AuthTokenResultModel("access-token-value", "refresh-token-value", 1800);
 
         // when
         authCookieManager.addAuthCookies(response, tokenReadModel);

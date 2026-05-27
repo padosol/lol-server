@@ -2,7 +2,7 @@ package com.example.lolserver.member.application.port.in;
 
 import com.example.lolserver.member.application.dto.OAuthLoginCommand;
 import com.example.lolserver.member.application.dto.TokenRefreshCommand;
-import com.example.lolserver.member.application.model.AuthTokenReadModel;
+import com.example.lolserver.member.application.model.resultmodel.AuthTokenResultModel;
 import com.example.lolserver.member.application.model.OAuthUserInfo;
 import com.example.lolserver.member.domain.vo.OAuthProvider;
 
@@ -10,15 +10,15 @@ public interface MemberAuthUseCase {
 
     String getOAuthAuthorizationUrl(OAuthProvider provider);
 
-    AuthTokenReadModel loginWithOAuth(OAuthLoginCommand command);
+    AuthTokenResultModel loginWithOAuth(OAuthLoginCommand command);
 
-    AuthTokenReadModel loginWithOAuthUserInfo(OAuthUserInfo userInfo);
+    AuthTokenResultModel loginWithOAuthUserInfo(OAuthUserInfo userInfo);
 
     void linkSocialAccount(Long memberId, OAuthUserInfo userInfo);
 
     void unlinkSocialAccount(Long memberId, Long socialAccountId);
 
-    AuthTokenReadModel refreshToken(TokenRefreshCommand command);
+    AuthTokenResultModel refreshToken(TokenRefreshCommand command);
 
     void logout(Long memberId);
 

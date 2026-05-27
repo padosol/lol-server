@@ -2,7 +2,7 @@ package com.example.lolserver.gamedata.adapter.in.web;
 
 import com.example.lolserver.common.web.response.ApiResponse;
 import com.example.lolserver.gamedata.application.port.in.TierCutoffQueryUseCase;
-import com.example.lolserver.gamedata.application.model.TierCutoffReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.TierCutoffReadModel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

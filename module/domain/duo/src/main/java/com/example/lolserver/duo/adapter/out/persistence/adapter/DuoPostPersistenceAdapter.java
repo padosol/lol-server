@@ -1,7 +1,7 @@
 package com.example.lolserver.duo.adapter.out.persistence.adapter;
 
 import com.example.lolserver.duo.application.command.DuoPostSearchCommand;
-import com.example.lolserver.duo.application.model.DuoPostListReadModel;
+import com.example.lolserver.duo.application.model.readmodel.DuoPostListReadModel;
 import com.example.lolserver.duo.application.port.out.DuoPostPersistencePort;
 import com.example.lolserver.duo.domain.DuoPost;
 import com.example.lolserver.duo.adapter.out.persistence.dto.DuoPostListDTO;

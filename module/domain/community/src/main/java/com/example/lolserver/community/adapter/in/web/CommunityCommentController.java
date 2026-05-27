@@ -7,7 +7,8 @@ import com.example.lolserver.common.web.security.AuthenticatedMember;
 import com.example.lolserver.common.web.response.ApiResponse;
 import com.example.lolserver.community.application.command.CreateCommentCommand;
 import com.example.lolserver.community.application.command.UpdateCommentCommand;
-import com.example.lolserver.community.application.model.CommentTreeReadModel;
+import com.example.lolserver.community.application.model.readmodel.CommentTreeReadModel;
+import com.example.lolserver.community.application.model.resultmodel.CommentTreeResultModel;
 import com.example.lolserver.community.application.port.in.CommentQueryUseCase;
 import com.example.lolserver.community.application.port.in.CommentUseCase;
 import jakarta.validation.Valid;
@@ -44,7 +45,7 @@ public class CommunityCommentController {
                 .parentCommentId(request.parentCommentId())
                 .build();
 
-        CommentTreeReadModel readModel = commentUseCase.createComment(member.memberId(), postId, command);
+        CommentTreeResultModel readModel = commentUseCase.createComment(member.memberId(), postId, command);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(CommentResponse.from(readModel)));
     }
@@ -67,7 +68,7 @@ public class CommunityCommentController {
                 .content(request.content())
                 .build();
 
-        CommentTreeReadModel readModel = commentUseCase.updateComment(member.memberId(), commentId, command);
+        CommentTreeResultModel readModel = commentUseCase.updateComment(member.memberId(), commentId, command);
         return ResponseEntity.ok(
                 ApiResponse.success(CommentResponse.from(readModel)));
     }

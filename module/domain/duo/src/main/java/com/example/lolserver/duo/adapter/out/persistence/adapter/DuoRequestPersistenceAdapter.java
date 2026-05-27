@@ -1,6 +1,6 @@
 package com.example.lolserver.duo.adapter.out.persistence.adapter;
 
-import com.example.lolserver.duo.application.model.DuoRequestReadModel;
+import com.example.lolserver.duo.application.model.readmodel.DuoRequestReadModel;
 import com.example.lolserver.duo.application.port.out.DuoRequestPersistencePort;
 import com.example.lolserver.duo.domain.DuoRequest;
 import com.example.lolserver.duo.domain.vo.DuoRequestStatus;

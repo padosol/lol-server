@@ -1,7 +1,7 @@
 package com.example.lolserver.gamedata.application;
 
 import com.example.lolserver.shared.Platform;
-import com.example.lolserver.gamedata.application.model.TierCutoffReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.TierCutoffReadModel;
 import com.example.lolserver.gamedata.application.port.in.TierCutoffQueryUseCase;
 import com.example.lolserver.gamedata.application.port.out.TierCutoffPersistencePort;
 import com.example.lolserver.common.error.CoreException;

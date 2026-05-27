@@ -3,13 +3,14 @@ package com.example.lolserver.community.application;
 import com.example.lolserver.community.application.command.CreatePostCommand;
 import com.example.lolserver.community.application.command.PostSearchCommand;
 import com.example.lolserver.community.application.command.UpdatePostCommand;
-import com.example.lolserver.community.application.model.PostDetailReadModel;
-import com.example.lolserver.community.application.model.PostListReadModel;
+import com.example.lolserver.community.application.model.readmodel.PostDetailReadModel;
+import com.example.lolserver.community.application.model.readmodel.PostListReadModel;
+import com.example.lolserver.community.application.model.resultmodel.PostDetailResultModel;
 import com.example.lolserver.community.application.port.out.PostPersistencePort;
 import com.example.lolserver.community.application.port.out.VotePersistencePort;
 import com.example.lolserver.community.domain.Post;
 import com.example.lolserver.community.domain.vo.SortType;
-import com.example.lolserver.member.application.model.MemberProfileReadModel;
+import com.example.lolserver.member.application.model.readmodel.MemberProfileReadModel;
 import com.example.lolserver.member.application.port.in.MemberQueryUseCase;
 import com.example.lolserver.common.support.SliceResult;
 import com.example.lolserver.common.error.CoreException;
@@ -65,7 +66,7 @@ class PostServiceTest {
                 .willReturn(savedPost);
 
         // when
-        PostDetailReadModel result = postService.createPost(memberId, command);
+        PostDetailResultModel result = postService.createPost(memberId, command);
 
         // then
         assertThat(result.getId()).isEqualTo(1L);
@@ -113,7 +114,7 @@ class PostServiceTest {
                 .willReturn(createProfile(memberId));
 
         // when
-        PostDetailReadModel result =
+        PostDetailResultModel result =
                 postService.updatePost(memberId, postId, command);
 
         // then

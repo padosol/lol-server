@@ -1,6 +1,6 @@
 package com.example.lolserver.match.application.port.out;
 
-import com.example.lolserver.match.application.model.GameReadModel;
+import com.example.lolserver.match.application.model.readmodel.GameReadModel;
 
 import java.util.Collection;
 import java.util.Map;

@@ -3,10 +3,10 @@ package com.example.lolserver.duo.application;
 import com.example.lolserver.duo.application.command.CreateDuoPostCommand;
 import com.example.lolserver.duo.application.command.DuoPostSearchCommand;
 import com.example.lolserver.duo.application.command.UpdateDuoPostCommand;
-import com.example.lolserver.duo.application.model.DuoPostDetailReadModel;
-import com.example.lolserver.duo.application.model.DuoPostListReadModel;
-import com.example.lolserver.duo.application.model.DuoPostReadModel;
-import com.example.lolserver.duo.application.model.DuoRequestReadModel;
+import com.example.lolserver.duo.application.model.readmodel.DuoPostDetailReadModel;
+import com.example.lolserver.duo.application.model.readmodel.DuoPostListReadModel;
+import com.example.lolserver.duo.application.model.resultmodel.DuoPostResultModel;
+import com.example.lolserver.duo.application.model.readmodel.DuoRequestReadModel;
 import com.example.lolserver.duo.application.port.in.DuoPostQueryUseCase;
 import com.example.lolserver.duo.application.port.in.DuoPostUseCase;
 import com.example.lolserver.duo.application.port.out.DuoPostPersistencePort;
@@ -37,7 +37,7 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase {
 
     @Override
     @Transactional
-    public DuoPostReadModel createDuoPost(Long memberId, CreateDuoPostCommand command) {
+    public DuoPostResultModel createDuoPost(Long memberId, CreateDuoPostCommand command) {
         String puuid = riotAccountResolver.extractRiotPuuid(memberId);
         RiotAccountStats stats = riotAccountResolver.lookupAllStats(puuid);
 
@@ -50,7 +50,7 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase {
         );
 
         DuoPost saved = duoPostPersistencePort.save(duoPost);
-        return DuoPostReadModel.of(saved);
+        return DuoPostResultModel.of(saved);
     }
 
     @Override
@@ -67,7 +67,7 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase {
 
     @Override
     @Transactional
-    public DuoPostReadModel updateDuoPost(Long memberId, Long duoPostId,
+    public DuoPostResultModel updateDuoPost(Long memberId, Long duoPostId,
                                            UpdateDuoPostCommand command) {
         DuoPost duoPost = duoPostPersistencePort.findById(duoPostId)
                 .orElseThrow(() -> new CoreException(ErrorType.DUO_POST_NOT_FOUND));
@@ -80,7 +80,7 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase {
                 command.isHasMicrophone(), command.getMemo());
 
         DuoPost saved = duoPostPersistencePort.save(duoPost);
-        return DuoPostReadModel.of(saved);
+        return DuoPostResultModel.of(saved);
     }
 
     @Override

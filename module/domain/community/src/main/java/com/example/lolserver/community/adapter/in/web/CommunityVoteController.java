@@ -5,7 +5,7 @@ import com.example.lolserver.community.adapter.in.web.response.VoteResponse;
 import com.example.lolserver.common.web.security.AuthenticatedMember;
 import com.example.lolserver.common.web.response.ApiResponse;
 import com.example.lolserver.community.application.command.VoteCommand;
-import com.example.lolserver.community.application.model.VoteReadModel;
+import com.example.lolserver.community.application.model.resultmodel.VoteResultModel;
 import com.example.lolserver.community.application.port.in.VoteUseCase;
 import com.example.lolserver.community.domain.vo.VoteTargetType;
 import com.example.lolserver.community.domain.vo.VoteType;
@@ -38,7 +38,7 @@ public class CommunityVoteController {
                 .voteType(VoteType.valueOf(request.voteType()))
                 .build();
 
-        VoteReadModel readModel = voteUseCase.vote(member.memberId(), command);
+        VoteResultModel readModel = voteUseCase.vote(member.memberId(), command);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(VoteResponse.from(readModel)));
     }

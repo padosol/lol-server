@@ -1,6 +1,6 @@
 package com.example.lolserver.gamedata.application.port.out;
 
-import com.example.lolserver.gamedata.application.model.VersionReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.VersionReadModel;
 
 /**
  * Version 캐시 포트 - Redis 어댑터에서 구현

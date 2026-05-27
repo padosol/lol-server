@@ -9,9 +9,9 @@ import com.example.lolserver.common.web.security.AuthenticatedMember;
 import com.example.lolserver.common.web.response.ApiResponse;
 import com.example.lolserver.common.web.response.SliceResponse;
 import com.example.lolserver.duo.application.command.DuoPostSearchCommand;
-import com.example.lolserver.duo.application.model.DuoPostDetailReadModel;
-import com.example.lolserver.duo.application.model.DuoPostListReadModel;
-import com.example.lolserver.duo.application.model.DuoPostReadModel;
+import com.example.lolserver.duo.application.model.readmodel.DuoPostDetailReadModel;
+import com.example.lolserver.duo.application.model.readmodel.DuoPostListReadModel;
+import com.example.lolserver.duo.application.model.resultmodel.DuoPostResultModel;
 import com.example.lolserver.duo.application.port.in.DuoPostQueryUseCase;
 import com.example.lolserver.duo.application.port.in.DuoPostUseCase;
 import com.example.lolserver.common.support.SliceResult;
@@ -42,7 +42,7 @@ public class DuoPostController {
     public ResponseEntity<ApiResponse<DuoPostResponse>> createDuoPost(
             @AuthenticationPrincipal AuthenticatedMember member,
             @Valid @RequestBody CreateDuoPostRequest request) {
-        DuoPostReadModel result = duoPostUseCase.createDuoPost(
+        DuoPostResultModel result = duoPostUseCase.createDuoPost(
                 member.memberId(), request.toCommand());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(DuoPostResponse.from(result)));
@@ -80,7 +80,7 @@ public class DuoPostController {
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long postId,
             @Valid @RequestBody UpdateDuoPostRequest request) {
-        DuoPostReadModel result = duoPostUseCase.updateDuoPost(
+        DuoPostResultModel result = duoPostUseCase.updateDuoPost(
                 member.memberId(), postId, request.toCommand());
         return ResponseEntity.ok(
                 ApiResponse.success(DuoPostResponse.from(result)));

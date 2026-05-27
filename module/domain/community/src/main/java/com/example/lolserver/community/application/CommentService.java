@@ -2,13 +2,14 @@ package com.example.lolserver.community.application;
 
 import com.example.lolserver.community.application.command.CreateCommentCommand;
 import com.example.lolserver.community.application.command.UpdateCommentCommand;
-import com.example.lolserver.community.application.model.CommentTreeReadModel;
+import com.example.lolserver.community.application.model.readmodel.CommentTreeReadModel;
+import com.example.lolserver.community.application.model.resultmodel.CommentTreeResultModel;
 import com.example.lolserver.community.application.port.in.CommentQueryUseCase;
 import com.example.lolserver.community.application.port.in.CommentUseCase;
 import com.example.lolserver.community.application.port.out.CommentPersistencePort;
 import com.example.lolserver.community.application.port.out.PostPersistencePort;
 import com.example.lolserver.community.domain.Comment;
-import com.example.lolserver.member.application.model.MemberProfileReadModel;
+import com.example.lolserver.member.application.model.readmodel.MemberProfileReadModel;
 import com.example.lolserver.member.application.port.in.MemberQueryUseCase;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
@@ -37,7 +38,7 @@ public class CommentService implements CommentUseCase, CommentQueryUseCase {
 
     @Override
     @Transactional
-    public CommentTreeReadModel createComment(Long memberId, Long postId, CreateCommentCommand command) {
+    public CommentTreeResultModel createComment(Long memberId, Long postId, CreateCommentCommand command) {
         postPersistencePort.findById(postId)
                 .orElseThrow(() -> new CoreException(ErrorType.POST_NOT_FOUND));
 
@@ -61,12 +62,12 @@ public class CommentService implements CommentUseCase, CommentQueryUseCase {
         int commentCount = commentPersistencePort.countByPostId(postId);
         postPersistencePort.updateCommentCount(postId, commentCount);
 
-        return CommentTreeReadModel.of(saved, author);
+        return CommentTreeResultModel.of(saved, author);
     }
 
     @Override
     @Transactional
-    public CommentTreeReadModel updateComment(Long memberId, Long commentId, UpdateCommentCommand command) {
+    public CommentTreeResultModel updateComment(Long memberId, Long commentId, UpdateCommentCommand command) {
         Comment comment = commentPersistencePort.findById(commentId)
                 .orElseThrow(() -> new CoreException(ErrorType.COMMENT_NOT_FOUND));
 
@@ -77,7 +78,7 @@ public class CommentService implements CommentUseCase, CommentQueryUseCase {
 
         MemberProfileReadModel author = memberQueryUseCase.getMemberProfile(memberId);
 
-        return CommentTreeReadModel.of(saved, author);
+        return CommentTreeResultModel.of(saved, author);
     }
 
     @Override

@@ -1,13 +1,13 @@
 package com.example.lolserver.member.adapter.in.web.response;
 
-import com.example.lolserver.member.application.model.AuthTokenReadModel;
+import com.example.lolserver.member.application.model.resultmodel.AuthTokenResultModel;
 
 public record AuthTokenResponse(
         String accessToken,
         String refreshToken,
         long expiresIn
 ) {
-    public static AuthTokenResponse from(AuthTokenReadModel readModel) {
+    public static AuthTokenResponse from(AuthTokenResultModel readModel) {
         return new AuthTokenResponse(
                 readModel.accessToken(),
                 readModel.refreshToken(),

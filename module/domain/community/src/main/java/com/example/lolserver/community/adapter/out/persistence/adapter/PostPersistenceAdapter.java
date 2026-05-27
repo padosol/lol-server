@@ -1,7 +1,7 @@
 package com.example.lolserver.community.adapter.out.persistence.adapter;
 
 import com.example.lolserver.community.application.command.PostSearchCommand;
-import com.example.lolserver.community.application.model.PostListReadModel;
+import com.example.lolserver.community.application.model.readmodel.PostListReadModel;
 import com.example.lolserver.community.application.port.out.PostPersistencePort;
 import com.example.lolserver.community.domain.Post;
 import com.example.lolserver.community.domain.vo.SortType;

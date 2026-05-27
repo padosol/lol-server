@@ -5,8 +5,9 @@ import com.example.lolserver.common.test.TestAuthenticatedMemberResolver;
 import com.example.lolserver.member.adapter.in.web.request.NicknameUpdateRequest;
 import com.example.lolserver.member.adapter.in.web.security.SocialAccountLinkTokenStore;
 import com.example.lolserver.common.test.RestDocsSupport;
-import com.example.lolserver.member.application.model.MemberReadModel;
-import com.example.lolserver.member.application.model.SocialAccountReadModel;
+import com.example.lolserver.member.application.model.readmodel.MemberReadModel;
+import com.example.lolserver.member.application.model.readmodel.SocialAccountReadModel;
+import com.example.lolserver.member.application.model.resultmodel.MemberResultModel;
 import com.example.lolserver.member.application.port.in.MemberAuthUseCase;
 import com.example.lolserver.member.application.port.in.MemberCommandUseCase;
 import com.example.lolserver.member.application.port.in.MemberQueryUseCase;
@@ -140,7 +141,7 @@ class MemberControllerTest extends RestDocsSupport {
     @Test
     void updateNickname() throws Exception {
         // given
-        MemberReadModel readModel = MemberReadModel.builder()
+        MemberResultModel resultModel = MemberResultModel.builder()
                 .id(1L)
                 .uuid("550e8400-e29b-41d4-a716-446655440000")
                 .email("user@example.com")
@@ -158,7 +159,7 @@ class MemberControllerTest extends RestDocsSupport {
                 ))
                 .build();
 
-        given(memberCommandUseCase.updateNickname(eq(1L), any())).willReturn(readModel);
+        given(memberCommandUseCase.updateNickname(eq(1L), any())).willReturn(resultModel);
 
         NicknameUpdateRequest request = new NicknameUpdateRequest("새닉네임");
 

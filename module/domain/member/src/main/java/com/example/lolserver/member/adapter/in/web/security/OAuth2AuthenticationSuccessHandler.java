@@ -2,7 +2,7 @@ package com.example.lolserver.member.adapter.in.web.security;
 
 import com.example.lolserver.member.config.OAuthCallbackProperties;
 import com.example.lolserver.member.adapter.in.web.security.oauth2.OAuth2UserInfoExtractor;
-import com.example.lolserver.member.application.model.AuthTokenReadModel;
+import com.example.lolserver.member.application.model.resultmodel.AuthTokenResultModel;
 import com.example.lolserver.member.application.model.OAuthUserInfo;
 import com.example.lolserver.member.application.port.in.MemberAuthUseCase;
 import com.example.lolserver.common.error.CoreException;
@@ -92,7 +92,7 @@ public class OAuth2AuthenticationSuccessHandler
                 response.sendRedirect(buildErrorRedirectUrl(
                         ErrorType.OAUTH_LOGIN_NOT_SUPPORTED.name()));
             } else {
-                AuthTokenReadModel result =
+                AuthTokenResultModel result =
                         memberAuthUseCase.loginWithOAuthUserInfo(userInfo);
                 authCookieManager.addAuthCookies(response, result);
                 response.sendRedirect(

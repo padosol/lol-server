@@ -1,8 +1,8 @@
 package com.example.lolserver.gamedata.adapter.out.persistence.mapper;
 
-import com.example.lolserver.gamedata.application.model.PatchNoteReadModel;
-import com.example.lolserver.gamedata.application.model.PatchNoteSummaryReadModel;
-import com.example.lolserver.gamedata.application.model.patchnote.PatchNoteContent;
+import com.example.lolserver.gamedata.application.model.readmodel.PatchNoteReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.PatchNoteSummaryReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.patchnote.PatchNoteContent;
 import com.example.lolserver.gamedata.adapter.out.persistence.entity.PatchNoteEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

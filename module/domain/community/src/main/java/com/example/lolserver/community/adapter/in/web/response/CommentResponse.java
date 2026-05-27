@@ -1,6 +1,7 @@
 package com.example.lolserver.community.adapter.in.web.response;
 
-import com.example.lolserver.community.application.model.CommentTreeReadModel;
+import com.example.lolserver.community.application.model.readmodel.CommentTreeReadModel;
+import com.example.lolserver.community.application.model.resultmodel.CommentTreeResultModel;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,6 +37,27 @@ public record CommentResponse(
                 AuthorResponse.from(readModel.getAuthor()),
                 readModel.getCreatedAt(),
                 readModel.getUpdatedAt(),
+                childResponses
+        );
+    }
+
+    public static CommentResponse from(CommentTreeResultModel resultModel) {
+        List<CommentResponse> childResponses = resultModel.getChildren() != null
+                ? resultModel.getChildren().stream().map(CommentResponse::from).toList()
+                : List.of();
+
+        return new CommentResponse(
+                resultModel.getId(),
+                resultModel.getPostId(),
+                resultModel.getParentCommentId(),
+                resultModel.getContent(),
+                resultModel.getDepth(),
+                resultModel.getUpvoteCount(),
+                resultModel.getDownvoteCount(),
+                resultModel.isDeleted(),
+                AuthorResponse.from(resultModel.getAuthor()),
+                resultModel.getCreatedAt(),
+                resultModel.getUpdatedAt(),
                 childResponses
         );
     }

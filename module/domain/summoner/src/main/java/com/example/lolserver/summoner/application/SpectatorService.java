@@ -1,6 +1,6 @@
 package com.example.lolserver.summoner.application;
 
-import com.example.lolserver.summoner.application.model.CurrentGameInfoReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.CurrentGameInfoReadModel;
 import com.example.lolserver.summoner.application.port.in.SpectatorQueryUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

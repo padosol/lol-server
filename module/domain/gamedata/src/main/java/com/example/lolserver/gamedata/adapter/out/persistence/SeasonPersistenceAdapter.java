@@ -1,6 +1,6 @@
 package com.example.lolserver.gamedata.adapter.out.persistence;
 
-import com.example.lolserver.gamedata.application.model.SeasonReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.SeasonReadModel;
 import com.example.lolserver.gamedata.application.port.out.SeasonPersistencePort;
 import com.example.lolserver.gamedata.adapter.out.persistence.mapper.SeasonMapper;
 import lombok.RequiredArgsConstructor;

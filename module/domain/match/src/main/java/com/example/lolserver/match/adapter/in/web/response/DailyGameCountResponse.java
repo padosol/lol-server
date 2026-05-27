@@ -1,6 +1,6 @@
 package com.example.lolserver.match.adapter.in.web.response;
 
-import com.example.lolserver.match.application.model.DailyGameCountSummaryReadModel;
+import com.example.lolserver.match.application.model.readmodel.DailyGameCountSummaryReadModel;
 
 import java.util.List;
 

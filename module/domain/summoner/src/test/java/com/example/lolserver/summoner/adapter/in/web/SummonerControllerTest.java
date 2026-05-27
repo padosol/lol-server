@@ -1,13 +1,13 @@
 package com.example.lolserver.summoner.adapter.in.web;
 
-import com.example.lolserver.summoner.application.model.SummonerReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.SummonerReadModel;
 import com.example.lolserver.common.test.RestDocsSupport;
 import com.example.lolserver.summoner.application.port.in.SummonerQueryUseCase;
 import com.example.lolserver.summoner.application.port.in.SummonerUseCase;
 import com.example.lolserver.summoner.domain.SummonerRenewal;
 import com.example.lolserver.shared.RenewalStatus;
 
-import com.example.lolserver.summoner.application.model.SummonerAutoReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.SummonerAutoReadModel;
 import com.example.lolserver.summoner.domain.vo.GameName;
 
 import org.junit.jupiter.api.DisplayName;

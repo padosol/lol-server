@@ -1,6 +1,6 @@
 package com.example.lolserver.match.adapter.in.web.response;
 
-import com.example.lolserver.match.application.model.TeamReadModel;
+import com.example.lolserver.match.application.model.readmodel.TeamReadModel;
 
 /**
  * 매치 API 응답 - 블루/레드 팀 정보.

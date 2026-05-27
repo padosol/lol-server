@@ -1,9 +1,9 @@
 package com.example.lolserver.summoner.adapter.out.client.mapper;
 
-import com.example.lolserver.summoner.application.model.BannedChampionReadModel;
-import com.example.lolserver.summoner.application.model.CurrentGameInfoReadModel;
-import com.example.lolserver.summoner.application.model.ParticipantReadModel;
-import com.example.lolserver.summoner.application.model.PerksReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.BannedChampionReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.CurrentGameInfoReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.ParticipantReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.PerksReadModel;
 import com.example.lolserver.summoner.adapter.out.client.restclient.spectator.model.BannedChampionVO;
 import com.example.lolserver.summoner.adapter.out.client.restclient.spectator.model.CurrentGameInfoVO;
 import com.example.lolserver.summoner.adapter.out.client.restclient.spectator.model.ParticipantVO;

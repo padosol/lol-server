@@ -1,6 +1,6 @@
 package com.example.lolserver.leaderboard.adapter.in.web;
 
-import com.example.lolserver.leaderboard.application.model.RankReadModel;
+import com.example.lolserver.leaderboard.application.model.readmodel.RankReadModel;
 import com.example.lolserver.leaderboard.application.dto.RankSearchDto;
 import com.example.lolserver.leaderboard.application.RankService;
 import com.example.lolserver.common.web.response.ApiResponse;

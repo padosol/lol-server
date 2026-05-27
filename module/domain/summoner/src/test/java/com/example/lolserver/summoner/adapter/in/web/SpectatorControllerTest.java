@@ -2,10 +2,10 @@ package com.example.lolserver.summoner.adapter.in.web;
 
 import com.example.lolserver.common.test.RestDocsSupport;
 import com.example.lolserver.summoner.application.port.in.SpectatorQueryUseCase;
-import com.example.lolserver.summoner.application.model.BannedChampionReadModel;
-import com.example.lolserver.summoner.application.model.CurrentGameInfoReadModel;
-import com.example.lolserver.summoner.application.model.ParticipantReadModel;
-import com.example.lolserver.summoner.application.model.PerksReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.BannedChampionReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.CurrentGameInfoReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.ParticipantReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.PerksReadModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

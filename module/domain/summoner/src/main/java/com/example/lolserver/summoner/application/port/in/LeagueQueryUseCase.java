@@ -1,6 +1,6 @@
 package com.example.lolserver.summoner.application.port.in;
 
-import com.example.lolserver.summoner.application.model.LeagueReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.LeagueReadModel;
 import com.example.lolserver.summoner.domain.League;
 
 import java.util.List;

@@ -2,7 +2,7 @@ package com.example.lolserver.summoner.adapter.in.web;
 
 import com.example.lolserver.common.web.response.ApiResponse;
 import com.example.lolserver.summoner.application.port.in.SpectatorQueryUseCase;
-import com.example.lolserver.summoner.application.model.CurrentGameInfoReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.CurrentGameInfoReadModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

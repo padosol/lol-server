@@ -1,7 +1,8 @@
 package com.example.lolserver.member.adapter.in.web.response;
 
-import com.example.lolserver.member.application.model.MemberReadModel;
-import com.example.lolserver.member.application.model.SocialAccountReadModel;
+import com.example.lolserver.member.application.model.readmodel.MemberReadModel;
+import com.example.lolserver.member.application.model.readmodel.SocialAccountReadModel;
+import com.example.lolserver.member.application.model.resultmodel.MemberResultModel;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +27,22 @@ public record MemberResponse(
                 readModel.getEmail(),
                 readModel.getNickname(),
                 readModel.getProfileImageUrl(),
+                accounts
+        );
+    }
+
+    public static MemberResponse from(MemberResultModel resultModel) {
+        List<SocialAccountResponse> accounts = resultModel.getSocialAccounts()
+                .stream()
+                .map(SocialAccountResponse::from)
+                .toList();
+
+        return new MemberResponse(
+                resultModel.getId(),
+                resultModel.getUuid(),
+                resultModel.getEmail(),
+                resultModel.getNickname(),
+                resultModel.getProfileImageUrl(),
                 accounts
         );
     }

@@ -1,6 +1,6 @@
 package com.example.lolserver.championstats.application;
 
-import com.example.lolserver.championstats.application.model.ChampionRateReadModel;
+import com.example.lolserver.championstats.application.model.readmodel.ChampionRateReadModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

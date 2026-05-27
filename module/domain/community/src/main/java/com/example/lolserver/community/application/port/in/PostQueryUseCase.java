@@ -1,8 +1,8 @@
 package com.example.lolserver.community.application.port.in;
 
 import com.example.lolserver.community.application.command.PostSearchCommand;
-import com.example.lolserver.community.application.model.PostDetailReadModel;
-import com.example.lolserver.community.application.model.PostListReadModel;
+import com.example.lolserver.community.application.model.readmodel.PostDetailReadModel;
+import com.example.lolserver.community.application.model.readmodel.PostListReadModel;
 import com.example.lolserver.common.support.SliceResult;
 
 public interface PostQueryUseCase {

@@ -1,11 +1,11 @@
 package com.example.lolserver.summoner.adapter.in.web;
 
-import com.example.lolserver.summoner.application.model.SummonerAutoReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.SummonerAutoReadModel;
 import com.example.lolserver.summoner.adapter.in.web.response.SummonerRenewalResponse;
 import com.example.lolserver.summoner.application.port.in.SummonerQueryUseCase;
 import com.example.lolserver.summoner.application.port.in.SummonerUseCase;
 import com.example.lolserver.summoner.domain.SummonerRenewal;
-import com.example.lolserver.summoner.application.model.SummonerReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.SummonerReadModel;
 import com.example.lolserver.common.web.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

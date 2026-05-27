@@ -2,7 +2,7 @@ package com.example.lolserver.member.application;
 
 import com.example.lolserver.member.application.dto.OAuthLoginCommand;
 import com.example.lolserver.member.application.dto.TokenRefreshCommand;
-import com.example.lolserver.member.application.model.AuthTokenReadModel;
+import com.example.lolserver.member.application.model.resultmodel.AuthTokenResultModel;
 import com.example.lolserver.member.application.model.OAuthUserInfo;
 import com.example.lolserver.member.application.port.out.MemberPersistencePort;
 import com.example.lolserver.member.application.port.out.MemberWithdrawalPersistencePort;
@@ -114,7 +114,7 @@ class MemberAuthServiceTest {
         given(tokenPort.getRefreshTokenExpiry()).willReturn(1209600L);
 
         // when
-        AuthTokenReadModel result =
+        AuthTokenResultModel result =
                 memberAuthService.loginWithOAuth(command);
 
         // then
@@ -161,7 +161,7 @@ class MemberAuthServiceTest {
         given(tokenPort.getRefreshTokenExpiry()).willReturn(1209600L);
 
         // when
-        AuthTokenReadModel result =
+        AuthTokenResultModel result =
                 memberAuthService.loginWithOAuth(command);
 
         // then
@@ -204,7 +204,7 @@ class MemberAuthServiceTest {
         given(tokenPort.getRefreshTokenExpiry()).willReturn(1209600L);
 
         // when
-        AuthTokenReadModel result =
+        AuthTokenResultModel result =
                 memberAuthService.loginWithOAuthUserInfo(userInfo);
 
         // then
@@ -242,7 +242,7 @@ class MemberAuthServiceTest {
         given(tokenPort.getRefreshTokenExpiry()).willReturn(1209600L);
 
         // when
-        AuthTokenReadModel result =
+        AuthTokenResultModel result =
                 memberAuthService.loginWithOAuthUserInfo(userInfo);
 
         // then
@@ -279,7 +279,7 @@ class MemberAuthServiceTest {
         given(tokenPort.getRefreshTokenExpiry()).willReturn(1209600L);
 
         // when
-        AuthTokenReadModel result =
+        AuthTokenResultModel result =
                 memberAuthService.refreshToken(command);
 
         // then
@@ -405,7 +405,7 @@ class MemberAuthServiceTest {
         given(tokenPort.getRefreshTokenExpiry()).willReturn(1209600L);
 
         // when
-        AuthTokenReadModel result =
+        AuthTokenResultModel result =
                 memberAuthService.loginWithOAuth(command);
 
         // then
@@ -700,7 +700,7 @@ class MemberAuthServiceTest {
         given(tokenPort.getRefreshTokenExpiry()).willReturn(1209600L);
 
         // when
-        AuthTokenReadModel result =
+        AuthTokenResultModel result =
                 memberAuthService.loginWithOAuthUserInfo(userInfo);
 
         // then

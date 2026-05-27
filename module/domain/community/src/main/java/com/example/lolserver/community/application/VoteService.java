@@ -1,7 +1,7 @@
 package com.example.lolserver.community.application;
 
 import com.example.lolserver.community.application.command.VoteCommand;
-import com.example.lolserver.community.application.model.VoteReadModel;
+import com.example.lolserver.community.application.model.resultmodel.VoteResultModel;
 import com.example.lolserver.community.application.port.in.VoteUseCase;
 import com.example.lolserver.community.application.port.out.CommentPersistencePort;
 import com.example.lolserver.community.application.port.out.PostPersistencePort;
@@ -30,7 +30,7 @@ public class VoteService implements VoteUseCase {
 
     @Override
     @Transactional
-    public VoteReadModel vote(Long memberId, VoteCommand command) {
+    public VoteResultModel vote(Long memberId, VoteCommand command) {
         validateTarget(command.getTargetType(), command.getTargetId());
 
         Optional<Vote> existingVote = votePersistencePort
@@ -88,7 +88,7 @@ public class VoteService implements VoteUseCase {
         }
     }
 
-    private VoteReadModel recalculateCounts(
+    private VoteResultModel recalculateCounts(
             VoteTargetType targetType, Long targetId,
             VoteType voteType) {
         int upvoteCount = votePersistencePort
@@ -107,12 +107,12 @@ public class VoteService implements VoteUseCase {
                     targetId, upvoteCount, downvoteCount);
         }
 
-        return new VoteReadModel(
+        return new VoteResultModel(
                 targetType, targetId, voteType,
                 upvoteCount, downvoteCount);
     }
 
-    private VoteReadModel currentCounts(
+    private VoteResultModel currentCounts(
             VoteTargetType targetType, Long targetId,
             VoteType voteType) {
         int upvoteCount = votePersistencePort
@@ -121,7 +121,7 @@ public class VoteService implements VoteUseCase {
         int downvoteCount = votePersistencePort
                 .countByTargetTypeAndTargetIdAndVoteType(
                         targetType, targetId, VoteType.DOWNVOTE);
-        return new VoteReadModel(
+        return new VoteResultModel(
                 targetType, targetId, voteType,
                 upvoteCount, downvoteCount);
     }

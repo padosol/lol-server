@@ -1,6 +1,6 @@
 package com.example.lolserver.match.adapter.out.cache;
 
-import com.example.lolserver.match.application.model.GameReadModel;
+import com.example.lolserver.match.application.model.readmodel.GameReadModel;
 import com.example.lolserver.match.application.port.out.MatchSingleCachePort;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;

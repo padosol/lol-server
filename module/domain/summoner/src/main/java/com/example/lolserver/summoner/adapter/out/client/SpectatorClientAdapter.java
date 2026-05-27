@@ -1,12 +1,12 @@
 package com.example.lolserver.summoner.adapter.out.client;
 
-import com.example.lolserver.summoner.application.model.CurrentGameInfoReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.CurrentGameInfoReadModel;
 import com.example.lolserver.summoner.application.port.out.SpectatorCachePort;
 import com.example.lolserver.summoner.application.port.out.SpectatorClientPort;
 import com.example.lolserver.summoner.adapter.out.client.mapper.SpectatorClientMapper;
 import com.example.lolserver.summoner.adapter.out.client.restclient.spectator.SpectatorRestClient;
 import com.example.lolserver.summoner.adapter.out.client.restclient.spectator.model.CurrentGameInfoVO;
-import com.example.lolserver.summoner.application.model.ParticipantReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.ParticipantReadModel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

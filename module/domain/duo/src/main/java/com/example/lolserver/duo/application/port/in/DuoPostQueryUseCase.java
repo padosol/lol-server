@@ -1,8 +1,8 @@
 package com.example.lolserver.duo.application.port.in;
 
 import com.example.lolserver.duo.application.command.DuoPostSearchCommand;
-import com.example.lolserver.duo.application.model.DuoPostDetailReadModel;
-import com.example.lolserver.duo.application.model.DuoPostListReadModel;
+import com.example.lolserver.duo.application.model.readmodel.DuoPostDetailReadModel;
+import com.example.lolserver.duo.application.model.readmodel.DuoPostListReadModel;
 import com.example.lolserver.common.support.SliceResult;
 
 public interface DuoPostQueryUseCase {

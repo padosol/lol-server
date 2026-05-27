@@ -1,8 +1,9 @@
 package com.example.lolserver.duo.application;
 
 import com.example.lolserver.duo.application.command.CreateDuoRequestCommand;
-import com.example.lolserver.duo.application.model.DuoMatchResultReadModel;
-import com.example.lolserver.duo.application.model.DuoRequestReadModel;
+import com.example.lolserver.duo.application.model.resultmodel.DuoMatchResultModel;
+import com.example.lolserver.duo.application.model.readmodel.DuoRequestReadModel;
+import com.example.lolserver.duo.application.model.resultmodel.DuoRequestResultModel;
 import com.example.lolserver.duo.application.port.out.DuoPostPersistencePort;
 import com.example.lolserver.duo.application.port.out.DuoRequestPersistencePort;
 import com.example.lolserver.duo.domain.DuoPost;
@@ -14,7 +15,7 @@ import com.example.lolserver.duo.domain.vo.RiotAccountStats;
 import com.example.lolserver.duo.domain.vo.MostChampion;
 import com.example.lolserver.duo.domain.vo.RecentGameSummary;
 import com.example.lolserver.duo.domain.vo.TierInfo;
-import com.example.lolserver.summoner.application.model.SummonerReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.SummonerReadModel;
 import com.example.lolserver.summoner.application.port.in.SummonerQueryUseCase;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
@@ -213,7 +214,7 @@ class DuoRequestServiceTest {
                     });
 
             // when
-            DuoRequestReadModel result = duoRequestService.createDuoRequest(memberId, duoPostId, command);
+            DuoRequestResultModel result = duoRequestService.createDuoRequest(memberId, duoPostId, command);
 
             // then
             assertThat(result).isNotNull();
@@ -276,7 +277,7 @@ class DuoRequestServiceTest {
                     .willReturn(duoRequest);
 
             // when
-            DuoMatchResultReadModel result = duoRequestService.acceptDuoRequest(memberId, requestId);
+            DuoMatchResultModel result = duoRequestService.acceptDuoRequest(memberId, requestId);
 
             // then
             assertThat(result).isNotNull();
@@ -359,7 +360,7 @@ class DuoRequestServiceTest {
                     .willReturn(Optional.of(partnerSummoner));
 
             // when
-            DuoMatchResultReadModel result = duoRequestService.confirmDuoRequest(requesterId, requestId);
+            DuoMatchResultModel result = duoRequestService.confirmDuoRequest(requesterId, requestId);
 
             // then
             assertThat(result).isNotNull();

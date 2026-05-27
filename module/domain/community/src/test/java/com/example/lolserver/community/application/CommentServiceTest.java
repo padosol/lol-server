@@ -2,12 +2,13 @@ package com.example.lolserver.community.application;
 
 import com.example.lolserver.community.application.command.CreateCommentCommand;
 import com.example.lolserver.community.application.command.UpdateCommentCommand;
-import com.example.lolserver.community.application.model.CommentTreeReadModel;
+import com.example.lolserver.community.application.model.readmodel.CommentTreeReadModel;
+import com.example.lolserver.community.application.model.resultmodel.CommentTreeResultModel;
 import com.example.lolserver.community.application.port.out.CommentPersistencePort;
 import com.example.lolserver.community.application.port.out.PostPersistencePort;
 import com.example.lolserver.community.domain.Comment;
 import com.example.lolserver.community.domain.Post;
-import com.example.lolserver.member.application.model.MemberProfileReadModel;
+import com.example.lolserver.member.application.model.readmodel.MemberProfileReadModel;
 import com.example.lolserver.member.application.port.in.MemberQueryUseCase;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
@@ -66,7 +67,7 @@ class CommentServiceTest {
                 .willReturn(1);
 
         // when
-        CommentTreeReadModel result =
+        CommentTreeResultModel result =
                 commentService.createComment(memberId, postId, command);
 
         // then
@@ -103,7 +104,7 @@ class CommentServiceTest {
                 .willReturn(2);
 
         // when
-        CommentTreeReadModel result =
+        CommentTreeResultModel result =
                 commentService.createComment(memberId, postId, command);
 
         // then

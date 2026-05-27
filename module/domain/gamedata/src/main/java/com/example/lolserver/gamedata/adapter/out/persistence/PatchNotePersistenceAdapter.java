@@ -1,7 +1,7 @@
 package com.example.lolserver.gamedata.adapter.out.persistence;
 
-import com.example.lolserver.gamedata.application.model.PatchNoteReadModel;
-import com.example.lolserver.gamedata.application.model.PatchNoteSummaryReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.PatchNoteReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.PatchNoteSummaryReadModel;
 import com.example.lolserver.gamedata.application.port.out.PatchNotePersistencePort;
 import com.example.lolserver.gamedata.adapter.out.persistence.entity.PatchNoteEntity;
 import com.example.lolserver.gamedata.adapter.out.persistence.mapper.PatchNoteMapper;

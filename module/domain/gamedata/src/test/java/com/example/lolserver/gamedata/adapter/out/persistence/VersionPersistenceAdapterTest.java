@@ -1,6 +1,6 @@
 package com.example.lolserver.gamedata.adapter.out.persistence;
 
-import com.example.lolserver.gamedata.application.model.VersionReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.VersionReadModel;
 import com.example.lolserver.common.test.RepositoryTestBase;
 import com.example.lolserver.gamedata.adapter.out.persistence.entity.VersionEntity;
 import com.example.lolserver.gamedata.adapter.out.persistence.mapper.VersionMapper;

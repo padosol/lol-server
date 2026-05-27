@@ -6,7 +6,8 @@ import com.example.lolserver.common.web.security.AuthenticatedMember;
 import com.example.lolserver.member.adapter.in.web.security.SocialAccountLinkTokenStore;
 import com.example.lolserver.common.web.response.ApiResponse;
 import com.example.lolserver.member.application.dto.UpdateNicknameCommand;
-import com.example.lolserver.member.application.model.MemberReadModel;
+import com.example.lolserver.member.application.model.readmodel.MemberReadModel;
+import com.example.lolserver.member.application.model.resultmodel.MemberResultModel;
 import com.example.lolserver.member.application.port.in.MemberAuthUseCase;
 import com.example.lolserver.member.application.port.in.MemberCommandUseCase;
 import com.example.lolserver.member.application.port.in.MemberQueryUseCase;
@@ -58,10 +59,10 @@ public class MemberController {
                 .nickname(request.nickname())
                 .build();
 
-        MemberReadModel readModel =
+        MemberResultModel resultModel =
                 memberCommandUseCase.updateNickname(
                         member.memberId(), command);
-        return ApiResponse.success(MemberResponse.from(readModel));
+        return ApiResponse.success(MemberResponse.from(resultModel));
     }
 
     @GetMapping("/me/social-accounts/link/{provider}")

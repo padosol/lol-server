@@ -1,6 +1,6 @@
 package com.example.lolserver.gamedata.application;
 
-import com.example.lolserver.gamedata.application.model.SeasonReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.SeasonReadModel;
 import com.example.lolserver.gamedata.application.port.in.SeasonQueryUseCase;
 import com.example.lolserver.gamedata.application.port.out.SeasonPersistencePort;
 import lombok.RequiredArgsConstructor;

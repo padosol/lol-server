@@ -1,9 +1,9 @@
 package com.example.lolserver.match.application.port.out;
 
-import com.example.lolserver.match.application.model.DailyGameCountReadModel;
-import com.example.lolserver.match.application.model.GameReadModel;
-import com.example.lolserver.match.application.model.MSChampionByQueueReadModel;
-import com.example.lolserver.match.application.model.TimelineReadModel;
+import com.example.lolserver.match.application.model.readmodel.DailyGameCountReadModel;
+import com.example.lolserver.match.application.model.readmodel.GameReadModel;
+import com.example.lolserver.match.application.model.readmodel.MSChampionByQueueReadModel;
+import com.example.lolserver.match.application.model.readmodel.TimelineReadModel;
 import com.example.lolserver.common.support.PaginationRequest;
 import com.example.lolserver.common.support.SliceResult;
 

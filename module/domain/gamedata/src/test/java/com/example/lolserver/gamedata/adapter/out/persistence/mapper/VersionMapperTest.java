@@ -1,6 +1,6 @@
 package com.example.lolserver.gamedata.adapter.out.persistence.mapper;
 
-import com.example.lolserver.gamedata.application.model.VersionReadModel;
+import com.example.lolserver.gamedata.application.model.readmodel.VersionReadModel;
 import com.example.lolserver.gamedata.adapter.out.persistence.entity.VersionEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

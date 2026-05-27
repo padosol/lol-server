@@ -1,9 +1,9 @@
 package com.example.lolserver.championstats.adapter.out.bigquery;
 
 import com.example.lolserver.shared.TierFilter;
-import com.example.lolserver.championstats.application.model.ChampionMatchupReadModel;
-import com.example.lolserver.championstats.application.model.ChampionRateReadModel;
-import com.example.lolserver.championstats.application.model.ChampionWinRateReadModel;
+import com.example.lolserver.championstats.application.model.readmodel.ChampionMatchupReadModel;
+import com.example.lolserver.championstats.application.model.readmodel.ChampionRateReadModel;
+import com.example.lolserver.championstats.application.model.readmodel.ChampionWinRateReadModel;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValueList;
