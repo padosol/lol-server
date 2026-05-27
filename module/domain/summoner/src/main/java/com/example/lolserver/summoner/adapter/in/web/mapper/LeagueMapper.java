@@ -1,6 +1,6 @@
 package com.example.lolserver.summoner.adapter.in.web.mapper;
 
-import com.example.lolserver.QueueType;
+import com.example.lolserver.shared.QueueType;
 import com.example.lolserver.summoner.adapter.in.web.response.LeagueResponse;
 import com.example.lolserver.summoner.adapter.in.web.response.LeagueSummonerResponse;
 import com.example.lolserver.summoner.domain.League;

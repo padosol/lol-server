@@ -1,6 +1,6 @@
 package com.example.lolserver.summoner.domain;
 
-import com.example.lolserver.RenewalStatus;
+import com.example.lolserver.shared.RenewalStatus;
 import lombok.Getter;
 
 @Getter

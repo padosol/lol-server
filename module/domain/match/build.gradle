@@ -5,7 +5,7 @@ plugins {
 
 dependencies {
     implementation project(':module:common')
-    implementation project(':module:core:enum')
+    implementation project(':module:shared')
     implementation project(':module:support:logging')
 
     // match 2-tier 캐시(ZSET ids + 단건 JSON) Redis 어댑터

@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
     implementation project(':module:common')
-    implementation project(':module:core:enum')
+    implementation project(':module:shared')
 
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.redisson:redisson-spring-boot-starter:3.46.0'

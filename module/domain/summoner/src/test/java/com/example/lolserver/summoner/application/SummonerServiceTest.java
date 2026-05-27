@@ -1,6 +1,6 @@
 package com.example.lolserver.summoner.application;
 
-import com.example.lolserver.RenewalStatus;
+import com.example.lolserver.shared.RenewalStatus;
 import com.example.lolserver.summoner.application.model.SummonerAutoReadModel;
 import com.example.lolserver.summoner.application.model.SummonerReadModel;
 import com.example.lolserver.summoner.application.model.SummonerRenewalInfoReadModel;

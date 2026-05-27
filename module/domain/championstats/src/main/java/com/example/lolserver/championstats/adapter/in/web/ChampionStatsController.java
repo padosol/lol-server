@@ -1,7 +1,7 @@
 package com.example.lolserver.championstats.adapter.in.web;
 
-import com.example.lolserver.Platform;
-import com.example.lolserver.TierFilter;
+import com.example.lolserver.shared.Platform;
+import com.example.lolserver.shared.TierFilter;
 import com.example.lolserver.common.web.response.ApiResponse;
 import com.example.lolserver.championstats.application.port.in.ChampionStatsQueryUseCase;
 import com.example.lolserver.championstats.application.model.ChampionStatsReadModel;

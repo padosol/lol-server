@@ -8,7 +8,7 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
 |---|---|
 | [`module/app/application`](module/app/application/CLAUDE.md) | Spring Boot 진입점, 컴포지션 루트, bootJar |
 | `module/common` | 공유 커널 (web·error·support·security + persistence·redis·client config, testFixtures) — 도메인 아님 |
-| `module/core/enum` | `QueueType`, `Tier`, `Platform` 등 공유 enum |
+| `module/shared` | `QueueType`, `Tier`, `Platform` 등 공유 enum + `TierFilter` VO |
 | `module/support/logging` | `@LogExecutionTime` AOP 등 횡단 유틸 |
 | `module/domain/leaderboard` | 랭킹 리더보드 조회 |
 | `module/domain/match` | 전적/매치·타임라인 조회 + 2-tier Redis 캐시 |
@@ -18,6 +18,8 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
 | `module/domain/member` | 회원·인증 (OAuth/RSO 연동) |
 | `module/domain/community` | 커뮤니티 게시글·댓글·투표 |
 | `module/domain/duo` | 듀오 모집글·신청 + Riot 계정 통계 집계 |
+
+> 모듈 단일 진실원천은 `settings.gradle`. `module/infra/`·`module/core/lol-server-domain/` 등은 레이어→수직 컨텍스트 재구성(77b945e5) 잔재 디렉터리로 빌드에 미포함. `docs/ARCHITECTURE.md`·일부 build 커맨드(`:module:infra:api:asciidoctor`)는 옛 구조 기준(stale).
 
 ## What to read first
 
@@ -35,6 +37,8 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
 ```bash
 ./gradlew bootRun -Dspring.profiles.active=local   # Postgres/Redis/RabbitMQ Docker 필요
 ./gradlew test                                     # 전체 테스트
+./gradlew compileJava compileTestJava              # Docker 없이 전 모듈 컴파일 검증 (리팩토링용)
+./gradlew archTest                                 # Docker 없이 ArchUnit(*ArchitectureTest) 전 모듈 실행
 ./gradlew :module:infra:api:asciidoctor            # RestDocs HTML 재생성 (RestDocs 테스트 변경 시 필수)
 ./gradlew clean build                              # 클린 빌드
 ```
@@ -48,6 +52,7 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
 - 도메인 규칙은 도메인 객체 `validate*` guard 가 직접 던진다 (서비스에서 boolean+throw 금지)
 - ReadModel 변환은 `*ReadModel.of(domain)` 정적 팩토리에서만
 - 매직 스트링 금지: `OAuthProvider.RIOT.name()`, `QueueType.RANKED_SOLO_5x5.name()` 등 enum 사용
+- Redis 값 직렬화는 `GenericJackson2JsonRedisSerializer`(`@class` FQN 포함) — 캐시되는 값 클래스 이동/리네임 시 기존 엔트리 역직렬화 실패, 배포 때 해당 키 flush
 - 커밋 메시지: `<type>: MP-<번호> <한글 설명>` (Linear 키 필수; 타입 `feat`, `fix`, `refactor`, `docs`, `chore`)
 - 브랜치: `<type>/MP-<번호>-*` 형식. 기본 흐름은 `develop` → `main`, `hotfix`만 `main` → `develop` 역반영. type 6종:
 

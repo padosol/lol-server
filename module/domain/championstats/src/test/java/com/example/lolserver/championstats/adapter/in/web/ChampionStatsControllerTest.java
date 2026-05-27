@@ -25,7 +25,7 @@ import org.springframework.restdocs.payload.JsonFieldType;
 
 import java.util.List;
 
-import com.example.lolserver.TierFilter;
+import com.example.lolserver.shared.TierFilter;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
