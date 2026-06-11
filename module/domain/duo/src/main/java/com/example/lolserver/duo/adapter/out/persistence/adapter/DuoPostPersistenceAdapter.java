@@ -18,6 +18,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -66,6 +67,18 @@ public class DuoPostPersistenceAdapter implements DuoPostPersistencePort {
         Slice<DuoPostListDTO> slice = duoPostRepositoryCustom.findByMemberId(memberId, pageable);
 
         return toSliceResult(slice);
+    }
+
+    @Override
+    public List<Long> expireAllOverdue(LocalDateTime now) {
+        List<Long> overdueIds = duoPostJpaRepository.findIdsByStatusAndExpiresAtBefore(
+                DuoPostStatus.ACTIVE.name(), now);
+
+        if (!overdueIds.isEmpty()) {
+            duoPostJpaRepository.updateStatusByIds(overdueIds, DuoPostStatus.EXPIRED.name());
+        }
+
+        return overdueIds;
     }
 
     private SliceResult<DuoPostListReadModel> toSliceResult(Slice<DuoPostListDTO> slice) {

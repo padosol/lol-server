@@ -9,6 +9,7 @@ import com.example.lolserver.duo.application.model.resultmodel.DuoPostResultMode
 import com.example.lolserver.duo.application.model.readmodel.DuoRequestReadModel;
 import com.example.lolserver.duo.application.port.in.DuoPostQueryUseCase;
 import com.example.lolserver.duo.application.port.in.DuoPostUseCase;
+import com.example.lolserver.duo.application.port.out.DuoLockPort;
 import com.example.lolserver.duo.application.port.out.DuoPostPersistencePort;
 import com.example.lolserver.duo.application.port.out.DuoRequestPersistencePort;
 import com.example.lolserver.duo.domain.DuoPost;
@@ -31,31 +32,37 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase {
 
+    private static final String MEMBER_POST_LOCK_PREFIX = "duo:member:post:";
+
     private final DuoPostPersistencePort duoPostPersistencePort;
     private final DuoRequestPersistencePort duoRequestPersistencePort;
     private final RiotAccountResolver riotAccountResolver;
+    private final DuoLockPort duoLockPort;
 
     @Override
     @Transactional
     public DuoPostResultModel createDuoPost(Long memberId, CreateDuoPostCommand command) {
         String puuid = riotAccountResolver.extractRiotPuuid(memberId);
 
-        if (duoPostPersistencePort.existsActiveByMemberId(memberId)) {
-            throw new CoreException(ErrorType.DUO_POST_ACTIVE_EXISTS);
-        }
+        // 락 안에서 활성글 존재 검사와 저장을 함께 수행해 check-then-act 레이스를 제거한다.
+        return duoLockPort.executeWithLock(MEMBER_POST_LOCK_PREFIX + memberId, () -> {
+            if (duoPostPersistencePort.existsActiveByMemberId(memberId)) {
+                throw new CoreException(ErrorType.DUO_POST_ACTIVE_EXISTS);
+            }
 
-        RiotAccountStats stats = riotAccountResolver.lookupAllStats(puuid);
+            RiotAccountStats stats = riotAccountResolver.lookupAllStats(puuid);
 
-        DuoPost duoPost = DuoPost.create(
-                memberId, puuid,
-                Lane.from(command.getPrimaryLane()),
-                Lane.from(command.getDesiredLane()),
-                command.isHasMicrophone(), command.getMemo(),
-                stats
-        );
+            DuoPost duoPost = DuoPost.create(
+                    memberId, puuid,
+                    Lane.from(command.getPrimaryLane()),
+                    Lane.from(command.getDesiredLane()),
+                    command.isHasMicrophone(), command.getMemo(),
+                    stats
+            );
 
-        DuoPost saved = duoPostPersistencePort.save(duoPost);
-        return DuoPostResultModel.of(saved);
+            DuoPost saved = duoPostPersistencePort.save(duoPost);
+            return DuoPostResultModel.of(saved);
+        });
     }
 
     @Override

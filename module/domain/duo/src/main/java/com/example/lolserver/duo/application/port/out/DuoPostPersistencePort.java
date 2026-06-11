@@ -5,6 +5,8 @@ import com.example.lolserver.duo.application.model.readmodel.DuoPostListReadMode
 import com.example.lolserver.duo.domain.DuoPost;
 import com.example.lolserver.common.support.SliceResult;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface DuoPostPersistencePort {
@@ -13,4 +15,5 @@ public interface DuoPostPersistencePort {
     boolean existsActiveByMemberId(Long memberId);
     SliceResult<DuoPostListReadModel> findActivePosts(DuoPostSearchCommand command);
     SliceResult<DuoPostListReadModel> findByMemberId(Long memberId, int page);
+    List<Long> expireAllOverdue(LocalDateTime now);
 }

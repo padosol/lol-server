@@ -4,6 +4,7 @@ import com.example.lolserver.duo.application.command.CreateDuoPostCommand;
 import com.example.lolserver.duo.application.command.UpdateDuoPostCommand;
 import com.example.lolserver.duo.application.model.readmodel.DuoPostDetailReadModel;
 import com.example.lolserver.duo.application.model.resultmodel.DuoPostResultModel;
+import com.example.lolserver.duo.application.port.out.DuoLockPort;
 import com.example.lolserver.duo.application.port.out.DuoPostPersistencePort;
 import com.example.lolserver.duo.application.port.out.DuoRequestPersistencePort;
 import com.example.lolserver.duo.domain.DuoPost;
@@ -26,14 +27,26 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
@@ -52,6 +65,17 @@ class DuoServiceTest {
 
     @Mock
     private RiotAccountResolver riotAccountResolver;
+
+    @Mock
+    private DuoLockPort duoLockPort;
+
+    private void givenLockPassThrough() {
+        given(duoLockPort.executeWithLock(anyString(), any()))
+                .willAnswer(invocation -> {
+                    Supplier<?> action = invocation.getArgument(1);
+                    return action.get();
+                });
+    }
 
     @Nested
     @DisplayName("createDuoPost")
@@ -92,6 +116,7 @@ class DuoServiceTest {
                     .memo("듀오 구합니다")
                     .build();
 
+            givenLockPassThrough();
             given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
             given(duoPostPersistencePort.existsActiveByMemberId(memberId))
                     .willReturn(true);
@@ -125,6 +150,7 @@ class DuoServiceTest {
                     new RecentGameSummary.PlayedChampion(1, "Ahri")));
             RiotAccountStats stats = new RiotAccountStats(tierInfo, mostChampions, recentGameSummary);
 
+            givenLockPassThrough();
             given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
             given(duoPostPersistencePort.existsActiveByMemberId(memberId))
                     .willReturn(false);
@@ -169,6 +195,8 @@ class DuoServiceTest {
             assertThat(result.getMostChampions()).hasSize(1);
             assertThat(result.getRecentGameSummary().wins()).isEqualTo(12);
             then(duoPostPersistencePort).should().save(any(DuoPost.class));
+            then(duoLockPort).should()
+                    .executeWithLock(eq("duo:member:post:" + memberId), any());
         }
 
         @DisplayName("티어 정보 없을 때 tierAvailable=false")
@@ -188,6 +216,7 @@ class DuoServiceTest {
                     TierInfo.UNRANKED, Collections.emptyList(),
                     new RecentGameSummary(0, 0, Collections.emptyList()));
 
+            givenLockPassThrough();
             given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
             given(duoPostPersistencePort.existsActiveByMemberId(memberId))
                     .willReturn(false);
@@ -223,6 +252,111 @@ class DuoServiceTest {
             assertThat(result.getTier()).isNull();
             assertThat(result.getRank()).isNull();
             assertThat(result.isTierAvailable()).isFalse();
+        }
+
+        @DisplayName("락 획득 실패 시 LOCK_ACQUISITION_FAILED 에러 - 게시글은 저장되지 않는다")
+        @Test
+        void lockAcquisitionFailed_throwsException() {
+            // given
+            Long memberId = 1L;
+            String puuid = "test-puuid";
+            CreateDuoPostCommand command = CreateDuoPostCommand.builder()
+                    .primaryLane("MID")
+                    .desiredLane("JUNGLE")
+                    .hasMicrophone(true)
+                    .memo("듀오 구합니다")
+                    .build();
+
+            given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
+            given(duoLockPort.executeWithLock(anyString(), any()))
+                    .willThrow(new CoreException(ErrorType.LOCK_ACQUISITION_FAILED));
+
+            // when & then
+            assertThatThrownBy(() -> duoService.createDuoPost(memberId, command))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.LOCK_ACQUISITION_FAILED);
+
+            then(duoPostPersistencePort).should(never()).save(any(DuoPost.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("createDuoPost 활성글 1개 동시성")
+    class CreateDuoPostConcurrency {
+
+        @DisplayName("동시에 두 번 생성 요청해도 1개만 저장되고 나머지는 DUO_POST_ACTIVE_EXISTS")
+        @Test
+        void onlyOnePostCreated() throws Exception {
+            // given
+            Long memberId = 1L;
+            String puuid = "test-puuid";
+            CreateDuoPostCommand command = CreateDuoPostCommand.builder()
+                    .primaryLane("MID")
+                    .desiredLane("JUNGLE")
+                    .hasMicrophone(true)
+                    .memo("듀오 구합니다")
+                    .build();
+            RiotAccountStats stats = new RiotAccountStats(
+                    TierInfo.UNRANKED, Collections.emptyList(),
+                    new RecentGameSummary(0, 0, Collections.emptyList()));
+            List<DuoPost> savedPosts = Collections.synchronizedList(new ArrayList<>());
+
+            ConcurrentHashMap<String, ReentrantLock> locks = new ConcurrentHashMap<>();
+            given(duoLockPort.executeWithLock(anyString(), any()))
+                    .willAnswer(invocation -> {
+                        ReentrantLock lock = locks.computeIfAbsent(
+                                invocation.getArgument(0), key -> new ReentrantLock());
+                        lock.lock();
+                        try {
+                            Supplier<?> action = invocation.getArgument(1);
+                            return action.get();
+                        } finally {
+                            lock.unlock();
+                        }
+                    });
+            given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
+            given(riotAccountResolver.lookupAllStats(puuid)).willReturn(stats);
+            given(duoPostPersistencePort.existsActiveByMemberId(memberId))
+                    .willAnswer(invocation -> !savedPosts.isEmpty());
+            given(duoPostPersistencePort.save(any(DuoPost.class)))
+                    .willAnswer(invocation -> {
+                        DuoPost post = invocation.getArgument(0);
+                        savedPosts.add(post);
+                        return post;
+                    });
+
+            ExecutorService executor = Executors.newFixedThreadPool(2);
+            CountDownLatch startLatch = new CountDownLatch(1);
+            Future<Object> first = executor.submit(createTask(startLatch, memberId, command));
+            Future<Object> second = executor.submit(createTask(startLatch, memberId, command));
+
+            // when
+            startLatch.countDown();
+            Object result1 = first.get(5, TimeUnit.SECONDS);
+            Object result2 = second.get(5, TimeUnit.SECONDS);
+            executor.shutdownNow();
+
+            // then
+            List<Object> results = List.of(result1, result2);
+            assertThat(results).filteredOn(DuoPostResultModel.class::isInstance).hasSize(1);
+            assertThat(results).filteredOn(CoreException.class::isInstance)
+                    .hasSize(1)
+                    .allSatisfy(e -> assertThat(((CoreException) e).getErrorType())
+                            .isEqualTo(ErrorType.DUO_POST_ACTIVE_EXISTS));
+            assertThat(savedPosts).hasSize(1);
+        }
+
+        private Callable<Object> createTask(CountDownLatch startLatch, Long memberId,
+                CreateDuoPostCommand command) {
+            return () -> {
+                startLatch.await();
+                try {
+                    return duoService.createDuoPost(memberId, command);
+                } catch (CoreException e) {
+                    return e;
+                }
+            };
         }
     }
 

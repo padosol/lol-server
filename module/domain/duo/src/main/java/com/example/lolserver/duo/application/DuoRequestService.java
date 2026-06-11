@@ -6,6 +6,7 @@ import com.example.lolserver.duo.application.model.readmodel.DuoRequestReadModel
 import com.example.lolserver.duo.application.model.resultmodel.DuoRequestResultModel;
 import com.example.lolserver.duo.application.port.in.DuoRequestQueryUseCase;
 import com.example.lolserver.duo.application.port.in.DuoRequestUseCase;
+import com.example.lolserver.duo.application.port.out.DuoLockPort;
 import com.example.lolserver.duo.application.port.out.DuoPostPersistencePort;
 import com.example.lolserver.duo.application.port.out.DuoRequestPersistencePort;
 import com.example.lolserver.duo.domain.DuoPost;
@@ -31,10 +32,13 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseCase {
 
+    private static final String DUO_POST_LOCK_PREFIX = "duo:post:";
+
     private final DuoRequestPersistencePort duoRequestPersistencePort;
     private final DuoPostPersistencePort duoPostPersistencePort;
     private final SummonerQueryUseCase summonerQueryUseCase;
     private final RiotAccountResolver riotAccountResolver;
+    private final DuoLockPort duoLockPort;
 
     @Override
     @Transactional
@@ -96,22 +100,27 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
 
         duoRequest.validateRequester(memberId);
 
-        duoRequest.confirm();
-        duoRequestPersistencePort.save(duoRequest);
+        return duoLockPort.executeWithLock(
+                DUO_POST_LOCK_PREFIX + duoRequest.getDuoPostId(), () -> {
+                    // 락 획득 후 게시글 상태를 다시 읽어 선착순을 보장한다.
+                    // 이미 매칭된 게시글이면 markMatched 가 DUO_POST_NOT_ACTIVE 를 던진다.
+                    DuoPost duoPost = duoPostPersistencePort.findById(duoRequest.getDuoPostId())
+                            .orElseThrow(() -> new CoreException(ErrorType.DUO_POST_NOT_FOUND));
 
-        DuoPost duoPost = duoPostPersistencePort.findById(duoRequest.getDuoPostId())
-                .orElseThrow(() -> new CoreException(ErrorType.DUO_POST_NOT_FOUND));
+                    duoPost.markMatched();
 
-        duoPost.markMatched();
-        duoPostPersistencePort.save(duoPost);
+                    duoRequest.confirm();
+                    duoRequestPersistencePort.save(duoRequest);
+                    duoPostPersistencePort.save(duoPost);
 
-        duoRequestPersistencePort.closeAllOpenExcept(
-                duoPost.getId(), duoRequest.getId());
+                    duoRequestPersistencePort.closeAllOpenExcept(
+                            duoPost.getId(), duoRequest.getId());
 
-        SummonerReadModel partnerSummoner = summonerQueryUseCase
-                .findSummonerByPuuid(duoPost.getPuuid()).orElse(null);
+                    SummonerReadModel partnerSummoner = summonerQueryUseCase
+                            .findSummonerByPuuid(duoPost.getPuuid()).orElse(null);
 
-        return DuoMatchResultModel.of(duoPost, duoRequest, partnerSummoner);
+                    return DuoMatchResultModel.of(duoPost, duoRequest, partnerSummoner);
+                });
     }
 
     @Override

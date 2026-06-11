@@ -4,6 +4,7 @@ import com.example.lolserver.duo.application.command.CreateDuoRequestCommand;
 import com.example.lolserver.duo.application.model.resultmodel.DuoMatchResultModel;
 import com.example.lolserver.duo.application.model.readmodel.DuoRequestReadModel;
 import com.example.lolserver.duo.application.model.resultmodel.DuoRequestResultModel;
+import com.example.lolserver.duo.application.port.out.DuoLockPort;
 import com.example.lolserver.duo.application.port.out.DuoPostPersistencePort;
 import com.example.lolserver.duo.application.port.out.DuoRequestPersistencePort;
 import com.example.lolserver.duo.domain.DuoPost;
@@ -31,11 +32,21 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -58,6 +69,17 @@ class DuoRequestServiceTest {
 
     @Mock
     private RiotAccountResolver riotAccountResolver;
+
+    @Mock
+    private DuoLockPort duoLockPort;
+
+    private void givenLockPassThrough() {
+        given(duoLockPort.executeWithLock(anyString(), any()))
+                .willAnswer(invocation -> {
+                    Supplier<?> action = invocation.getArgument(1);
+                    return action.get();
+                });
+    }
 
     @Nested
     @DisplayName("createDuoRequest")
@@ -348,6 +370,7 @@ class DuoRequestServiceTest {
                     .tagLine("KR1")
                     .build();
 
+            givenLockPassThrough();
             given(duoRequestPersistencePort.findById(requestId))
                     .willReturn(Optional.of(duoRequest));
             given(duoRequestPersistencePort.save(any(DuoRequest.class)))
@@ -373,6 +396,167 @@ class DuoRequestServiceTest {
             assertThat(duoPost.getStatus()).isEqualTo(DuoPostStatus.MATCHED);
             then(duoRequestPersistencePort).should()
                     .closeAllOpenExcept(duoPostId, requestId);
+        }
+
+        @DisplayName("duo:post:{duoPostId} 키의 락 안에서 매칭 확정이 실행된다")
+        @Test
+        void executesWithinPostLock() {
+            // given
+            Long requesterId = 2L;
+            Long requestId = 200L;
+            Long duoPostId = 100L;
+            DuoRequest duoRequest = createTestDuoRequest(requestId, duoPostId, requesterId);
+            duoRequest.accept();
+            DuoPost duoPost = createTestDuoPost(duoPostId, 1L);
+
+            givenLockPassThrough();
+            given(duoRequestPersistencePort.findById(requestId))
+                    .willReturn(Optional.of(duoRequest));
+            given(duoRequestPersistencePort.save(any(DuoRequest.class)))
+                    .willReturn(duoRequest);
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+            given(duoPostPersistencePort.save(any(DuoPost.class)))
+                    .willReturn(duoPost);
+            given(summonerQueryUseCase.findSummonerByPuuid("owner-puuid"))
+                    .willReturn(Optional.empty());
+
+            // when
+            duoRequestService.confirmDuoRequest(requesterId, requestId);
+
+            // then
+            then(duoLockPort).should()
+                    .executeWithLock(eq("duo:post:" + duoPostId), any());
+        }
+
+        @DisplayName("락 획득 실패 시 LOCK_ACQUISITION_FAILED 에러 - 요청 상태는 변경되지 않는다")
+        @Test
+        void lockAcquisitionFailed_throwsException() {
+            // given
+            Long requesterId = 2L;
+            Long requestId = 200L;
+            DuoRequest duoRequest = createTestDuoRequest(requestId, 100L, requesterId);
+            duoRequest.accept();
+
+            given(duoRequestPersistencePort.findById(requestId))
+                    .willReturn(Optional.of(duoRequest));
+            given(duoLockPort.executeWithLock(anyString(), any()))
+                    .willThrow(new CoreException(ErrorType.LOCK_ACQUISITION_FAILED));
+
+            // when & then
+            assertThatThrownBy(() -> duoRequestService.confirmDuoRequest(requesterId, requestId))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.LOCK_ACQUISITION_FAILED);
+
+            assertThat(duoRequest.getStatus()).isEqualTo(DuoRequestStatus.ACCEPTED);
+            then(duoRequestPersistencePort).should(never()).save(any(DuoRequest.class));
+        }
+
+        @DisplayName("락 획득 후 게시글이 이미 MATCHED면 DUO_POST_NOT_ACTIVE - 요청은 CONFIRMED 되지 않는다")
+        @Test
+        void alreadyMatchedPost_throwsNotActive() {
+            // given
+            Long requesterId = 2L;
+            Long requestId = 200L;
+            Long duoPostId = 100L;
+            DuoRequest duoRequest = createTestDuoRequest(requestId, duoPostId, requesterId);
+            duoRequest.accept();
+            DuoPost matchedPost = createTestDuoPost(duoPostId, 1L);
+            matchedPost.markMatched();
+
+            givenLockPassThrough();
+            given(duoRequestPersistencePort.findById(requestId))
+                    .willReturn(Optional.of(duoRequest));
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(matchedPost));
+
+            // when & then
+            assertThatThrownBy(() -> duoRequestService.confirmDuoRequest(requesterId, requestId))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.DUO_POST_NOT_ACTIVE);
+
+            assertThat(duoRequest.getStatus()).isEqualTo(DuoRequestStatus.ACCEPTED);
+            then(duoRequestPersistencePort).should(never()).save(any(DuoRequest.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("confirmDuoRequest 선착순 동시성")
+    class ConfirmDuoRequestConcurrency {
+
+        @DisplayName("두 요청자가 동시에 승락해도 1명만 CONFIRMED 되고 나머지는 DUO_POST_NOT_ACTIVE")
+        @Test
+        void onlyOneConfirmed() throws Exception {
+            // given
+            Long duoPostId = 100L;
+            DuoPost duoPost = createTestDuoPost(duoPostId, 1L);
+            DuoRequest request1 = createTestDuoRequest(200L, duoPostId, 2L);
+            DuoRequest request2 = createTestDuoRequest(201L, duoPostId, 3L);
+            request1.accept();
+            request2.accept();
+
+            ConcurrentHashMap<String, ReentrantLock> locks = new ConcurrentHashMap<>();
+            given(duoLockPort.executeWithLock(anyString(), any()))
+                    .willAnswer(invocation -> {
+                        ReentrantLock lock = locks.computeIfAbsent(
+                                invocation.getArgument(0), key -> new ReentrantLock());
+                        lock.lock();
+                        try {
+                            Supplier<?> action = invocation.getArgument(1);
+                            return action.get();
+                        } finally {
+                            lock.unlock();
+                        }
+                    });
+            given(duoRequestPersistencePort.findById(200L))
+                    .willReturn(Optional.of(request1));
+            given(duoRequestPersistencePort.findById(201L))
+                    .willReturn(Optional.of(request2));
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+            given(duoRequestPersistencePort.save(any(DuoRequest.class)))
+                    .willAnswer(invocation -> invocation.getArgument(0));
+            given(duoPostPersistencePort.save(any(DuoPost.class)))
+                    .willAnswer(invocation -> invocation.getArgument(0));
+            given(summonerQueryUseCase.findSummonerByPuuid("owner-puuid"))
+                    .willReturn(Optional.empty());
+
+            ExecutorService executor = Executors.newFixedThreadPool(2);
+            CountDownLatch startLatch = new CountDownLatch(1);
+            Future<Object> first = executor.submit(confirmTask(startLatch, 2L, 200L));
+            Future<Object> second = executor.submit(confirmTask(startLatch, 3L, 201L));
+
+            // when
+            startLatch.countDown();
+            Object result1 = first.get(5, TimeUnit.SECONDS);
+            Object result2 = second.get(5, TimeUnit.SECONDS);
+            executor.shutdownNow();
+
+            // then
+            List<Object> results = List.of(result1, result2);
+            assertThat(results).filteredOn(DuoMatchResultModel.class::isInstance).hasSize(1);
+            assertThat(results).filteredOn(CoreException.class::isInstance)
+                    .hasSize(1)
+                    .allSatisfy(e -> assertThat(((CoreException) e).getErrorType())
+                            .isEqualTo(ErrorType.DUO_POST_NOT_ACTIVE));
+            long confirmedCount = List.of(request1, request2).stream()
+                    .filter(request -> request.getStatus() == DuoRequestStatus.CONFIRMED)
+                    .count();
+            assertThat(confirmedCount).isEqualTo(1);
+            assertThat(duoPost.getStatus()).isEqualTo(DuoPostStatus.MATCHED);
+        }
+
+        private Callable<Object> confirmTask(CountDownLatch startLatch, Long memberId, Long requestId) {
+            return () -> {
+                startLatch.await();
+                try {
+                    return duoRequestService.confirmDuoRequest(memberId, requestId);
+                } catch (CoreException e) {
+                    return e;
+                }
+            };
         }
     }
 
