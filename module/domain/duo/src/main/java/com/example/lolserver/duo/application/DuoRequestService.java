@@ -117,9 +117,14 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
 
                     duoPost.markMatched();
 
+                    // DB 조건부 UPDATE 로 선착순을 원자적으로 확정한다 — 락 해제~커밋
+                    // 윈도우에서 미커밋 ACTIVE 를 읽은 경쟁자는 여기서 0건 갱신으로 걸러진다.
+                    if (!duoPostPersistencePort.markMatchedIfActive(duoPost.getId())) {
+                        throw new CoreException(ErrorType.DUO_POST_NOT_ACTIVE);
+                    }
+
                     duoRequest.confirm();
                     duoRequestPersistencePort.save(duoRequest);
-                    duoPostPersistencePort.save(duoPost);
 
                     // 벌크 close 전에 탈락 대상을 조회해 둔다 (알림 대상 식별용).
                     List<DuoRequest> losingRequests = duoRequestPersistencePort

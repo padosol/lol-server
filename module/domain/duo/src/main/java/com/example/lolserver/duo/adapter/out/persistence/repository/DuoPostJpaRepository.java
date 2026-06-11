@@ -25,6 +25,12 @@ public interface DuoPostJpaRepository extends JpaRepository<DuoPostEntity, Long>
 
     @Modifying
     @Query("UPDATE DuoPostEntity p SET p.status = :newStatus, p.updatedAt = CURRENT_TIMESTAMP "
-            + "WHERE p.id IN :ids")
-    void updateStatusByIds(@Param("ids") List<Long> ids, @Param("newStatus") String newStatus);
+            + "WHERE p.id IN :ids AND p.status = :expectedStatus")
+    void updateStatusByIds(@Param("ids") List<Long> ids, @Param("newStatus") String newStatus,
+            @Param("expectedStatus") String expectedStatus);
+
+    @Modifying
+    @Query("UPDATE DuoPostEntity p SET p.status = 'MATCHED', p.updatedAt = CURRENT_TIMESTAMP "
+            + "WHERE p.id = :id AND p.status = 'ACTIVE' AND p.expiresAt > CURRENT_TIMESTAMP")
+    int markMatchedIfActive(@Param("id") Long id);
 }

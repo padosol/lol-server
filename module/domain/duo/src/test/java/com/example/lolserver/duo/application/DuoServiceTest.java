@@ -2,9 +2,12 @@ package com.example.lolserver.duo.application;
 
 import com.example.lolserver.duo.application.command.CreateDuoPostCommand;
 import com.example.lolserver.duo.application.command.UpdateDuoPostCommand;
+import com.example.lolserver.duo.application.model.event.DuoNotificationEvent;
+import com.example.lolserver.duo.application.model.event.DuoNotificationEvent.DuoNotificationType;
 import com.example.lolserver.duo.application.model.readmodel.DuoPostDetailReadModel;
 import com.example.lolserver.duo.application.model.resultmodel.DuoPostResultModel;
 import com.example.lolserver.duo.application.port.out.DuoLockPort;
+import com.example.lolserver.duo.application.port.out.DuoNotificationPort;
 import com.example.lolserver.duo.application.port.out.DuoPostPersistencePort;
 import com.example.lolserver.duo.application.port.out.DuoRequestPersistencePort;
 import com.example.lolserver.duo.domain.DuoPost;
@@ -68,6 +71,9 @@ class DuoServiceTest {
 
     @Mock
     private DuoLockPort duoLockPort;
+
+    @Mock
+    private DuoNotificationPort duoNotificationPort;
 
     private void givenLockPassThrough() {
         given(duoLockPort.executeWithLock(anyString(), any()))
@@ -392,11 +398,14 @@ class DuoServiceTest {
             Long memberId = 1L;
             Long duoPostId = 100L;
             DuoPost duoPost = createTestDuoPost(duoPostId, memberId);
+            DuoRequest openRequest = createTestDuoRequest(200L, duoPostId, 2L);
 
             given(duoPostPersistencePort.findById(duoPostId))
                     .willReturn(Optional.of(duoPost));
             given(duoPostPersistencePort.save(any(DuoPost.class)))
                     .willReturn(duoPost);
+            given(duoRequestPersistencePort.findByDuoPostId(duoPostId))
+                    .willReturn(List.of(openRequest));
 
             // when
             duoService.deleteDuoPost(memberId, duoPostId);
@@ -405,6 +414,8 @@ class DuoServiceTest {
             assertThat(duoPost.getStatus()).isEqualTo(DuoPostStatus.DELETED);
             then(duoPostPersistencePort).should().save(duoPost);
             then(duoRequestPersistencePort).should().closeAllOpen(duoPostId);
+            then(duoNotificationPort).should().notify(new DuoNotificationEvent(
+                    DuoNotificationType.REQUEST_CLOSED, 2L, duoPostId, 200L));
         }
     }
 

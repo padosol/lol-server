@@ -71,6 +71,19 @@ class SseEmitterRegistryTest {
         then(emitter).should().completeWithError(any(IOException.class));
     }
 
+    @DisplayName("같은 멤버가 재구독하면 기존 emitter 는 complete 되고 새 emitter 로 교체된다")
+    @Test
+    void register_sameMember_completesPreviousEmitter() {
+        SseEmitter previous = mock(SseEmitter.class);
+        SseEmitter replacement = mock(SseEmitter.class);
+        registry.register(1L, previous);
+
+        registry.register(1L, replacement);
+
+        then(previous).should().complete();
+        assertThat(registry.contains(1L)).isTrue();
+    }
+
     @DisplayName("emitter 완료 콜백이 호출되면 보관소에서 제거된다")
     @Test
     void register_completionCallback_removesEmitter() {

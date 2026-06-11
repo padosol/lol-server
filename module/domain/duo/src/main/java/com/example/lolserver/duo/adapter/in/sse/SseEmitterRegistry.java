@@ -20,7 +20,11 @@ public class SseEmitterRegistry {
     private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
 
     public SseEmitter register(Long memberId, SseEmitter emitter) {
-        emitters.put(memberId, emitter);
+        SseEmitter previous = emitters.put(memberId, emitter);
+        if (previous != null) {
+            // 이전 연결을 닫아 서블릿 async context 가 타임아웃까지 누적되지 않게 한다.
+            previous.complete();
+        }
         emitter.onCompletion(() -> emitters.remove(memberId, emitter));
         emitter.onTimeout(() -> emitters.remove(memberId, emitter));
         emitter.onError(e -> emitters.remove(memberId, emitter));

@@ -70,12 +70,19 @@ public class DuoPostPersistenceAdapter implements DuoPostPersistencePort {
     }
 
     @Override
+    public boolean markMatchedIfActive(Long duoPostId) {
+        return duoPostJpaRepository.markMatchedIfActive(duoPostId) > 0;
+    }
+
+    @Override
     public List<Long> expireAllOverdue(LocalDateTime now) {
         List<Long> overdueIds = duoPostJpaRepository.findIdsByStatusAndExpiresAtBefore(
                 DuoPostStatus.ACTIVE.name(), now);
 
         if (!overdueIds.isEmpty()) {
-            duoPostJpaRepository.updateStatusByIds(overdueIds, DuoPostStatus.EXPIRED.name());
+            // ACTIVE 인 행만 전환 — SELECT 이후 MATCHED 로 바뀐 글을 덮어쓰지 않는다.
+            duoPostJpaRepository.updateStatusByIds(overdueIds,
+                    DuoPostStatus.EXPIRED.name(), DuoPostStatus.ACTIVE.name());
         }
 
         return overdueIds;

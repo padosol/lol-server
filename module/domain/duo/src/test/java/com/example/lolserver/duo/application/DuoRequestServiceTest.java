@@ -387,8 +387,8 @@ class DuoRequestServiceTest {
                     .willReturn(duoRequest);
             given(duoPostPersistencePort.findById(duoPostId))
                     .willReturn(Optional.of(duoPost));
-            given(duoPostPersistencePort.save(any(DuoPost.class)))
-                    .willReturn(duoPost);
+            given(duoPostPersistencePort.markMatchedIfActive(duoPostId))
+                    .willReturn(true);
             given(duoRequestPersistencePort.findByDuoPostId(duoPostId))
                     .willReturn(List.of(duoRequest, losingRequest));
             given(summonerQueryUseCase.findSummonerByPuuid(ownerPuuid))
@@ -434,8 +434,8 @@ class DuoRequestServiceTest {
                     .willReturn(duoRequest);
             given(duoPostPersistencePort.findById(duoPostId))
                     .willReturn(Optional.of(duoPost));
-            given(duoPostPersistencePort.save(any(DuoPost.class)))
-                    .willReturn(duoPost);
+            given(duoPostPersistencePort.markMatchedIfActive(duoPostId))
+                    .willReturn(true);
             given(summonerQueryUseCase.findSummonerByPuuid("owner-puuid"))
                     .willReturn(Optional.empty());
 
@@ -536,8 +536,8 @@ class DuoRequestServiceTest {
                     .willReturn(Optional.of(duoPost));
             given(duoRequestPersistencePort.save(any(DuoRequest.class)))
                     .willAnswer(invocation -> invocation.getArgument(0));
-            given(duoPostPersistencePort.save(any(DuoPost.class)))
-                    .willAnswer(invocation -> invocation.getArgument(0));
+            given(duoPostPersistencePort.markMatchedIfActive(duoPostId))
+                    .willReturn(true);
             given(summonerQueryUseCase.findSummonerByPuuid("owner-puuid"))
                     .willReturn(Optional.empty());
 

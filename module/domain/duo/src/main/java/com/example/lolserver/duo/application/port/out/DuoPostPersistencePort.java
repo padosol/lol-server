@@ -13,6 +13,7 @@ public interface DuoPostPersistencePort {
     DuoPost save(DuoPost duoPost);
     Optional<DuoPost> findById(Long id);
     boolean existsActiveByMemberId(Long memberId);
+    boolean markMatchedIfActive(Long duoPostId);
     SliceResult<DuoPostListReadModel> findActivePosts(DuoPostSearchCommand command);
     SliceResult<DuoPostListReadModel> findByMemberId(Long memberId, int page);
     List<Long> expireAllOverdue(LocalDateTime now);
