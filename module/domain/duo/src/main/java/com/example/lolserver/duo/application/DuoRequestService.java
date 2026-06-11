@@ -1,12 +1,15 @@
 package com.example.lolserver.duo.application;
 
 import com.example.lolserver.duo.application.command.CreateDuoRequestCommand;
+import com.example.lolserver.duo.application.model.event.DuoNotificationEvent;
+import com.example.lolserver.duo.application.model.event.DuoNotificationEvent.DuoNotificationType;
 import com.example.lolserver.duo.application.model.resultmodel.DuoMatchResultModel;
 import com.example.lolserver.duo.application.model.readmodel.DuoRequestReadModel;
 import com.example.lolserver.duo.application.model.resultmodel.DuoRequestResultModel;
 import com.example.lolserver.duo.application.port.in.DuoRequestQueryUseCase;
 import com.example.lolserver.duo.application.port.in.DuoRequestUseCase;
 import com.example.lolserver.duo.application.port.out.DuoLockPort;
+import com.example.lolserver.duo.application.port.out.DuoNotificationPort;
 import com.example.lolserver.duo.application.port.out.DuoPostPersistencePort;
 import com.example.lolserver.duo.application.port.out.DuoRequestPersistencePort;
 import com.example.lolserver.duo.domain.DuoPost;
@@ -39,6 +42,7 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
     private final SummonerQueryUseCase summonerQueryUseCase;
     private final RiotAccountResolver riotAccountResolver;
     private final DuoLockPort duoLockPort;
+    private final DuoNotificationPort duoNotificationPort;
 
     @Override
     @Transactional
@@ -89,6 +93,10 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
         duoRequest.accept();
         duoRequestPersistencePort.save(duoRequest);
 
+        duoNotificationPort.notify(new DuoNotificationEvent(
+                DuoNotificationType.REQUEST_ACCEPTED,
+                duoRequest.getRequesterId(), duoRequest.getDuoPostId(), requestId));
+
         return DuoMatchResultModel.of(duoPost, duoRequest);
     }
 
@@ -113,11 +121,29 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
                     duoRequestPersistencePort.save(duoRequest);
                     duoPostPersistencePort.save(duoPost);
 
+                    // 벌크 close 전에 탈락 대상을 조회해 둔다 (알림 대상 식별용).
+                    List<DuoRequest> losingRequests = duoRequestPersistencePort
+                            .findByDuoPostId(duoPost.getId()).stream()
+                            .filter(request -> !request.getId().equals(duoRequest.getId()))
+                            .filter(request -> request.getStatus() == DuoRequestStatus.PENDING
+                                    || request.getStatus() == DuoRequestStatus.ACCEPTED)
+                            .toList();
+
                     duoRequestPersistencePort.closeAllOpenExcept(
                             duoPost.getId(), duoRequest.getId());
 
                     SummonerReadModel partnerSummoner = summonerQueryUseCase
                             .findSummonerByPuuid(duoPost.getPuuid()).orElse(null);
+
+                    duoNotificationPort.notify(new DuoNotificationEvent(
+                            DuoNotificationType.MATCH_CONFIRMED,
+                            duoPost.getMemberId(), duoPost.getId(), duoRequest.getId()));
+                    duoNotificationPort.notify(new DuoNotificationEvent(
+                            DuoNotificationType.MATCH_CONFIRMED,
+                            duoRequest.getRequesterId(), duoPost.getId(), duoRequest.getId()));
+                    losingRequests.forEach(losing -> duoNotificationPort.notify(
+                            new DuoNotificationEvent(DuoNotificationType.REQUEST_CLOSED,
+                                    losing.getRequesterId(), duoPost.getId(), losing.getId())));
 
                     return DuoMatchResultModel.of(duoPost, duoRequest, partnerSummoner);
                 });

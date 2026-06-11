@@ -4,7 +4,10 @@ import com.example.lolserver.duo.application.command.CreateDuoRequestCommand;
 import com.example.lolserver.duo.application.model.resultmodel.DuoMatchResultModel;
 import com.example.lolserver.duo.application.model.readmodel.DuoRequestReadModel;
 import com.example.lolserver.duo.application.model.resultmodel.DuoRequestResultModel;
+import com.example.lolserver.duo.application.model.event.DuoNotificationEvent;
+import com.example.lolserver.duo.application.model.event.DuoNotificationEvent.DuoNotificationType;
 import com.example.lolserver.duo.application.port.out.DuoLockPort;
+import com.example.lolserver.duo.application.port.out.DuoNotificationPort;
 import com.example.lolserver.duo.application.port.out.DuoPostPersistencePort;
 import com.example.lolserver.duo.application.port.out.DuoRequestPersistencePort;
 import com.example.lolserver.duo.domain.DuoPost;
@@ -72,6 +75,9 @@ class DuoRequestServiceTest {
 
     @Mock
     private DuoLockPort duoLockPort;
+
+    @Mock
+    private DuoNotificationPort duoNotificationPort;
 
     private void givenLockPassThrough() {
         given(duoLockPort.executeWithLock(anyString(), any()))
@@ -310,6 +316,8 @@ class DuoRequestServiceTest {
             assertThat(result.getPartnerTagLine()).isNull();
             assertThat(duoRequest.getStatus()).isEqualTo(DuoRequestStatus.ACCEPTED);
             then(duoRequestPersistencePort).should().save(duoRequest);
+            then(duoNotificationPort).should().notify(new DuoNotificationEvent(
+                    DuoNotificationType.REQUEST_ACCEPTED, 2L, duoPostId, requestId));
         }
     }
 
@@ -370,6 +378,8 @@ class DuoRequestServiceTest {
                     .tagLine("KR1")
                     .build();
 
+            DuoRequest losingRequest = createTestDuoRequest(201L, duoPostId, 3L);
+
             givenLockPassThrough();
             given(duoRequestPersistencePort.findById(requestId))
                     .willReturn(Optional.of(duoRequest));
@@ -379,6 +389,8 @@ class DuoRequestServiceTest {
                     .willReturn(Optional.of(duoPost));
             given(duoPostPersistencePort.save(any(DuoPost.class)))
                     .willReturn(duoPost);
+            given(duoRequestPersistencePort.findByDuoPostId(duoPostId))
+                    .willReturn(List.of(duoRequest, losingRequest));
             given(summonerQueryUseCase.findSummonerByPuuid(ownerPuuid))
                     .willReturn(Optional.of(partnerSummoner));
 
@@ -396,6 +408,12 @@ class DuoRequestServiceTest {
             assertThat(duoPost.getStatus()).isEqualTo(DuoPostStatus.MATCHED);
             then(duoRequestPersistencePort).should()
                     .closeAllOpenExcept(duoPostId, requestId);
+            then(duoNotificationPort).should().notify(new DuoNotificationEvent(
+                    DuoNotificationType.MATCH_CONFIRMED, 1L, duoPostId, requestId));
+            then(duoNotificationPort).should().notify(new DuoNotificationEvent(
+                    DuoNotificationType.MATCH_CONFIRMED, requesterId, duoPostId, requestId));
+            then(duoNotificationPort).should().notify(new DuoNotificationEvent(
+                    DuoNotificationType.REQUEST_CLOSED, 3L, duoPostId, 201L));
         }
 
         @DisplayName("duo:post:{duoPostId} 키의 락 안에서 매칭 확정이 실행된다")
