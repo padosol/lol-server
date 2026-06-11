@@ -10,6 +10,7 @@ import java.util.Optional;
 public interface DuoPostPersistencePort {
     DuoPost save(DuoPost duoPost);
     Optional<DuoPost> findById(Long id);
+    boolean existsActiveByMemberId(Long memberId);
     SliceResult<DuoPostListReadModel> findActivePosts(DuoPostSearchCommand command);
     SliceResult<DuoPostListReadModel> findByMemberId(Long memberId, int page);
 }

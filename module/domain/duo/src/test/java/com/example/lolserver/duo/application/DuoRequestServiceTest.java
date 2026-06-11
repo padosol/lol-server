@@ -314,7 +314,7 @@ class DuoRequestServiceTest {
                     .isEqualTo(ErrorType.FORBIDDEN);
         }
 
-        @DisplayName("정상 확인 - 매칭 완료, gameName 반환, 나머지 요청 자동 거절")
+        @DisplayName("정상 확인 - 매칭 완료, gameName 반환, 나머지 요청 자동 종료")
         @Test
         void success() {
             // given
@@ -372,7 +372,120 @@ class DuoRequestServiceTest {
             assertThat(duoRequest.getStatus()).isEqualTo(DuoRequestStatus.CONFIRMED);
             assertThat(duoPost.getStatus()).isEqualTo(DuoPostStatus.MATCHED);
             then(duoRequestPersistencePort).should()
-                    .rejectAllPendingAndAccepted(duoPostId, requestId);
+                    .closeAllOpenExcept(duoPostId, requestId);
+        }
+    }
+
+    @Nested
+    @DisplayName("getMatchResult")
+    class GetMatchResult {
+
+        @DisplayName("소유자 조회 시 상대(확정 요청자)의 게임이름을 반환한다")
+        @Test
+        void owner_returnsRequesterIdentity() {
+            // given
+            Long ownerId = 1L;
+            Long duoPostId = 100L;
+            DuoPost duoPost = createTestDuoPost(duoPostId, ownerId);
+            duoPost.markMatched();
+            DuoRequest confirmedRequest = createTestDuoRequest(200L, duoPostId, 2L);
+            confirmedRequest.accept();
+            confirmedRequest.confirm();
+            SummonerReadModel requesterSummoner = SummonerReadModel.builder()
+                    .puuid("requester-puuid")
+                    .gameName("DuoBuddy")
+                    .tagLine("KR2")
+                    .build();
+
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+            given(duoRequestPersistencePort.findByDuoPostId(duoPostId))
+                    .willReturn(List.of(confirmedRequest));
+            given(summonerQueryUseCase.findSummonerByPuuid("requester-puuid"))
+                    .willReturn(Optional.of(requesterSummoner));
+
+            // when
+            DuoMatchResultModel result = duoRequestService.getMatchResult(ownerId, duoPostId);
+
+            // then
+            assertThat(result.getDuoPostId()).isEqualTo(duoPostId);
+            assertThat(result.getRequestId()).isEqualTo(200L);
+            assertThat(result.getPartnerGameName()).isEqualTo("DuoBuddy");
+            assertThat(result.getPartnerTagLine()).isEqualTo("KR2");
+            assertThat(result.getStatus()).isEqualTo("CONFIRMED");
+        }
+
+        @DisplayName("확정 요청자 조회 시 상대(소유자)의 게임이름을 반환한다")
+        @Test
+        void confirmedRequester_returnsOwnerIdentity() {
+            // given
+            Long requesterId = 2L;
+            Long duoPostId = 100L;
+            DuoPost duoPost = createTestDuoPost(duoPostId, 1L);
+            duoPost.markMatched();
+            DuoRequest confirmedRequest = createTestDuoRequest(200L, duoPostId, requesterId);
+            confirmedRequest.accept();
+            confirmedRequest.confirm();
+            SummonerReadModel ownerSummoner = SummonerReadModel.builder()
+                    .puuid("owner-puuid")
+                    .gameName("Hide on bush")
+                    .tagLine("KR1")
+                    .build();
+
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+            given(duoRequestPersistencePort.findByDuoPostId(duoPostId))
+                    .willReturn(List.of(confirmedRequest));
+            given(summonerQueryUseCase.findSummonerByPuuid("owner-puuid"))
+                    .willReturn(Optional.of(ownerSummoner));
+
+            // when
+            DuoMatchResultModel result = duoRequestService.getMatchResult(requesterId, duoPostId);
+
+            // then
+            assertThat(result.getPartnerGameName()).isEqualTo("Hide on bush");
+            assertThat(result.getPartnerTagLine()).isEqualTo("KR1");
+        }
+
+        @DisplayName("MATCHED 상태가 아닌 게시글 조회 시 DUO_POST_NOT_MATCHED 에러")
+        @Test
+        void notMatchedPost_throwsException() {
+            // given
+            Long duoPostId = 100L;
+            DuoPost duoPost = createTestDuoPost(duoPostId, 1L);
+
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+
+            // when & then
+            assertThatThrownBy(() -> duoRequestService.getMatchResult(1L, duoPostId))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.DUO_POST_NOT_MATCHED);
+        }
+
+        @DisplayName("매칭 당사자가 아니면 FORBIDDEN 에러")
+        @Test
+        void thirdParty_throwsForbidden() {
+            // given
+            Long thirdPartyId = 3L;
+            Long duoPostId = 100L;
+            DuoPost duoPost = createTestDuoPost(duoPostId, 1L);
+            duoPost.markMatched();
+            DuoRequest confirmedRequest = createTestDuoRequest(200L, duoPostId, 2L);
+            confirmedRequest.accept();
+            confirmedRequest.confirm();
+
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+            given(duoRequestPersistencePort.findByDuoPostId(duoPostId))
+                    .willReturn(List.of(confirmedRequest));
+
+            // when & then
+            assertThatThrownBy(() -> duoRequestService.getMatchResult(thirdPartyId, duoPostId))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.FORBIDDEN);
         }
     }
 

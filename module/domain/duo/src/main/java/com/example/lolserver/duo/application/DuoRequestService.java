@@ -105,7 +105,7 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
         duoPost.markMatched();
         duoPostPersistencePort.save(duoPost);
 
-        duoRequestPersistencePort.rejectAllPendingAndAccepted(
+        duoRequestPersistencePort.closeAllOpenExcept(
                 duoPost.getId(), duoRequest.getId());
 
         SummonerReadModel partnerSummoner = summonerQueryUseCase
@@ -156,5 +156,33 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
     @Override
     public SliceResult<DuoRequestReadModel> getMyDuoRequests(Long memberId, int page) {
         return duoRequestPersistencePort.findByRequesterId(memberId, page);
+    }
+
+    @Override
+    public DuoMatchResultModel getMatchResult(Long memberId, Long duoPostId) {
+        DuoPost duoPost = duoPostPersistencePort.findById(duoPostId)
+                .orElseThrow(() -> new CoreException(ErrorType.DUO_POST_NOT_FOUND));
+
+        duoPost.validateMatched();
+
+        DuoRequest confirmedRequest = duoRequestPersistencePort
+                .findByDuoPostId(duoPostId).stream()
+                .filter(request -> request.getStatus() == DuoRequestStatus.CONFIRMED)
+                .findFirst()
+                .orElseThrow(() -> new CoreException(ErrorType.DUO_REQUEST_NOT_FOUND));
+
+        String partnerPuuid;
+        if (duoPost.isOwner(memberId)) {
+            partnerPuuid = confirmedRequest.getRequesterPuuid();
+        } else if (confirmedRequest.getRequesterId().equals(memberId)) {
+            partnerPuuid = duoPost.getPuuid();
+        } else {
+            throw new CoreException(ErrorType.FORBIDDEN);
+        }
+
+        SummonerReadModel partnerSummoner = summonerQueryUseCase
+                .findSummonerByPuuid(partnerPuuid).orElse(null);
+
+        return DuoMatchResultModel.of(duoPost, confirmedRequest, partnerSummoner);
     }
 }

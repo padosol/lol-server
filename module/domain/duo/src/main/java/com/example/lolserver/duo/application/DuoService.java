@@ -39,6 +39,11 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase {
     @Transactional
     public DuoPostResultModel createDuoPost(Long memberId, CreateDuoPostCommand command) {
         String puuid = riotAccountResolver.extractRiotPuuid(memberId);
+
+        if (duoPostPersistencePort.existsActiveByMemberId(memberId)) {
+            throw new CoreException(ErrorType.DUO_POST_ACTIVE_EXISTS);
+        }
+
         RiotAccountStats stats = riotAccountResolver.lookupAllStats(puuid);
 
         DuoPost duoPost = DuoPost.create(
@@ -63,6 +68,8 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase {
 
         duoPost.markDeleted();
         duoPostPersistencePort.save(duoPost);
+
+        duoRequestPersistencePort.closeAllOpen(duoPostId);
     }
 
     @Override

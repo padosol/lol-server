@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class DuoPostTest {
@@ -99,6 +100,55 @@ class DuoPostTest {
 
         // when & then
         assertThatThrownBy(() -> duoPost.validateActive())
+                .isInstanceOf(CoreException.class)
+                .extracting(e -> ((CoreException) e).getErrorType())
+                .isEqualTo(ErrorType.DUO_POST_NOT_ACTIVE);
+    }
+
+    @DisplayName("활성 게시글에 markMatched 호출 시 MATCHED로 전환된다")
+    @Test
+    void markMatched_active_success() {
+        // given
+        DuoPost duoPost = createActiveDuoPost(1L);
+
+        // when
+        duoPost.markMatched();
+
+        // then
+        assertThat(duoPost.getStatus()).isEqualTo(DuoPostStatus.MATCHED);
+    }
+
+    @DisplayName("MATCHED 게시글에 markMatched 호출 시 DUO_POST_NOT_ACTIVE 예외가 발생한다")
+    @Test
+    void markMatched_alreadyMatched_throwsNotActive() {
+        // given
+        DuoPost duoPost = DuoPost.builder()
+                .id(1L)
+                .memberId(1L)
+                .status(DuoPostStatus.MATCHED)
+                .expiresAt(LocalDateTime.now().plusHours(24))
+                .build();
+
+        // when & then
+        assertThatThrownBy(duoPost::markMatched)
+                .isInstanceOf(CoreException.class)
+                .extracting(e -> ((CoreException) e).getErrorType())
+                .isEqualTo(ErrorType.DUO_POST_NOT_ACTIVE);
+    }
+
+    @DisplayName("만료된 게시글에 markMatched 호출 시 DUO_POST_NOT_ACTIVE 예외가 발생한다")
+    @Test
+    void markMatched_expired_throwsNotActive() {
+        // given
+        DuoPost duoPost = DuoPost.builder()
+                .id(1L)
+                .memberId(1L)
+                .status(DuoPostStatus.ACTIVE)
+                .expiresAt(LocalDateTime.now().minusHours(1))
+                .build();
+
+        // when & then
+        assertThatThrownBy(duoPost::markMatched)
                 .isInstanceOf(CoreException.class)
                 .extracting(e -> ((CoreException) e).getErrorType())
                 .isEqualTo(ErrorType.DUO_POST_NOT_ACTIVE);

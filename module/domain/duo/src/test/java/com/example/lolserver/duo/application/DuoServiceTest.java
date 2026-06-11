@@ -79,6 +79,32 @@ class DuoServiceTest {
                     .isEqualTo(ErrorType.RIOT_ACCOUNT_NOT_LINKED);
         }
 
+        @DisplayName("이미 활성 게시글이 있으면 DUO_POST_ACTIVE_EXISTS 에러")
+        @Test
+        void activePostExists_throwsException() {
+            // given
+            Long memberId = 1L;
+            String puuid = "test-puuid";
+            CreateDuoPostCommand command = CreateDuoPostCommand.builder()
+                    .primaryLane("MID")
+                    .desiredLane("JUNGLE")
+                    .hasMicrophone(true)
+                    .memo("듀오 구합니다")
+                    .build();
+
+            given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
+            given(duoPostPersistencePort.existsActiveByMemberId(memberId))
+                    .willReturn(true);
+
+            // when & then
+            assertThatThrownBy(() -> duoService.createDuoPost(memberId, command))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.DUO_POST_ACTIVE_EXISTS);
+
+            then(duoPostPersistencePort).should(never()).save(any(DuoPost.class));
+        }
+
         @DisplayName("정상 등록 - 티어 정보 있을 때 tierAvailable=true")
         @Test
         void success_withTier() {
@@ -100,6 +126,8 @@ class DuoServiceTest {
             RiotAccountStats stats = new RiotAccountStats(tierInfo, mostChampions, recentGameSummary);
 
             given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
+            given(duoPostPersistencePort.existsActiveByMemberId(memberId))
+                    .willReturn(false);
             given(riotAccountResolver.lookupAllStats(puuid)).willReturn(stats);
             given(duoPostPersistencePort.save(any(DuoPost.class)))
                     .willAnswer(invocation -> {
@@ -161,6 +189,8 @@ class DuoServiceTest {
                     new RecentGameSummary(0, 0, Collections.emptyList()));
 
             given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
+            given(duoPostPersistencePort.existsActiveByMemberId(memberId))
+                    .willReturn(false);
             given(riotAccountResolver.lookupAllStats(puuid)).willReturn(stats);
             given(duoPostPersistencePort.save(any(DuoPost.class)))
                     .willAnswer(invocation -> {
@@ -240,6 +270,7 @@ class DuoServiceTest {
             // then
             assertThat(duoPost.getStatus()).isEqualTo(DuoPostStatus.DELETED);
             then(duoPostPersistencePort).should().save(duoPost);
+            then(duoRequestPersistencePort).should().closeAllOpen(duoPostId);
         }
     }
 

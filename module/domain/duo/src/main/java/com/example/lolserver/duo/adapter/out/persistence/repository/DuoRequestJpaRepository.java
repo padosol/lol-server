@@ -18,11 +18,16 @@ public interface DuoRequestJpaRepository extends JpaRepository<DuoRequestEntity,
             Long requesterId, List<String> statuses);
 
     @Modifying
-    @Query("UPDATE DuoRequestEntity r SET r.status = 'REJECTED', r.updatedAt = CURRENT_TIMESTAMP "
+    @Query("UPDATE DuoRequestEntity r SET r.status = 'CLOSED', r.updatedAt = CURRENT_TIMESTAMP "
             + "WHERE r.duoPostId = :duoPostId AND r.id != :excludeRequestId "
             + "AND r.status IN ('PENDING', 'ACCEPTED')")
-    void rejectAllPendingAndAccepted(@Param("duoPostId") Long duoPostId,
+    void closeAllOpenExcept(@Param("duoPostId") Long duoPostId,
             @Param("excludeRequestId") Long excludeRequestId);
+
+    @Modifying
+    @Query("UPDATE DuoRequestEntity r SET r.status = 'CLOSED', r.updatedAt = CURRENT_TIMESTAMP "
+            + "WHERE r.duoPostId = :duoPostId AND r.status IN ('PENDING', 'ACCEPTED')")
+    void closeAllOpen(@Param("duoPostId") Long duoPostId);
 
     Slice<DuoRequestEntity> findByRequesterIdOrderByCreatedAtDesc(Long requesterId,
             Pageable pageable);

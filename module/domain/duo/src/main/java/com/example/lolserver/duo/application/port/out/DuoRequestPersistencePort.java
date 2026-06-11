@@ -14,6 +14,7 @@ public interface DuoRequestPersistencePort {
     List<DuoRequest> findByDuoPostId(Long duoPostId);
     boolean existsByDuoPostIdAndRequesterIdAndStatusIn(Long duoPostId,
             Long requesterId, List<DuoRequestStatus> statuses);
-    void rejectAllPendingAndAccepted(Long duoPostId, Long excludeRequestId);
+    void closeAllOpenExcept(Long duoPostId, Long excludeRequestId);
+    void closeAllOpen(Long duoPostId);
     SliceResult<DuoRequestReadModel> findByRequesterId(Long requesterId, int page);
 }

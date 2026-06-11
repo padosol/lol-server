@@ -101,4 +101,13 @@ public class DuoRequest {
         this.status = DuoRequestStatus.CANCELLED;
         this.updatedAt = LocalDateTime.now();
     }
+
+    public void close() {
+        if (this.status != DuoRequestStatus.PENDING
+                && this.status != DuoRequestStatus.ACCEPTED) {
+            throw new CoreException(ErrorType.DUO_REQUEST_ALREADY_COMPLETED);
+        }
+        this.status = DuoRequestStatus.CLOSED;
+        this.updatedAt = LocalDateTime.now();
+    }
 }

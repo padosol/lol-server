@@ -4,6 +4,7 @@ import com.example.lolserver.duo.application.command.DuoPostSearchCommand;
 import com.example.lolserver.duo.application.model.readmodel.DuoPostListReadModel;
 import com.example.lolserver.duo.application.port.out.DuoPostPersistencePort;
 import com.example.lolserver.duo.domain.DuoPost;
+import com.example.lolserver.duo.domain.vo.DuoPostStatus;
 import com.example.lolserver.duo.adapter.out.persistence.dto.DuoPostListDTO;
 import com.example.lolserver.duo.adapter.out.persistence.dsl.DuoPostRepositoryCustom;
 import com.example.lolserver.duo.adapter.out.persistence.entity.DuoPostEntity;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Component
@@ -39,6 +41,12 @@ public class DuoPostPersistenceAdapter implements DuoPostPersistencePort {
     public Optional<DuoPost> findById(Long id) {
         return duoPostJpaRepository.findById(id)
                 .map(duoPostMapper::toDomain);
+    }
+
+    @Override
+    public boolean existsActiveByMemberId(Long memberId) {
+        return duoPostJpaRepository.existsByMemberIdAndStatusAndExpiresAtAfter(
+                memberId, DuoPostStatus.ACTIVE.name(), LocalDateTime.now());
     }
 
     @Override

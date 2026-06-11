@@ -47,6 +47,16 @@ public class DuoRequestController {
                 .body(ApiResponse.success(DuoRequestResponse.from(result)));
     }
 
+    @GetMapping("/posts/{postId}/match-result")
+    public ResponseEntity<ApiResponse<DuoMatchResultResponse>> getMatchResult(
+            @AuthenticationPrincipal AuthenticatedMember member,
+            @PathVariable Long postId) {
+        DuoMatchResultModel result = duoRequestQueryUseCase.getMatchResult(
+                member.memberId(), postId);
+        return ResponseEntity.ok(
+                ApiResponse.success(DuoMatchResultResponse.from(result)));
+    }
+
     @GetMapping("/posts/{postId}/requests")
     public ResponseEntity<ApiResponse<List<DuoRequestResponse>>> getDuoRequestsForPost(
             @AuthenticationPrincipal AuthenticatedMember member,

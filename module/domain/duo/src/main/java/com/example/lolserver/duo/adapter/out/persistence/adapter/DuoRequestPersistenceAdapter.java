@@ -56,8 +56,13 @@ public class DuoRequestPersistenceAdapter implements DuoRequestPersistencePort {
     }
 
     @Override
-    public void rejectAllPendingAndAccepted(Long duoPostId, Long excludeRequestId) {
-        duoRequestJpaRepository.rejectAllPendingAndAccepted(duoPostId, excludeRequestId);
+    public void closeAllOpenExcept(Long duoPostId, Long excludeRequestId) {
+        duoRequestJpaRepository.closeAllOpenExcept(duoPostId, excludeRequestId);
+    }
+
+    @Override
+    public void closeAllOpen(Long duoPostId) {
+        duoRequestJpaRepository.closeAllOpen(duoPostId);
     }
 
     @Override
