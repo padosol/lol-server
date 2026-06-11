@@ -46,6 +46,13 @@ public class DuoRequestPersistenceAdapter implements DuoRequestPersistencePort {
     }
 
     @Override
+    public Optional<DuoRequest> findConfirmedByDuoPostId(Long duoPostId) {
+        return duoRequestJpaRepository.findFirstByDuoPostIdAndStatus(
+                        duoPostId, DuoRequestStatus.CONFIRMED.name())
+                .map(duoRequestMapper::toDomain);
+    }
+
+    @Override
     public boolean existsByDuoPostIdAndRequesterIdAndStatusIn(Long duoPostId,
             Long requesterId, List<DuoRequestStatus> statuses) {
         List<String> statusStrings = statuses.stream()

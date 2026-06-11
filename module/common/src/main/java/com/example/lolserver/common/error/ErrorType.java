@@ -54,6 +54,8 @@ public enum ErrorType {
             "이미 활성 상태의 듀오 게시글이 있습니다."),
     DUO_POST_NOT_MATCHED(400, ErrorCode.E400,
             "매칭이 완료된 게시글이 아닙니다."),
+    DUO_POST_ALREADY_MATCHED(400, ErrorCode.E400,
+            "이미 매칭이 완료된 게시글은 삭제할 수 없습니다."),
     DUO_POST_SELF_REQUEST(400, ErrorCode.E400,
             "본인의 듀오 게시글에는 요청할 수 없습니다."),
     DUO_REQUEST_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 듀오 요청입니다."),

@@ -399,8 +399,8 @@ class DuoRequestServiceTest {
 
             given(duoPostPersistencePort.findById(duoPostId))
                     .willReturn(Optional.of(duoPost));
-            given(duoRequestPersistencePort.findByDuoPostId(duoPostId))
-                    .willReturn(List.of(confirmedRequest));
+            given(duoRequestPersistencePort.findConfirmedByDuoPostId(duoPostId))
+                    .willReturn(Optional.of(confirmedRequest));
             given(summonerQueryUseCase.findSummonerByPuuid("requester-puuid"))
                     .willReturn(Optional.of(requesterSummoner));
 
@@ -434,8 +434,8 @@ class DuoRequestServiceTest {
 
             given(duoPostPersistencePort.findById(duoPostId))
                     .willReturn(Optional.of(duoPost));
-            given(duoRequestPersistencePort.findByDuoPostId(duoPostId))
-                    .willReturn(List.of(confirmedRequest));
+            given(duoRequestPersistencePort.findConfirmedByDuoPostId(duoPostId))
+                    .willReturn(Optional.of(confirmedRequest));
             given(summonerQueryUseCase.findSummonerByPuuid("owner-puuid"))
                     .willReturn(Optional.of(ownerSummoner));
 
@@ -478,8 +478,8 @@ class DuoRequestServiceTest {
 
             given(duoPostPersistencePort.findById(duoPostId))
                     .willReturn(Optional.of(duoPost));
-            given(duoRequestPersistencePort.findByDuoPostId(duoPostId))
-                    .willReturn(List.of(confirmedRequest));
+            given(duoRequestPersistencePort.findConfirmedByDuoPostId(duoPostId))
+                    .willReturn(Optional.of(confirmedRequest));
 
             // when & then
             assertThatThrownBy(() -> duoRequestService.getMatchResult(thirdPartyId, duoPostId))

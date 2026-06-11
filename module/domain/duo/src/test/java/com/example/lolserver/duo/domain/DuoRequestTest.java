@@ -92,6 +92,32 @@ class DuoRequestTest {
                 .isEqualTo(ErrorType.DUO_REQUEST_ALREADY_COMPLETED);
     }
 
+    @DisplayName("CLOSED 요청에 reject 호출 시 DUO_REQUEST_ALREADY_COMPLETED 예외가 발생한다")
+    @Test
+    void reject_closed_throwsAlreadyCompleted() {
+        // given
+        DuoRequest duoRequest = createRequestWithStatus(DuoRequestStatus.CLOSED);
+
+        // when & then
+        assertThatThrownBy(duoRequest::reject)
+                .isInstanceOf(CoreException.class)
+                .extracting(e -> ((CoreException) e).getErrorType())
+                .isEqualTo(ErrorType.DUO_REQUEST_ALREADY_COMPLETED);
+    }
+
+    @DisplayName("CLOSED 요청에 cancel 호출 시 DUO_REQUEST_ALREADY_COMPLETED 예외가 발생한다")
+    @Test
+    void cancel_closed_throwsAlreadyCompleted() {
+        // given
+        DuoRequest duoRequest = createRequestWithStatus(DuoRequestStatus.CLOSED);
+
+        // when & then
+        assertThatThrownBy(duoRequest::cancel)
+                .isInstanceOf(CoreException.class)
+                .extracting(e -> ((CoreException) e).getErrorType())
+                .isEqualTo(ErrorType.DUO_REQUEST_ALREADY_COMPLETED);
+    }
+
     private DuoRequest createRequestWithStatus(DuoRequestStatus status) {
         return DuoRequest.builder()
                 .id(1L)

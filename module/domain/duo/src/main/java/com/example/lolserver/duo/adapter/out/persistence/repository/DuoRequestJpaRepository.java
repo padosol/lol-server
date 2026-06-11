@@ -9,10 +9,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface DuoRequestJpaRepository extends JpaRepository<DuoRequestEntity, Long> {
 
     List<DuoRequestEntity> findByDuoPostId(Long duoPostId);
+
+    Optional<DuoRequestEntity> findFirstByDuoPostIdAndStatus(Long duoPostId, String status);
 
     boolean existsByDuoPostIdAndRequesterIdAndStatusIn(Long duoPostId,
             Long requesterId, List<String> statuses);

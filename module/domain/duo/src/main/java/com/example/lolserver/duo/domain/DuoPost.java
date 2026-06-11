@@ -102,6 +102,9 @@ public class DuoPost {
     }
 
     public void markDeleted() {
+        if (this.status == DuoPostStatus.MATCHED) {
+            throw new CoreException(ErrorType.DUO_POST_ALREADY_MATCHED);
+        }
         this.status = DuoPostStatus.DELETED;
         this.updatedAt = LocalDateTime.now();
     }

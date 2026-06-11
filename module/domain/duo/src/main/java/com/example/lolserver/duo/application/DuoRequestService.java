@@ -166,9 +166,7 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
         duoPost.validateMatched();
 
         DuoRequest confirmedRequest = duoRequestPersistencePort
-                .findByDuoPostId(duoPostId).stream()
-                .filter(request -> request.getStatus() == DuoRequestStatus.CONFIRMED)
-                .findFirst()
+                .findConfirmedByDuoPostId(duoPostId)
                 .orElseThrow(() -> new CoreException(ErrorType.DUO_REQUEST_NOT_FOUND));
 
         String partnerPuuid;

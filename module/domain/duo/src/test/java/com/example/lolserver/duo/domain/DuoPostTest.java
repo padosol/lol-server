@@ -154,6 +154,24 @@ class DuoPostTest {
                 .isEqualTo(ErrorType.DUO_POST_NOT_ACTIVE);
     }
 
+    @DisplayName("MATCHED 게시글에 markDeleted 호출 시 DUO_POST_ALREADY_MATCHED 예외가 발생한다")
+    @Test
+    void markDeleted_matched_throwsAlreadyMatched() {
+        // given
+        DuoPost duoPost = DuoPost.builder()
+                .id(1L)
+                .memberId(1L)
+                .status(DuoPostStatus.MATCHED)
+                .expiresAt(LocalDateTime.now().plusHours(24))
+                .build();
+
+        // when & then
+        assertThatThrownBy(duoPost::markDeleted)
+                .isInstanceOf(CoreException.class)
+                .extracting(e -> ((CoreException) e).getErrorType())
+                .isEqualTo(ErrorType.DUO_POST_ALREADY_MATCHED);
+    }
+
     private DuoPost createActiveDuoPost(Long memberId) {
         return DuoPost.builder()
                 .id(1L)
