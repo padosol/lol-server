@@ -5,13 +5,19 @@ import com.example.lolserver.duo.application.command.DuoPostSearchCommand;
 import com.example.lolserver.duo.application.command.UpdateDuoPostCommand;
 import com.example.lolserver.duo.application.model.readmodel.DuoPostDetailReadModel;
 import com.example.lolserver.duo.application.model.readmodel.DuoPostListReadModel;
+import com.example.lolserver.duo.application.model.event.DuoNotificationEvent;
+import com.example.lolserver.duo.application.model.event.DuoNotificationEvent.DuoNotificationType;
 import com.example.lolserver.duo.application.model.resultmodel.DuoPostResultModel;
 import com.example.lolserver.duo.application.model.readmodel.DuoRequestReadModel;
 import com.example.lolserver.duo.application.port.in.DuoPostQueryUseCase;
 import com.example.lolserver.duo.application.port.in.DuoPostUseCase;
+import com.example.lolserver.duo.application.port.out.DuoLockPort;
+import com.example.lolserver.duo.application.port.out.DuoNotificationPort;
 import com.example.lolserver.duo.application.port.out.DuoPostPersistencePort;
 import com.example.lolserver.duo.application.port.out.DuoRequestPersistencePort;
 import com.example.lolserver.duo.domain.DuoPost;
+import com.example.lolserver.duo.domain.DuoRequest;
+import com.example.lolserver.duo.domain.vo.DuoRequestStatus;
 import com.example.lolserver.duo.domain.vo.Lane;
 import com.example.lolserver.duo.domain.vo.RiotAccountStats;
 import com.example.lolserver.common.support.SliceResult;
@@ -31,26 +37,39 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase {
 
+    private static final String MEMBER_POST_LOCK_PREFIX = "duo:member:post:";
+
     private final DuoPostPersistencePort duoPostPersistencePort;
     private final DuoRequestPersistencePort duoRequestPersistencePort;
     private final RiotAccountResolver riotAccountResolver;
+    private final DuoLockPort duoLockPort;
+    private final DuoNotificationPort duoNotificationPort;
 
     @Override
     @Transactional
     public DuoPostResultModel createDuoPost(Long memberId, CreateDuoPostCommand command) {
         String puuid = riotAccountResolver.extractRiotPuuid(memberId);
+
+        // 외부 통계 조회는 락 밖에서 — 락 임계구역이 lease(10s)를 넘지 않도록 한다.
         RiotAccountStats stats = riotAccountResolver.lookupAllStats(puuid);
 
-        DuoPost duoPost = DuoPost.create(
-                memberId, puuid,
-                Lane.from(command.getPrimaryLane()),
-                Lane.from(command.getDesiredLane()),
-                command.isHasMicrophone(), command.getMemo(),
-                stats
-        );
+        // 락 안에서 활성글 존재 검사와 저장을 함께 수행해 check-then-act 레이스를 제거한다.
+        return duoLockPort.executeWithLock(MEMBER_POST_LOCK_PREFIX + memberId, () -> {
+            if (duoPostPersistencePort.existsActiveByMemberId(memberId)) {
+                throw new CoreException(ErrorType.DUO_POST_ACTIVE_EXISTS);
+            }
 
-        DuoPost saved = duoPostPersistencePort.save(duoPost);
-        return DuoPostResultModel.of(saved);
+            DuoPost duoPost = DuoPost.create(
+                    memberId, puuid,
+                    Lane.from(command.getPrimaryLane()),
+                    Lane.from(command.getDesiredLane()),
+                    command.isHasMicrophone(), command.getMemo(),
+                    stats
+            );
+
+            DuoPost saved = duoPostPersistencePort.save(duoPost);
+            return DuoPostResultModel.of(saved);
+        });
     }
 
     @Override
@@ -63,6 +82,18 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase {
 
         duoPost.markDeleted();
         duoPostPersistencePort.save(duoPost);
+
+        List<DuoRequest> openRequests = duoRequestPersistencePort
+                .findByDuoPostId(duoPostId).stream()
+                .filter(request -> request.getStatus() == DuoRequestStatus.PENDING
+                        || request.getStatus() == DuoRequestStatus.ACCEPTED)
+                .toList();
+
+        duoRequestPersistencePort.closeAllOpen(duoPostId);
+
+        openRequests.forEach(closed -> duoNotificationPort.notify(
+                new DuoNotificationEvent(DuoNotificationType.REQUEST_CLOSED,
+                        closed.getRequesterId(), duoPostId, closed.getId())));
     }
 
     @Override

@@ -80,6 +80,9 @@ public class SecurityConfig {
                                 "/api/community/posts").permitAll()
                         .requestMatchers("/api/community/**").authenticated()
                         .requestMatchers(HttpMethod.GET,
+                                "/api/duo/posts/*/match-result",
+                                "/api/duo/posts/*/requests").authenticated()
+                        .requestMatchers(HttpMethod.GET,
                                 "/api/duo/posts/**").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/duo/posts").permitAll()

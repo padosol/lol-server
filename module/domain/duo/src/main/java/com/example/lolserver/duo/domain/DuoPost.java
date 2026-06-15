@@ -90,11 +90,21 @@ public class DuoPost {
     }
 
     public void markMatched() {
+        validateActive();
         this.status = DuoPostStatus.MATCHED;
         this.updatedAt = LocalDateTime.now();
     }
 
+    public void validateMatched() {
+        if (this.status != DuoPostStatus.MATCHED) {
+            throw new CoreException(ErrorType.DUO_POST_NOT_MATCHED);
+        }
+    }
+
     public void markDeleted() {
+        if (this.status == DuoPostStatus.MATCHED) {
+            throw new CoreException(ErrorType.DUO_POST_ALREADY_MATCHED);
+        }
         this.status = DuoPostStatus.DELETED;
         this.updatedAt = LocalDateTime.now();
     }

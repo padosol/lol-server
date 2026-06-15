@@ -4,6 +4,7 @@ import com.example.lolserver.duo.application.command.DuoPostSearchCommand;
 import com.example.lolserver.duo.application.model.readmodel.DuoPostListReadModel;
 import com.example.lolserver.duo.application.port.out.DuoPostPersistencePort;
 import com.example.lolserver.duo.domain.DuoPost;
+import com.example.lolserver.duo.domain.vo.DuoPostStatus;
 import com.example.lolserver.duo.adapter.out.persistence.dto.DuoPostListDTO;
 import com.example.lolserver.duo.adapter.out.persistence.dsl.DuoPostRepositoryCustom;
 import com.example.lolserver.duo.adapter.out.persistence.entity.DuoPostEntity;
@@ -16,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -42,6 +45,12 @@ public class DuoPostPersistenceAdapter implements DuoPostPersistencePort {
     }
 
     @Override
+    public boolean existsActiveByMemberId(Long memberId) {
+        return duoPostJpaRepository.existsByMemberIdAndStatusAndExpiresAtAfter(
+                memberId, DuoPostStatus.ACTIVE.name(), LocalDateTime.now());
+    }
+
+    @Override
     public SliceResult<DuoPostListReadModel> findActivePosts(DuoPostSearchCommand command) {
         Pageable pageable = PageRequest.of(command.getPage(), PAGE_SIZE);
 
@@ -58,6 +67,25 @@ public class DuoPostPersistenceAdapter implements DuoPostPersistencePort {
         Slice<DuoPostListDTO> slice = duoPostRepositoryCustom.findByMemberId(memberId, pageable);
 
         return toSliceResult(slice);
+    }
+
+    @Override
+    public boolean markMatchedIfActive(Long duoPostId) {
+        return duoPostJpaRepository.markMatchedIfActive(duoPostId) > 0;
+    }
+
+    @Override
+    public List<Long> expireAllOverdue(LocalDateTime now) {
+        List<Long> overdueIds = duoPostJpaRepository.findIdsByStatusAndExpiresAtBefore(
+                DuoPostStatus.ACTIVE.name(), now);
+
+        if (!overdueIds.isEmpty()) {
+            // ACTIVE 인 행만 전환 — SELECT 이후 MATCHED 로 바뀐 글을 덮어쓰지 않는다.
+            duoPostJpaRepository.updateStatusByIds(overdueIds,
+                    DuoPostStatus.EXPIRED.name(), DuoPostStatus.ACTIVE.name());
+        }
+
+        return overdueIds;
     }
 
     private SliceResult<DuoPostListReadModel> toSliceResult(Slice<DuoPostListDTO> slice) {

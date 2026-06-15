@@ -4,6 +4,10 @@ import com.example.lolserver.duo.application.command.CreateDuoRequestCommand;
 import com.example.lolserver.duo.application.model.resultmodel.DuoMatchResultModel;
 import com.example.lolserver.duo.application.model.readmodel.DuoRequestReadModel;
 import com.example.lolserver.duo.application.model.resultmodel.DuoRequestResultModel;
+import com.example.lolserver.duo.application.model.event.DuoNotificationEvent;
+import com.example.lolserver.duo.application.model.event.DuoNotificationEvent.DuoNotificationType;
+import com.example.lolserver.duo.application.port.out.DuoLockPort;
+import com.example.lolserver.duo.application.port.out.DuoNotificationPort;
 import com.example.lolserver.duo.application.port.out.DuoPostPersistencePort;
 import com.example.lolserver.duo.application.port.out.DuoRequestPersistencePort;
 import com.example.lolserver.duo.domain.DuoPost;
@@ -31,11 +35,21 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -58,6 +72,20 @@ class DuoRequestServiceTest {
 
     @Mock
     private RiotAccountResolver riotAccountResolver;
+
+    @Mock
+    private DuoLockPort duoLockPort;
+
+    @Mock
+    private DuoNotificationPort duoNotificationPort;
+
+    private void givenLockPassThrough() {
+        given(duoLockPort.executeWithLock(anyString(), any()))
+                .willAnswer(invocation -> {
+                    Supplier<?> action = invocation.getArgument(1);
+                    return action.get();
+                });
+    }
 
     @Nested
     @DisplayName("createDuoRequest")
@@ -288,6 +316,8 @@ class DuoRequestServiceTest {
             assertThat(result.getPartnerTagLine()).isNull();
             assertThat(duoRequest.getStatus()).isEqualTo(DuoRequestStatus.ACCEPTED);
             then(duoRequestPersistencePort).should().save(duoRequest);
+            then(duoNotificationPort).should().notify(new DuoNotificationEvent(
+                    DuoNotificationType.REQUEST_ACCEPTED, 2L, duoPostId, requestId));
         }
     }
 
@@ -314,7 +344,7 @@ class DuoRequestServiceTest {
                     .isEqualTo(ErrorType.FORBIDDEN);
         }
 
-        @DisplayName("정상 확인 - 매칭 완료, gameName 반환, 나머지 요청 자동 거절")
+        @DisplayName("정상 확인 - 매칭 완료, gameName 반환, 나머지 요청 자동 종료")
         @Test
         void success() {
             // given
@@ -348,14 +378,19 @@ class DuoRequestServiceTest {
                     .tagLine("KR1")
                     .build();
 
+            DuoRequest losingRequest = createTestDuoRequest(201L, duoPostId, 3L);
+
+            givenLockPassThrough();
             given(duoRequestPersistencePort.findById(requestId))
                     .willReturn(Optional.of(duoRequest));
             given(duoRequestPersistencePort.save(any(DuoRequest.class)))
                     .willReturn(duoRequest);
             given(duoPostPersistencePort.findById(duoPostId))
                     .willReturn(Optional.of(duoPost));
-            given(duoPostPersistencePort.save(any(DuoPost.class)))
-                    .willReturn(duoPost);
+            given(duoPostPersistencePort.markMatchedIfActive(duoPostId))
+                    .willReturn(true);
+            given(duoRequestPersistencePort.findByDuoPostId(duoPostId))
+                    .willReturn(List.of(duoRequest, losingRequest));
             given(summonerQueryUseCase.findSummonerByPuuid(ownerPuuid))
                     .willReturn(Optional.of(partnerSummoner));
 
@@ -372,7 +407,287 @@ class DuoRequestServiceTest {
             assertThat(duoRequest.getStatus()).isEqualTo(DuoRequestStatus.CONFIRMED);
             assertThat(duoPost.getStatus()).isEqualTo(DuoPostStatus.MATCHED);
             then(duoRequestPersistencePort).should()
-                    .rejectAllPendingAndAccepted(duoPostId, requestId);
+                    .closeAllOpenExcept(duoPostId, requestId);
+            then(duoNotificationPort).should().notify(new DuoNotificationEvent(
+                    DuoNotificationType.MATCH_CONFIRMED, 1L, duoPostId, requestId));
+            then(duoNotificationPort).should().notify(new DuoNotificationEvent(
+                    DuoNotificationType.MATCH_CONFIRMED, requesterId, duoPostId, requestId));
+            then(duoNotificationPort).should().notify(new DuoNotificationEvent(
+                    DuoNotificationType.REQUEST_CLOSED, 3L, duoPostId, 201L));
+        }
+
+        @DisplayName("duo:post:{duoPostId} 키의 락 안에서 매칭 확정이 실행된다")
+        @Test
+        void executesWithinPostLock() {
+            // given
+            Long requesterId = 2L;
+            Long requestId = 200L;
+            Long duoPostId = 100L;
+            DuoRequest duoRequest = createTestDuoRequest(requestId, duoPostId, requesterId);
+            duoRequest.accept();
+            DuoPost duoPost = createTestDuoPost(duoPostId, 1L);
+
+            givenLockPassThrough();
+            given(duoRequestPersistencePort.findById(requestId))
+                    .willReturn(Optional.of(duoRequest));
+            given(duoRequestPersistencePort.save(any(DuoRequest.class)))
+                    .willReturn(duoRequest);
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+            given(duoPostPersistencePort.markMatchedIfActive(duoPostId))
+                    .willReturn(true);
+            given(summonerQueryUseCase.findSummonerByPuuid("owner-puuid"))
+                    .willReturn(Optional.empty());
+
+            // when
+            duoRequestService.confirmDuoRequest(requesterId, requestId);
+
+            // then
+            then(duoLockPort).should()
+                    .executeWithLock(eq("duo:post:" + duoPostId), any());
+        }
+
+        @DisplayName("락 획득 실패 시 LOCK_ACQUISITION_FAILED 에러 - 요청 상태는 변경되지 않는다")
+        @Test
+        void lockAcquisitionFailed_throwsException() {
+            // given
+            Long requesterId = 2L;
+            Long requestId = 200L;
+            DuoRequest duoRequest = createTestDuoRequest(requestId, 100L, requesterId);
+            duoRequest.accept();
+
+            given(duoRequestPersistencePort.findById(requestId))
+                    .willReturn(Optional.of(duoRequest));
+            given(duoLockPort.executeWithLock(anyString(), any()))
+                    .willThrow(new CoreException(ErrorType.LOCK_ACQUISITION_FAILED));
+
+            // when & then
+            assertThatThrownBy(() -> duoRequestService.confirmDuoRequest(requesterId, requestId))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.LOCK_ACQUISITION_FAILED);
+
+            assertThat(duoRequest.getStatus()).isEqualTo(DuoRequestStatus.ACCEPTED);
+            then(duoRequestPersistencePort).should(never()).save(any(DuoRequest.class));
+        }
+
+        @DisplayName("락 획득 후 게시글이 이미 MATCHED면 DUO_POST_NOT_ACTIVE - 요청은 CONFIRMED 되지 않는다")
+        @Test
+        void alreadyMatchedPost_throwsNotActive() {
+            // given
+            Long requesterId = 2L;
+            Long requestId = 200L;
+            Long duoPostId = 100L;
+            DuoRequest duoRequest = createTestDuoRequest(requestId, duoPostId, requesterId);
+            duoRequest.accept();
+            DuoPost matchedPost = createTestDuoPost(duoPostId, 1L);
+            matchedPost.markMatched();
+
+            givenLockPassThrough();
+            given(duoRequestPersistencePort.findById(requestId))
+                    .willReturn(Optional.of(duoRequest));
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(matchedPost));
+
+            // when & then
+            assertThatThrownBy(() -> duoRequestService.confirmDuoRequest(requesterId, requestId))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.DUO_POST_NOT_ACTIVE);
+
+            assertThat(duoRequest.getStatus()).isEqualTo(DuoRequestStatus.ACCEPTED);
+            then(duoRequestPersistencePort).should(never()).save(any(DuoRequest.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("confirmDuoRequest 선착순 동시성")
+    class ConfirmDuoRequestConcurrency {
+
+        @DisplayName("두 요청자가 동시에 승락해도 1명만 CONFIRMED 되고 나머지는 DUO_POST_NOT_ACTIVE")
+        @Test
+        void onlyOneConfirmed() throws Exception {
+            // given
+            Long duoPostId = 100L;
+            DuoPost duoPost = createTestDuoPost(duoPostId, 1L);
+            DuoRequest request1 = createTestDuoRequest(200L, duoPostId, 2L);
+            DuoRequest request2 = createTestDuoRequest(201L, duoPostId, 3L);
+            request1.accept();
+            request2.accept();
+
+            ConcurrentHashMap<String, ReentrantLock> locks = new ConcurrentHashMap<>();
+            given(duoLockPort.executeWithLock(anyString(), any()))
+                    .willAnswer(invocation -> {
+                        ReentrantLock lock = locks.computeIfAbsent(
+                                invocation.getArgument(0), key -> new ReentrantLock());
+                        lock.lock();
+                        try {
+                            Supplier<?> action = invocation.getArgument(1);
+                            return action.get();
+                        } finally {
+                            lock.unlock();
+                        }
+                    });
+            given(duoRequestPersistencePort.findById(200L))
+                    .willReturn(Optional.of(request1));
+            given(duoRequestPersistencePort.findById(201L))
+                    .willReturn(Optional.of(request2));
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+            given(duoRequestPersistencePort.save(any(DuoRequest.class)))
+                    .willAnswer(invocation -> invocation.getArgument(0));
+            given(duoPostPersistencePort.markMatchedIfActive(duoPostId))
+                    .willReturn(true);
+            given(summonerQueryUseCase.findSummonerByPuuid("owner-puuid"))
+                    .willReturn(Optional.empty());
+
+            ExecutorService executor = Executors.newFixedThreadPool(2);
+            CountDownLatch startLatch = new CountDownLatch(1);
+            Future<Object> first = executor.submit(confirmTask(startLatch, 2L, 200L));
+            Future<Object> second = executor.submit(confirmTask(startLatch, 3L, 201L));
+
+            // when
+            startLatch.countDown();
+            Object result1 = first.get(5, TimeUnit.SECONDS);
+            Object result2 = second.get(5, TimeUnit.SECONDS);
+            executor.shutdownNow();
+
+            // then
+            List<Object> results = List.of(result1, result2);
+            assertThat(results).filteredOn(DuoMatchResultModel.class::isInstance).hasSize(1);
+            assertThat(results).filteredOn(CoreException.class::isInstance)
+                    .hasSize(1)
+                    .allSatisfy(e -> assertThat(((CoreException) e).getErrorType())
+                            .isEqualTo(ErrorType.DUO_POST_NOT_ACTIVE));
+            long confirmedCount = List.of(request1, request2).stream()
+                    .filter(request -> request.getStatus() == DuoRequestStatus.CONFIRMED)
+                    .count();
+            assertThat(confirmedCount).isEqualTo(1);
+            assertThat(duoPost.getStatus()).isEqualTo(DuoPostStatus.MATCHED);
+        }
+
+        private Callable<Object> confirmTask(CountDownLatch startLatch, Long memberId, Long requestId) {
+            return () -> {
+                startLatch.await();
+                try {
+                    return duoRequestService.confirmDuoRequest(memberId, requestId);
+                } catch (CoreException e) {
+                    return e;
+                }
+            };
+        }
+    }
+
+    @Nested
+    @DisplayName("getMatchResult")
+    class GetMatchResult {
+
+        @DisplayName("소유자 조회 시 상대(확정 요청자)의 게임이름을 반환한다")
+        @Test
+        void owner_returnsRequesterIdentity() {
+            // given
+            Long ownerId = 1L;
+            Long duoPostId = 100L;
+            DuoPost duoPost = createTestDuoPost(duoPostId, ownerId);
+            duoPost.markMatched();
+            DuoRequest confirmedRequest = createTestDuoRequest(200L, duoPostId, 2L);
+            confirmedRequest.accept();
+            confirmedRequest.confirm();
+            SummonerReadModel requesterSummoner = SummonerReadModel.builder()
+                    .puuid("requester-puuid")
+                    .gameName("DuoBuddy")
+                    .tagLine("KR2")
+                    .build();
+
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+            given(duoRequestPersistencePort.findConfirmedByDuoPostId(duoPostId))
+                    .willReturn(Optional.of(confirmedRequest));
+            given(summonerQueryUseCase.findSummonerByPuuid("requester-puuid"))
+                    .willReturn(Optional.of(requesterSummoner));
+
+            // when
+            DuoMatchResultModel result = duoRequestService.getMatchResult(ownerId, duoPostId);
+
+            // then
+            assertThat(result.getDuoPostId()).isEqualTo(duoPostId);
+            assertThat(result.getRequestId()).isEqualTo(200L);
+            assertThat(result.getPartnerGameName()).isEqualTo("DuoBuddy");
+            assertThat(result.getPartnerTagLine()).isEqualTo("KR2");
+            assertThat(result.getStatus()).isEqualTo("CONFIRMED");
+        }
+
+        @DisplayName("확정 요청자 조회 시 상대(소유자)의 게임이름을 반환한다")
+        @Test
+        void confirmedRequester_returnsOwnerIdentity() {
+            // given
+            Long requesterId = 2L;
+            Long duoPostId = 100L;
+            DuoPost duoPost = createTestDuoPost(duoPostId, 1L);
+            duoPost.markMatched();
+            DuoRequest confirmedRequest = createTestDuoRequest(200L, duoPostId, requesterId);
+            confirmedRequest.accept();
+            confirmedRequest.confirm();
+            SummonerReadModel ownerSummoner = SummonerReadModel.builder()
+                    .puuid("owner-puuid")
+                    .gameName("Hide on bush")
+                    .tagLine("KR1")
+                    .build();
+
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+            given(duoRequestPersistencePort.findConfirmedByDuoPostId(duoPostId))
+                    .willReturn(Optional.of(confirmedRequest));
+            given(summonerQueryUseCase.findSummonerByPuuid("owner-puuid"))
+                    .willReturn(Optional.of(ownerSummoner));
+
+            // when
+            DuoMatchResultModel result = duoRequestService.getMatchResult(requesterId, duoPostId);
+
+            // then
+            assertThat(result.getPartnerGameName()).isEqualTo("Hide on bush");
+            assertThat(result.getPartnerTagLine()).isEqualTo("KR1");
+        }
+
+        @DisplayName("MATCHED 상태가 아닌 게시글 조회 시 DUO_POST_NOT_MATCHED 에러")
+        @Test
+        void notMatchedPost_throwsException() {
+            // given
+            Long duoPostId = 100L;
+            DuoPost duoPost = createTestDuoPost(duoPostId, 1L);
+
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+
+            // when & then
+            assertThatThrownBy(() -> duoRequestService.getMatchResult(1L, duoPostId))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.DUO_POST_NOT_MATCHED);
+        }
+
+        @DisplayName("매칭 당사자가 아니면 FORBIDDEN 에러")
+        @Test
+        void thirdParty_throwsForbidden() {
+            // given
+            Long thirdPartyId = 3L;
+            Long duoPostId = 100L;
+            DuoPost duoPost = createTestDuoPost(duoPostId, 1L);
+            duoPost.markMatched();
+            DuoRequest confirmedRequest = createTestDuoRequest(200L, duoPostId, 2L);
+            confirmedRequest.accept();
+            confirmedRequest.confirm();
+
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+            given(duoRequestPersistencePort.findConfirmedByDuoPostId(duoPostId))
+                    .willReturn(Optional.of(confirmedRequest));
+
+            // when & then
+            assertThatThrownBy(() -> duoRequestService.getMatchResult(thirdPartyId, duoPostId))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.FORBIDDEN);
         }
     }
 

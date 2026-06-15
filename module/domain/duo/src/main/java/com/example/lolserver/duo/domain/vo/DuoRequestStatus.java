@@ -5,5 +5,6 @@ public enum DuoRequestStatus {
     ACCEPTED,
     CONFIRMED,
     REJECTED,
-    CANCELLED
+    CANCELLED,
+    CLOSED
 }

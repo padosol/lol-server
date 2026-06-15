@@ -85,20 +85,27 @@ public class DuoRequest {
     }
 
     public void reject() {
-        if (this.status == DuoRequestStatus.CONFIRMED
-                || this.status == DuoRequestStatus.CANCELLED) {
-            throw new CoreException(ErrorType.DUO_REQUEST_ALREADY_COMPLETED);
-        }
+        validateOpen();
         this.status = DuoRequestStatus.REJECTED;
         this.updatedAt = LocalDateTime.now();
     }
 
     public void cancel() {
-        if (this.status == DuoRequestStatus.CONFIRMED
-                || this.status == DuoRequestStatus.REJECTED) {
-            throw new CoreException(ErrorType.DUO_REQUEST_ALREADY_COMPLETED);
-        }
+        validateOpen();
         this.status = DuoRequestStatus.CANCELLED;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void close() {
+        validateOpen();
+        this.status = DuoRequestStatus.CLOSED;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    private void validateOpen() {
+        if (this.status != DuoRequestStatus.PENDING
+                && this.status != DuoRequestStatus.ACCEPTED) {
+            throw new CoreException(ErrorType.DUO_REQUEST_ALREADY_COMPLETED);
+        }
     }
 }
