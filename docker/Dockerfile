@@ -9,6 +9,8 @@ RUN chmod +x gradlew
 
 # 의존성 캐싱을 위해 빌드 파일 먼저 복사
 COPY build.gradle settings.gradle ./
+# convention plugins (lolserver.web-conventions 등) — module/*/build.gradle 에서 참조
+COPY buildSrc buildSrc
 COPY module module
 
 # 빌드 실행
