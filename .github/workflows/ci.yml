@@ -54,6 +54,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          # module/app/application 이 lol-db-schema 를 resources srcDir 로 참조한다.
+          submodules: recursive
 
       - uses: actions/setup-java@v4
         with:
@@ -69,6 +72,19 @@ jobs:
 
       - name: Build and Test
         run: ./gradlew build -x checkstyleMain -x checkstyleTest
+
+      # 서브모듈 미체크아웃이나 srcDir 배선 유실은 "조용히" 마이그레이션 0개인 jar 를
+      # 만든다 (Flyway 는 No migrations found 로 넘어가고, 빈 DB 에서만 터진다).
+      # 부트 jar 에 마이그레이션이 실렸는지 여기서 못 박는다.
+      - name: Verify Flyway migrations are packaged
+        run: |
+          jar=$(ls module/app/application/build/libs/*.jar)
+          count=$(unzip -l "$jar" | grep -c 'db/migration/.*\.sql' || true)
+          echo "packaged migrations: ${count}"
+          if [ "${count}" -eq 0 ]; then
+            echo "::error::부트 jar 에 db/migration/*.sql 이 없습니다. lol-db-schema 서브모듈 체크아웃 또는 resources srcDir 배선을 확인하세요."
+            exit 1
+          fi
 
       - name: Generate JaCoCo Coverage Report
         run: ./gradlew jacocoTestReport
