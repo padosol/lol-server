@@ -21,6 +21,9 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
+          # Flyway 마이그레이션(lol-db-schema)이 이미지에 실려야 한다. 서브모듈을
+          # 받지 않으면 빈 디렉터리가 COPY 돼 db/migration 없는 jar 가 만들어진다.
+          submodules: recursive
 
       - name: Extract version and SHA
         id: version
