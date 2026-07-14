@@ -28,6 +28,17 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
 }
 
+// Flyway 마이그레이션(lol-db-schema 서브모듈)을 부트 jar 의 classpath 에 싣는다.
+// spring.flyway.enabled=true + jpa.ddl-auto=validate 를 선언하는 곳이 이 모듈의
+// postgresql-*.yml 이므로, 마이그레이션도 같은 모듈이 소유한다.
+sourceSets {
+    main {
+        resources {
+            srcDir "${rootProject.projectDir}/lol-db-schema"
+        }
+    }
+}
+
 bootJar {
     enabled = true
 }

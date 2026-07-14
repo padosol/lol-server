@@ -12,6 +12,9 @@ COPY build.gradle settings.gradle ./
 # convention plugins (lolserver.web-conventions 등) — module/*/build.gradle 에서 참조
 COPY buildSrc buildSrc
 COPY module module
+# Flyway 마이그레이션 서브모듈 — module/app/application 이 resources srcDir 로 참조한다.
+# 빠지면 db/migration 이 없는 jar 가 만들어져 빈 DB 에서 ddl-auto=validate 가 실패한다.
+COPY lol-db-schema lol-db-schema
 
 # 빌드 실행
 RUN ./gradlew :module:app:application:bootJar -x test --no-daemon
