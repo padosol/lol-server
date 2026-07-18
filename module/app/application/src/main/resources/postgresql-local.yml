@@ -1,8 +1,12 @@
 spring:
+  # 스키마 마이그레이션은 lol-repository 가 단독으로 소유한다 (lol-db-schema 서브모듈을
+  # 이미지에 싣고 기동 시 Flyway 로 적용). lol-server 는 스키마를 만들지 않고
+  # ddl-auto: validate 로 검증만 한다.
+  #
+  # local: 빈 DB 로 시작하면 lol-repository 가 먼저 떠서 스키마를 만들어야 한다.
+  # lol-server 단독 기동 시에는 validate 가 실패하니, lol-repository 를 먼저 띄울 것.
   flyway:
-    enabled: true
-    baseline-on-migrate: true
-    baseline-version: 2
+    enabled: false
 
   # local 개발용 기본 데이터 시드 (스키마는 Flyway 담당, 여기선 데이터만).
   # Flyway 마이그레이션 이후 실행되며, 스크립트는 ON CONFLICT 로 멱등 처리됨.
