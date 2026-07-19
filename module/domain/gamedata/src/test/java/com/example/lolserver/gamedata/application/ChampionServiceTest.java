@@ -96,4 +96,22 @@ class ChampionServiceTest {
         assertThat(result.getFreeChampionIds()).containsExactly(100, 101, 102, 103);
         then(championPersistencePort).should().getChampionRotate(platformId);
     }
+
+    @DisplayName("빈 로테이션 응답도 캐시에 저장한다 (짧은 TTL 은 캐시 어댑터가 적용)")
+    @Test
+    void getChampionRotate_빈응답_저장까지수행() {
+        // given: upstream(lol-repository) 조회 실패 시 내려오는 빈 응답
+        String platformId = "kr";
+        ChampionRotate emptyRotate = new ChampionRotate(0, null, null);
+        given(championPersistencePort.getChampionRotate(platformId)).willReturn(Optional.empty());
+        given(championClientPort.getChampionRotate(platformId)).willReturn(emptyRotate);
+
+        // when
+        ChampionRotate result = championService.getChampionRotate(platformId);
+
+        // then: 빈 값도 그대로 반환하고 저장한다 (rate limit 보호). TTL 차등은 어댑터 책임.
+        assertThat(result).isEqualTo(emptyRotate);
+        then(championClientPort).should().getChampionRotate(platformId);
+        then(championPersistencePort).should().saveChampionRotate(platformId, emptyRotate);
+    }
 }

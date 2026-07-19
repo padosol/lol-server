@@ -106,6 +106,46 @@ class ChampionCacheAdapterTest {
         );
     }
 
+    @DisplayName("빈 로테이션(freeChampionIds=null)은 짧은 TTL(60초)로 저장한다")
+    @Test
+    void saveChampionRotate_emptyNull_savesWithShortTtl() {
+        // given: upstream 조회 실패 시 내려오는 빈 응답
+        String platformId = "kr";
+        ChampionRotate emptyRotate = new ChampionRotate(0, null, null);
+
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+
+        // when
+        adapter.saveChampionRotate(platformId, emptyRotate);
+
+        // then: 1시간이 아니라 60초 negative cache 로 저장 → rate limit 보호 + 빠른 복구
+        then(valueOperations).should().set(
+                eq(CACHE_KEY_PREFIX + platformId),
+                eq(emptyRotate),
+                eq(Duration.ofSeconds(60))
+        );
+    }
+
+    @DisplayName("빈 로테이션(freeChampionIds=빈 리스트)도 짧은 TTL(60초)로 저장한다")
+    @Test
+    void saveChampionRotate_emptyList_savesWithShortTtl() {
+        // given
+        String platformId = "kr";
+        ChampionRotate emptyRotate = new ChampionRotate(0, List.of(), List.of());
+
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+
+        // when
+        adapter.saveChampionRotate(platformId, emptyRotate);
+
+        // then
+        then(valueOperations).should().set(
+                eq(CACHE_KEY_PREFIX + platformId),
+                eq(emptyRotate),
+                eq(Duration.ofSeconds(60))
+        );
+    }
+
     @DisplayName("다른 지역의 챔피언 로테이션을 각각 캐시에 저장하고 조회할 수 있다")
     @Test
     void getChampionRotate_differentPlatformIds_returnsCorrectData() {
