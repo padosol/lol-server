@@ -18,7 +18,11 @@ public class ChampionCacheAdapter implements ChampionPersistencePort {
     private final RedisTemplate<String, Object> redisTemplate;
 
     private static final String CACHE_KEY_PREFIX = "champion_rotation_";
-    private static final Duration CACHE_TTL = Duration.ofHours(1); // Cache for 1 hour
+    private static final Duration CACHE_TTL = Duration.ofHours(1); // 정상 로테이션 캐시 (1시간)
+    // 빈 로테이션(upstream/Riot 조회 실패)은 짧게만 캐싱한다. 아예 캐싱하지 않으면 매 요청이
+    // upstream→Riot 으로 관통해 rate limit 을 소모하고, 1시간을 캐싱하면 upstream 이 복구된 뒤에도
+    // 빈 값이 고착된다. 짧은 TTL 의 negative cache 로 두 문제를 동시에 방지한다.
+    private static final Duration EMPTY_CACHE_TTL = Duration.ofSeconds(60);
 
     @Override
     public Optional<ChampionRotate> getChampionRotate(String platformId) {
@@ -28,7 +32,9 @@ public class ChampionCacheAdapter implements ChampionPersistencePort {
 
     @Override
     public void saveChampionRotate(String platformId, ChampionRotate championRotate) {
-        log.info("Caching champion rotation for platformId: {}", platformId);
-        redisTemplate.opsForValue().set(CACHE_KEY_PREFIX + platformId, championRotate, CACHE_TTL);
+        Duration ttl = championRotate.isEmpty() ? EMPTY_CACHE_TTL : CACHE_TTL;
+        log.info("Caching champion rotation for platformId: {} (empty={}, ttl={})",
+                platformId, championRotate.isEmpty(), ttl);
+        redisTemplate.opsForValue().set(CACHE_KEY_PREFIX + platformId, championRotate, ttl);
     }
 }

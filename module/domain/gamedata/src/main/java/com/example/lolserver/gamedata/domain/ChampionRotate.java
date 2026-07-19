@@ -19,7 +19,7 @@ public class ChampionRotate {
     /**
      * 로테이션 데이터가 비어 있는지 여부.
      * upstream(lol-repository)이 Riot 조회에 실패하면 {@code freeChampionIds} 가 null/빈 값인
-     * 응답을 내려주는데, 이런 값은 캐싱하면 안 되므로 이를 판별하는 guard.
+     * 응답을 내려주는데, 이런 값은 짧은 TTL(negative cache)로만 저장하기 위해 판별하는 guard.
      */
     public boolean isEmpty() {
         return freeChampionIds == null || freeChampionIds.isEmpty();

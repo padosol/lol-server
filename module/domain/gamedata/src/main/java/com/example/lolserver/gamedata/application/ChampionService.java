@@ -25,18 +25,12 @@ public class ChampionService implements ChampionRotateUseCase {
         Optional<ChampionRotate> championRotate = championPersistencePort.getChampionRotate(platformId);
         if (championRotate.isPresent()) {
             return championRotate.get();
-        }
-
-        ChampionRotate newChampionRotate = championClientPort.getChampionRotate(platformId);
-
-        // 빈 로테이션(upstream 조회 실패)은 캐싱하지 않는다.
-        // 캐싱하면 TTL 동안 빈 값이 고착되어, upstream 이 복구된 뒤에도 계속 빈 값을 서빙한다.
-        if (newChampionRotate.isEmpty()) {
-            log.warn("빈 챔피언 로테이션 응답 — 캐싱을 생략한다. platformId: {}", platformId);
+        } else {
+            ChampionRotate newChampionRotate = championClientPort.getChampionRotate(platformId);
+            // 빈 로테이션이어도 캐싱한다. 캐시 어댑터가 빈 값에는 짧은 TTL(negative cache)을 적용해
+            // Riot rate limit 소모를 막으면서 upstream 복구를 빠르게 반영한다.
+            championPersistencePort.saveChampionRotate(platformId, newChampionRotate);
             return newChampionRotate;
         }
-
-        championPersistencePort.saveChampionRotate(platformId, newChampionRotate);
-        return newChampionRotate;
     }
 }
