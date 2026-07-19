@@ -24,6 +24,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
+    // DevTools — 소스 변경 시 클래스패스 감시 후 자동 재시작 (developmentOnly: bootJar/prod 미포함)
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
     // PostgreSQL 드라이버 (runtimeOnly는 모듈간 전이되지 않으므로 직접 추가)
     runtimeOnly 'org.postgresql:postgresql'
 }

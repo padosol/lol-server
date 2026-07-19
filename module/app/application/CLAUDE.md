@@ -56,7 +56,16 @@ Spring Boot 진입점 + 컴포지션 루트. **모든 인프라 모듈을 implem
 ./gradlew :module:app:application:bootRun -Dspring.profiles.active=local  # local 부트 (Docker 서비스 필요)
 ./gradlew :module:app:application:bootJar                                 # 실행 가능 fat jar
 ./gradlew :module:app:application:test                                    # 모듈 단위 테스트
+
+# DevTools 자동 재시작 — bootRun 은 컴파일된 build/classes 디렉터리를 감시하므로,
+# 소스 저장 시 자동 재컴파일이 있어야 재시작이 걸린다. 둘 중 하나:
+#  1) 별도 터미널에서 지속 컴파일 (전 모듈 소스 변경 감지)
+./gradlew classes -t
+#  2) IntelliJ: "Build project automatically" ON +
+#     Advanced Settings → "Allow auto-make to start even if developed application is currently running"
 ```
+
+> DevTools 는 `developmentOnly` 의존이라 `bootJar`(dev/prod) 에는 포함되지 않는다. 재시작/LiveReload 세부 설정은 `application-local.yml` 의 `spring.devtools.*` 에서.
 
 ## See Also
 
