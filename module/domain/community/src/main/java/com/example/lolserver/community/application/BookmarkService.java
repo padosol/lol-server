@@ -41,12 +41,11 @@ public class BookmarkService implements BookmarkUseCase, BookmarkQueryUseCase {
                 .orElseThrow(() -> new CoreException(ErrorType.POST_NOT_FOUND));
         post.validateNotDeleted();
 
-        // 사전 조회로 막지만 최종 방어선은 uq_cb_member_post 다.
-        // 동시 요청 두 건은 둘 다 이 조회를 통과할 수 있다.
-        bookmarkPersistencePort.findByMemberIdAndPostId(memberId, postId)
-                .ifPresent(bookmark -> {
-                    throw new CoreException(ErrorType.BOOKMARK_ALREADY_EXISTS);
-                });
+        // 동시 요청 두 건은 둘 다 이 조회를 통과할 수 있다. 그때는 uq_cb_member_post 가
+        // 걸리고, 어댑터가 같은 BOOKMARK_ALREADY_EXISTS 로 변환한다.
+        if (bookmarkPersistencePort.existsByMemberIdAndPostId(memberId, postId)) {
+            throw new CoreException(ErrorType.BOOKMARK_ALREADY_EXISTS);
+        }
 
         bookmarkPersistencePort.save(Bookmark.create(memberId, postId));
     }
@@ -65,6 +64,11 @@ public class BookmarkService implements BookmarkUseCase, BookmarkQueryUseCase {
 
     @Override
     public SliceResult<PostListReadModel> getMyBookmarks(Long memberId, int page) {
+        // PageRequest.of 는 음수에 IllegalArgumentException 을 던지고, 그건 처리되지 않아
+        // 500 이 된다. 잘못된 입력이므로 400 으로 돌려준다.
+        if (page < 0) {
+            throw new CoreException(ErrorType.INVALID_INPUT);
+        }
         return enrichAuthors(bookmarkPersistencePort.findBookmarkedPosts(memberId, page));
     }
 

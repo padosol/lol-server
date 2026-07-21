@@ -24,9 +24,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 북마크 경로는 반드시 /api/community/bookmarks 최상위에 둔다.
- * /api/community/posts/{id}/bookmark 로 중첩하면 SecurityConfig 의
- * `GET /api/community/posts/**` permitAll 규칙에 걸려 인증 없이 뚫린다.
+ * 북마크 경로는 /api/community/bookmarks 최상위에 둔다.
+ *
+ * <p>SecurityConfig 의 permitAll 은 <b>GET</b> /api/community/posts/** 한정이므로
+ * 여기의 POST/DELETE 는 중첩했더라도 /api/community/** .authenticated() 에 걸린다.
+ * 다만 앞으로 "GET /posts/{id}/bookmark 로 북마크 여부 조회" 같은 것을 posts 하위에
+ * 추가하면 그건 <b>실제로 permitAll 에 걸려 인증 없이 뚫린다.</b> 그래서 북마크 리소스는
+ * 처음부터 posts 바깥에 둔다.
  */
 @RestController
 @RequestMapping("/api/community")
@@ -37,11 +41,12 @@ public class CommunityBookmarkController {
     private final BookmarkQueryUseCase bookmarkQueryUseCase;
 
     @PostMapping("/bookmarks")
-    public ResponseEntity<ApiResponse<?>> addBookmark(
+    public ResponseEntity<ApiResponse<Void>> addBookmark(
             @AuthenticationPrincipal AuthenticatedMember member,
             @Valid @RequestBody BookmarkRequest request) {
         bookmarkUseCase.addBookmark(member.memberId(), request.postId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(null));
     }
 
     @DeleteMapping("/bookmarks/{postId}")

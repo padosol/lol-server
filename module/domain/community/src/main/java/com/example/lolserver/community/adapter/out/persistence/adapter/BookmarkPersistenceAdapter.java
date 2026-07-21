@@ -4,7 +4,7 @@ import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
 import com.example.lolserver.common.support.SliceResult;
 import com.example.lolserver.community.adapter.out.persistence.entity.CommunityBookmarkEntity;
-import com.example.lolserver.community.adapter.out.persistence.entity.CommunityPostEntity;
+import com.example.lolserver.community.adapter.out.persistence.dto.PostListDTO;
 import com.example.lolserver.community.application.model.readmodel.PostListReadModel;
 import com.example.lolserver.community.adapter.out.persistence.mapper.CommunityBookmarkMapper;
 import com.example.lolserver.community.adapter.out.persistence.repository.CommunityBookmarkJpaRepository;
@@ -43,6 +43,11 @@ public class BookmarkPersistenceAdapter implements BookmarkPersistencePort {
     }
 
     @Override
+    public boolean existsByMemberIdAndPostId(Long memberId, Long postId) {
+        return bookmarkJpaRepository.existsByMemberIdAndPostId(memberId, postId);
+    }
+
+    @Override
     public Optional<Bookmark> findByMemberIdAndPostId(Long memberId, Long postId) {
         return bookmarkJpaRepository.findByMemberIdAndPostId(memberId, postId)
                 .map(bookmarkMapper::toDomain);
@@ -56,22 +61,22 @@ public class BookmarkPersistenceAdapter implements BookmarkPersistencePort {
     @Override
     public SliceResult<PostListReadModel> findBookmarkedPosts(Long memberId, int page) {
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
-        Slice<CommunityPostEntity> slice =
+        Slice<PostListDTO> slice =
                 bookmarkJpaRepository.findBookmarkedPosts(memberId, pageable);
 
         return new SliceResult<>(
                 slice.getContent().stream()
-                        .map(entity -> PostListReadModel.builder()
-                                .id(entity.getId())
-                                .title(entity.getTitle())
-                                .category(entity.getCategory())
-                                .viewCount(entity.getViewCount())
-                                .upvoteCount(entity.getUpvoteCount())
-                                .downvoteCount(entity.getDownvoteCount())
-                                .commentCount(entity.getCommentCount())
-                                .hotScore(entity.getHotScore())
-                                .authorId(entity.getMemberId())
-                                .createdAt(entity.getCreatedAt())
+                        .map(dto -> PostListReadModel.builder()
+                                .id(dto.getId())
+                                .title(dto.getTitle())
+                                .category(dto.getCategory())
+                                .viewCount(dto.getViewCount())
+                                .upvoteCount(dto.getUpvoteCount())
+                                .downvoteCount(dto.getDownvoteCount())
+                                .commentCount(dto.getCommentCount())
+                                .hotScore(dto.getHotScore())
+                                .authorId(dto.getMemberId())
+                                .createdAt(dto.getCreatedAt())
                                 .build())
                         .toList(),
                 slice.hasNext()

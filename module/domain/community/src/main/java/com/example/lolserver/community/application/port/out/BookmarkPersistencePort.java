@@ -16,6 +16,12 @@ public interface BookmarkPersistencePort {
      */
     Optional<Bookmark> findByMemberIdAndPostId(Long memberId, Long postId);
 
+    /**
+     * 존재 여부만 필요할 때 쓴다. 엔티티를 통째로 읽어 즉시 버리지 않기 위함이며,
+     * 특히 게시글 상세 조회는 최다 호출 읽기 경로다.
+     */
+    boolean existsByMemberIdAndPostId(Long memberId, Long postId);
+
     void delete(Bookmark bookmark);
 
     /**

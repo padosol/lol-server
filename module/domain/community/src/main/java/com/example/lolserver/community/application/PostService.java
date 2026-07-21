@@ -77,7 +77,7 @@ public class PostService implements PostUseCase, PostQueryUseCase {
         // false 로 고정하면 자기 글을 북마크한 뒤 수정했을 때 응답이 해제 상태로
         // 돌아와 클라이언트 캐시가 뒤집힌다. 실제 상태를 조회한다.
         boolean bookmarked = bookmarkPersistencePort
-                .findByMemberIdAndPostId(memberId, postId).isPresent();
+                .existsByMemberIdAndPostId(memberId, postId);
 
         return PostDetailResultModel.of(saved, author, null, bookmarked);
     }
@@ -117,7 +117,7 @@ public class PostService implements PostUseCase, PostQueryUseCase {
         // 비로그인은 조회 없이 false. null 이 아니라 false 여야 응답에서 모호해지지 않는다.
         boolean currentUserBookmarked = currentMemberId != null
                 && bookmarkPersistencePort
-                        .findByMemberIdAndPostId(currentMemberId, postId).isPresent();
+                        .existsByMemberIdAndPostId(currentMemberId, postId);
 
         return PostDetailReadModel.of(post, author, currentUserVote, currentUserBookmarked);
     }
@@ -147,6 +147,11 @@ public class PostService implements PostUseCase, PostQueryUseCase {
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
+
+        // 빈 목록에 회원 조회를 날리지 않는다.
+        if (authorIds.isEmpty()) {
+            return slice;
+        }
 
         Map<Long, MemberProfileReadModel> profiles = memberQueryUseCase.getMemberProfiles(authorIds).stream()
                 .collect(Collectors.toMap(MemberProfileReadModel::getId, Function.identity()));

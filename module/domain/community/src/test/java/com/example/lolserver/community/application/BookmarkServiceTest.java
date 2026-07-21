@@ -51,8 +51,8 @@ class BookmarkServiceTest {
         Long postId = 10L;
         given(postPersistencePort.findById(postId))
                 .willReturn(Optional.of(createPost(postId, false)));
-        given(bookmarkPersistencePort.findByMemberIdAndPostId(memberId, postId))
-                .willReturn(Optional.empty());
+        given(bookmarkPersistencePort.existsByMemberIdAndPostId(memberId, postId))
+                .willReturn(false);
 
         // when
         bookmarkService.addBookmark(memberId, postId);
@@ -69,8 +69,8 @@ class BookmarkServiceTest {
         Long postId = 10L;
         given(postPersistencePort.findById(postId))
                 .willReturn(Optional.of(createPost(postId, false)));
-        given(bookmarkPersistencePort.findByMemberIdAndPostId(memberId, postId))
-                .willReturn(Optional.of(Bookmark.create(memberId, postId)));
+        given(bookmarkPersistencePort.existsByMemberIdAndPostId(memberId, postId))
+                .willReturn(true);
 
         // when & then
         assertThatThrownBy(() -> bookmarkService.addBookmark(memberId, postId))
@@ -208,6 +208,17 @@ class BookmarkServiceTest {
         // then — 빈 목록에 회원 조회를 날리면 불필요한 쿼리가 된다
         assertThat(result.getContent()).isEmpty();
         then(memberQueryUseCase).shouldHaveNoInteractions();
+    }
+
+    @DisplayName("page 가 음수면 500 이 아니라 INVALID_INPUT 으로 막는다")
+    @Test
+    void getMyBookmarks_negativePage() {
+        // when & then — PageRequest.of 까지 내려가면 IllegalArgumentException 으로 500 이 된다
+        assertThatThrownBy(() -> bookmarkService.getMyBookmarks(1L, -1))
+                .isInstanceOf(CoreException.class)
+                .extracting(e -> ((CoreException) e).getErrorType())
+                .isEqualTo(ErrorType.INVALID_INPUT);
+        then(bookmarkPersistencePort).shouldHaveNoInteractions();
     }
 
     private Post createPost(Long postId, boolean deleted) {

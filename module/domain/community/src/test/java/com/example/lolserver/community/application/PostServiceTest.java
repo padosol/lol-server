@@ -9,7 +9,6 @@ import com.example.lolserver.community.application.model.resultmodel.PostDetailR
 import com.example.lolserver.community.application.port.out.BookmarkPersistencePort;
 import com.example.lolserver.community.application.port.out.PostPersistencePort;
 import com.example.lolserver.community.application.port.out.VotePersistencePort;
-import com.example.lolserver.community.domain.Bookmark;
 import com.example.lolserver.community.domain.Post;
 import com.example.lolserver.community.domain.vo.SortType;
 import com.example.lolserver.member.application.model.readmodel.MemberProfileReadModel;
@@ -126,6 +125,52 @@ class PostServiceTest {
         assertThat(result).isNotNull();
     }
 
+    @DisplayName("북마크한 자기 글을 수정해도 응답의 북마크 여부는 true 로 유지된다")
+    @Test
+    void updatePost_keepsBookmarkedState() {
+        // given — false 로 고정하면 클라이언트 캐시가 해제 상태로 뒤집힌다
+        Long memberId = 1L;
+        Long postId = 1L;
+        UpdatePostCommand command = UpdatePostCommand.builder()
+                .title("수정된 제목").content("수정된 내용").category("GENERAL")
+                .build();
+        Post post = createPost(postId, memberId);
+
+        given(postPersistencePort.findById(postId)).willReturn(Optional.of(post));
+        given(postPersistencePort.save(any(Post.class))).willReturn(post);
+        given(memberQueryUseCase.getMemberProfile(memberId))
+                .willReturn(createProfile(memberId));
+        given(bookmarkPersistencePort.existsByMemberIdAndPostId(memberId, postId))
+                .willReturn(true);
+
+        // when
+        PostDetailResultModel result = postService.updatePost(memberId, postId, command);
+
+        // then
+        assertThat(result.isCurrentUserBookmarked()).isTrue();
+    }
+
+    @DisplayName("게시글을 새로 작성하면 북마크 여부는 항상 false 이고 조회하지 않는다")
+    @Test
+    void createPost_neverBookmarked() {
+        // given
+        Long memberId = 1L;
+        CreatePostCommand command = CreatePostCommand.builder()
+                .title("제목").content("내용").category("GENERAL")
+                .build();
+        given(memberQueryUseCase.getMemberProfile(memberId))
+                .willReturn(createProfile(memberId));
+        given(postPersistencePort.save(any(Post.class)))
+                .willReturn(createPost(1L, memberId));
+
+        // when
+        PostDetailResultModel result = postService.createPost(memberId, command);
+
+        // then — 방금 만든 글이므로 조회 없이 false 여야 한다
+        assertThat(result.isCurrentUserBookmarked()).isFalse();
+        then(bookmarkPersistencePort).shouldHaveNoInteractions();
+    }
+
     @DisplayName("다른 사람의 게시글을 수정하면 FORBIDDEN 예외가 발생한다")
     @Test
     void updatePost_forbidden() {
@@ -237,8 +282,8 @@ class PostServiceTest {
                 .willReturn(Optional.of(createPost(postId, authorId)));
         given(memberQueryUseCase.getMemberProfile(authorId))
                 .willReturn(createProfile(authorId));
-        given(bookmarkPersistencePort.findByMemberIdAndPostId(viewerId, postId))
-                .willReturn(Optional.of(Bookmark.create(viewerId, postId)));
+        given(bookmarkPersistencePort.existsByMemberIdAndPostId(viewerId, postId))
+                .willReturn(true);
 
         // when
         PostDetailReadModel result = postService.getPost(postId, viewerId);
@@ -258,8 +303,8 @@ class PostServiceTest {
                 .willReturn(Optional.of(createPost(postId, authorId)));
         given(memberQueryUseCase.getMemberProfile(authorId))
                 .willReturn(createProfile(authorId));
-        given(bookmarkPersistencePort.findByMemberIdAndPostId(viewerId, postId))
-                .willReturn(Optional.empty());
+        given(bookmarkPersistencePort.existsByMemberIdAndPostId(viewerId, postId))
+                .willReturn(false);
 
         // when
         PostDetailReadModel result = postService.getPost(postId, viewerId);
