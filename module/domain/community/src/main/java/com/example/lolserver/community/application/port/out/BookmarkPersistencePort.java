@@ -1,5 +1,7 @@
 package com.example.lolserver.community.application.port.out;
 
+import com.example.lolserver.common.support.SliceResult;
+import com.example.lolserver.community.application.model.readmodel.PostListReadModel;
 import com.example.lolserver.community.domain.Bookmark;
 
 import java.util.Optional;
@@ -15,4 +17,9 @@ public interface BookmarkPersistencePort {
     Optional<Bookmark> findByMemberIdAndPostId(Long memberId, Long postId);
 
     void delete(Bookmark bookmark);
+
+    /**
+     * 북마크한 게시글 목록. 북마크 시각 기준 최신순이며 삭제된 글은 제외한다.
+     */
+    SliceResult<PostListReadModel> findBookmarkedPosts(Long memberId, int page);
 }

@@ -2,10 +2,14 @@ package com.example.lolserver.community.application;
 
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
+import com.example.lolserver.common.support.SliceResult;
+import com.example.lolserver.community.application.model.readmodel.PostListReadModel;
 import com.example.lolserver.community.application.port.out.BookmarkPersistencePort;
 import com.example.lolserver.community.application.port.out.PostPersistencePort;
 import com.example.lolserver.community.domain.Bookmark;
 import com.example.lolserver.community.domain.Post;
+import com.example.lolserver.member.application.model.readmodel.MemberProfileReadModel;
+import com.example.lolserver.member.application.port.in.MemberQueryUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,8 +18,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -30,6 +36,9 @@ class BookmarkServiceTest {
 
     @Mock
     private PostPersistencePort postPersistencePort;
+
+    @Mock
+    private MemberQueryUseCase memberQueryUseCase;
 
     @InjectMocks
     private BookmarkService bookmarkService;
@@ -153,6 +162,52 @@ class BookmarkServiceTest {
         // then
         then(bookmarkPersistencePort).should().delete(bookmark);
         then(postPersistencePort).shouldHaveNoInteractions();
+    }
+
+    @DisplayName("내 북마크 목록을 조회하면 작성자가 보강된 페이지 결과를 반환한다")
+    @Test
+    void getMyBookmarks_enrichesAuthor() {
+        // given — 영속성은 authorId 만 채워주고 author 는 비어 있다
+        Long memberId = 1L;
+        int page = 2;
+        PostListReadModel item = PostListReadModel.builder()
+                .id(10L).title("제목").category("GENERAL")
+                .authorId(7L)
+                .createdAt(LocalDateTime.now())
+                .build();
+        given(bookmarkPersistencePort.findBookmarkedPosts(memberId, page))
+                .willReturn(new SliceResult<>(List.of(item), true));
+        given(memberQueryUseCase.getMemberProfiles(List.of(7L)))
+                .willReturn(List.of(MemberProfileReadModel.builder()
+                        .id(7L).nickname("테스터")
+                        .profileImageUrl("http://img/7").build()));
+
+        // when
+        SliceResult<PostListReadModel> result =
+                bookmarkService.getMyBookmarks(memberId, page);
+
+        // then — 게시글 목록과 동일하게 author 가 채워져야 한다.
+        // 안 채우면 북마크 목록에서만 작성자가 비어 보인다.
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getAuthor()).isNotNull();
+        assertThat(result.getContent().get(0).getAuthor().id()).isEqualTo(7L);
+        assertThat(result.getContent().get(0).getAuthor().nickname()).isEqualTo("테스터");
+        assertThat(result.isHasNext()).isTrue();
+    }
+
+    @DisplayName("북마크 목록이 비어 있으면 회원 조회를 하지 않는다")
+    @Test
+    void getMyBookmarks_empty_skipsMemberLookup() {
+        // given
+        given(bookmarkPersistencePort.findBookmarkedPosts(1L, 0))
+                .willReturn(new SliceResult<>(List.of(), false));
+
+        // when
+        SliceResult<PostListReadModel> result = bookmarkService.getMyBookmarks(1L, 0);
+
+        // then — 빈 목록에 회원 조회를 날리면 불필요한 쿼리가 된다
+        assertThat(result.getContent()).isEmpty();
+        then(memberQueryUseCase).shouldHaveNoInteractions();
     }
 
     private Post createPost(Long postId, boolean deleted) {
