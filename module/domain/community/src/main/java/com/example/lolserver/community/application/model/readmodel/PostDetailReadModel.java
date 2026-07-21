@@ -25,10 +25,12 @@ public class PostDetailReadModel {
     private final int commentCount;
     private final AuthorReadModel author;
     private final VoteType currentUserVote;
+    private final boolean currentUserBookmarked;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
-    public static PostDetailReadModel of(Post post, MemberProfileReadModel author, Vote currentUserVote) {
+    public static PostDetailReadModel of(Post post, MemberProfileReadModel author, Vote currentUserVote,
+                                         boolean currentUserBookmarked) {
         return PostDetailReadModel.builder()
                 .id(post.getId())
                 .title(post.getTitle())
@@ -42,6 +44,7 @@ public class PostDetailReadModel {
                 .currentUserVote(
                         currentUserVote != null
                                 ? currentUserVote.getVoteType() : null)
+                .currentUserBookmarked(currentUserBookmarked)
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();

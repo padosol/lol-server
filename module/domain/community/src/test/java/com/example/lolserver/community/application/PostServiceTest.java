@@ -6,8 +6,10 @@ import com.example.lolserver.community.application.command.UpdatePostCommand;
 import com.example.lolserver.community.application.model.readmodel.PostDetailReadModel;
 import com.example.lolserver.community.application.model.readmodel.PostListReadModel;
 import com.example.lolserver.community.application.model.resultmodel.PostDetailResultModel;
+import com.example.lolserver.community.application.port.out.BookmarkPersistencePort;
 import com.example.lolserver.community.application.port.out.PostPersistencePort;
 import com.example.lolserver.community.application.port.out.VotePersistencePort;
+import com.example.lolserver.community.domain.Bookmark;
 import com.example.lolserver.community.domain.Post;
 import com.example.lolserver.community.domain.vo.SortType;
 import com.example.lolserver.member.application.model.readmodel.MemberProfileReadModel;
@@ -40,6 +42,9 @@ class PostServiceTest {
 
     @Mock
     private MemberQueryUseCase memberQueryUseCase;
+
+    @Mock
+    private BookmarkPersistencePort bookmarkPersistencePort;
 
     @Mock
     private VotePersistencePort votePersistencePort;
@@ -200,6 +205,67 @@ class PostServiceTest {
         // then
         assertThat(result.getId()).isEqualTo(postId);
         then(postPersistencePort).should().incrementViewCount(postId);
+    }
+
+    @DisplayName("비로그인 상세 조회 시 북마크 여부는 false 이고 북마크를 조회하지 않는다")
+    @Test
+    void getPost_anonymous_bookmarkFalse() {
+        // given
+        Long postId = 1L;
+        Long authorId = 1L;
+        given(postPersistencePort.findById(postId))
+                .willReturn(Optional.of(createPost(postId, authorId)));
+        given(memberQueryUseCase.getMemberProfile(authorId))
+                .willReturn(createProfile(authorId));
+
+        // when
+        PostDetailReadModel result = postService.getPost(postId, null);
+
+        // then — null 이 아니라 false 여야 한다 (응답에서 구분 불가한 값이 되면 안 된다)
+        assertThat(result.isCurrentUserBookmarked()).isFalse();
+        then(bookmarkPersistencePort).shouldHaveNoInteractions();
+    }
+
+    @DisplayName("북마크한 게시글을 상세 조회하면 북마크 여부가 true 이다")
+    @Test
+    void getPost_bookmarked_returnsTrue() {
+        // given
+        Long postId = 1L;
+        Long authorId = 1L;
+        Long viewerId = 99L;
+        given(postPersistencePort.findById(postId))
+                .willReturn(Optional.of(createPost(postId, authorId)));
+        given(memberQueryUseCase.getMemberProfile(authorId))
+                .willReturn(createProfile(authorId));
+        given(bookmarkPersistencePort.findByMemberIdAndPostId(viewerId, postId))
+                .willReturn(Optional.of(Bookmark.create(viewerId, postId)));
+
+        // when
+        PostDetailReadModel result = postService.getPost(postId, viewerId);
+
+        // then
+        assertThat(result.isCurrentUserBookmarked()).isTrue();
+    }
+
+    @DisplayName("북마크하지 않은 게시글을 상세 조회하면 북마크 여부가 false 이다")
+    @Test
+    void getPost_notBookmarked_returnsFalse() {
+        // given
+        Long postId = 1L;
+        Long authorId = 1L;
+        Long viewerId = 99L;
+        given(postPersistencePort.findById(postId))
+                .willReturn(Optional.of(createPost(postId, authorId)));
+        given(memberQueryUseCase.getMemberProfile(authorId))
+                .willReturn(createProfile(authorId));
+        given(bookmarkPersistencePort.findByMemberIdAndPostId(viewerId, postId))
+                .willReturn(Optional.empty());
+
+        // when
+        PostDetailReadModel result = postService.getPost(postId, viewerId);
+
+        // then
+        assertThat(result.isCurrentUserBookmarked()).isFalse();
     }
 
     @DisplayName("게시글 목록을 조회하면 작성자가 보강된 페이지 결과를 반환한다")
