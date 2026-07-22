@@ -9,6 +9,7 @@ import com.example.lolserver.community.application.model.readmodel.PostListReadM
 import com.example.lolserver.community.application.model.resultmodel.PostDetailResultModel;
 import com.example.lolserver.community.application.port.in.PostQueryUseCase;
 import com.example.lolserver.community.application.port.in.PostUseCase;
+import com.example.lolserver.community.application.port.out.BookmarkPersistencePort;
 import com.example.lolserver.community.application.port.out.PostPersistencePort;
 import com.example.lolserver.community.application.port.out.VotePersistencePort;
 import com.example.lolserver.community.domain.Post;
@@ -39,6 +40,7 @@ public class PostService implements PostUseCase, PostQueryUseCase {
 
     private final PostPersistencePort postPersistencePort;
     private final MemberQueryUseCase memberQueryUseCase;
+    private final BookmarkPersistencePort bookmarkPersistencePort;
     private final VotePersistencePort votePersistencePort;
 
     @Override
@@ -53,7 +55,8 @@ public class PostService implements PostUseCase, PostQueryUseCase {
 
         Post saved = postPersistencePort.save(post);
 
-        return PostDetailResultModel.of(saved, author, null);
+        // 방금 만든 글이므로 북마크되어 있을 수 없다.
+        return PostDetailResultModel.of(saved, author, null, false);
     }
 
     @Override
@@ -71,7 +74,12 @@ public class PostService implements PostUseCase, PostQueryUseCase {
 
         MemberProfileReadModel author = memberQueryUseCase.getMemberProfile(memberId);
 
-        return PostDetailResultModel.of(saved, author, null);
+        // false 로 고정하면 자기 글을 북마크한 뒤 수정했을 때 응답이 해제 상태로
+        // 돌아와 클라이언트 캐시가 뒤집힌다. 실제 상태를 조회한다.
+        boolean bookmarked = bookmarkPersistencePort
+                .existsByMemberIdAndPostId(memberId, postId);
+
+        return PostDetailResultModel.of(saved, author, null, bookmarked);
     }
 
     @Override
@@ -106,7 +114,12 @@ public class PostService implements PostUseCase, PostQueryUseCase {
                     .orElse(null);
         }
 
-        return PostDetailReadModel.of(post, author, currentUserVote);
+        // 비로그인은 조회 없이 false. null 이 아니라 false 여야 응답에서 모호해지지 않는다.
+        boolean currentUserBookmarked = currentMemberId != null
+                && bookmarkPersistencePort
+                        .existsByMemberIdAndPostId(currentMemberId, postId);
+
+        return PostDetailReadModel.of(post, author, currentUserVote, currentUserBookmarked);
     }
 
     @Override
@@ -134,6 +147,11 @@ public class PostService implements PostUseCase, PostQueryUseCase {
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
+
+        // 빈 목록에 회원 조회를 날리지 않는다.
+        if (authorIds.isEmpty()) {
+            return slice;
+        }
 
         Map<Long, MemberProfileReadModel> profiles = memberQueryUseCase.getMemberProfiles(authorIds).stream()
                 .collect(Collectors.toMap(MemberProfileReadModel::getId, Function.identity()));

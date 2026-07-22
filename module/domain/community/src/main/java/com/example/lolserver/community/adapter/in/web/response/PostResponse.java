@@ -16,6 +16,7 @@ public record PostResponse(
         int commentCount,
         AuthorResponse author,
         String currentUserVote,
+        boolean currentUserBookmarked,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -31,6 +32,7 @@ public record PostResponse(
                 readModel.getCommentCount(),
                 AuthorResponse.from(readModel.getAuthor()),
                 readModel.getCurrentUserVote() != null ? readModel.getCurrentUserVote().name() : null,
+                readModel.isCurrentUserBookmarked(),
                 readModel.getCreatedAt(),
                 readModel.getUpdatedAt()
         );
@@ -48,6 +50,7 @@ public record PostResponse(
                 resultModel.getCommentCount(),
                 AuthorResponse.from(resultModel.getAuthor()),
                 resultModel.getCurrentUserVote() != null ? resultModel.getCurrentUserVote().name() : null,
+                resultModel.isCurrentUserBookmarked(),
                 resultModel.getCreatedAt(),
                 resultModel.getUpdatedAt()
         );
