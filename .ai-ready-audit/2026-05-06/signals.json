@@ -1,0 +1,737 @@
+{
+  "schema_version": "1.0",
+  "tool": "ai-ready-audit/audit.py",
+  "scanned_at": "2026-05-06T05:07:32.491699+00:00",
+  "repo_path": "/home/padosol/lol/.orch/mp-23/worktrees/server",
+  "git_head": "1c722319423860b54696e5d67a98c47bc063dce5",
+  "totals": {
+    "tracked_files": 805
+  },
+  "signals": {
+    "core_modules_total": 5,
+    "core_modules_with_context": 1,
+    "core_modules_with_strong_context": 0,
+    "navigation_coverage_ratio": 0.0,
+    "claude_md_count": 11,
+    "agents_md_count": 0,
+    "claude_md_locations": [
+      "CLAUDE.md",
+      "module/app/application/CLAUDE.md",
+      "module/core/lol-server-domain/CLAUDE.md",
+      "module/infra/api/CLAUDE.md",
+      "module/infra/client/lol-repository/CLAUDE.md",
+      "module/infra/client/oauth/CLAUDE.md",
+      "module/infra/message/kafka/CLAUDE.md",
+      "module/infra/message/rabbitmq/CLAUDE.md",
+      "module/infra/persistence/clickhouse/CLAUDE.md",
+      "module/infra/persistence/postgresql/CLAUDE.md",
+      "module/infra/persistence/redis/CLAUDE.md"
+    ],
+    "claude_md_line_distribution": [
+      61,
+      66,
+      68,
+      72,
+      71,
+      70,
+      62,
+      60,
+      59,
+      78,
+      68
+    ],
+    "context_files_total": 31,
+    "context_files_with_commands_section": 11,
+    "context_files_with_key_files_section": 10,
+    "context_files_with_gotcha_section": 0,
+    "context_files_with_xref_section": 13,
+    "modules_answering_q1_what_owned": 1,
+    "modules_answering_q2_modification_patterns": 1,
+    "modules_answering_q3_failure_patterns": 2,
+    "modules_answering_q4_dependencies": 1,
+    "modules_answering_q5_tribal_knowledge": 1,
+    "five_question_module_coverage_pct": [
+      20.0,
+      20.0,
+      40.0,
+      20.0,
+      20.0
+    ],
+    "has_architecture_doc": true,
+    "has_dependency_map": false,
+    "has_data_flow_diagram": false,
+    "has_any_diagram": true,
+    "arch_doc_paths": [
+      "docs/ARCHITECTURE.md"
+    ],
+    "dep_doc_paths": [],
+    "github_workflow_count": 3,
+    "other_ci_files": [],
+    "has_lint_ci": true,
+    "has_test_ci": true,
+    "has_typecheck_ci": false,
+    "has_doc_ci": true,
+    "has_freshness_ci": true,
+    "broken_path_refs_in_docs": 50,
+    "broken_refs_sample": [
+      {
+        "doc": "CLAUDE.md",
+        "ref": "infra/client/lol-repository/CLAUDE.md"
+      },
+      {
+        "doc": "CLAUDE.md",
+        "ref": "infra/client/oauth/CLAUDE.md"
+      },
+      {
+        "doc": "CLAUDE.md",
+        "ref": ".claude/skills/build-validator/SKILL.md"
+      },
+      {
+        "doc": "CLAUDE.md",
+        "ref": "app/application/CLAUDE.md"
+      },
+      {
+        "doc": "CLAUDE.md",
+        "ref": "infra/persistence/postgresql/CLAUDE.md"
+      },
+      {
+        "doc": "CLAUDE.md",
+        "ref": "infra/api/CLAUDE.md"
+      },
+      {
+        "doc": "CLAUDE.md",
+        "ref": "core/lol-server-domain/CLAUDE.md"
+      },
+      {
+        "doc": "docs/ARCHITECTURE.md",
+        "ref": "core/lol-server-domain"
+      },
+      {
+        "doc": "docs/ARCHITECTURE.md",
+        "ref": "controller/security/"
+      },
+      {
+        "doc": "docs/docs-maintenance.md",
+        "ref": "/ai-ready-audit:audit-codebase"
+      },
+      {
+        "doc": "docs/docs-maintenance.md",
+        "ref": "application.yml"
+      },
+      {
+        "doc": "docs/docs-maintenance.md",
+        "ref": "app/application/build.gradle"
+      },
+      {
+        "doc": "docs/duo-api-spec.md",
+        "ref": "/api/duo"
+      },
+      {
+        "doc": "docs/oauth2-login.md",
+        "ref": "/oauth2/authorize"
+      },
+      {
+        "doc": "docs/oauth2-login.md",
+        "ref": "SecurityConfig.java"
+      },
+      {
+        "doc": "docs/oauth2-login.md",
+        "ref": "{Provider}OAuth2UserInfoExtractor.java"
+      },
+      {
+        "doc": "docs/oauth2-login.md",
+        "ref": "CustomOidcUserService.java"
+      },
+      {
+        "doc": "docs/oauth2-login.md",
+        "ref": "OAuthProvider.java"
+      },
+      {
+        "doc": "docs/oauth2-login.md",
+        "ref": "api-local.yml"
+      },
+      {
+        "doc": "docs/review/2026-03-17-oauth-member-review.md",
+        "ref": "OAuthLoginRequest.java"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "path": "docker",
+      "name": "docker",
+      "file_count": 1,
+      "has_readme": false,
+      "has_claude_md": false,
+      "has_agents_md": false,
+      "context_paths": []
+    },
+    {
+      "path": "gradle",
+      "name": "gradle",
+      "file_count": 2,
+      "has_readme": false,
+      "has_claude_md": false,
+      "has_agents_md": false,
+      "context_paths": []
+    },
+    {
+      "path": "module",
+      "name": "module",
+      "file_count": 698,
+      "has_readme": false,
+      "has_claude_md": false,
+      "has_agents_md": false,
+      "context_paths": []
+    },
+    {
+      "path": "performance-tests",
+      "name": "performance-tests",
+      "file_count": 21,
+      "has_readme": true,
+      "has_claude_md": false,
+      "has_agents_md": false,
+      "context_paths": [
+        "performance-tests/README.md"
+      ]
+    },
+    {
+      "path": "plans",
+      "name": "plans",
+      "file_count": 31,
+      "has_readme": false,
+      "has_claude_md": false,
+      "has_agents_md": false,
+      "context_paths": []
+    }
+  ],
+  "context_files": [
+    {
+      "path": "CLAUDE.md",
+      "lines": 61,
+      "bytes_": 4445,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": true,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": true,
+        "q3_failure_patterns": false,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "README.md",
+      "lines": 84,
+      "bytes_": 2165,
+      "has_quick_commands": true,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": false,
+        "q3_failure_patterns": false,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "lines": 173,
+      "bytes_": 7305,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": true,
+      "five_question_hits": {
+        "q1_what_owned": false,
+        "q2_modification_patterns": true,
+        "q3_failure_patterns": false,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": true
+    },
+    {
+      "path": "docs/docs-maintenance.md",
+      "lines": 62,
+      "bytes_": 4057,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": true,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": true,
+        "q3_failure_patterns": true,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": true
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "docs/duo-api-spec.md",
+      "lines": 167,
+      "bytes_": 5841,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": false,
+        "q3_failure_patterns": true,
+        "q4_dependencies": false,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "docs/oauth2-login.md",
+      "lines": 495,
+      "bytes_": 23762,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": false,
+        "q3_failure_patterns": true,
+        "q4_dependencies": false,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "docs/review/2026-03-17-oauth-member-review.md",
+      "lines": 208,
+      "bytes_": 11731,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": false,
+        "q3_failure_patterns": true,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "docs/review/2026-03-17-tier-filter-review.md",
+      "lines": 85,
+      "bytes_": 5648,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": false,
+        "q2_modification_patterns": false,
+        "q3_failure_patterns": true,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": true
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "docs/review/2026-03-18-oauth-member-simplify.md",
+      "lines": 79,
+      "bytes_": 5359,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": false,
+        "q2_modification_patterns": false,
+        "q3_failure_patterns": true,
+        "q4_dependencies": false,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "docs/rso-oauth2-troubleshooting.md",
+      "lines": 494,
+      "bytes_": 19058,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": false,
+        "q3_failure_patterns": true,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "docs/simplify/2026-04-13-duo-riot-rso-review.md",
+      "lines": 66,
+      "bytes_": 4844,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": false,
+        "q2_modification_patterns": false,
+        "q3_failure_patterns": false,
+        "q4_dependencies": false,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "docs/simplify/2026-04-13-rso-puuid-review.md",
+      "lines": 61,
+      "bytes_": 3298,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": false,
+        "q2_modification_patterns": false,
+        "q3_failure_patterns": true,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "docs/simplify/2026-04-13-transactional-policy.md",
+      "lines": 66,
+      "bytes_": 4057,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": false,
+        "q2_modification_patterns": false,
+        "q3_failure_patterns": true,
+        "q4_dependencies": false,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "docs/simplify/2026-04-14-duo-magic-string-refactor.md",
+      "lines": 72,
+      "bytes_": 5107,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": false,
+        "q2_modification_patterns": false,
+        "q3_failure_patterns": true,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "docs/simplify/2026-04-14-duo-mvp-completion.md",
+      "lines": 53,
+      "bytes_": 2984,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": false,
+        "q3_failure_patterns": true,
+        "q4_dependencies": false,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "docs/simplify/2026-04-15-duo-feature-improvements.md",
+      "lines": 67,
+      "bytes_": 4977,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": false,
+        "q2_modification_patterns": false,
+        "q3_failure_patterns": false,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "docs/simplify/2026-04-16-gold-timeline.md",
+      "lines": 56,
+      "bytes_": 3112,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": false,
+        "q2_modification_patterns": false,
+        "q3_failure_patterns": true,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "docs/simplify/2026-04-16-timeline-union-all.md",
+      "lines": 57,
+      "bytes_": 2945,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": false,
+        "q3_failure_patterns": false,
+        "q4_dependencies": false,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "docs/simplify/2026-05-04-cache-stale-handling.md",
+      "lines": 56,
+      "bytes_": 3524,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": false,
+        "q3_failure_patterns": true,
+        "q4_dependencies": false,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "docs/workflow.md",
+      "lines": 188,
+      "bytes_": 9322,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": true,
+        "q3_failure_patterns": false,
+        "q4_dependencies": false,
+        "q5_tribal_knowledge": true
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "module/app/application/CLAUDE.md",
+      "lines": 66,
+      "bytes_": 4971,
+      "has_quick_commands": true,
+      "has_key_files": true,
+      "has_gotcha": false,
+      "has_see_also": true,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": true,
+        "q3_failure_patterns": true,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": true
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "module/core/lol-server-domain/CLAUDE.md",
+      "lines": 68,
+      "bytes_": 5025,
+      "has_quick_commands": true,
+      "has_key_files": true,
+      "has_gotcha": false,
+      "has_see_also": true,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": true,
+        "q3_failure_patterns": true,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": true
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "module/infra/api/CLAUDE.md",
+      "lines": 72,
+      "bytes_": 5107,
+      "has_quick_commands": true,
+      "has_key_files": true,
+      "has_gotcha": false,
+      "has_see_also": true,
+      "five_question_hits": {
+        "q1_what_owned": false,
+        "q2_modification_patterns": true,
+        "q3_failure_patterns": true,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": true
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "module/infra/client/lol-repository/CLAUDE.md",
+      "lines": 71,
+      "bytes_": 4997,
+      "has_quick_commands": true,
+      "has_key_files": true,
+      "has_gotcha": false,
+      "has_see_also": true,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": true,
+        "q3_failure_patterns": true,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": true
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "module/infra/client/oauth/CLAUDE.md",
+      "lines": 70,
+      "bytes_": 4847,
+      "has_quick_commands": true,
+      "has_key_files": true,
+      "has_gotcha": false,
+      "has_see_also": true,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": true,
+        "q3_failure_patterns": true,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": true
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "module/infra/message/kafka/CLAUDE.md",
+      "lines": 62,
+      "bytes_": 3865,
+      "has_quick_commands": true,
+      "has_key_files": true,
+      "has_gotcha": false,
+      "has_see_also": true,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": true,
+        "q3_failure_patterns": true,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": true
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "module/infra/message/rabbitmq/CLAUDE.md",
+      "lines": 60,
+      "bytes_": 3831,
+      "has_quick_commands": true,
+      "has_key_files": true,
+      "has_gotcha": false,
+      "has_see_also": true,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": true,
+        "q3_failure_patterns": true,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": true
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "module/infra/persistence/clickhouse/CLAUDE.md",
+      "lines": 59,
+      "bytes_": 3757,
+      "has_quick_commands": true,
+      "has_key_files": true,
+      "has_gotcha": false,
+      "has_see_also": true,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": true,
+        "q3_failure_patterns": true,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": true
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "module/infra/persistence/postgresql/CLAUDE.md",
+      "lines": 78,
+      "bytes_": 5253,
+      "has_quick_commands": true,
+      "has_key_files": true,
+      "has_gotcha": false,
+      "has_see_also": true,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": true,
+        "q3_failure_patterns": true,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": true
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "module/infra/persistence/redis/CLAUDE.md",
+      "lines": 68,
+      "bytes_": 4212,
+      "has_quick_commands": true,
+      "has_key_files": true,
+      "has_gotcha": false,
+      "has_see_also": true,
+      "five_question_hits": {
+        "q1_what_owned": true,
+        "q2_modification_patterns": true,
+        "q3_failure_patterns": true,
+        "q4_dependencies": true,
+        "q5_tribal_knowledge": true
+      },
+      "has_mermaid": false
+    },
+    {
+      "path": "performance-tests/README.md",
+      "lines": 236,
+      "bytes_": 5704,
+      "has_quick_commands": false,
+      "has_key_files": false,
+      "has_gotcha": false,
+      "has_see_also": false,
+      "five_question_hits": {
+        "q1_what_owned": false,
+        "q2_modification_patterns": false,
+        "q3_failure_patterns": true,
+        "q4_dependencies": false,
+        "q5_tribal_knowledge": false
+      },
+      "has_mermaid": false
+    }
+  ]
+}

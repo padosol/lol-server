@@ -1,0 +1,45 @@
+spring:
+  # 스키마 마이그레이션은 lol-repository 가 단독으로 소유한다 (lol-db-schema 서브모듈을
+  # 이미지에 싣고 기동 시 Flyway 로 적용). lol-server 는 스키마를 만들지 않고
+  # ddl-auto: validate 로 검증만 한다.
+  #
+  # local: 빈 DB 로 시작하면 lol-repository 가 먼저 떠서 스키마를 만들어야 한다.
+  # lol-server 단독 기동 시에는 validate 가 실패하니, lol-repository 를 먼저 띄울 것.
+  flyway:
+    enabled: false
+
+  # local 개발용 기본 데이터 시드 (스키마는 Flyway 담당, 여기선 데이터만).
+  # Flyway 마이그레이션 이후 실행되며, 스크립트는 ON CONFLICT 로 멱등 처리됨.
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:db/seed/season-local.sql
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        use_sql_comments: true
+        jdbc:
+          batch_size: 1000
+          order_inserts: true
+          order_updates: true
+    show-sql: false
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      register-mbeans: true
+      maximum-pool-size: 30
+      minimum-idle: 30
+      connection-timeout: 10000
+      max-lifetime: 600000
+      validation-timeout: 3000
+      pool-name: "lol-server-pool"

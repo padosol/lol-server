@@ -1,0 +1,20 @@
+spring:
+  config:
+    import:
+      - core-local.yml
+      - api-local.yml
+      - client-repository-local.yml
+      - oauth-local.yml
+      - rabbitmq-local.yml
+      - kafka-local.yml
+      - postgresql-local.yml
+      - redis-local.yml
+      - bigquery-local.yml
+      - logging-local.yml
+  devtools:
+    restart:
+      enabled: true       # 클래스패스(도메인 모듈 포함) 변경 감지 시 자동 재시작
+      poll-interval: 2s    # 변경 폴링 주기
+      quiet-period: 1s     # 마지막 변경 후 안정화 대기 (poll-interval 보다 작아야 함)
+    livereload:
+      enabled: true       # 정적 리소스 변경 시 브라우저 LiveReload (포트 35729)

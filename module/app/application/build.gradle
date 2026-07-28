@@ -5,20 +5,27 @@ plugins {
 }
 
 dependencies {
-    implementation project(":module:core:lol-server-domain")
-    implementation project(":module:infra:api")
-    implementation project(":module:infra:client:lol-repository")
-    implementation project(":module:infra:client:oauth")
-    implementation project(":module:infra:message:rabbitmq")
-    implementation project(":module:infra:message:kafka")
-    implementation project(":module:infra:persistence:postgresql")
-    implementation project(":module:infra:persistence:redis")
-    implementation project(":module:infra:persistence:clickhouse")
+    // ── 수직(컨텍스트별) 도메인 모듈 — 컴포지션 루트가 전 컨텍스트를 조립한다 ──
+    implementation project(":module:common")
+    implementation project(":module:domain:leaderboard")
+    implementation project(":module:domain:match")
+    implementation project(":module:domain:championstats")
+    implementation project(":module:domain:gamedata")
+    implementation project(":module:domain:summoner")
+    implementation project(":module:domain:member")
+    implementation project(":module:domain:community")
+    implementation project(":module:domain:duo")
+
+    // 공유 모듈
+    implementation project(":module:shared")
     implementation project(":module:support:logging")
 
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    // DevTools — 소스 변경 시 클래스패스 감시 후 자동 재시작 (developmentOnly: bootJar/prod 미포함)
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     // PostgreSQL 드라이버 (runtimeOnly는 모듈간 전이되지 않으므로 직접 추가)
     runtimeOnly 'org.postgresql:postgresql'

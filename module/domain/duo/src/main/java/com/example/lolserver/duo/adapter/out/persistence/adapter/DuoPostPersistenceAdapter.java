@@ -1,0 +1,114 @@
+package com.example.lolserver.duo.adapter.out.persistence.adapter;
+
+import com.example.lolserver.duo.application.command.DuoPostSearchCommand;
+import com.example.lolserver.duo.application.model.readmodel.DuoPostListReadModel;
+import com.example.lolserver.duo.application.port.out.DuoPostPersistencePort;
+import com.example.lolserver.duo.domain.DuoPost;
+import com.example.lolserver.duo.domain.vo.DuoPostStatus;
+import com.example.lolserver.duo.adapter.out.persistence.dto.DuoPostListDTO;
+import com.example.lolserver.duo.adapter.out.persistence.dsl.DuoPostRepositoryCustom;
+import com.example.lolserver.duo.adapter.out.persistence.entity.DuoPostEntity;
+import com.example.lolserver.duo.adapter.out.persistence.mapper.DuoPostMapper;
+import com.example.lolserver.duo.adapter.out.persistence.repository.DuoPostJpaRepository;
+import com.example.lolserver.common.support.SliceResult;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Component
+@RequiredArgsConstructor
+public class DuoPostPersistenceAdapter implements DuoPostPersistencePort {
+
+    private static final int PAGE_SIZE = 20;
+
+    private final DuoPostJpaRepository duoPostJpaRepository;
+    private final DuoPostRepositoryCustom duoPostRepositoryCustom;
+    private final DuoPostMapper duoPostMapper;
+
+    @Override
+    public DuoPost save(DuoPost duoPost) {
+        DuoPostEntity entity = duoPostMapper.toEntity(duoPost);
+        DuoPostEntity saved = duoPostJpaRepository.save(entity);
+        return duoPostMapper.toDomain(saved);
+    }
+
+    @Override
+    public Optional<DuoPost> findById(Long id) {
+        return duoPostJpaRepository.findById(id)
+                .map(duoPostMapper::toDomain);
+    }
+
+    @Override
+    public boolean existsActiveByMemberId(Long memberId) {
+        return duoPostJpaRepository.existsByMemberIdAndStatusAndExpiresAtAfter(
+                memberId, DuoPostStatus.ACTIVE.name(), LocalDateTime.now());
+    }
+
+    @Override
+    public SliceResult<DuoPostListReadModel> findActivePosts(DuoPostSearchCommand command) {
+        Pageable pageable = PageRequest.of(command.getPage(), PAGE_SIZE);
+
+        Slice<DuoPostListDTO> slice = duoPostRepositoryCustom.findActivePosts(
+                command.getLane(), command.getTier(), pageable);
+
+        return toSliceResult(slice);
+    }
+
+    @Override
+    public SliceResult<DuoPostListReadModel> findByMemberId(Long memberId, int page) {
+        Pageable pageable = PageRequest.of(page, PAGE_SIZE);
+
+        Slice<DuoPostListDTO> slice = duoPostRepositoryCustom.findByMemberId(memberId, pageable);
+
+        return toSliceResult(slice);
+    }
+
+    @Override
+    public boolean markMatchedIfActive(Long duoPostId) {
+        return duoPostJpaRepository.markMatchedIfActive(duoPostId) > 0;
+    }
+
+    @Override
+    public List<Long> expireAllOverdue(LocalDateTime now) {
+        List<Long> overdueIds = duoPostJpaRepository.findIdsByStatusAndExpiresAtBefore(
+                DuoPostStatus.ACTIVE.name(), now);
+
+        if (!overdueIds.isEmpty()) {
+            // ACTIVE 인 행만 전환 — SELECT 이후 MATCHED 로 바뀐 글을 덮어쓰지 않는다.
+            duoPostJpaRepository.updateStatusByIds(overdueIds,
+                    DuoPostStatus.EXPIRED.name(), DuoPostStatus.ACTIVE.name());
+        }
+
+        return overdueIds;
+    }
+
+    private SliceResult<DuoPostListReadModel> toSliceResult(Slice<DuoPostListDTO> slice) {
+        return new SliceResult<>(
+                slice.getContent().stream()
+                        .map(dto -> DuoPostListReadModel.builder()
+                                .id(dto.getId())
+                                .primaryLane(dto.getPrimaryLane())
+                                .desiredLane(dto.getDesiredLane())
+                                .hasMicrophone(dto.isHasMicrophone())
+                                .tier(dto.getTier())
+                                .rank(dto.getRank())
+                                .leaguePoints(dto.getLeaguePoints())
+                                .memo(dto.getMemo())
+                                .status(dto.getStatus())
+                                .requestCount((int) dto.getRequestCount())
+                                .mostChampions(dto.getMostChampions())
+                                .recentGameSummary(dto.getRecentGameSummary())
+                                .expiresAt(dto.getExpiresAt())
+                                .createdAt(dto.getCreatedAt())
+                                .build())
+                        .toList(),
+                slice.hasNext()
+        );
+    }
+}

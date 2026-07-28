@@ -1,6 +1,0 @@
-clickhouse:
-  datasource:
-    url: jdbc:clickhouse://${CLICKHOUSE_HOST:localhost}:${CLICKHOUSE_PORT:8123}/default?compress=0
-    driver-class-name: com.clickhouse.jdbc.ClickHouseDriver
-    username: ${CLICKHOUSE_USERNAME:default}
-    password: ${CLICKHOUSE_PASSWORD:clickhouse}

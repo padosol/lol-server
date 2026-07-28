@@ -2,16 +2,21 @@ rootProject.name = 'lol-server'
 
 include(
         "module:app:application",
-        "module:core:lol-server-domain",
-        "module:core:enum",
-//        "module:web",
-        "module:infra:client:lol-repository",
-        "module:infra:client:oauth",
-        "module:infra:api",
-        "module:infra:message:rabbitmq",
-        "module:infra:message:kafka",
-        "module:infra:persistence:postgresql",
-        "module:infra:persistence:redis",
-        "module:infra:persistence:clickhouse",
-        "module:support:logging"
+
+        // 공유 모듈
+        "module:shared",
+        "module:support:logging",
+
+        // 공유 커널 (도메인 아님)
+        "module:common",
+
+        // ── 수직(컨텍스트별) 도메인 모듈 ──
+        "module:domain:leaderboard",
+        "module:domain:match",
+        "module:domain:championstats",
+        "module:domain:gamedata",
+        "module:domain:summoner",
+        "module:domain:member",
+        "module:domain:community",
+        "module:domain:duo"
 )

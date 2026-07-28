@@ -1,0 +1,79 @@
+{
+  "repo_name": "lol-server",
+  "repo_path": "/home/padosol/lol/.orch/mp-23/worktrees/server",
+  "git_head": "1c722319423860b54696e5d67a98c47bc063dce5",
+  "scanned_at": "2026-05-06T05:07:32.491699+00:00",
+  "tracked_files": 805,
+  "scores": {
+    "A": {
+      "score": 12,
+      "reason": "11개 등록 모듈(app/application, core/lol-server-domain, infra/api, infra/client/{lol-repository,oauth}, infra/message/{kafka,rabbitmq}, infra/persistence/{clickhouse,postgresql,redis}) 전부 CLAUDE.md 보유. 그러나 이번 사이클에 머지된 MP-9 (`STATS_DATASOURCE` 기본값 → bigquery) 로 사실상 OLAP 디폴트가 바뀌었음에도 신규 `module/infra/persistence/bigquery` 모듈에 CLAUDE.md 없고 루트 CLAUDE.md 모듈 표에 미등재 — navigation coverage 가 실제 OLAP 경로를 가리키지 못함. 직전 (15) 대비 -3.",
+      "action_hint": "module/infra/persistence/bigquery/CLAUDE.md 추가 + 루트 CLAUDE.md 모듈 표에 한 줄 추가 (또는 clickhouse 줄 교체)."
+    },
+    "B": {
+      "score": 18,
+      "items": {
+        "B1": {
+          "score": 3,
+          "reason": "CLAUDE.md 라인 분포 59-78줄 (직전 동일). 권장(25-35) 보다 길지만 헥사고날 모듈별 Boundaries/Layout/Key Files/Modifications/Gotchas/Quick Commands 6 섹션을 다 담아야 해서 적정. 80줄 cap CI 가 강제."
+        },
+        "B2": {
+          "score": 4,
+          "reason": "11/11 등록 모듈 CLAUDE.md 가 Quick Commands 섹션 보유, 모든 명령이 즉시 copy-paste 가능한 ./gradlew 형식. 신규 bigquery 모듈은 CLAUDE.md 자체가 없어 평가 대상 외 (A 에서 차감)."
+        },
+        "B3": {
+          "score": 4,
+          "reason": "10/11 등록 모듈 Key Files 섹션 보유, 'reference 패턴' 라벨로 3-5개 핵심 파일에 좁혀짐 (예: ChampionStatsClickHouseAdapter=SQL Injection 방어 정석)."
+        },
+        "B4": {
+          "score": 4,
+          "reason": "11/11 모듈 'Failure Patterns / Gotchas' + ❌/✅ 패턴 (audit.py grep 0 은 'Failure Patterns / Gotchas' 헤더 매칭 실패한 false signal). JdkSerializationRedisSerializer 데이터 깨짐, MapStruct 컬렉션 중복 add, ClickHouse JDBC IN 절 PreparedStatement 미지원 등 비자명한 함정 명시."
+        },
+        "B5": {
+          "score": 3,
+          "reason": "11/11 모듈 See Also 섹션 + docs-maintenance.md 의 cross-link. broken_refs_in_docs=50 중 다수가 prose 내 클래스명/URL false positive 이지만 oauth2-login.md/review/* 의 일부 prose 깨짐 잔존 — 만점 미달."
+        }
+      }
+    },
+    "C": {
+      "score": 14,
+      "reason": "11/11 등록 모듈 CLAUDE.md 가 Q1(owned) Q2(modification) Q3(failure) Q4(deps) Q5(tribal) 5질문에 답 (직접 module/core/lol-server-domain + module/infra/persistence/clickhouse 본문 검증 완료). 그러나 (1) 신규 bigquery 모듈은 0/5 질문 답 없음 — Q3 의 'BigQuery JDBC 어댑터 vs ClickHouse JDBC 어댑터 차이', Q5 의 'STATS_DATASOURCE 분기' tribal knowledge 가 코드 주석에만 존재. (2) clickhouse CLAUDE.md 가 'runtime dead, 신규 코드는 BigQuery 기준' 사실을 노출 안 함 — 새 컨트리뷰터가 clickhouse 어댑터를 수정해도 효과 없음을 모름. 직전 (17) 대비 -3.",
+      "action_hint": "bigquery 모듈에 CLAUDE.md 추가 + clickhouse CLAUDE.md 첫 단락에 'STATS_DATASOURCE=bigquery 가 기본값, 이 어댑터는 fallback' 한 줄 추가."
+    },
+    "D": {
+      "score": 7,
+      "reason": "docs/ARCHITECTURE.md 173줄, mermaid graph + 3개 sequence/flowchart + 'X 변경시 영향 범위' 표 모두 유지. 그러나 OLAP 데이터 플로우 다이어그램(섹션 3)이 ClickHouse 만 표기 (BigQuery 6회 미언급, ClickHouse 6회) — 실제 런타임 디폴트와 정반대. 의존 그래프(`module:persistence:bigquery`) 도 누락. 직전 (10) 대비 -3.",
+      "action_hint": "ARCHITECTURE.md 섹션 3 OLAP 다이어그램에 BigQuery 어댑터 추가, `STATS_DATASOURCE` 분기 표시. 의존 그래프 노드에 bigquery 추가."
+    },
+    "E": {
+      "score": 12,
+      "items": {
+        "E1": {
+          "score": 3,
+          "reason": "audit.py 가 broken_refs 50개 보고하지만 샘플 검증 결과 다수가 prose 내 클래스명/URL/디렉토리명 false positive (`OAuthProvider.java`, `/api/duo`, `controller/security/` 등). lychee CI 가 .md 파일 참조 통과 — 실제 깨진 파일 링크 0. review/* docs prose 참조는 일부 실재."
+        },
+        "E2": {
+          "score": 3,
+          "reason": ".github/workflows/docs-check.yml 운영 (lychee 링크 검사 + CLAUDE.md 80줄 cap lint + freshness). docs-as-code 게이트 + docs-maintenance.md 가 PR 시점 doc 동기화 표 명문화. 실패 시 PR 차단."
+        },
+        "E3": {
+          "score": 3,
+          "reason": "github_workflow_count=3, lint/test/doc CI 모두 존재 + GitGuardian + Slack. 최근 PR #85/#86 모두 7/7 green. typecheck 는 Java 컴파일에 내포."
+        },
+        "E4": {
+          "score": 3,
+          "reason": "context-doc-freshness job 운영 — CLAUDE.md 가 180일 넘게 미수정이면 ::warning + 매주 월 09:00 UTC cron. has_freshness_ci=true 로 audit.py 도 인식."
+        }
+      }
+    },
+    "F": {
+      "score": 3,
+      "reason": "docs/docs-maintenance.md 가 (1) PR 시점 doc 동기화 표 (2) 분기별 정기 리뷰 (3) CI 게이트 (4) 신규 모듈 추가 체크리스트 명문화. docs-check.yml + lychee + line-cap + freshness 4중 CI 게이트 운영. 그러나 실증 실패: MP-8/MP-9 동안 bigquery 모듈이 신규 추가되었음에도 (a) 모듈 CLAUDE.md 미생성 (b) 루트 CLAUDE.md 모듈 표 미갱신 (c) ARCHITECTURE.md OLAP 다이어그램 미갱신 — '신규 모듈 추가 체크리스트' 가 PR 시점에 enforce 되지 않음. 절차는 문서화, 자동 enforcement 부재. 직전 (5) 대비 -2.",
+      "action_hint": "docs-check.yml 에 'module/* 디렉토리 신규 추가 시 동일 경로 CLAUDE.md 존재 필수' 룰 추가. 루트 CLAUDE.md 모듈 표 ↔ 실제 module/ 디렉토리 sync 검사."
+    },
+    "G": {
+      "score": 0,
+      "reason": "AI agent 성능 측정/리그레션 벤치마크 흔적 없음. before/after 대시보드, agent 답변 정확도 추적 미존재 — default 0 유지."
+    }
+  }
+}

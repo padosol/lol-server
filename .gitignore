@@ -11,7 +11,8 @@ logs/
 !**/src/main/resources/*.yml
 !**/src/test/resources/*.yml
 !performance-tests/docker-compose.yml
-docker/
+!docker/docker-compose*.yml
+!docker/monitoring/**/*.yml
 
 ### STS ###
 .apt_generated
@@ -50,6 +51,8 @@ out/
 
 ### Claude Code ###
 .claude/settings.local.json
+.claude/command-log.txt
+.claude/messages/
 
 ### Checkstyle CLI ###
 config/checkstyle/checkstyle-*-all.jar
@@ -58,3 +61,9 @@ config/checkstyle/checkstyle-*-all.jar
 performance-tests/results/*.json
 performance-tests/results/*.txt
 !performance-tests/results/.gitkeep
+
+### AI-Ready Audit ###
+.ai-ready-audit/
+
+### Embedded Tomcat ###
+work/

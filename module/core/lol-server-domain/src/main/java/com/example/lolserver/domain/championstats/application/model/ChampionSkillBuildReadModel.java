@@ -1,8 +1,0 @@
-package com.example.lolserver.domain.championstats.application.model;
-
-public record ChampionSkillBuildReadModel(
-    String skillBuild,
-    long games,
-    double winRate,
-    double pickRate
-) {}
