@@ -28,8 +28,8 @@ class SecurityConfigTest {
     private OAuth2AuthenticationFailureHandler oAuth2FailureHandler;
 
     @Mock
-    private CookieOAuth2AuthorizationRequestRepository
-            cookieAuthorizationRequestRepository;
+    private RedisOAuth2AuthorizationRequestRepository
+            redisAuthorizationRequestRepository;
 
     @Mock
     private CustomOidcUserService customOidcUserService;
@@ -74,7 +74,7 @@ class SecurityConfigTest {
                 filter, corsProperties,
                 oAuth2SuccessHandler,
                 oAuth2FailureHandler,
-                cookieAuthorizationRequestRepository,
+                redisAuthorizationRequestRepository,
                 customOidcUserService,
                 clientRegistrationRepository,
                 socialAccountLinkTokenStore,

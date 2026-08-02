@@ -33,7 +33,7 @@ public class OAuth2AuthenticationSuccessHandler
 
     private final MemberAuthUseCase memberAuthUseCase;
     private final OAuthCallbackProperties oAuthCallbackProperties;
-    private final CookieOAuth2AuthorizationRequestRepository
+    private final RedisOAuth2AuthorizationRequestRepository
             authorizationRequestRepository;
     private final Map<String, OAuth2UserInfoExtractor> extractors;
     private final AuthCookieManager authCookieManager;
@@ -41,7 +41,7 @@ public class OAuth2AuthenticationSuccessHandler
     public OAuth2AuthenticationSuccessHandler(
             MemberAuthUseCase memberAuthUseCase,
             OAuthCallbackProperties oAuthCallbackProperties,
-            CookieOAuth2AuthorizationRequestRepository
+            RedisOAuth2AuthorizationRequestRepository
                     authorizationRequestRepository,
             List<OAuth2UserInfoExtractor> extractorList,
             AuthCookieManager authCookieManager) {

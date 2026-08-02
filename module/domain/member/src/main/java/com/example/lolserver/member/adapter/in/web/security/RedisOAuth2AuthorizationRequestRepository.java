@@ -1,29 +1,34 @@
 package com.example.lolserver.member.adapter.in.web.security;
 
+import com.example.lolserver.member.application.port.out.OAuthAuthorizationRequestPort;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
+/**
+ * 진행 중인 OAuth2 authorization request 를 Redis 에 보관한다.
+ *
+ * <p>authorize 요청과 provider 콜백은 별개의 HTTP 요청이라, 저장소가 인스턴스 로컬이면
+ * 두 요청이 다른 인스턴스로 라우팅되는 순간 state 조회가 실패한다. 공유 저장소를 써서
+ * 인스턴스를 늘려도 로그인이 깨지지 않게 한다.
+ */
 @Slf4j
 @Component
-public class CookieOAuth2AuthorizationRequestRepository
+@RequiredArgsConstructor
+public class RedisOAuth2AuthorizationRequestRepository
         implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
 
     private static final int EXPIRE_SECONDS = 300;
     private static final String REMOVED_AUTH_REQUEST_ATTR =
-            CookieOAuth2AuthorizationRequestRepository.class.getName()
+            RedisOAuth2AuthorizationRequestRepository.class.getName()
                     + ".REMOVED_REQUEST";
 
-    private final ConcurrentHashMap<String, AuthorizationRequestEntry> store =
-            new ConcurrentHashMap<>();
+    private final OAuthAuthorizationRequestPort authorizationRequestPort;
+    private final OAuth2AuthorizationRequestSerializer serializer;
 
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(
@@ -32,10 +37,17 @@ public class CookieOAuth2AuthorizationRequestRepository
         if (state == null) {
             return null;
         }
-        AuthorizationRequestEntry entry = store.get(state);
-        if (entry != null && !entry.isExpired()) {
-            return entry.request();
+
+        OAuth2AuthorizationRequest stored = authorizationRequestPort.find(state)
+                .map(serializer::deserialize)
+                .orElse(null);
+        if (stored != null) {
+            return stored;
         }
+
+        // Spring Security 가 인증 처리 중 이미 remove 한 뒤, 같은 요청의
+        // SuccessHandler 가 link_member_id 를 읽으려고 다시 load 하는 경로.
+        // 저장소에는 없으므로 remove 시 요청 스코프에 남겨둔 값으로 돌려준다.
         Object removed = request.getAttribute(REMOVED_AUTH_REQUEST_ATTR);
         if (removed instanceof OAuth2AuthorizationRequest removedRequest) {
             return removedRequest;
@@ -52,11 +64,9 @@ public class CookieOAuth2AuthorizationRequestRepository
             return;
         }
 
-        evictExpired();
-
         String state = authorizationRequest.getState();
-        store.put(state, new AuthorizationRequestEntry(
-                authorizationRequest, Instant.now().plusSeconds(EXPIRE_SECONDS)));
+        authorizationRequestPort.save(state,
+                serializer.serialize(authorizationRequest), EXPIRE_SECONDS);
 
         log.debug("[OAuth2 State] 저장 - state: {}, redirectUri: {}",
                 state, authorizationRequest.getRedirectUri());
@@ -70,33 +80,18 @@ public class CookieOAuth2AuthorizationRequestRepository
         if (state == null) {
             return null;
         }
-        AuthorizationRequestEntry entry = store.remove(state);
-        if (entry == null || entry.isExpired()) {
-            log.debug("[OAuth2 State] 조회 실패 - state: {}, 만료: {}",
-                    state, entry != null);
+
+        OAuth2AuthorizationRequest authRequest =
+                authorizationRequestPort.findAndDelete(state)
+                        .map(serializer::deserialize)
+                        .orElse(null);
+        if (authRequest == null) {
+            log.debug("[OAuth2 State] 조회 실패 - state: {}", state);
             return null;
         }
+
         log.debug("[OAuth2 State] 조회 성공 - state: {}", state);
-        OAuth2AuthorizationRequest authRequest = entry.request();
         request.setAttribute(REMOVED_AUTH_REQUEST_ATTR, authRequest);
         return authRequest;
-    }
-
-    private void evictExpired() {
-        Iterator<Map.Entry<String, AuthorizationRequestEntry>> it =
-                store.entrySet().iterator();
-        while (it.hasNext()) {
-            if (it.next().getValue().isExpired()) {
-                it.remove();
-            }
-        }
-    }
-
-    private record AuthorizationRequestEntry(
-            OAuth2AuthorizationRequest request,
-            Instant expiresAt) {
-        boolean isExpired() {
-            return Instant.now().isAfter(expiresAt);
-        }
     }
 }

@@ -1,6 +1,6 @@
 package com.example.lolserver.member.config;
 
-import com.example.lolserver.member.adapter.in.web.security.CookieOAuth2AuthorizationRequestRepository;
+import com.example.lolserver.member.adapter.in.web.security.RedisOAuth2AuthorizationRequestRepository;
 import com.example.lolserver.member.adapter.in.web.security.JwtAuthenticationFilter;
 import com.example.lolserver.member.adapter.in.web.security.LinkOAuth2AuthorizationRequestResolver;
 import com.example.lolserver.member.adapter.in.web.security.OAuth2AuthenticationFailureHandler;
@@ -44,8 +44,8 @@ public class SecurityConfig {
     private final CorsProperties corsProperties;
     private final OAuth2AuthenticationSuccessHandler oAuth2SuccessHandler;
     private final OAuth2AuthenticationFailureHandler oAuth2FailureHandler;
-    private final CookieOAuth2AuthorizationRequestRepository
-            cookieAuthorizationRequestRepository;
+    private final RedisOAuth2AuthorizationRequestRepository
+            redisAuthorizationRequestRepository;
     private final CustomOidcUserService customOidcUserService;
     private final ClientRegistrationRepository clientRegistrationRepository;
     private final SocialAccountLinkTokenStore socialAccountLinkTokenStore;
@@ -98,7 +98,7 @@ public class SecurityConfig {
                         .authorizationEndpoint(authorization -> authorization
                                 .baseUri("/oauth2/authorize")
                                 .authorizationRequestRepository(
-                                        cookieAuthorizationRequestRepository)
+                                        redisAuthorizationRequestRepository)
                                 .authorizationRequestResolver(
                                         new LinkOAuth2AuthorizationRequestResolver(
                                                 clientRegistrationRepository,

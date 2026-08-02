@@ -61,8 +61,11 @@ public class LinkOAuth2AuthorizationRequestResolver
 
         log.info("소셜 계정 연동 요청 - memberId: {}", memberId);
 
+        // 이 attribute 는 공유 저장소를 거쳐 콜백 요청에서 다시 읽힌다. 직렬화 왕복에서
+        // 정수 타입이 좁아지는 일이 없도록 String 으로 넣는다 (읽는 쪽은 toString 기반).
         return OAuth2AuthorizationRequest.from(authRequest)
-                .attributes(attrs -> attrs.put(LINK_MEMBER_ID_ATTR, memberId))
+                .attributes(attrs ->
+                        attrs.put(LINK_MEMBER_ID_ATTR, String.valueOf(memberId)))
                 .build();
     }
 }
