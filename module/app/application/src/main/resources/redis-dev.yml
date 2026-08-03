@@ -1,7 +1,0 @@
-spring:
-  data:
-    redis:
-      host: lol-redis
-      port: 6379
-      timeout: 3000ms
-      connect-timeout: 3000ms

@@ -14,7 +14,7 @@ Spring Boot 진입점 + 컴포지션 루트. **모든 인프라 모듈을 implem
 - `config/ExecutorConfig.java` — `taskExecutor` (`ThreadPoolTaskExecutor`), `schedulerTask` (`ThreadPoolTaskScheduler`) 빈
 - `config/CacheConfig.java` — `@EnableCaching`, `ConcurrentMapCacheManager("rotation")` (in-memory, 노드 로컬)
 - `config/CacheScheduler.java` — `@Scheduled` cron 으로 로테이션 캐시 evict
-- `src/main/resources/application.yml` — 프로파일별 (`local`/`dev`/`prod`) 모듈 설정 import + RabbitMQ/Kafka AutoConfiguration exclude
+- `src/main/resources/application.yml` — 프로파일별 (`local`/`prod`) 모듈 설정 import + RabbitMQ/Kafka AutoConfiguration exclude
 
 ## Key Files
 

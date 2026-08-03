@@ -157,9 +157,9 @@ PostgreSQL OLTP 데이터를 외부 ETL 파이프라인이 BigQuery 로 적재�
 | `core:lol-server-domain` 의 in port (UseCase) 시그니처 | `infra:api` 컨트롤러 | 도메인 서비스 구현 |
 | `core:lol-server-domain` 의 out port 시그니처 | 모든 인프라 어댑터 (`*Adapter`) | `app:application` 빈 주입 |
 | 도메인 객체 필드 추가 | `infra:postgresql` (Entity + Mapper), `infra:api` (ReadModel/Response), `infra:redis` (직렬화) | RestDocs 스냅샷, MapStruct 테스트 |
-| Flyway 마이그레이션 (`lol-db-schema/`) | `infra:postgresql` | local/dev DB 재생성, 운영 배포 순서 |
+| Flyway 마이그레이션 (`lol-db-schema/`) | `infra:postgresql` | local DB 재생성, 운영 배포 순서 |
 | Riot API VO (`restclient/.../model/*VO.java`) | `infra:client:lol-repository` 만 | Mapper 단위 테스트 (도메인은 모름) |
-| `application-*.yml` (프로파일) | `app:application` 런타임 | `local`/`dev`/`prod` 환경 차이 검증 |
+| `application-*.yml` (프로파일) | `app:application` 런타임 | `local`/`prod` 환경 차이 검증 |
 | `message.broker` 프로퍼티 | `app:application` | `infra:message:rabbitmq` ↔ `kafka` 활성 분기 |
 | `stats.datasource` (`STATS_DATASOURCE=bigquery`) | `infra:persistence:bigquery` 활성 | 통계 API 응답 |
 | `ChampionStatsQueryPort` 메서드 추가/시그니처 | `infra:persistence:bigquery` 어댑터 | 어댑터 단위 테스트 |
