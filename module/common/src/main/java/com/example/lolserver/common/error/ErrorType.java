@@ -30,7 +30,6 @@ public enum ErrorType {
     SOCIAL_ACCOUNT_ALREADY_LINKED(409, ErrorCode.E409, "이미 연동된 소셜 계정입니다."),
     SOCIAL_ACCOUNT_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 소셜 계정입니다."),
     MEMBER_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 회원입니다."),
-    INVALID_OAUTH_STATE(400, ErrorCode.E400, "유효하지 않은 OAuth state 입니다."),
 
     POST_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 게시글입니다."),
     COMMENT_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 댓글입니다."),

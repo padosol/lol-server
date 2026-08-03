@@ -1,9 +1,6 @@
 package com.example.lolserver.member.adapter.out.oauth;
 
 import com.example.lolserver.member.config.OAuthProperties;
-import com.example.lolserver.member.adapter.out.oauth.dto.OAuthTokenResponse;
-import com.example.lolserver.member.application.model.OAuthUserInfo;
-import com.example.lolserver.member.domain.vo.OAuthProvider;
 import com.example.lolserver.common.error.CoreException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,9 +27,6 @@ class RiotRsoClientTest {
     private OAuthProperties oAuthProperties;
 
     @Mock
-    private OAuthTokenExchanger tokenExchanger;
-
-    @Mock
     private RestClient.RequestHeadersUriSpec requestHeadersUriSpec;
 
     @Mock
@@ -49,80 +43,25 @@ class RiotRsoClientTest {
     @BeforeEach
     void setUp() {
         config = new OAuthProperties.ProviderConfig();
-        config.setClientId("riot-client-id");
-        config.setClientSecret("riot-client-secret");
-        config.setTokenUri("https://auth.riotgames.com/token");
-        config.setUserInfoUri("https://auth.riotgames.com/userinfo");
         config.setAccountUri("https://asia.api.riotgames.com/riot/account/v1/accounts/me");
     }
 
-    @Test
-    @DisplayName("Account API만 호출하여 OAuthUserInfo 생성")
-    void getUserInfo_callsAccountApiOnly() {
-        // given
+    private void givenAccountApiReturns(String accessToken, Map<String, Object> body) {
         given(oAuthProperties.getProviderConfig("riot")).willReturn(config);
-        given(tokenExchanger.exchange("code", "redirect", config, OAuthProvider.RIOT))
-                .willReturn(OAuthTokenResponse.builder()
-                        .accessToken("riot-access-token")
-                        .idToken("riot-id-token")
-                        .build());
-
         given(oauthRestClient.get()).willReturn(requestHeadersUriSpec);
         given(requestHeadersUriSpec.uri("https://asia.api.riotgames.com/riot/account/v1/accounts/me"))
                 .willReturn(requestHeadersSpec);
-        given(requestHeadersSpec.header("Authorization", "Bearer riot-access-token"))
+        given(requestHeadersSpec.header("Authorization", "Bearer " + accessToken))
                 .willReturn(requestHeadersSpec);
         given(requestHeadersSpec.retrieve()).willReturn(responseSpec);
-        given(responseSpec.body(Map.class)).willReturn(Map.of(
-                "puuid", "test-puuid-123",
-                "gameName", "TestPlayer",
-                "tagLine", "KR1"
-        ));
-
-        // when
-        OAuthUserInfo userInfo = riotRsoClient.getUserInfo("code", "redirect");
-
-        // then
-        assertThat(userInfo.getProvider()).isEqualTo("RIOT");
-        assertThat(userInfo.getProviderId()).isEqualTo("test-puuid-123");
-        assertThat(userInfo.getPuuid()).isEqualTo("test-puuid-123");
-    }
-
-    @Test
-    @DisplayName("Account API에서 puuid가 null이면 예외 발생")
-    void getUserInfo_throwsWhenPuuidIsNull() {
-        // given
-        given(oAuthProperties.getProviderConfig("riot")).willReturn(config);
-        given(tokenExchanger.exchange("code", "redirect", config, OAuthProvider.RIOT))
-                .willReturn(OAuthTokenResponse.builder()
-                        .accessToken("riot-access-token")
-                        .build());
-
-        given(oauthRestClient.get()).willReturn(requestHeadersUriSpec);
-        given(requestHeadersUriSpec.uri("https://asia.api.riotgames.com/riot/account/v1/accounts/me"))
-                .willReturn(requestHeadersSpec);
-        given(requestHeadersSpec.header("Authorization", "Bearer riot-access-token"))
-                .willReturn(requestHeadersSpec);
-        given(requestHeadersSpec.retrieve()).willReturn(responseSpec);
-        given(responseSpec.body(Map.class)).willReturn(Map.of("gameName", "TestPlayer"));
-
-        // when & then
-        assertThatThrownBy(() -> riotRsoClient.getUserInfo("code", "redirect"))
-                .isInstanceOf(CoreException.class);
+        given(responseSpec.body(Map.class)).willReturn(body);
     }
 
     @Test
     @DisplayName("fetchPuuid로 access token을 사용하여 PUUID를 조회한다")
     void fetchPuuid_success() {
         // given
-        given(oAuthProperties.getProviderConfig("riot")).willReturn(config);
-        given(oauthRestClient.get()).willReturn(requestHeadersUriSpec);
-        given(requestHeadersUriSpec.uri("https://asia.api.riotgames.com/riot/account/v1/accounts/me"))
-                .willReturn(requestHeadersSpec);
-        given(requestHeadersSpec.header("Authorization", "Bearer test-access-token"))
-                .willReturn(requestHeadersSpec);
-        given(requestHeadersSpec.retrieve()).willReturn(responseSpec);
-        given(responseSpec.body(Map.class)).willReturn(Map.of(
+        givenAccountApiReturns("test-access-token", Map.of(
                 "puuid", "fetched-puuid-456",
                 "gameName", "Player",
                 "tagLine", "KR1"
@@ -139,14 +78,18 @@ class RiotRsoClientTest {
     @DisplayName("fetchPuuid에서 응답이 null이면 예외가 발생한다")
     void fetchPuuid_nullResponse_throwsException() {
         // given
-        given(oAuthProperties.getProviderConfig("riot")).willReturn(config);
-        given(oauthRestClient.get()).willReturn(requestHeadersUriSpec);
-        given(requestHeadersUriSpec.uri("https://asia.api.riotgames.com/riot/account/v1/accounts/me"))
-                .willReturn(requestHeadersSpec);
-        given(requestHeadersSpec.header("Authorization", "Bearer test-access-token"))
-                .willReturn(requestHeadersSpec);
-        given(requestHeadersSpec.retrieve()).willReturn(responseSpec);
-        given(responseSpec.body(Map.class)).willReturn(null);
+        givenAccountApiReturns("test-access-token", null);
+
+        // when & then
+        assertThatThrownBy(() -> riotRsoClient.fetchPuuid("test-access-token"))
+                .isInstanceOf(CoreException.class);
+    }
+
+    @Test
+    @DisplayName("fetchPuuid에서 응답에 puuid가 없으면 예외가 발생한다")
+    void fetchPuuid_missingPuuid_throwsException() {
+        // given
+        givenAccountApiReturns("test-access-token", Map.of("gameName", "TestPlayer"));
 
         // when & then
         assertThatThrownBy(() -> riotRsoClient.fetchPuuid("test-access-token"))

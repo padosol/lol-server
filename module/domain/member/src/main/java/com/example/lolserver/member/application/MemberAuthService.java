@@ -1,22 +1,17 @@
 package com.example.lolserver.member.application;
 
-import com.example.lolserver.member.application.dto.OAuthLoginCommand;
 import com.example.lolserver.member.application.dto.TokenRefreshCommand;
 import com.example.lolserver.member.application.model.resultmodel.AuthTokenResultModel;
 import com.example.lolserver.member.application.model.OAuthUserInfo;
 import com.example.lolserver.member.application.port.in.MemberAuthUseCase;
 import com.example.lolserver.member.application.port.out.MemberPersistencePort;
 import com.example.lolserver.member.application.port.out.MemberWithdrawalPersistencePort;
-import com.example.lolserver.member.application.port.out.OAuthAuthorizationPort;
-import com.example.lolserver.member.application.port.out.OAuthClientPort;
-import com.example.lolserver.member.application.port.out.OAuthStatePort;
 import com.example.lolserver.member.application.port.out.RefreshTokenPort;
 import com.example.lolserver.member.application.port.out.SocialAccountPersistencePort;
 import com.example.lolserver.member.application.port.out.TokenPort;
 import com.example.lolserver.member.domain.Member;
 import com.example.lolserver.member.domain.MemberWithdrawal;
 import com.example.lolserver.member.domain.SocialAccount;
-import com.example.lolserver.member.domain.vo.OAuthProvider;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -36,35 +30,8 @@ public class MemberAuthService implements MemberAuthUseCase {
     private final MemberPersistencePort memberPersistencePort;
     private final SocialAccountPersistencePort socialAccountPersistencePort;
     private final MemberWithdrawalPersistencePort memberWithdrawalPersistencePort;
-    private final OAuthClientPort oAuthClientPort;
     private final TokenPort tokenPort;
     private final RefreshTokenPort refreshTokenPort;
-    private final OAuthStatePort oAuthStatePort;
-    private final OAuthAuthorizationPort oAuthAuthorizationPort;
-
-    @Override
-    public String getOAuthAuthorizationUrl(OAuthProvider provider) {
-        String state = UUID.randomUUID().toString();
-        oAuthStatePort.saveState(state, 300);
-        return oAuthAuthorizationPort.buildAuthorizationUrl(
-                provider, state);
-    }
-
-    @Override
-    @Transactional
-    public AuthTokenResultModel loginWithOAuth(OAuthLoginCommand command) {
-        if (command.getState() != null) {
-            if (!oAuthStatePort.validateAndDelete(command.getState())) {
-                throw new CoreException(ErrorType.INVALID_OAUTH_STATE);
-            }
-        }
-
-        OAuthUserInfo userInfo = oAuthClientPort.getUserInfo(
-                command.getProvider(), command.getCode(),
-                command.getRedirectUri());
-
-        return findOrCreateMemberAndGenerateTokens(userInfo);
-    }
 
     @Override
     @Transactional
