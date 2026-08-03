@@ -1,4 +1,0 @@
-oauth:
-  providers:
-    riot:
-      account-uri: https://asia.api.riotgames.com/riot/account/v1/accounts/me
