@@ -1,21 +1,16 @@
 package com.example.lolserver.member.application;
 
-import com.example.lolserver.member.application.dto.OAuthLoginCommand;
 import com.example.lolserver.member.application.dto.TokenRefreshCommand;
 import com.example.lolserver.member.application.model.resultmodel.AuthTokenResultModel;
 import com.example.lolserver.member.application.model.OAuthUserInfo;
 import com.example.lolserver.member.application.port.out.MemberPersistencePort;
 import com.example.lolserver.member.application.port.out.MemberWithdrawalPersistencePort;
-import com.example.lolserver.member.application.port.out.OAuthAuthorizationPort;
-import com.example.lolserver.member.application.port.out.OAuthClientPort;
-import com.example.lolserver.member.application.port.out.OAuthStatePort;
 import com.example.lolserver.member.application.port.out.RefreshTokenPort;
 import com.example.lolserver.member.application.port.out.SocialAccountPersistencePort;
 import com.example.lolserver.member.application.port.out.TokenPort;
 import com.example.lolserver.member.domain.Member;
 import com.example.lolserver.member.domain.MemberWithdrawal;
 import com.example.lolserver.member.domain.SocialAccount;
-import com.example.lolserver.member.domain.vo.OAuthProvider;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
@@ -33,8 +28,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
@@ -52,122 +45,13 @@ class MemberAuthServiceTest {
     private MemberWithdrawalPersistencePort memberWithdrawalPersistencePort;
 
     @Mock
-    private OAuthClientPort oAuthClientPort;
-
-    @Mock
     private TokenPort tokenPort;
 
     @Mock
     private RefreshTokenPort refreshTokenPort;
 
-    @Mock
-    private OAuthStatePort oAuthStatePort;
-
-    @Mock
-    private OAuthAuthorizationPort oAuthAuthorizationPort;
-
     @InjectMocks
     private MemberAuthService memberAuthService;
-
-    @DisplayName("기존 회원이 Google OAuth 로그인하면 토큰을 반환한다")
-    @Test
-    void loginWithOAuth_existingMember() {
-        // given
-        OAuthLoginCommand command = OAuthLoginCommand.builder()
-                .provider(OAuthProvider.GOOGLE)
-                .code("auth-code")
-                .redirectUri("http://localhost:3000/callback")
-                .build();
-
-        OAuthUserInfo userInfo = OAuthUserInfo.builder()
-                .provider("GOOGLE")
-                .providerId("google-123")
-                .email("test@gmail.com")
-                .nickname("테스터")
-                .build();
-
-        SocialAccount existingSocialAccount = SocialAccount.builder()
-                .id(1L).memberId(1L)
-                .provider("GOOGLE").providerId("google-123")
-                .build();
-
-        Member existingMember = Member.builder()
-                .id(1L).uuid("test-uuid").email("test@gmail.com")
-                .nickname("테스터").role("USER")
-                .createdAt(LocalDateTime.now()).build();
-
-        given(oAuthClientPort.getUserInfo(OAuthProvider.GOOGLE,
-                "auth-code", "http://localhost:3000/callback"))
-                .willReturn(userInfo);
-        given(socialAccountPersistencePort.findByProviderAndProviderId(
-                "GOOGLE", "google-123"))
-                .willReturn(Optional.of(existingSocialAccount));
-        given(memberPersistencePort.findById(1L))
-                .willReturn(Optional.of(existingMember));
-        given(memberPersistencePort.save(any(Member.class)))
-                .willReturn(existingMember);
-        given(tokenPort.generateAccessToken(1L, "USER"))
-                .willReturn("access-token");
-        given(tokenPort.generateRefreshToken(1L, "USER"))
-                .willReturn("refresh-token");
-        given(tokenPort.getAccessTokenExpiry()).willReturn(1800L);
-        given(tokenPort.getRefreshTokenExpiry()).willReturn(1209600L);
-
-        // when
-        AuthTokenResultModel result =
-                memberAuthService.loginWithOAuth(command);
-
-        // then
-        assertThat(result.accessToken()).isEqualTo("access-token");
-        assertThat(result.refreshToken()).isEqualTo("refresh-token");
-        assertThat(result.expiresIn()).isEqualTo(1800L);
-    }
-
-    @DisplayName("신규 회원이 Google OAuth 로그인하면 회원가입 후 토큰을 반환한다")
-    @Test
-    void loginWithOAuth_newMember() {
-        // given
-        OAuthLoginCommand command = OAuthLoginCommand.builder()
-                .provider(OAuthProvider.GOOGLE)
-                .code("auth-code")
-                .redirectUri("http://localhost:3000/callback")
-                .build();
-
-        OAuthUserInfo userInfo = OAuthUserInfo.builder()
-                .provider("GOOGLE")
-                .providerId("google-new")
-                .email("new@gmail.com")
-                .nickname("신규유저")
-                .build();
-
-        Member savedMember = Member.builder()
-                .id(2L).uuid("new-uuid")
-                .nickname("용감한소환사1234").role("USER")
-                .createdAt(LocalDateTime.now()).build();
-
-        given(oAuthClientPort.getUserInfo(OAuthProvider.GOOGLE,
-                "auth-code", "http://localhost:3000/callback"))
-                .willReturn(userInfo);
-        given(socialAccountPersistencePort.findByProviderAndProviderId(
-                "GOOGLE", "google-new"))
-                .willReturn(Optional.empty());
-        given(memberPersistencePort.save(any(Member.class)))
-                .willReturn(savedMember);
-        given(tokenPort.generateAccessToken(2L, "USER"))
-                .willReturn("access-token");
-        given(tokenPort.generateRefreshToken(2L, "USER"))
-                .willReturn("refresh-token");
-        given(tokenPort.getAccessTokenExpiry()).willReturn(1800L);
-        given(tokenPort.getRefreshTokenExpiry()).willReturn(1209600L);
-
-        // when
-        AuthTokenResultModel result =
-                memberAuthService.loginWithOAuth(command);
-
-        // then
-        assertThat(result.accessToken()).isEqualTo("access-token");
-        then(memberPersistencePort).should().save(any(Member.class));
-    }
 
     @DisplayName("Spring Security OAuth2로 기존 회원 로그인 시 토큰을 반환한다")
     @Test
@@ -338,101 +222,6 @@ class MemberAuthServiceTest {
 
         // then
         then(refreshTokenPort).should().delete(1L);
-    }
-
-    @DisplayName("OAuth 인가 URL을 생성하면 state를 저장하고 URL을 반환한다")
-    @Test
-    void getOAuthAuthorizationUrl_success() {
-        // given
-        given(oAuthAuthorizationPort.buildAuthorizationUrl(
-                eq(OAuthProvider.GOOGLE), anyString()))
-                .willReturn("https://accounts.google.com/o/oauth2/v2/auth?state=test");
-
-        // when
-        String url = memberAuthService.getOAuthAuthorizationUrl(
-                OAuthProvider.GOOGLE);
-
-        // then
-        assertThat(url).contains("accounts.google.com");
-        then(oAuthStatePort).should()
-                .saveState(anyString(), eq(300L));
-    }
-
-    @DisplayName("유효한 state로 OAuth 로그인하면 토큰을 반환한다")
-    @Test
-    void loginWithOAuth_validState_success() {
-        // given
-        OAuthLoginCommand command = OAuthLoginCommand.builder()
-                .provider(OAuthProvider.GOOGLE)
-                .code("auth-code")
-                .state("valid-state")
-                .redirectUri("http://localhost:3000/callback")
-                .build();
-
-        OAuthUserInfo userInfo = OAuthUserInfo.builder()
-                .provider("GOOGLE")
-                .providerId("google-123")
-                .email("test@gmail.com")
-                .nickname("테스터")
-                .build();
-
-        SocialAccount existingSocialAccount = SocialAccount.builder()
-                .id(1L).memberId(1L)
-                .provider("GOOGLE").providerId("google-123").build();
-
-        Member existingMember = Member.builder()
-                .id(1L).uuid("test-uuid").email("test@gmail.com")
-                .nickname("테스터").role("USER")
-                .createdAt(LocalDateTime.now()).build();
-
-        given(oAuthStatePort.validateAndDelete("valid-state"))
-                .willReturn(true);
-        given(oAuthClientPort.getUserInfo(OAuthProvider.GOOGLE,
-                "auth-code", "http://localhost:3000/callback"))
-                .willReturn(userInfo);
-        given(socialAccountPersistencePort.findByProviderAndProviderId(
-                "GOOGLE", "google-123"))
-                .willReturn(Optional.of(existingSocialAccount));
-        given(memberPersistencePort.findById(1L))
-                .willReturn(Optional.of(existingMember));
-        given(memberPersistencePort.save(any(Member.class)))
-                .willReturn(existingMember);
-        given(tokenPort.generateAccessToken(1L, "USER"))
-                .willReturn("access-token");
-        given(tokenPort.generateRefreshToken(1L, "USER"))
-                .willReturn("refresh-token");
-        given(tokenPort.getAccessTokenExpiry()).willReturn(1800L);
-        given(tokenPort.getRefreshTokenExpiry()).willReturn(1209600L);
-
-        // when
-        AuthTokenResultModel result =
-                memberAuthService.loginWithOAuth(command);
-
-        // then
-        assertThat(result.accessToken()).isEqualTo("access-token");
-        then(oAuthStatePort).should()
-                .validateAndDelete("valid-state");
-    }
-
-    @DisplayName("유효하지 않은 state로 OAuth 로그인하면 예외가 발생한다")
-    @Test
-    void loginWithOAuth_invalidState_throwsException() {
-        // given
-        OAuthLoginCommand command = OAuthLoginCommand.builder()
-                .provider(OAuthProvider.GOOGLE)
-                .code("auth-code")
-                .state("invalid-state")
-                .build();
-
-        given(oAuthStatePort.validateAndDelete("invalid-state"))
-                .willReturn(false);
-
-        // when & then
-        assertThatThrownBy(() ->
-                memberAuthService.loginWithOAuth(command))
-                .isInstanceOf(CoreException.class)
-                .extracting(e -> ((CoreException) e).getErrorType())
-                .isEqualTo(ErrorType.INVALID_OAUTH_STATE);
     }
 
     @DisplayName("소셜 계정을 연동하면 aggregate root를 통해 저장된다")

@@ -1,11 +1,7 @@
 package com.example.lolserver.member.adapter.out.oauth;
 
 import com.example.lolserver.member.config.OAuthProperties;
-import com.example.lolserver.member.adapter.out.oauth.dto.OAuthTokenResponse;
-import com.example.lolserver.member.application.model.OAuthUserInfo;
-import com.example.lolserver.member.application.port.out.OAuthProviderClient;
 import com.example.lolserver.member.application.port.out.RiotAccountPort;
-import com.example.lolserver.member.domain.vo.OAuthProvider;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -18,33 +14,10 @@ import java.util.Map;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class RiotRsoClient implements OAuthProviderClient, RiotAccountPort {
+public class RiotRsoClient implements RiotAccountPort {
 
     private final RestClient oauthRestClient;
     private final OAuthProperties oAuthProperties;
-    private final OAuthTokenExchanger tokenExchanger;
-
-    @Override
-    public OAuthProvider getProvider() {
-        return OAuthProvider.RIOT;
-    }
-
-    @Override
-    public OAuthUserInfo getUserInfo(String code, String redirectUri) {
-        OAuthProperties.ProviderConfig config = oAuthProperties.getProviderConfig("riot");
-
-        OAuthTokenResponse tokenResponse = tokenExchanger.exchange(
-                code, redirectUri, config, OAuthProvider.RIOT);
-        String accessToken = tokenResponse.getAccessToken();
-
-        String puuid = fetchPuuid(accessToken);
-
-        return OAuthUserInfo.builder()
-                .provider(OAuthProvider.RIOT.name())
-                .providerId(puuid)
-                .puuid(puuid)
-                .build();
-    }
 
     @SuppressWarnings("unchecked")
     @Override
