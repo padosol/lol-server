@@ -2,6 +2,7 @@ package com.example.lolserver.duo.application;
 
 import com.example.lolserver.duo.domain.vo.MostChampion;
 import com.example.lolserver.duo.domain.vo.RecentGameSummary;
+import com.example.lolserver.duo.domain.vo.RiotAccountStats;
 import com.example.lolserver.duo.domain.vo.TierInfo;
 import com.example.lolserver.match.application.command.MSChampionCommand;
 import com.example.lolserver.match.application.model.readmodel.MSChampionReadModel;
@@ -19,6 +20,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.Collections;
 import java.util.List;
@@ -224,6 +227,52 @@ class RiotAccountResolverTest {
             assertThat(result.wins()).isEqualTo(0);
             assertThat(result.losses()).isEqualTo(0);
             assertThat(result.playedChampions()).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("lookupAllStats")
+    @MockitoSettings(strictness = Strictness.LENIENT)
+    class LookupAllStats {
+
+        @DisplayName("랭크 정보 없어도 tier/rank 는 null 이 아니다 - NOT NULL 컬럼 저장 가능")
+        @Test
+        void noRankedData_returnsNonNullTierMarker() {
+            // given
+            String puuid = "test-puuid";
+            given(leagueQueryUseCase.getLeagueSummariesByPuuid(puuid))
+                    .willReturn(Collections.emptyList());
+            given(matchQueryUseCase.getRankChampionSummaries(any(MSChampionCommand.class)))
+                    .willReturn(Collections.emptyList());
+            given(matchQueryUseCase.getRecentPlayerMatches(eq(puuid), eq(420), anyInt()))
+                    .willReturn(Collections.emptyList());
+
+            // when
+            RiotAccountStats stats = riotAccountResolver.lookupAllStats(puuid);
+
+            // then
+            assertThat(stats.tierInfo().tier()).isNotNull();
+            assertThat(stats.tierInfo().rank()).isNotNull();
+            assertThat(stats.tierInfo()).isEqualTo(TierInfo.UNRANKED);
+        }
+
+        @DisplayName("상위 조회 예외는 CompletionException 으로 감싸지 않고 그대로 전파한다")
+        @Test
+        void upstreamFailure_propagatesCoreException() {
+            // given
+            String puuid = "test-puuid";
+            given(leagueQueryUseCase.getLeagueSummariesByPuuid(puuid))
+                    .willThrow(new CoreException(ErrorType.MEMBER_NOT_FOUND));
+            given(matchQueryUseCase.getRankChampionSummaries(any(MSChampionCommand.class)))
+                    .willReturn(Collections.emptyList());
+            given(matchQueryUseCase.getRecentPlayerMatches(eq(puuid), eq(420), anyInt()))
+                    .willReturn(Collections.emptyList());
+
+            // when & then
+            assertThatThrownBy(() -> riotAccountResolver.lookupAllStats(puuid))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.MEMBER_NOT_FOUND);
         }
     }
 }

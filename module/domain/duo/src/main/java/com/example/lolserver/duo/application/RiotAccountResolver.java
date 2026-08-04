@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.function.Supplier;
 
 @Component
@@ -51,12 +52,30 @@ public class RiotAccountResolver {
                 CompletableFuture.supplyAsync(() -> withMdc(contextMap, () -> lookupRecentGameSummary(puuid)));
 
         return new RiotAccountStats(
-                tierFuture.join(),
-                championsFuture.join(),
-                recentGameFuture.join()
+                join(tierFuture),
+                join(championsFuture),
+                join(recentGameFuture)
         );
     }
 
+    /**
+     * join() 이 씌우는 CompletionException 을 벗겨 원래 예외를 그대로 던진다.
+     * 래핑된 채로 올라가면 CoreException 이 전역 핸들러에 잡히지 않아 전부 500 이 된다.
+     */
+    private <T> T join(CompletableFuture<T> future) {
+        try {
+            return future.join();
+        } catch (CompletionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException runtimeException) {
+                throw runtimeException;
+            }
+            if (cause instanceof Error error) {
+                throw error;
+            }
+            throw e;
+        }
+    }
 
     private <T> T withMdc(Map<String, String> contextMap, Supplier<T> supplier) {
         if (contextMap != null) {

@@ -255,8 +255,9 @@ class DuoServiceTest {
 
             // then
             assertThat(result).isNotNull();
-            assertThat(result.getTier()).isNull();
-            assertThat(result.getRank()).isNull();
+            // tier/tier_rank 는 NOT NULL 컬럼이므로 null 이 아닌 UNRANKED 표식이 실린다.
+            assertThat(result.getTier()).isEqualTo(TierInfo.UNRANKED_TIER);
+            assertThat(result.getRank()).isEqualTo(TierInfo.UNRANKED_RANK);
             assertThat(result.isTierAvailable()).isFalse();
         }
 
