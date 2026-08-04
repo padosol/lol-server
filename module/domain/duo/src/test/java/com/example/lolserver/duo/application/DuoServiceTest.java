@@ -205,9 +205,9 @@ class DuoServiceTest {
                     .executeWithLock(eq("duo:member:post:" + memberId), any());
         }
 
-        @DisplayName("티어 정보 없을 때 tierAvailable=false")
+        @DisplayName("솔로랭크 티어가 없으면 DUO_UNRANKED_NOT_ALLOWED 에러 - 저장되지 않는다")
         @Test
-        void success_withoutTier() {
+        void unranked_throwsException() {
             // given
             Long memberId = 1L;
             String puuid = "test-puuid";
@@ -227,38 +227,13 @@ class DuoServiceTest {
             given(duoPostPersistencePort.existsActiveByMemberId(memberId))
                     .willReturn(false);
             given(riotAccountResolver.lookupAllStats(puuid)).willReturn(stats);
-            given(duoPostPersistencePort.save(any(DuoPost.class)))
-                    .willAnswer(invocation -> {
-                        DuoPost post = invocation.getArgument(0);
-                        return DuoPost.builder()
-                                .id(101L)
-                                .memberId(post.getMemberId())
-                                .puuid(post.getPuuid())
-                                .primaryLane(post.getPrimaryLane())
-                                .desiredLane(post.getDesiredLane())
-                                .hasMicrophone(post.isHasMicrophone())
-                                .tier(post.getTier())
-                                .rank(post.getRank())
-                                .leaguePoints(post.getLeaguePoints())
-                                .memo(post.getMemo())
-                                .status(post.getStatus())
-                                .mostChampions(post.getMostChampions())
-                                .recentGameSummary(post.getRecentGameSummary())
-                                .expiresAt(post.getExpiresAt())
-                                .createdAt(post.getCreatedAt())
-                                .updatedAt(post.getUpdatedAt())
-                                .build();
-                    });
 
-            // when
-            DuoPostResultModel result = duoService.createDuoPost(memberId, command);
-
-            // then
-            assertThat(result).isNotNull();
-            // tier/tier_rank 는 NOT NULL 컬럼이므로 null 이 아닌 UNRANKED 표식이 실린다.
-            assertThat(result.getTier()).isEqualTo(TierInfo.UNRANKED_TIER);
-            assertThat(result.getRank()).isEqualTo(TierInfo.UNRANKED_RANK);
-            assertThat(result.isTierAvailable()).isFalse();
+            // when & then
+            assertThatThrownBy(() -> duoService.createDuoPost(memberId, command))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.DUO_UNRANKED_NOT_ALLOWED);
+            then(duoPostPersistencePort).should(never()).save(any(DuoPost.class));
         }
 
         @DisplayName("락 획득 실패 시 LOCK_ACQUISITION_FAILED 에러 - 게시글은 저장되지 않는다")
@@ -305,7 +280,7 @@ class DuoServiceTest {
                     .memo("듀오 구합니다")
                     .build();
             RiotAccountStats stats = new RiotAccountStats(
-                    TierInfo.UNRANKED, Collections.emptyList(),
+                    new TierInfo("GOLD", "I", 50), Collections.emptyList(),
                     new RecentGameSummary(0, 0, Collections.emptyList()));
             List<DuoPost> savedPosts = Collections.synchronizedList(new ArrayList<>());
 

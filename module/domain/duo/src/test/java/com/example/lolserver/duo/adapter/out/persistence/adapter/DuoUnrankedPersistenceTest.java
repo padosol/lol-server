@@ -3,9 +3,10 @@ package com.example.lolserver.duo.adapter.out.persistence.adapter;
 import com.example.lolserver.common.test.RepositoryTestBase;
 import com.example.lolserver.duo.domain.DuoPost;
 import com.example.lolserver.duo.domain.DuoRequest;
+import com.example.lolserver.duo.domain.vo.DuoPostStatus;
+import com.example.lolserver.duo.domain.vo.DuoRequestStatus;
 import com.example.lolserver.duo.domain.vo.Lane;
 import com.example.lolserver.duo.domain.vo.RecentGameSummary;
-import com.example.lolserver.duo.domain.vo.RiotAccountStats;
 import com.example.lolserver.duo.domain.vo.TierInfo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,16 +18,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * 랭크 정보가 없는 계정도 듀오 글/신청을 저장할 수 있어야 한다.
+ * UNRANKED 표식이 NOT NULL 컬럼에 저장 가능한 값이어야 한다.
  *
- * <p>duo_post·duo_request 의 tier / tier_rank 는 NOT NULL 이므로 UNRANKED 표식이
- * null 로 돌아가면 저장 단계에서 제약 위반(500)이 난다. 단위 테스트는 영속 포트를
+ * <p>등록 경로는 {@code TierInfo.validateRanked()} 가 언랭을 막지만, 표식 자체가 다시
+ * null 로 돌아가면 guard 를 우회하는 경로(기존 행 재저장 등)에서 제약 위반(500)이 난다.
+ * duo_post·duo_request 의 tier / tier_rank 는 NOT NULL 이고, 단위 테스트는 영속 포트를
  * mock 으로 두어 이 경로를 타지 않으므로 실제 스키마로 검증한다.
+ *
+ * <p>도메인 guard 를 우회해야 하므로 팩토리 대신 빌더로 직접 조립한다.
  */
 @Import(DuoUnrankedPersistenceTest.RedisStubConfig.class)
 class DuoUnrankedPersistenceTest extends RepositoryTestBase {
@@ -50,23 +55,34 @@ class DuoUnrankedPersistenceTest extends RepositoryTestBase {
         }
     }
 
-    private static final RiotAccountStats UNRANKED_STATS = new RiotAccountStats(
-            TierInfo.UNRANKED,
-            Collections.emptyList(),
-            new RecentGameSummary(0, 0, Collections.emptyList()));
-
     @Autowired
     private DuoPostPersistenceAdapter duoPostPersistenceAdapter;
 
     @Autowired
     private DuoRequestPersistenceAdapter duoRequestPersistenceAdapter;
 
-    @DisplayName("언랭 계정의 듀오 글도 저장된다 - tier/tier_rank NOT NULL 위반 없음")
+    @DisplayName("UNRANKED 표식이 실린 듀오 글은 저장된다 - tier/tier_rank NOT NULL 위반 없음")
     @Test
     void saveDuoPost_withUnrankedTier() {
         // given
-        DuoPost duoPost = DuoPost.create(1L, "unranked-puuid",
-                Lane.TOP, Lane.SUPPORT, false, "랭크 없음", UNRANKED_STATS);
+        LocalDateTime now = LocalDateTime.now();
+        DuoPost duoPost = DuoPost.builder()
+                .memberId(1L)
+                .puuid("unranked-puuid")
+                .primaryLane(Lane.TOP)
+                .desiredLane(Lane.SUPPORT)
+                .hasMicrophone(false)
+                .tier(TierInfo.UNRANKED.tier())
+                .rank(TierInfo.UNRANKED.rank())
+                .leaguePoints(TierInfo.UNRANKED.leaguePoints())
+                .memo("랭크 없음")
+                .status(DuoPostStatus.ACTIVE)
+                .mostChampions(Collections.emptyList())
+                .recentGameSummary(new RecentGameSummary(0, 0, Collections.emptyList()))
+                .expiresAt(now.plusHours(1))
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
 
         // when
         DuoPost saved = duoPostPersistenceAdapter.save(duoPost);
@@ -78,12 +94,28 @@ class DuoUnrankedPersistenceTest extends RepositoryTestBase {
         assertThat(saved.getLeaguePoints()).isZero();
     }
 
-    @DisplayName("언랭 계정의 듀오 신청도 저장된다 - tier/tier_rank NOT NULL 위반 없음")
+    @DisplayName("UNRANKED 표식이 실린 듀오 신청은 저장된다 - tier/tier_rank NOT NULL 위반 없음")
     @Test
     void saveDuoRequest_withUnrankedTier() {
         // given
-        DuoRequest duoRequest = DuoRequest.create(1L, 2L, "unranked-puuid",
-                Lane.MID, Lane.JUNGLE, false, "랭크 없음", UNRANKED_STATS);
+        LocalDateTime now = LocalDateTime.now();
+        DuoRequest duoRequest = DuoRequest.builder()
+                .duoPostId(1L)
+                .requesterId(2L)
+                .requesterPuuid("unranked-puuid")
+                .primaryLane(Lane.MID)
+                .desiredLane(Lane.JUNGLE)
+                .hasMicrophone(false)
+                .tier(TierInfo.UNRANKED.tier())
+                .rank(TierInfo.UNRANKED.rank())
+                .leaguePoints(TierInfo.UNRANKED.leaguePoints())
+                .memo("랭크 없음")
+                .status(DuoRequestStatus.PENDING)
+                .mostChampions(Collections.emptyList())
+                .recentGameSummary(new RecentGameSummary(0, 0, Collections.emptyList()))
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
 
         // when
         DuoRequest saved = duoRequestPersistenceAdapter.save(duoRequest);

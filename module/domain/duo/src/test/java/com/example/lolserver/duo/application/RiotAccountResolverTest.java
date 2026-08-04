@@ -10,7 +10,9 @@ import com.example.lolserver.match.application.model.readmodel.PlayerMatchReadMo
 import com.example.lolserver.match.application.port.in.MatchQueryUseCase;
 import com.example.lolserver.member.application.port.in.MemberQueryUseCase;
 import com.example.lolserver.summoner.application.model.readmodel.LeagueReadModel;
+import com.example.lolserver.summoner.application.model.readmodel.SummonerReadModel;
 import com.example.lolserver.summoner.application.port.in.LeagueQueryUseCase;
+import com.example.lolserver.summoner.application.port.in.SummonerQueryUseCase;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
@@ -48,6 +50,14 @@ class RiotAccountResolverTest {
 
     @Mock
     private MatchQueryUseCase matchQueryUseCase;
+
+    @Mock
+    private SummonerQueryUseCase summonerQueryUseCase;
+
+    private void givenSummonerIndexed(String puuid) {
+        given(summonerQueryUseCase.findSummonerByPuuid(puuid))
+                .willReturn(Optional.of(SummonerReadModel.builder().puuid(puuid).build()));
+    }
 
     @Nested
     @DisplayName("extractRiotPuuid")
@@ -235,11 +245,27 @@ class RiotAccountResolverTest {
     @MockitoSettings(strictness = Strictness.LENIENT)
     class LookupAllStats {
 
+        @DisplayName("전적 색인이 없는 계정은 언랭이 아니라 SUMMONER_SEARCH_REQUIRED 로 구분한다")
+        @Test
+        void summonerNotIndexed_throwsSearchRequired() {
+            // given
+            String puuid = "test-puuid";
+            given(summonerQueryUseCase.findSummonerByPuuid(puuid))
+                    .willReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> riotAccountResolver.lookupAllStats(puuid))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.SUMMONER_SEARCH_REQUIRED);
+        }
+
         @DisplayName("랭크 정보 없어도 tier/rank 는 null 이 아니다 - NOT NULL 컬럼 저장 가능")
         @Test
         void noRankedData_returnsNonNullTierMarker() {
             // given
             String puuid = "test-puuid";
+            givenSummonerIndexed(puuid);
             given(leagueQueryUseCase.getLeagueSummariesByPuuid(puuid))
                     .willReturn(Collections.emptyList());
             given(matchQueryUseCase.getRankChampionSummaries(any(MSChampionCommand.class)))
@@ -261,6 +287,7 @@ class RiotAccountResolverTest {
         void upstreamFailure_propagatesCoreException() {
             // given
             String puuid = "test-puuid";
+            givenSummonerIndexed(puuid);
             given(leagueQueryUseCase.getLeagueSummariesByPuuid(puuid))
                     .willThrow(new CoreException(ErrorType.MEMBER_NOT_FOUND));
             given(matchQueryUseCase.getRankChampionSummaries(any(MSChampionCommand.class)))
