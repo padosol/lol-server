@@ -11,6 +11,7 @@ import com.example.lolserver.match.application.model.readmodel.PlayerMatchReadMo
 import com.example.lolserver.match.application.port.in.MatchQueryUseCase;
 import com.example.lolserver.member.application.port.in.MemberQueryUseCase;
 import com.example.lolserver.summoner.application.port.in.LeagueQueryUseCase;
+import com.example.lolserver.summoner.application.port.in.SummonerQueryUseCase;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.function.Supplier;
 
 @Component
@@ -34,13 +36,29 @@ public class RiotAccountResolver {
     private final MemberQueryUseCase memberQueryUseCase;
     private final LeagueQueryUseCase leagueQueryUseCase;
     private final MatchQueryUseCase matchQueryUseCase;
+    private final SummonerQueryUseCase summonerQueryUseCase;
 
     public String extractRiotPuuid(Long memberId) {
         return memberQueryUseCase.findRiotPuuid(memberId)
                 .orElseThrow(() -> new CoreException(ErrorType.RIOT_ACCOUNT_NOT_LINKED));
     }
 
+    /**
+     * 전적 데이터가 적재된 적 없는 계정을 언랭과 구분해 걸러낸다.
+     *
+     * <p>리그·매치 조회는 DB 만 보므로, 소환사 자체가 색인된 적 없으면 실제 티어와 무관하게
+     * 언랭으로 보인다. 그대로 두면 "언랭이라 등록 불가"라는 잘못된 안내가 나가므로,
+     * 이 경우는 소환사 검색을 먼저 하도록 별도 에러로 알린다.
+     */
+    public void validateSummonerIndexed(String puuid) {
+        if (summonerQueryUseCase.findSummonerByPuuid(puuid).isEmpty()) {
+            throw new CoreException(ErrorType.SUMMONER_SEARCH_REQUIRED);
+        }
+    }
+
     public RiotAccountStats lookupAllStats(String puuid) {
+        validateSummonerIndexed(puuid);
+
         Map<String, String> contextMap = MDC.getCopyOfContextMap();
 
         CompletableFuture<TierInfo> tierFuture =
@@ -51,12 +69,30 @@ public class RiotAccountResolver {
                 CompletableFuture.supplyAsync(() -> withMdc(contextMap, () -> lookupRecentGameSummary(puuid)));
 
         return new RiotAccountStats(
-                tierFuture.join(),
-                championsFuture.join(),
-                recentGameFuture.join()
+                join(tierFuture),
+                join(championsFuture),
+                join(recentGameFuture)
         );
     }
 
+    /**
+     * join() 이 씌우는 CompletionException 을 벗겨 원래 예외를 그대로 던진다.
+     * 래핑된 채로 올라가면 CoreException 이 전역 핸들러에 잡히지 않아 전부 500 이 된다.
+     */
+    private <T> T join(CompletableFuture<T> future) {
+        try {
+            return future.join();
+        } catch (CompletionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException runtimeException) {
+                throw runtimeException;
+            }
+            if (cause instanceof Error error) {
+                throw error;
+            }
+            throw e;
+        }
+    }
 
     private <T> T withMdc(Map<String, String> contextMap, Supplier<T> supplier) {
         if (contextMap != null) {

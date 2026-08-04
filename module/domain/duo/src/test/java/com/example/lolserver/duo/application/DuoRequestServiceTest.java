@@ -257,6 +257,40 @@ class DuoRequestServiceTest {
             assertThat(result.getRecentGameSummary().wins()).isEqualTo(10);
             then(duoRequestPersistencePort).should().save(any(DuoRequest.class));
         }
+
+        @DisplayName("솔로랭크 티어가 없으면 DUO_UNRANKED_NOT_ALLOWED 에러 - 저장되지 않는다")
+        @Test
+        void unranked_throwsException() {
+            // given
+            Long memberId = 2L;
+            Long duoPostId = 100L;
+            String puuid = "test-puuid";
+            DuoPost duoPost = createTestDuoPost(duoPostId, 1L);
+            CreateDuoRequestCommand command = CreateDuoRequestCommand.builder()
+                    .primaryLane("ADC")
+                    .desiredLane("SUPPORT")
+                    .hasMicrophone(true)
+                    .memo("같이 하실 분")
+                    .build();
+
+            given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+            given(duoRequestPersistencePort.existsByDuoPostIdAndRequesterIdAndStatusIn(
+                    eq(duoPostId), eq(memberId), anyList()))
+                    .willReturn(false);
+            given(riotAccountResolver.lookupAllStats(puuid)).willReturn(new RiotAccountStats(
+                    TierInfo.UNRANKED, Collections.emptyList(),
+                    new RecentGameSummary(0, 0, Collections.emptyList())));
+
+            // when & then
+            assertThatThrownBy(() ->
+                    duoRequestService.createDuoRequest(memberId, duoPostId, command))
+                    .isInstanceOf(CoreException.class)
+                    .extracting(e -> ((CoreException) e).getErrorType())
+                    .isEqualTo(ErrorType.DUO_UNRANKED_NOT_ALLOWED);
+            then(duoRequestPersistencePort).should(never()).save(any(DuoRequest.class));
+        }
     }
 
     @Nested

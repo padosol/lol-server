@@ -42,6 +42,8 @@ public class DuoPost {
             Lane primaryLane, Lane desiredLane, boolean hasMicrophone, String memo,
             RiotAccountStats stats) {
         TierInfo tierInfo = stats.tierInfo();
+        tierInfo.validateRanked();
+
         LocalDateTime now = LocalDateTime.now();
         return DuoPost.builder()
                 .memberId(memberId)
