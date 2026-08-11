@@ -25,6 +25,7 @@ public class PatchNoteMapper {
         return new PatchNoteSummaryReadModel(
                 entity.getVersionId(),
                 entity.getTitle(),
+                entity.getPatchUrl(),
                 formatDate(entity.getCreatedAt())
         );
     }
