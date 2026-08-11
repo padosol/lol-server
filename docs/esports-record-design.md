@@ -7,8 +7,8 @@
 새 바운디드 컨텍스트 `module/domain/esports` 를 추가한다.
 
 > **v2 개정 요지** — v1은 외부 API가 이미 집계해 둔 순위표를 스냅샷으로 적재하는 설계였다.
-> 실제 API 3종을 호출해 검증한 결과(§2) **공식 API만으로는 화면 컬럼의 절반을 채울 수 없고**,
-> 전부 채워주는 유일한 출처는 비공식 API였다. 따라서 **경기 원장을 우리 DB의 진실원천으로 두고
+> 실제 API 3종을 호출해 검증한 결과(§2) **라이엇에는 문서화된 e스포츠 공개 API 자체가 없고**,
+> 실제로 쓸 수 있는 세 출처는 전부 비문서화 내부 API였다. 따라서 **경기 원장을 우리 DB의 진실원천으로 두고
 > 순위표는 집계 산출물로 만드는 구조**로 전환한다. 이력(순위 추이) 테이블도 다시 포함한다.
 
 ---
@@ -75,7 +75,17 @@
 
 세 경로를 모두 직접 호출해 확인했다. **셋 다 실재하고 응답한다.** 차이는 "무엇까지 주는가"다.
 
-### 2.1 라이엇 공식 LoL Esports API
+### 2.1 lolesports.com 내부 API — ⚠️ "공식"이 아니다
+
+> **용어 정정.** 이 문서 v2 초판은 이 출처를 "라이엇 공식 API" 라고 불렀다. **부정확하다.**
+> `esports-api.lolesports.com` 은 라이엇이 소유·운영하는 lolesports.com 의 백엔드이고 데이터도 라이엇 1차 출처지만,
+> **Riot Developer Portal 에 문서화된 공개 API 가 아니다.** 개발자 포털 API 목록(`developer.riotgames.com/apis`)을
+> 확인한 결과 **프로 e스포츠 경기·순위 API 는 존재하지 않는다** — `tournament-v5` 는 서드파티가 자체 대회를 여는
+> 용도지 LCK 데이터가 아니다.
+>
+> 인증에 쓰는 `x-api-key` 는 웹 클라이언트에 하드코딩되어 커뮤니티에 알려진 공개 키다.
+> 즉 **성격상 네이버 API 와 같은 범주(비문서화 내부 API)** 이며, 차이는 "라이엇 1차 데이터냐 3자 가공이냐" 뿐이다.
+> 레이트리밋·스키마 안정성·사용 허가 어느 것도 보장되지 않는다.
 
 ```
 GET https://esports-api.lolesports.com/persisted/gw/getLeagues?hl=ko-KR
@@ -132,15 +142,73 @@ GET https://esports-api.game.naver.com/service/v1/meta/{topLeagueId}/leagues
 
 ### 2.3 판단
 
-| 출처 | 팀 승/패 | 득실차·승률 | 팀·선수 KDA | POG | 상시 의존 |
+| 출처 | 문서화된 공개 API | 팀 승/패 | 득실차·승률 | 팀·선수 KDA | POG |
 |---|---|---|---|---|---|
-| 공식 Esports API | ✅ | ❌ (원장에서 유도 가능) | ❌ (livestats 별도 수집) | ❌ | ✅ |
-| livestats 피드 | – | – | ⚠️ 세트별 수집·파싱 필요 | ❌ | ⚠️ |
-| 네이버 API | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Riot Developer Portal | ✅ | **e스포츠 API 자체가 없음** | – | – | – |
+| lolesports.com 내부 API | ❌ | ✅ | ❌ (원장에서 유도) | ❌ (livestats 별도) | ❌ |
+| livestats 피드 | ❌ | – | – | ⚠️ 세트별 수집·파싱 | ❌ |
+| 네이버 API | ❌ | ✅ | ✅ | ✅ | ✅ |
 
-**→ 지적하신 방향이 맞다.** 어떤 단일 API도 화면을 그대로 채워주지 않고, 채워주는 하나는 의존할 수 없다.
+### 2.4 직접 확인용 URL
+
+각 출처를 눈으로 검증할 수 있는 주소. **브라우저에 그대로 붙여넣어 열리는 것**과 헤더가 필요한 것이 갈린다.
+
+**브라우저에서 바로 열림** (인증 헤더 불필요, HTTP 200 확인)
+
+```
+# 네이버 — LCK 2026 팀 순위 (화면의 팀 탭 원본)
+https://esports-api.game.naver.com/service/v1/ranking/lck_2026/team
+
+# 네이버 — LCK 2026 선수 순위 (화면의 선수 탭 원본)
+https://esports-api.game.naver.com/service/v1/ranking/lck_2026/player
+
+# 네이버 — LCK 시즌 목록 (시즌 필터 원본)
+https://esports-api.game.naver.com/service/v1/meta/lck/leagues
+
+# 네이버 — 리그 목록 (리그 필터 원본)
+https://esports-api.game.naver.com/service/v1/meta/topLeagues
+
+# lolesports livestats — 세트별 선수 K/D/A (프레임 시계열)
+https://feed.lolesports.com/livestats/v1/window/116951349275512133
+```
+
+**헤더 필요** — 주소창에 붙여넣으면 `403 Forbidden` 이다. `x-api-key` 를 넣어야 한다.
+
+```bash
+K=0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z
+
+# 리그 목록 (LCK leagueId = 98767991310872058)
+curl -s -H "x-api-key: $K" \
+  "https://esports-api.lolesports.com/persisted/gw/getLeagues?hl=ko-KR" | jq .
+
+# LCK 토너먼트(시즌) 목록
+curl -s -H "x-api-key: $K" \
+  "https://esports-api.lolesports.com/persisted/gw/getTournamentsForLeague?hl=ko-KR&leagueId=98767991310872058" | jq .
+
+# 2026 스플릿3 순위 — 레전드/라이즈 그룹 구조가 보인다
+curl -s -H "x-api-key: $K" \
+  "https://esports-api.lolesports.com/persisted/gw/getStandingsV3?hl=ko-KR&tournamentId=115548147890329817" | jq .
+
+# 완료된 경기 — 팀코드·gameWins·주차(blockName), 그리고 §2.1 의 미플레이 세트 함정
+curl -s -H "x-api-key: $K" \
+  "https://esports-api.lolesports.com/persisted/gw/getCompletedEvents?hl=ko-KR&leagueId=98767991310872058" | jq .
+```
+
+헤더가 필요하다는 사실 자체가 **이것이 웹 클라이언트 전용 내부 API** 라는 방증이다.
+브라우저에서 보려면 <https://lolesports.com> 에 접속해 개발자도구 Network 탭을 여는 편이 정확하다.
+
+**참고** — 라이엇 공식 개발자 포털: <https://developer.riotgames.com/apis>
+(위 목록 어디에도 e스포츠 경기·순위 API 는 없다. 직접 확인 가능)
+
+**→ 지적하신 방향이 맞다.** 정리하면:
+
+1. **문서화된 공식 경로는 아예 없다.** 라이엇이 프로 e스포츠 데이터를 퍼블릭 API 로 제공하지 않는다.
+2. 실제로 쓸 수 있는 세 출처는 **전부 비문서화 내부 API** 다. 안정성·허가가 보장되는 곳이 하나도 없다.
+3. 화면을 그대로 채워주는 유일한 곳(네이버)은 3자 가공 데이터라 더더욱 의존할 수 없다.
+
+세 출처 모두 언제든 막힐 수 있다는 뜻이므로, **어디에도 상시 의존하지 않는 설계가 유일한 안전한 선택**이다.
 따라서 **경기 원장을 우리 DB에 두고 순위표를 집계로 만든다.** 외부 API 는 원장을 채우는
-*선택적 보조 입력*으로 격하하고, 없어도 시스템이 성립하게 한다.
+*일회성·선택적 보조 입력*으로 격하하고, 전부 막혀도 관리자 입력만으로 시스템이 성립하게 한다.
 
 ---
 
@@ -337,7 +405,7 @@ CREATE TABLE IF NOT EXISTS esports_match (
     home_score    SMALLINT     NOT NULL,         -- 세트 승수 (2)
     away_score    SMALLINT     NOT NULL,         -- 세트 승수 (1)
     status        VARCHAR(20)  NOT NULL DEFAULT 'COMPLETED',  -- SCHEDULED|COMPLETED|CANCELED
-    external_ref  VARCHAR(60),                   -- 공식 API match id (중복 적재 방지)
+    external_ref  VARCHAR(60),                   -- 외부 출처 match id (중복 적재 방지)
     created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_esports_match PRIMARY KEY (match_id),
@@ -773,7 +841,7 @@ public void aggregateActiveSeasons() { ... }
 
 | # | 이슈 | 결정 필요 사항 |
 |---|---|---|
-| 1 | **원장 초기 적재** | 공식 API `getCompletedEvents` 로 1회 임포트 — **권장**. LCK 매치가 실제로 내려오는 것과 팀코드·`gameWins`·주차(`blockName`)까지 확보되는 것을 확인했다. 단 ① 응답이 전 리그 혼합 최근 300건이라 **시즌 전체를 긁으려면 페이징 확인 필요** ② §2.1 의 미플레이 세트 함정 처리 필수 |
+| 1 | **원장 초기 적재** | lolesports 내부 API `getCompletedEvents` 로 1회 임포트 — 조건부 권장. LCK 매치가 실제로 내려오고 팀코드·`gameWins`·주차(`blockName`)까지 확보되는 것은 확인했다. 단 ① **비문서화 API 이므로 1회성 임포트로 한정**하고 상시 호출 경로로 만들지 말 것 ② 응답이 전 리그 혼합 최근 300건이라 시즌 전체는 페이징 확인 필요 ③ §2.1 의 미플레이 세트 함정 처리 필수. 법무/약관 판단이 걸리면 **수기 입력 110건이 현실적 대안**이다 |
 | 2 | 동점 규칙 | LCK 규정의 정확한 타이브레이커 순서(득실차 → 상대전적 → ?) 확인 필요. `TieBreakRule` 구현 전 확정해야 함 |
 | 3 | POG 산정 단위 | 원본 POG 총합 9,000점(=90회)이 총 매치 110건과 맞지 않음. 세트당인지 매치당인지, 미집계 구간이 있는지 확인 필요 |
 | 4 | 선수 기록 확보 경로 | livestats 수집(세트 245회 호출·파싱) vs CSV 일괄 적재 vs 2단계 자체 보류 |
