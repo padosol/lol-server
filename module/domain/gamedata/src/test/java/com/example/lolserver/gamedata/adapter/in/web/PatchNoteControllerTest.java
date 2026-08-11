@@ -41,8 +41,10 @@ class PatchNoteControllerTest extends RestDocsSupport {
     void getAllPatchNotes_성공() throws Exception {
         // given
         List<PatchNoteSummaryReadModel> patchNotes = List.of(
-                new PatchNoteSummaryReadModel("26.S1.1", "패치 26.1 노트", "2026-01-15"),
-                new PatchNoteSummaryReadModel("26.S1.2", "패치 26.2 노트", "2026-01-01")
+                new PatchNoteSummaryReadModel("26.S1.1", "패치 26.1 노트",
+                        "https://www.leagueoflegends.com/ko-kr/news/game-updates/patch-26-1-notes/", "2026-01-15"),
+                new PatchNoteSummaryReadModel("26.S1.2", "패치 26.2 노트",
+                        "https://www.leagueoflegends.com/ko-kr/news/game-updates/patch-26-2-notes/", "2026-01-01")
         );
 
         given(patchNoteService.getAllPatchNotes()).willReturn(patchNotes);
@@ -68,6 +70,9 @@ class PatchNoteControllerTest extends RestDocsSupport {
                                         .description("패치노트 버전 ID"),
                                 fieldWithPath("data[].title").type(JsonFieldType.STRING)
                                         .description("패치노트 제목"),
+                                fieldWithPath("data[].patchUrl").type(JsonFieldType.STRING)
+                                        .optional()
+                                        .description("패치노트 원본 URL (없으면 null)"),
                                 fieldWithPath("data[].createdAt").type(JsonFieldType.STRING)
                                         .description("패치노트 생성 일시")
                         )
