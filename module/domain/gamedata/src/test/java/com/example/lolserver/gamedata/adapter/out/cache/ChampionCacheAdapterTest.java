@@ -7,7 +7,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.ArgumentCaptor;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.ValueOperations;
 
 import java.time.Duration;
@@ -15,9 +18,13 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class ChampionCacheAdapterTest {
@@ -170,5 +177,43 @@ class ChampionCacheAdapterTest {
 
         assertThat(naResult).isPresent();
         assertThat(naResult.get().getFreeChampionIds()).containsExactly(200, 201);
+    }
+
+    @DisplayName("evict 는 접두사에 매칭되는 모든 플랫폼 캐시 키를 한 번에 삭제한다")
+    @Test
+    @SuppressWarnings("unchecked")
+    void evictChampionRotate_deletesAllMatchedKeys() {
+        // given: kr / na1 두 플랫폼이 캐시에 적재된 상태
+        Cursor<String> cursor = mock(Cursor.class);
+        given(cursor.hasNext()).willReturn(true, true, false);
+        given(cursor.next()).willReturn(CACHE_KEY_PREFIX + "kr", CACHE_KEY_PREFIX + "na1");
+        given(redisTemplate.scan(any(ScanOptions.class))).willReturn(cursor);
+
+        // when
+        adapter.evictChampionRotate();
+
+        // then: SCAN 패턴은 로테이션 접두사로 한정되고, 매칭 키는 일괄 삭제된다
+        ArgumentCaptor<ScanOptions> optionsCaptor = ArgumentCaptor.forClass(ScanOptions.class);
+        then(redisTemplate).should().scan(optionsCaptor.capture());
+        assertThat(optionsCaptor.getValue().getPattern()).isEqualTo(CACHE_KEY_PREFIX + "*");
+
+        then(redisTemplate).should().delete(
+                List.of(CACHE_KEY_PREFIX + "kr", CACHE_KEY_PREFIX + "na1"));
+    }
+
+    @DisplayName("evict 대상 키가 없으면 삭제를 호출하지 않는다")
+    @Test
+    @SuppressWarnings("unchecked")
+    void evictChampionRotate_noKeys_skipsDelete() {
+        // given
+        Cursor<String> cursor = mock(Cursor.class);
+        given(cursor.hasNext()).willReturn(false);
+        given(redisTemplate.scan(any(ScanOptions.class))).willReturn(cursor);
+
+        // when
+        adapter.evictChampionRotate();
+
+        // then
+        then(redisTemplate).should(never()).delete(anyCollection());
     }
 }
