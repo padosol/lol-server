@@ -220,17 +220,20 @@ module/domain/esports/src/main/java/com/example/lolserver/esports/
 > `lol-db-schema` 는 **git 서브모듈**(`padosol/lol-db-schema`)이다. 마이그레이션은 그쪽 리포에 별도 PR 로 올리고,
 > 본 리포에서는 서브모듈 포인터 갱신 커밋을 함께 넣는다.
 
-> ✅ 아래 DDL 전체(**테이블 15 · 인덱스 7 · 뷰 3**)는 로컬 `postgres:16-alpine` 에서
+> ✅ 아래 DDL 전체(**테이블 15 · 인덱스 9 · 뷰 3**)는 로컬 `postgres:16-alpine` 에서
 > `BEGIN … ROLLBACK` 으로 실제 실행해 문법·제약·의존 순서를 검증했다 (§7.4 에 결과).
 
 ### 5.1 마스터
 
 ```sql
+-- 리그. 지역 리그(lck, lpl…)와 국제 대회(worlds, msi…)를 같은 테이블에 담는다.
 CREATE TABLE IF NOT EXISTS esports_league (
-    league_id      VARCHAR(50)  NOT NULL,          -- 'lck'
+    league_id      VARCHAR(50)  NOT NULL,          -- 'lck', 'worlds', 'msi'
     game_code      VARCHAR(20)  NOT NULL DEFAULT 'lol',
     name           VARCHAR(200) NOT NULL,
     name_acronym   VARCHAR(50),
+    region         VARCHAR(50),                    -- '한국', '중국', '국제 대회'
+    international  BOOLEAN      NOT NULL DEFAULT FALSE,  -- 국제 대회 여부
     image_url      VARCHAR(500),
     dark_image_url VARCHAR(500),
     sort_order     INTEGER      NOT NULL DEFAULT 0,
@@ -239,6 +242,7 @@ CREATE TABLE IF NOT EXISTS esports_league (
     updated_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_esports_league PRIMARY KEY (league_id)
 );
+CREATE INDEX IF NOT EXISTS idx_league_intl ON esports_league (international, sort_order);
 
 CREATE TABLE IF NOT EXISTS esports_season (
     season_id      VARCHAR(80)  NOT NULL,          -- 'lck_2026'
@@ -256,10 +260,13 @@ CREATE TABLE IF NOT EXISTS esports_season (
         REFERENCES esports_league (league_id)
 );
 
+-- 팀 마스터는 대회와 무관하다. 국제 대회에서 여러 리그 팀이 한 순위표에 모이므로
+-- 소속(홈) 리그를 갖는다 — "T1 (LCK)" / "BLG (LPL)" 표시에 필요.
 CREATE TABLE IF NOT EXISTS esports_team (
     team_id          VARCHAR(30)  NOT NULL,
     team_code        VARCHAR(20)  NOT NULL,        -- 'T1' ← 수기 입력용 키
     game_code        VARCHAR(20)  NOT NULL DEFAULT 'lol',
+    home_league_id   VARCHAR(50),                  -- 'lck' (국제 대회 표시용)
     name             VARCHAR(100) NOT NULL,
     name_eng         VARCHAR(100),
     image_url        VARCHAR(500),
@@ -267,7 +274,9 @@ CREATE TABLE IF NOT EXISTS esports_team (
     created_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_esports_team PRIMARY KEY (team_id),
-    CONSTRAINT uk_esports_team_code UNIQUE (game_code, team_code)
+    CONSTRAINT uk_esports_team_code UNIQUE (game_code, team_code),
+    CONSTRAINT fk_team_home_league FOREIGN KEY (home_league_id)
+        REFERENCES esports_league (league_id)
 );
 
 CREATE TABLE IF NOT EXISTS esports_player (
@@ -306,12 +315,17 @@ CREATE TABLE IF NOT EXISTS esports_stage (
     stage_key       VARCHAR(40)  NOT NULL,   -- 'REGULAR_R1_R2','MSI_QUALIFIER',
                                              -- 'REGULAR_R3_R5','PLAY_IN','PLAYOFF'
     name            VARCHAR(100) NOT NULL,   -- '정규시즌 1-2R'
-    format          VARCHAR(20)  NOT NULL,   -- 'ROUND_ROBIN' | 'BRACKET'
+    -- ROUND_ROBIN : 풀리그 (LCK 정규시즌)
+    -- SWISS       : 스위스 (롤드컵) — 풀리그가 아니지만 순위표가 존재한다
+    -- BRACKET     : 토너먼트 (플레이인·플레이오프·녹아웃) — 순위표 없음
+    format          VARCHAR(20)  NOT NULL,
     grouped         BOOLEAN      NOT NULL DEFAULT FALSE,  -- 그룹별 진행 여부
     -- ★ 같은 값을 가진 스테이지들이 하나의 순위표로 누적 집계된다 (§1.2).
-    --   NULL 이면 순위표를 만들지 않는다 (토너먼트 스테이지).
+    --   NULL 이면 순위표를 만들지 않는다 (BRACKET 스테이지).
     standing_key    VARCHAR(40),
-    -- 그룹 편성의 근거가 되는 이전 스테이지 (1~2R 성적으로 Legend/Rise 를 가른다)
+    -- 그룹 편성 근거 스테이지 (1~2R 성적으로 Legend/Rise 를 가른다).
+    -- NULL + grouped=TRUE 면 성적이 아닌 추첨 등으로 편성된 것이며,
+    -- 이 경우 GroupSplitter 가 건드리지 않고 관리자가 직접 입력한다 (롤드컵 조 추첨).
     group_source_stage_id BIGINT,
     group_size      SMALLINT,                -- 상위 N팀 / 하위 N팀 (LCK = 5)
     start_date      DATE,
@@ -320,7 +334,10 @@ CREATE TABLE IF NOT EXISTS esports_stage (
     created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_esports_stage PRIMARY KEY (stage_id),
     CONSTRAINT uk_esports_stage UNIQUE (season_id, stage_key),
-    CONSTRAINT ck_esports_stage_format CHECK (format IN ('ROUND_ROBIN', 'BRACKET')),
+    CONSTRAINT ck_esports_stage_format CHECK (format IN ('ROUND_ROBIN', 'SWISS', 'BRACKET')),
+    -- BRACKET 은 순위표를 만들지 않는다
+    CONSTRAINT ck_stage_bracket_no_standing
+        CHECK (format <> 'BRACKET' OR standing_key IS NULL),
     CONSTRAINT fk_stage_season FOREIGN KEY (season_id) REFERENCES esports_season (season_id),
     CONSTRAINT fk_stage_group_source FOREIGN KEY (group_source_stage_id)
         REFERENCES esports_stage (stage_id)
@@ -369,6 +386,9 @@ CREATE TABLE IF NOT EXISTS esports_match (
     away_team_id  VARCHAR(30)  NOT NULL,
     home_score    SMALLINT     NOT NULL,          -- 세트 승수
     away_score    SMALLINT     NOT NULL,
+    -- Bo 형식. 같은 스테이지 안에서도 달라진다 (롤드컵 스위스: 초반 Bo1, 진출·탈락전 Bo3).
+    -- 검증 뷰가 "Bo3 인데 4세트" 같은 오입력을 잡는 데 쓴다.
+    best_of       SMALLINT,
     status        VARCHAR(20)  NOT NULL DEFAULT 'COMPLETED',
     created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -509,19 +529,27 @@ CREATE TABLE IF NOT EXISTS esports_standing_snapshot (
 CREATE INDEX IF NOT EXISTS idx_ess_timeline
     ON esports_standing_snapshot (season_id, standing_key, team_id, snapshot_date);
 
--- 플레이오프까지 끝난 뒤의 최종 순위 + 롤드컵 시드.
+-- 대회 최종 순위 + 다음 대회 진출권.
 -- 토너먼트는 순위표로 집계되지 않으므로 관리자가 직접 확정한다.
+-- 공동 순위(8강 탈락 4팀 = 공동 5위)를 위해 final_rank 중복을 허용한다.
 CREATE TABLE IF NOT EXISTS esports_season_result (
-    season_id    VARCHAR(80) NOT NULL,
-    team_id      VARCHAR(30) NOT NULL,
-    final_rank   SMALLINT    NOT NULL,      -- 1=우승
-    worlds_seed  SMALLINT,                  -- 1~4시드, NULL=미진출
-    note         VARCHAR(200),
-    created_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    season_id           VARCHAR(80) NOT NULL,
+    team_id             VARCHAR(30) NOT NULL,
+    final_rank          SMALLINT    NOT NULL,   -- 1=우승 (중복 허용)
+    -- 다음 대회 진출권을 일반화한다. LCK→롤드컵뿐 아니라 LCK→MSI,
+    -- 롤드컵 플레이인→스위스 등 모든 진출 관계를 같은 컬럼으로 표현한다.
+    qualified_season_id VARCHAR(80),            -- 진출한 대회 (예: 'worlds_2026')
+    seed_no             SMALLINT,               -- 그 대회에서의 시드 번호
+    note                VARCHAR(200),
+    created_at          TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_esports_season_result PRIMARY KEY (season_id, team_id),
-    CONSTRAINT fk_esr_season FOREIGN KEY (season_id) REFERENCES esports_season (season_id),
-    CONSTRAINT fk_esr_team   FOREIGN KEY (team_id)   REFERENCES esports_team (team_id)
+    CONSTRAINT fk_esr_season    FOREIGN KEY (season_id) REFERENCES esports_season (season_id),
+    CONSTRAINT fk_esr_team      FOREIGN KEY (team_id)   REFERENCES esports_team (team_id),
+    CONSTRAINT fk_esr_qualified FOREIGN KEY (qualified_season_id)
+        REFERENCES esports_season (season_id)
 );
+CREATE INDEX IF NOT EXISTS idx_esr_qualified
+    ON esports_season_result (qualified_season_id, seed_no);
 ```
 
 ### 5.6 설계 근거
@@ -538,6 +566,82 @@ CREATE TABLE IF NOT EXISTS esports_season_result (
 | `esports_season_result` 분리 | 플레이오프 결과는 집계 불가. 최종 순위·롤드컵 시드는 관리자 확정값 |
 | `team_code` / `nick_name` UNIQUE | 수기 입력이 확정이므로 사람이 읽는 키가 필수다 |
 | `rank` → `team_rank` | PostgreSQL 에선 쓸 수 있으나 윈도우 함수 `rank()` 와 겹쳐 가독성이 나쁘고 MySQL 8+ 는 예약어 |
+| `esports_team.home_league_id` | 국제 대회 순위표에 여러 리그 팀이 섞인다. "T1 (LCK)" 표시에 필요 (§5.7) |
+| `format` 에 `SWISS` 포함 | 롤드컵의 핵심 스테이지가 스위스다. 풀리그도 토너먼트도 아니면서 순위표가 있다 (§5.7) |
+| `qualified_season_id` + `seed_no` | LCK→롤드컵뿐 아니라 LCK→MSI, 플레이인→스위스도 같은 컬럼으로 표현 |
+| `best_of` 를 매치 단위로 | 스테이지 안에서도 Bo 가 달라진다 (스위스: 초반 Bo1, 진출·탈락전 Bo3) |
+
+### 5.7 국제 대회(롤드컵 · MSI) 커버리지 검토
+
+실제 대회 구조를 조회해 현재 테이블이 감당하는지 점검했다.
+
+**확인한 실제 구조**
+
+| 대회 | 스테이지 |
+|---|---|
+| 롤드컵 2026 | 플레이-인 → **스위스** → 녹아웃 |
+| MSI 2026 | 플레이-인 → 녹아웃 |
+| 국제 리그 목록 | `worlds`, `msi`, `first_stand`, `ewc_lol`, `wqs` — 전부 `region="국제 대회"` |
+| 팀 마스터 | `homeLeague: {name:"LCK", region:"한국"}` — **팀은 홈 리그를 갖는다** |
+
+**점검 결과**
+
+| # | 항목 | 검토 전 | 조치 |
+|---|---|---|---|
+| 1 | **스위스 스테이지** | ❌ `format` CHECK 가 `ROUND_ROBIN`/`BRACKET` 만 허용해 **INSERT 가 막힘** | `SWISS` 추가. 순위표를 만들되 풀리그 가정을 두지 않는다 |
+| 2 | **팀의 소속 리그** | ❌ 컬럼 없음 → 국제 대회에서 소속 표시 불가 | `esports_team.home_league_id` 추가 |
+| 3 | 리그의 국제/지역 구분 | ❌ 없음 | `esports_league.region` + `international` 추가 |
+| 4 | 추첨 기반 조 편성 | ⚠️ 성적 기반 자동 분리만 상정 | `group_source_stage_id IS NULL` = 수동 편성으로 정의. `GroupSplitter` 가 건드리지 않는다 |
+| 5 | 다음 대회 진출권 | ⚠️ `worlds_seed` 가 특정 대회 종속 | `qualified_season_id` + `seed_no` 로 일반화 |
+| 6 | Bo 형식 혼재 | ⚠️ 미기록 | `esports_match.best_of` 추가 + 검증 뷰가 위반 검출 |
+| 7 | 여러 리그 팀이 한 대회에 | ✅ 팀 마스터가 대회와 무관 | 변경 없음 |
+| 8 | 다단계 대회 구조 | ✅ `esports_stage` 가 그대로 수용 | 변경 없음 |
+| 9 | 스테이지별 독립 순위표 | ✅ `standing_key` 를 다르게 주면 분리 | 변경 없음 |
+| 10 | 공동 순위(8강 탈락 = 공동 5위) | ✅ `final_rank` 중복 허용 | 변경 없음 |
+| 11 | Bo1 ~ Bo5 | ✅ `home_score`/`away_score` 로 표현 | 변경 없음 |
+
+**롤드컵 2026 시드 예시** — 위 조치만으로 표현된다.
+
+```sql
+INSERT INTO esports_league (league_id, name, name_acronym, region, international)
+VALUES ('worlds', '월드 챔피언십', 'Worlds', '국제 대회', TRUE);
+
+INSERT INTO esports_season (season_id, league_id, name, year, start_date, end_date)
+VALUES ('worlds_2026', 'worlds', '2026 월드 챔피언십', 2026, DATE '2026-10-20', DATE '2026-11-20');
+
+INSERT INTO esports_stage
+    (season_id, stage_key, name, format, grouped, standing_key, sort_order)
+VALUES
+    ('worlds_2026', 'PLAY_IN',  '플레이-인', 'BRACKET',     FALSE, NULL,    1),
+    ('worlds_2026', 'SWISS',    '스위스',    'SWISS',       FALSE, 'SWISS', 2),
+    ('worlds_2026', 'KNOCKOUT', '녹아웃',    'BRACKET',     FALSE, NULL,    3);
+
+-- LCK 1시드로 롤드컵 진출
+INSERT INTO esports_season_result (season_id, team_id, final_rank, qualified_season_id, seed_no)
+SELECT 'lck_2026', team_id, 1, 'worlds_2026', 1 FROM esports_team WHERE team_code = 'T1';
+```
+
+**검증 결과** — 위 시드와 조치를 Postgres 16 에서 실행하고 롤백했다.
+
+| 확인 | 기대 | 실제 |
+|---|---|---|
+| 리그 국제/지역 구분 | `worlds`=국제, `lck`·`lpl`=지역 | **일치** |
+| 롤드컵 스테이지 3단 | `SWISS` 는 `standing_key` 보유, `BRACKET` 은 NULL | **일치** |
+| 팀 → 홈 리그 조회 | `T1→한국`, `BLG→중국` | **일치** |
+| LCK 1위 → 롤드컵 1시드 | `qualified_season_id='worlds_2026'`, `seed_no=1` | **일치** |
+| 스위스 Bo1 매치(1:0) 입력 | 검증 뷰 0행 | **0행** |
+| `Bo3` 인데 `3:0` 주입 | 검증 뷰가 검출 | **1행 검출** |
+| `BRACKET` 에 `standing_key` 부여 | CHECK 제약이 거부 | **`ck_stage_bracket_no_standing` 위반으로 거부** |
+
+**남은 한계 (이번 범위 밖)**
+
+- **스위스 순위 규칙**: 승패 동률 시 상대 전적 강도(Buchholz)를 쓰는 경우가 있다.
+  `TieBreakRule` 을 스위스용으로 하나 더 만들어야 할 수 있다 → §11-8.
+- **토너먼트 대진표**: 8강·4강·결승의 대진 구조(누가 누구와 붙는지, 상위 진출 연결)는
+  `esports_match` 로 경기 결과는 남지만 **대진도(bracket tree)를 그릴 정보는 없다**.
+  대진표 화면이 필요하면 별도 설계가 추가로 필요하다 → §11-5.
+- **참가팀 명단(경기 전)**: 경기가 입력되기 전에는 참가팀을 알 수 없다.
+  개막 전 참가팀 목록 화면이 필요하면 `esports_season_participant` 를 추가한다.
 
 ---
 
@@ -654,11 +758,11 @@ SELECT m.match_id, g.game_no, t.team_id, g.duration_sec
 수기 입력은 반드시 틀린다. **집계 전에 걸러내는 뷰**를 함께 만든다.
 
 ```sql
--- ① 매치 결과와 세트 수가 어긋난 매치
+-- ① 매치 결과와 세트 수가 어긋난 매치 (+ Bo 형식 위반)
 CREATE OR REPLACE VIEW v_esports_match_invalid AS
 SELECT m.match_id, m.match_date, st.name AS stage,
        h.team_code AS home, a.team_code AS away,
-       m.home_score, m.away_score,
+       m.home_score, m.away_score, m.best_of,
        COUNT(g.game_id)                                          AS game_rows,
        COUNT(*) FILTER (WHERE g.winner_team_id = m.home_team_id)  AS home_game_wins,
        COUNT(*) FILTER (WHERE g.winner_team_id = m.away_team_id)  AS away_game_wins
@@ -668,10 +772,18 @@ SELECT m.match_id, m.match_date, st.name AS stage,
   JOIN esports_team a ON a.team_id = m.away_team_id
   LEFT JOIN esports_game g ON g.match_id = m.match_id
  WHERE m.status = 'COMPLETED'
- GROUP BY m.match_id, m.match_date, st.name, h.team_code, a.team_code, m.home_score, m.away_score
+ GROUP BY m.match_id, m.match_date, st.name, h.team_code, a.team_code,
+          m.home_score, m.away_score, m.best_of
+   -- 세트 행 수가 매치 스코어 합과 다름
 HAVING COUNT(g.game_id) <> m.home_score + m.away_score
+   -- 세트 승자 분포가 매치 스코어와 다름
     OR COUNT(*) FILTER (WHERE g.winner_team_id = m.home_team_id) <> m.home_score
-    OR COUNT(*) FILTER (WHERE g.winner_team_id = m.away_team_id) <> m.away_score;
+    OR COUNT(*) FILTER (WHERE g.winner_team_id = m.away_team_id) <> m.away_score
+   -- Bo 형식 위반: 승자는 정확히 과반 세트를 이겨야 한다 (Bo1→1, Bo3→2, Bo5→3)
+    OR (m.best_of IS NOT NULL
+        AND GREATEST(m.home_score, m.away_score) <> m.best_of / 2 + 1)
+   -- Bo 형식 초과: 총 세트가 best_of 를 넘을 수 없다
+    OR (m.best_of IS NOT NULL AND m.home_score + m.away_score > m.best_of);
 
 -- ② 스테이지별 입력 진행률 — 어디까지 넣었는지 한눈에
 --    주의: 팀 테이블을 JOIN 하면 매치당 2행이 되어 집계가 2배가 된다.
@@ -720,7 +832,7 @@ SELECT st.season_id, st.standing_key,
 
 | 단계 | 기대 | 실제 |
 |---|---|---|
-| DDL 전체 생성 | 성공 | **테이블 15 · 인덱스 7 · 뷰 3 생성** |
+| DDL 전체 생성 | 성공 | **테이블 15 · 인덱스 9 · 뷰 3 생성** |
 | 스테이지 시드 + 그룹 근거 연결 | 5행 | **5행, `REGULAR_R3_R5 → REGULAR_R1_R2` 연결됨** |
 | 정상 입력 후 검증 뷰 ① | 0행 | **0행** |
 | 진행률 뷰 ② | 매치 2 · 세트 5 · 팀 3 | **정확히 일치** |
@@ -777,7 +889,8 @@ SELECT st.season_id, st.standing_key,
           {
             "rank": 1, "overallRank": 1,
             "team": { "teamId": "R1040", "teamCode": "T1", "name": "T1",
-                      "imageUrl": "https://.../t1.png" },
+                      "imageUrl": "https://.../t1.png",
+                      "homeLeague": { "leagueId": "lck", "nameAcronym": "LCK", "region": "한국" } },
             "wins": 16, "loses": 6, "draws": 0,
             "setWins": 34, "setLoses": 13, "score": 21,
             "winRate": 0.7273,
@@ -793,6 +906,11 @@ SELECT st.season_id, st.standing_key,
 
 `includedStages` 로 **이 순위표가 어떤 단계를 합산한 것인지** 화면에 표시할 수 있다.
 `kda` 등이 `null` 인 것은 3단계 미완을 뜻한다(에러가 아니다).
+`homeLeague` 는 국제 대회 순위표에서 `T1 (LCK)` · `BLG (LPL)` 처럼 소속을 표시할 때 쓴다.
+LCK 단독 순위표에서는 전 팀이 동일하므로 화면에서 생략하면 된다.
+
+`GET /leagues` 응답에도 `region` 과 `international` 이 포함되어, 리그 필터에서
+지역 리그와 국제 대회를 구분해 그룹핑할 수 있다.
 
 ### 8.2 스테이지 목록 (신규)
 
@@ -917,9 +1035,11 @@ SELECT st.season_id, st.standing_key,
 | 2 | **순위표 노출 단위** | 화면에 `REGULAR`(1~2R+3~5R 누적) 하나만 둘지, `1~2R 단독` 탭도 줄지. `standing_key` 를 나누기만 하면 되므로 코드 변경은 없다 |
 | 3 | POG 산정 단위 | 원본 총합 9,000점(=90회)이 매치 수와 맞지 않는다. 세트당인지 매치당인지, 미집계 구간이 있는지 확인 필요 |
 | 4 | **선수 상세 스탯(3단계)** | 세트별 선수 기록 약 4,000행은 수기로 불가능(§2.1). ① 3단계 자체를 보류하고 선수 탭은 포인트·승패만 노출 ② 매치 단위 합계로 축소 입력(약 1,650행) ③ 별도 적재 경로 마련 — **①을 권장**(팀 탭이 먼저 완성되고 나중에 확장 가능) |
-| 5 | MSI·플레이오프 대진표 | 토너먼트는 순위표로 표현되지 않는다. 대진표 화면이 필요하면 별도 테이블·API 설계가 추가로 필요하다. 현재 범위는 **최종 순위만 `esports_season_result` 로 관리** |
-| 6 | 롤드컵 시드 표시 | `worlds_seed` 를 화면에 노출할지, 관리 목적으로만 둘지 |
+| 5 | 토너먼트 대진표 | MSI·플레이오프·롤드컵 녹아웃의 **대진도**(누가 누구와, 승자가 어디로)는 현재 표현되지 않는다. 경기 결과는 `esports_match` 에 남지만 브래킷 트리는 없다. 대진표 화면이 필요하면 별도 설계 필요 (§5.7) |
+| 6 | 진출권 표시 | `qualified_season_id`/`seed_no` 를 화면에 노출할지, 관리 목적으로만 둘지 |
 | 7 | 관리자 인증 | `/api/v1/admin/**` 권한 체계. 기존 member 컨텍스트 역할 재사용 여부 |
+| 8 | **스위스 순위 규칙** | 롤드컵 스위스는 승패 동률 시 상대 전적 강도(Buchholz) 등 풀리그와 다른 타이브레이커를 쓸 수 있다. 롤드컵을 실제로 다룰 때 `TieBreakRule` 의 스위스 구현이 필요 (§5.7) |
+| 9 | 국제 대회 도입 시점 | LCK 만 먼저 할지, 롤드컵·MSI 를 같이 열지. **테이블은 이미 커버하므로(§5.7) 시드 데이터와 입력량 문제일 뿐이다** |
 
 ---
 
