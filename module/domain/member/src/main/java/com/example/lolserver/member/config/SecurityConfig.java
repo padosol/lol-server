@@ -78,6 +78,9 @@ public class SecurityConfig {
                                 "/api/community/posts/**").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/community/posts").permitAll()
+                        // 게시판 목록은 비로그인 사용자에게도 사이드바를 그리는 데 필요하다.
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/community/categories").permitAll()
                         .requestMatchers("/api/community/**").authenticated()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/duo/posts/*/match-result",
