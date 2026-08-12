@@ -220,7 +220,7 @@ module/domain/esports/src/main/java/com/example/lolserver/esports/
 > `lol-db-schema` 는 **git 서브모듈**(`padosol/lol-db-schema`)이다. 마이그레이션은 그쪽 리포에 별도 PR 로 올리고,
 > 본 리포에서는 서브모듈 포인터 갱신 커밋을 함께 넣는다.
 
-> ✅ 아래 DDL 전체(**테이블 15 · 인덱스 9 · 뷰 3**)는 로컬 `postgres:16-alpine` 에서
+> ✅ 아래 DDL 전체(**테이블 15 · 인덱스 11 · 뷰 4**)는 로컬 `postgres:16-alpine` 에서
 > `BEGIN … ROLLBACK` 으로 실제 실행해 문법·제약·의존 순서를 검증했다 (§7.4 에 결과).
 
 ### 5.1 마스터
@@ -291,18 +291,41 @@ CREATE TABLE IF NOT EXISTS esports_player (
     CONSTRAINT uk_esports_player_nick UNIQUE (nick_name)
 );
 
+-- ★ 로스터는 "시즌별 소속" 이 아니라 "계약 기간" 으로 표현한다 (근거는 §5.8).
+--   이적이 과거 소속을 덮어쓰지 못하게 기간 이력(temporal) 테이블로 둔다.
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
 CREATE TABLE IF NOT EXISTS esports_roster (
-    season_id  VARCHAR(80) NOT NULL,
+    roster_id  BIGSERIAL   NOT NULL,
     player_id  VARCHAR(30) NOT NULL,
     team_id    VARCHAR(30) NOT NULL,
     position   VARCHAR(10) NOT NULL,               -- TOP|JGL|MID|AD|SPT
-    joined_at  DATE,
-    left_at    DATE,
-    CONSTRAINT pk_esports_roster PRIMARY KEY (season_id, player_id, team_id),
-    CONSTRAINT fk_roster_season FOREIGN KEY (season_id) REFERENCES esports_season (season_id),
+    joined_at  DATE        NOT NULL,
+    left_at    DATE,                               -- NULL = 현재 소속
+    note       VARCHAR(200),                       -- '2026 서머 로스터 변경' 등
+    created_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_esports_roster PRIMARY KEY (roster_id),
+    CONSTRAINT uk_roster_player_joined UNIQUE (player_id, joined_at),
+    CONSTRAINT ck_roster_period CHECK (left_at IS NULL OR left_at > joined_at),
     CONSTRAINT fk_roster_player FOREIGN KEY (player_id) REFERENCES esports_player (player_id),
-    CONSTRAINT fk_roster_team   FOREIGN KEY (team_id)   REFERENCES esports_team (team_id)
+    CONSTRAINT fk_roster_team   FOREIGN KEY (team_id)   REFERENCES esports_team (team_id),
+    -- 한 선수의 소속 기간은 겹칠 수 없다. DB 가 강제하므로 오입력이 아예 들어오지 못한다.
+    CONSTRAINT ex_roster_no_overlap EXCLUDE USING gist (
+        player_id WITH =,
+        daterange(joined_at, COALESCE(left_at, DATE '9999-12-31')) WITH &&
+    )
 );
+CREATE INDEX IF NOT EXISTS idx_roster_team   ON esports_roster (team_id, joined_at DESC);
+CREATE INDEX IF NOT EXISTS idx_roster_player ON esports_roster (player_id, joined_at DESC);
+
+-- 시즌 로스터는 저장하지 않고 계약 기간 ∩ 시즌 기간으로 유도한다.
+-- 시즌마다·국제 대회마다 로스터를 다시 입력할 필요가 없어진다.
+CREATE OR REPLACE VIEW v_esports_season_roster AS
+SELECT s.season_id, r.player_id, r.team_id, r.position, r.joined_at, r.left_at
+  FROM esports_season s
+  JOIN esports_roster r
+    ON daterange(r.joined_at,  COALESCE(r.left_at,  DATE '9999-12-31'))
+    && daterange(s.start_date, COALESCE(s.end_date, DATE '9999-12-31'));
 ```
 
 ### 5.2 ★ 스테이지 — LCK 구조를 담는 핵심 테이블
@@ -566,6 +589,8 @@ CREATE INDEX IF NOT EXISTS idx_esr_qualified
 | `esports_season_result` 분리 | 플레이오프 결과는 집계 불가. 최종 순위·롤드컵 시드는 관리자 확정값 |
 | `team_code` / `nick_name` UNIQUE | 수기 입력이 확정이므로 사람이 읽는 키가 필수다 |
 | `rank` → `team_rank` | PostgreSQL 에선 쓸 수 있으나 윈도우 함수 `rank()` 와 겹쳐 가독성이 나쁘고 MySQL 8+ 는 예약어 |
+| `esports_roster` 를 기간 이력으로 | 시즌 PK 구조에서는 같은 시즌 재계약이 저장되지 않고, 이적을 `UPDATE` 로 처리하면 과거 소속이 사라졌다. `EXCLUDE` 제약으로 겹침을 DB 가 막는다 (§5.8) |
+| 시즌 로스터를 저장하지 않고 유도 | 계약 기간 ∩ 시즌 기간으로 산출. 시즌·국제 대회마다 로스터를 재입력할 필요가 없다 (§5.8) |
 | `esports_team.home_league_id` | 국제 대회 순위표에 여러 리그 팀이 섞인다. "T1 (LCK)" 표시에 필요 (§5.7) |
 | `format` 에 `SWISS` 포함 | 롤드컵의 핵심 스테이지가 스위스다. 풀리그도 토너먼트도 아니면서 순위표가 있다 (§5.7) |
 | `qualified_season_id` + `seed_no` | LCK→롤드컵뿐 아니라 LCK→MSI, 플레이인→스위스도 같은 컬럼으로 표현 |
@@ -643,6 +668,61 @@ SELECT 'lck_2026', team_id, 1, 'worlds_2026', 1 FROM esports_team WHERE team_cod
 - **참가팀 명단(경기 전)**: 경기가 입력되기 전에는 참가팀을 알 수 없다.
   개막 전 참가팀 목록 화면이 필요하면 `esports_season_participant` 를 추가한다.
 
+### 5.8 로스터 — 선수 커리어(과거 소속) 보존
+
+**초판의 `esports_roster` 는 `PRIMARY KEY (season_id, player_id, team_id)` 였다.**
+이 구조로 이적을 처리하면 어떻게 되는지 실제로 실행해 확인했다.
+
+| 시나리오 | 결과 | 판정 |
+|---|---|---|
+| 시즌을 넘는 이적 (2025 GEN → 2026 T1) | 시즌이 다르므로 두 행이 남는다 | ✅ 이력 보존 |
+| 시즌 중 이적 (2026 T1 → GEN) | `team_id` 가 PK 에 있어 두 행이 공존 | ✅ 이력 보존 |
+| **시즌 중 복귀** (GEN → T1 재계약) | **PK 충돌로 INSERT 실패** | ❌ 저장 불가 |
+| **이적을 `UPDATE` 로 처리** | **GEN 소속 이력이 흔적 없이 사라짐** | ❌ 이력 소실 |
+| 현재 소속의 유일성 | `left_at IS NULL` 이 2건이어도 통과 | ❌ 무결성 미보장 |
+
+**정확한 진단** — 이력이 항상 사라지는 건 아니다. 시즌이 다르면 남는다.
+문제는 **구조가 이력 보존을 강제하지 않는다**는 것이다. 관리자가 이적을 새 행으로 넣으면 남고
+기존 행을 고치면 사라진다. 데이터 무결성이 입력자의 습관에 의존하면 언젠가 깨진다.
+같은 시즌 재계약은 아예 저장할 수도 없다.
+
+**개선 — 계약 기간(temporal) 모델**
+
+`season_id` 를 버리고 `joined_at ~ left_at` 기간으로 표현한다. 선수-팀 계약은 시즌이 아니라
+기간의 함수이기 때문이다. `EXCLUDE USING gist` 로 **한 선수의 소속 기간이 겹칠 수 없게 DB 가 강제**한다.
+
+검증 결과 (Postgres 16, 실행 후 롤백):
+
+| 확인 | 결과 |
+|---|---|
+| GEN → T1 → GEN 재계약 3건 입력 | **전부 저장됨** (기존 PK 로는 불가능했던 케이스) |
+| 기간이 겹치는 오입력 | **`ex_roster_no_overlap` 위반으로 거부** |
+| 현재 소속 조회 (`left_at IS NULL`) | **정확히 1건** |
+| 시즌 로스터 유도 (`v_esports_season_roster`) | lck_2025→GEN, lck_2026→GEN·T1, **worlds_2026→GEN 자동 산출** |
+| 특정 시점 소속 (2026-07-01) | **T1** — 임의 시점 조회 가능 |
+
+**부수 효과 — 국제 대회 로스터 중복 입력이 사라진다.**
+§5.7 에서 "Worlds 참가 로스터를 또 입력해야 한다" 는 부담을 지적했는데,
+계약 기간이 대회 기간과 겹치면 자동으로 유도되므로 **입력 자체가 필요 없어진다.**
+
+**운영 주의**
+
+- `btree_gist` 확장이 필요하다(`EXCLUDE` 에서 `player_id WITH =` 를 쓰기 위해).
+  설치 권한이 없는 환경이라면 `UNIQUE (player_id, joined_at)` 만 남기고
+  겹침 검출은 검증 뷰 + `Roster` 도메인의 `validateNoOverlap()` 으로 대체한다.
+- 이적 입력은 **기존 행의 `left_at` 을 채우고 새 행을 INSERT** 하는 2단계다.
+  `UPDATE team_id` 로 처리하면 안 된다 — 그게 초판에서 이력이 사라지던 경로다.
+
+```sql
+-- 2026-06-01 자로 GEN → T1 이적
+UPDATE esports_roster SET left_at = DATE '2026-06-01'
+ WHERE player_id = 'P_CHOVY' AND left_at IS NULL;
+
+INSERT INTO esports_roster (player_id, team_id, position, joined_at)
+SELECT 'P_CHOVY', team_id, 'MID', DATE '2026-06-01'
+  FROM esports_team WHERE team_code = 'T1';
+```
+
 ---
 
 ## 6. 집계 로직
@@ -667,6 +747,7 @@ SELECT 'lck_2026', team_id, 1, 'worlds_2026', 1 FROM esports_team WHERE team_cod
 | 선수 `kill_involve_rate` | `(선수 K + A) / 같은 세트 소속팀 총 킬` |
 | 선수 `pog_point` | `esports_pog.point` 합 |
 | 선수 `wins/loses/score` | 선수가 1세트 이상 출전한 매치만 대상 |
+| 선수 `team_id` · `position` | **해당 순위표 기간과 겹치는 계약 중 가장 최근 것** (§5.8). 시즌 중 이적한 선수는 순위표에 한 팀만 표시되므로 마지막 소속을 쓴다. 3단계 이후에는 `esports_game_player` 의 실제 출전 팀으로 교차 검증한다 |
 
 **정렬(동점 규칙)** — `TieBreakRule` 로 분리한다. 리그마다 다르고 규정이 바뀐다.
 
@@ -832,7 +913,7 @@ SELECT st.season_id, st.standing_key,
 
 | 단계 | 기대 | 실제 |
 |---|---|---|
-| DDL 전체 생성 | 성공 | **테이블 15 · 인덱스 9 · 뷰 3 생성** |
+| DDL 전체 생성 | 성공 | **테이블 15 · 인덱스 11 · 뷰 4 생성** |
 | 스테이지 시드 + 그룹 근거 연결 | 5행 | **5행, `REGULAR_R3_R5 → REGULAR_R1_R2` 연결됨** |
 | 정상 입력 후 검증 뷰 ① | 0행 | **0행** |
 | 진행률 뷰 ② | 매치 2 · 세트 5 · 팀 3 | **정확히 일치** |
@@ -858,7 +939,9 @@ SELECT st.season_id, st.standing_key,
 | GET | `/api/v1/esports/seasons/{seasonId}/team-standings` | 팀 순위표 |
 | GET | `/api/v1/esports/seasons/{seasonId}/player-standings` | 선수 순위표 |
 | GET | `/api/v1/esports/seasons/{seasonId}/standing-history` | 순위 추이 |
-| GET | `/api/v1/esports/seasons/{seasonId}/result` | 최종 순위 · 롤드컵 시드 |
+| GET | `/api/v1/esports/seasons/{seasonId}/result` | 최종 순위 · 진출권 |
+| GET | `/api/v1/esports/players/{playerId}/career` | **선수 커리어 (팀 이력) — 신규** |
+| GET | `/api/v1/esports/teams/{teamCode}/roster` | **팀 로스터 (현재 / 특정 시점) — 신규** |
 | POST | `/api/v1/admin/esports/seasons/{seasonId}/aggregate` | 집계 트리거 |
 | POST | `/api/v1/admin/esports/stages/{stageId}/split-groups` | **그룹 편성 확정** |
 
@@ -965,7 +1048,46 @@ LCK 단독 순위표에서는 전 팀이 동일하므로 화면에서 생략하�
 
 `teamCode` 생략 시 전 팀 시리즈. 그룹 분리 전후가 한 차트에 이어진다.
 
-### 8.5 에러
+### 8.5 선수 커리어 (신규)
+
+`GET /players/{playerId}/career`
+
+`esports_roster` 가 기간 이력이 되면서 가능해진 조회다(§5.8).
+
+```json
+{
+  "result": "SUCCESS",
+  "data": {
+    "player": { "playerId": "10785", "nickName": "Duro", "name": "주민규" },
+    "currentTeam": { "teamCode": "GEN", "name": "젠지", "joinedAt": "2026-08-16" },
+    "career": [
+      { "team": { "teamCode": "GEN", "name": "젠지",
+                  "homeLeague": { "leagueId": "lck", "nameAcronym": "LCK" } },
+        "position": "SPT", "joinedAt": "2026-08-16", "leftAt": null,
+        "seasons": ["lck_2026", "worlds_2026"] },
+      { "team": { "teamCode": "T1", "name": "T1" },
+        "position": "SPT", "joinedAt": "2026-06-01", "leftAt": "2026-08-15",
+        "seasons": ["lck_2026"] },
+      { "team": { "teamCode": "GEN", "name": "젠지" },
+        "position": "SPT", "joinedAt": "2024-11-20", "leftAt": "2026-05-31",
+        "seasons": ["lck_2025", "lck_2026"] }
+    ]
+  }
+}
+```
+
+- `career` 는 **최신 계약이 먼저** 오도록 `joinedAt DESC` 정렬한다.
+- 같은 팀에 두 번 소속된 이력이 각각 별도 항목으로 남는다 — 초판 구조에서는 저장조차 불가능했다.
+- `seasons` 는 `v_esports_season_roster` 로 유도한 값이라 별도 입력이 없다.
+
+### 8.6 팀 로스터 (신규)
+
+`GET /teams/{teamCode}/roster?asOf=2026-07-01`
+
+`asOf` 를 생략하면 현재 로스터(`left_at IS NULL`), 주면 그 시점의 로스터를 돌려준다.
+`asOf` 대신 `seasonId` 를 주면 해당 대회 기간과 겹치는 로스터가 나온다.
+
+### 8.7 에러
 
 | 상황 | 코드 |
 |---|---|
@@ -1040,6 +1162,8 @@ LCK 단독 순위표에서는 전 팀이 동일하므로 화면에서 생략하�
 | 7 | 관리자 인증 | `/api/v1/admin/**` 권한 체계. 기존 member 컨텍스트 역할 재사용 여부 |
 | 8 | **스위스 순위 규칙** | 롤드컵 스위스는 승패 동률 시 상대 전적 강도(Buchholz) 등 풀리그와 다른 타이브레이커를 쓸 수 있다. 롤드컵을 실제로 다룰 때 `TieBreakRule` 의 스위스 구현이 필요 (§5.7) |
 | 9 | 국제 대회 도입 시점 | LCK 만 먼저 할지, 롤드컵·MSI 를 같이 열지. **테이블은 이미 커버하므로(§5.7) 시드 데이터와 입력량 문제일 뿐이다** |
+| 10 | **팀 리브랜딩 시 "당시 팀명"** | 팀이 이름을 바꾸면(`DWG KIA → Dplus KIA` — 공식 데이터에도 `slug='dwg-kia'`, `name='Dplus KIA'` 로 흔적이 남아 있다) `team_id` 는 그대로라 **과거 기록도 새 이름으로 표시된다.** 커리어에 "2022 DWG KIA" 로 보여야 한다면 `esports_team_name_history` 가 필요하다. 현재 범위에서는 최신 이름으로 통일 |
+| 11 | 코치·감독 로스터 | `esports_roster.position` 이 선수 포지션 5종 전제다. 코칭스태프를 넣으려면 `role`(PLAYER/COACH) 구분이 필요 |
 
 ---
 
