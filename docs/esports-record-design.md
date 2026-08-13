@@ -227,11 +227,25 @@ module/domain/esports/src/main/java/com/example/lolserver/esports/
 
 ## 6. DB 테이블 설계
 
-마이그레이션: `lol-db-schema/db/migration/V31__add_esports_record_tables.sql`
-(현재 최신은 `V30__idempotent_guards.sql`)
+마이그레이션: `lol-db-schema/db/migration/V33__add_esports_record_tables.sql`
 
 > `lol-db-schema` 는 **git 서브모듈**(`padosol/lol-db-schema`)이다. 마이그레이션은 그쪽 리포에 별도 PR 로 올리고,
 > 본 리포에서는 서브모듈 포인터 갱신 커밋을 함께 넣는다.
+>
+> **버전 번호는 착수 시점에 다시 확인한다.** 서브모듈은 이 리포와 독립적으로 진행되므로
+> 문서에 적힌 번호가 그사이 선점될 수 있다 (`V31`·`V32` 가 커뮤니티 작업으로 이미 사용됐다).
+> `ls db/migration | sort -V | tail -1` 로 최신을 확인하고 그다음 번호를 쓴다.
+
+| 서브모듈 최신 (`origin/main` `23723cc`) | 내용 |
+|---|---|
+| `V30__idempotent_guards.sql` | 멱등 가드 |
+| `V31__add_community_bookmark.sql` | 커뮤니티 북마크 |
+| `V32__add_community_category_tables.sql` | 커뮤니티 게시판 그룹·카테고리 |
+| **`V33__add_esports_record_tables.sql`** | **본 설계 (신규)** |
+
+V32 가 `community_board_group` 에 `ESPORTS` 그룹과 `LCK`·`LCK_NEWS` 카테고리를 시드하지만,
+그쪽은 **커뮤니티 게시판 분류**이고 본 설계의 `esports_*` 는 **기록 데이터**다.
+접두사가 달라 테이블·인덱스 충돌은 없다.
 
 ### 6.1 마스터
 
@@ -1120,7 +1134,8 @@ DDL → 시즌 구조 시드 → 매치 입력 → 검증 뷰 3종 → 집계 �
 **1단계 — 팀 순위표 (외부 의존 0)**
 
 1. `module/domain/esports` 생성 + `settings.gradle` / 컴포지션 루트 등록
-2. `V31` 마이그레이션 (마스터 + 로스터 + 스테이지 + 원장 + 집계 + 이력 + 검증 뷰)
+2. `V33` 마이그레이션 (마스터 + 로스터 + 스테이지 + 원장 + 집계 + 이력 + 검증 뷰)
+   — 착수 시점에 서브모듈 최신 번호를 다시 확인할 것 (§6 머리말)
 3. 마스터 시드: LCK 10팀 · `lck_2026` 시즌 · **스테이지 5개**(§8.1)
 4. **`StandingCalculator` · `GroupSplitter` · `TieBreakRule` 단위 테스트 먼저**
    — 동률 3팀(§2.4), 공동 순위, 누적 합산(§2.2) 시나리오를 재현
