@@ -227,14 +227,19 @@ module/domain/esports/src/main/java/com/example/lolserver/esports/
 
 ## 6. DB 테이블 설계
 
-마이그레이션: `lol-db-schema/db/migration/V33__add_esports_record_tables.sql`
+마이그레이션: **`lol-db-schema/db/migration/V33__add_esports_record_tables.sql` — 작성 완료**
+(`lol-db-schema` 브랜치 `feature/MP-XXX-esports-record`)
 
 > `lol-db-schema` 는 **git 서브모듈**(`padosol/lol-db-schema`)이다. 마이그레이션은 그쪽 리포에 별도 PR 로 올리고,
 > 본 리포에서는 서브모듈 포인터 갱신 커밋을 함께 넣는다.
 >
-> **버전 번호는 착수 시점에 다시 확인한다.** 서브모듈은 이 리포와 독립적으로 진행되므로
-> 문서에 적힌 번호가 그사이 선점될 수 있다 (`V31`·`V32` 가 커뮤니티 작업으로 이미 사용됐다).
-> `ls db/migration | sort -V | tail -1` 로 최신을 확인하고 그다음 번호를 쓴다.
+> **머지 순서 주의**: 현재 포인터는 서브모듈의 *브랜치* 커밋을 가리킨다.
+> 이 브랜치를 `develop` 에 머지하기 전에 서브모듈 PR 을 먼저 머지하고 포인터를 `main` 커밋으로 옮겨야 한다.
+>
+> **버전 번호는 머지 직전에 다시 확인한다.** 서브모듈은 이 리포와 독립적으로 진행되므로
+> 그사이 `V33` 이 선점될 수 있다 (`V31`·`V32` 가 커뮤니티 작업으로 이미 그렇게 됐다).
+> `ls db/migration | sort -V | tail -1` 로 최신을 확인하고, 선점됐다면 파일명을 리넘버링한다
+> (서브모듈 README 의 Flyway checksum 가드 참고).
 
 | 서브모듈 최신 (`origin/main` `23723cc`) | 내용 |
 |---|---|
@@ -699,11 +704,16 @@ SELECT 'lck_2026', team_id, 1, 'worlds_2026', 1 FROM esports_team WHERE team_cod
 
 ### 6.9 스키마 검증
 
-로컬 Postgres 16 에서 DDL 과 제약 동작을 실행하고 `ROLLBACK` 했다.
+`V33` 을 단독으로 실행한 것이 아니라 **빈 DB 에 `V1`~`V33` 전체 마이그레이션 체인을 순서대로 적용**해
+실제 스키마 위에 올라가는지 확인했다 (로컬 `postgres:16-alpine`). 이후 제약 동작은 `ROLLBACK` 으로 검증했다.
 
 | 확인 | 기대 | 실제 |
 |---|---|---|
-| DDL 전체 생성 | 성공 | **테이블 15 · 인덱스 11 · 뷰 4** |
+| V1~V33 전체 체인 적용 | 29개 파일 전부 성공 | **전부 성공** |
+| V33 이 만든 객체 | 테이블 15 · 인덱스 11 · 뷰 4 | **일치** (테이블 코멘트 누락 0) |
+| `btree_gist` 확장 | 생성됨 | **생성됨** |
+| `ck_roster_period` (`left_at <= joined_at`) | CHECK 가 거부 | **거부** |
+| `ck_esports_stage_format` (정의 밖 포맷) | CHECK 가 거부 | **거부** |
 | 리그 국제/지역 구분 | `worlds`=국제, `lck`·`lpl`=지역 | 일치 |
 | 롤드컵 스테이지 3단 | `SWISS` 는 `standing_key` 보유, `BRACKET` 은 NULL | 일치 |
 | 팀 → 홈 리그 조회 | `T1→한국`, `BLG→중국` | 일치 |
@@ -1134,8 +1144,8 @@ DDL → 시즌 구조 시드 → 매치 입력 → 검증 뷰 3종 → 집계 �
 **1단계 — 팀 순위표 (외부 의존 0)**
 
 1. `module/domain/esports` 생성 + `settings.gradle` / 컴포지션 루트 등록
-2. `V33` 마이그레이션 (마스터 + 로스터 + 스테이지 + 원장 + 집계 + 이력 + 검증 뷰)
-   — 착수 시점에 서브모듈 최신 번호를 다시 확인할 것 (§6 머리말)
+2. ~~`V33` 마이그레이션 (마스터 + 로스터 + 스테이지 + 원장 + 집계 + 이력 + 검증 뷰)~~
+   **완료** — V1~V33 전체 체인을 빈 DB 에 적용해 검증했다 (§6.9)
 3. 마스터 시드: LCK 10팀 · `lck_2026` 시즌 · **스테이지 5개**(§8.1)
 4. **`StandingCalculator` · `GroupSplitter` · `TieBreakRule` 단위 테스트 먼저**
    — 동률 3팀(§2.4), 공동 순위, 누적 합산(§2.2) 시나리오를 재현
