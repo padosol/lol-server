@@ -17,5 +17,5 @@ public interface CategoryPersistencePort {
      */
     List<BoardGroup> findAllGroupsWithCategories();
 
-    Optional<Category> findCategoryByCode(String code);
+    Optional<Category> findCategoryById(Long id);
 }

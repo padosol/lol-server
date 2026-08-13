@@ -19,7 +19,7 @@ public class PostDetailResultModel {
     private final Long id;
     private final String title;
     private final String content;
-    private final String category;
+    private final Long categoryId;
     private final int viewCount;
     private final int upvoteCount;
     private final int downvoteCount;
@@ -36,7 +36,7 @@ public class PostDetailResultModel {
                 .id(post.getId())
                 .title(post.getTitle())
                 .content(post.getContent())
-                .category(post.getCategory())
+                .categoryId(post.getCategoryId())
                 .viewCount(post.getViewCount())
                 .upvoteCount(post.getUpvoteCount())
                 .downvoteCount(post.getDownvoteCount())

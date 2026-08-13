@@ -144,7 +144,7 @@ class BookmarkPersistenceAdapterTest extends RepositoryTestBase {
                 .memberId(99L)
                 .title(title)
                 .content("내용")
-                .category("GENERAL")
+                .categoryId(1L)
                 .deleted(deleted)
                 .createdAt(now)
                 .updatedAt(now)

@@ -20,6 +20,9 @@ import java.util.Map;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Category {
 
+    /** 게시글이 참조하는 식별자이자 클라이언트가 글을 쓸 때 지정하는 값. */
+    private final Long id;
+    /** 사람이 읽는 안정 코드. 표시·로그용이며 참조에는 쓰지 않는다. */
     private final String code;
     /** 소속 그룹 코드. 조립과 로그 추적용이며 응답 DTO 에서는 중복이라 빠진다. */
     private final String groupCode;

@@ -54,6 +54,7 @@ public class CategoryService implements CategoryQueryUseCase {
         }
         return categories.stream()
                 .map(category -> new CategoryReadModel(
+                        category.getId(),
                         category.getCode(),
                         category.resolveName(locale),
                         category.resolveDescription(locale),
@@ -69,8 +70,8 @@ public class CategoryService implements CategoryQueryUseCase {
      * 사이드바에서 내린 게시판에 계속 글이 쌓인다.
      */
     @Override
-    public void validateWritable(String categoryCode) {
-        Category category = categoryPersistencePort.findCategoryByCode(categoryCode)
+    public void validateWritable(Long categoryId) {
+        Category category = categoryPersistencePort.findCategoryById(categoryId)
                 .orElseThrow(() -> new CoreException(ErrorType.INVALID_CATEGORY));
 
         if (!category.isActive() || !category.isWritable()) {

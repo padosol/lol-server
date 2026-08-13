@@ -69,7 +69,7 @@ public class BookmarkPersistenceAdapter implements BookmarkPersistencePort {
                         .map(dto -> PostListReadModel.builder()
                                 .id(dto.getId())
                                 .title(dto.getTitle())
-                                .category(dto.getCategory())
+                                .categoryId(dto.getCategoryId())
                                 .viewCount(dto.getViewCount())
                                 .upvoteCount(dto.getUpvoteCount())
                                 .downvoteCount(dto.getDownvoteCount())

@@ -69,7 +69,7 @@ class PostServiceTest {
         CreatePostCommand command = CreatePostCommand.builder()
                 .title("테스트 제목")
                 .content("테스트 내용")
-                .category("GENERAL")
+                .categoryId(1L)
                 .build();
 
         Post savedPost = createPost(1L, memberId);
@@ -96,11 +96,11 @@ class PostServiceTest {
         CreatePostCommand command = CreatePostCommand.builder()
                 .title("제목")
                 .content("내용")
-                .category("INVALID")
+                .categoryId(999L)
                 .build();
 
         willThrow(new CoreException(ErrorType.INVALID_CATEGORY))
-                .given(categoryQueryUseCase).validateWritable("INVALID");
+                .given(categoryQueryUseCase).validateWritable(999L);
 
         // when & then
         assertThatThrownBy(() -> postService.createPost(memberId, command))
@@ -118,7 +118,7 @@ class PostServiceTest {
         UpdatePostCommand command = UpdatePostCommand.builder()
                 .title("수정된 제목")
                 .content("수정된 내용")
-                .category("GENERAL")
+                .categoryId(1L)
                 .build();
 
         Post post = createPost(postId, memberId);
@@ -145,7 +145,7 @@ class PostServiceTest {
         Long memberId = 1L;
         Long postId = 1L;
         UpdatePostCommand command = UpdatePostCommand.builder()
-                .title("수정된 제목").content("수정된 내용").category("GENERAL")
+                .title("수정된 제목").content("수정된 내용").categoryId(1L)
                 .build();
         Post post = createPost(postId, memberId);
 
@@ -169,7 +169,7 @@ class PostServiceTest {
         // given
         Long memberId = 1L;
         CreatePostCommand command = CreatePostCommand.builder()
-                .title("제목").content("내용").category("GENERAL")
+                .title("제목").content("내용").categoryId(1L)
                 .build();
         given(memberQueryUseCase.getMemberProfile(memberId))
                 .willReturn(createProfile(memberId));
@@ -194,7 +194,7 @@ class PostServiceTest {
         UpdatePostCommand command = UpdatePostCommand.builder()
                 .title("수정")
                 .content("내용")
-                .category("GENERAL")
+                .categoryId(1L)
                 .build();
 
         Post post = createPost(postId, otherMemberId);
@@ -336,7 +336,7 @@ class PostServiceTest {
                 .build();
 
         PostListReadModel item = PostListReadModel.builder()
-                .id(10L).title("제목").category("GENERAL")
+                .id(10L).title("제목").categoryId(1L)
                 .authorId(1L)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -370,7 +370,7 @@ class PostServiceTest {
                 .memberId(memberId)
                 .title("테스트 제목")
                 .content("테스트 내용")
-                .category("GENERAL")
+                .categoryId(1L)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();

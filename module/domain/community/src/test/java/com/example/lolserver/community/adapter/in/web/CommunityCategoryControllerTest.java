@@ -47,10 +47,10 @@ class CommunityCategoryControllerTest extends RestDocsSupport {
         // given
         CategoryTreeReadModel tree = new CategoryTreeReadModel(List.of(
                 new BoardGroupReadModel("COMMUNITY", "커뮤니티", 10, List.of(
-                        new CategoryReadModel("GENERAL", "자유", null, 10, true, true, null),
-                        new CategoryReadModel("HUMOR", "유머", null, 20, true, true, null))),
+                        new CategoryReadModel(3L, "GENERAL", "자유", null, 10, true, true, null),
+                        new CategoryReadModel(4L, "HUMOR", "유머", null, 20, true, true, null))),
                 new BoardGroupReadModel("ESPORTS", "e-스포츠", 20, List.of(
-                        new CategoryReadModel("LCK", "LCK", null, 10, true, true, null)))
+                        new CategoryReadModel(5L, "LCK", "LCK", null, 10, true, true, null)))
         ));
 
         given(categoryQueryUseCase.getCategoryTree("ko")).willReturn(tree);
@@ -66,6 +66,8 @@ class CommunityCategoryControllerTest extends RestDocsSupport {
                 // 배열 순서가 곧 화면 순서다. 프론트가 재정렬하지 않는 것이 계약이다.
                 .andExpect(jsonPath("$.data.groups[0].code").value("COMMUNITY"))
                 .andExpect(jsonPath("$.data.groups[0].categories[0].code").value("GENERAL"))
+                // 글 작성·필터에 되돌려 보낼 값이라 id 가 반드시 실려야 한다
+                .andExpect(jsonPath("$.data.groups[0].categories[0].id").value(3))
                 .andExpect(jsonPath("$.data.groups[1].code").value("ESPORTS"))
                 .andDo(document("community-category-list",
                         preprocessRequest(prettyPrint()),
@@ -89,8 +91,10 @@ class CommunityCategoryControllerTest extends RestDocsSupport {
                                         .description("그룹 노출 순서 (전역)"),
                                 fieldWithPath("data.groups[].categories[]").type(JsonFieldType.ARRAY)
                                         .description("그룹에 속한 게시판 목록. 비어 있을 수 있다"),
+                                fieldWithPath("data.groups[].categories[].id").type(JsonFieldType.NUMBER)
+                                        .description("게시판 식별자. 글 작성·수정의 categoryId 와 목록 필터에 이 값을 보낸다"),
                                 fieldWithPath("data.groups[].categories[].code").type(JsonFieldType.STRING)
-                                        .description("게시판 코드. 게시글의 category 값과 같다"),
+                                        .description("게시판 코드. 표시·디버깅용이며 참조에는 id 를 쓴다"),
                                 fieldWithPath("data.groups[].categories[].name").type(JsonFieldType.STRING)
                                         .description("게시판 표시 이름 (요청 로케일로 해석됨)"),
                                 fieldWithPath("data.groups[].categories[].description")
