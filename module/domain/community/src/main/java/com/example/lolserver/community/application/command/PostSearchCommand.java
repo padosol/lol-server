@@ -14,7 +14,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostSearchCommand {
-    private String category;
+    private Long categoryId;
     private SortType sortType;
     private TimePeriod timePeriod;
     private int page;

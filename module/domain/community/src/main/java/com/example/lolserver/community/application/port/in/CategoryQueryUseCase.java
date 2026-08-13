@@ -15,5 +15,5 @@ public interface CategoryQueryUseCase {
      * 글 작성/수정이 가능한 카테고리인지 검증한다. 존재하지 않거나 숨김이거나
      * 읽기 전용이면 예외를 던진다.
      */
-    void validateWritable(String categoryCode);
+    void validateWritable(Long categoryId);
 }

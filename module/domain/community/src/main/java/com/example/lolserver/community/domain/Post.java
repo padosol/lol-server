@@ -19,7 +19,8 @@ public class Post {
     private Long memberId;
     private String title;
     private String content;
-    private String category;
+    /** 소속 게시판 식별자. 클라이언트도 이 값을 그대로 주고받는다(카테고리 트리 응답의 id). */
+    private Long categoryId;
     private int viewCount;
     private int upvoteCount;
     private int downvoteCount;
@@ -29,12 +30,12 @@ public class Post {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public static Post create(Long memberId, String title, String content, String category) {
+    public static Post create(Long memberId, String title, String content, Long categoryId) {
         Post post = Post.builder()
                 .memberId(memberId)
                 .title(title)
                 .content(content)
-                .category(category)
+                .categoryId(categoryId)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -63,10 +64,10 @@ public class Post {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void updateContent(String title, String content, String category) {
+    public void updateContent(String title, String content, Long categoryId) {
         this.title = title;
         this.content = content;
-        this.category = category;
+        this.categoryId = categoryId;
         this.updatedAt = LocalDateTime.now();
     }
 

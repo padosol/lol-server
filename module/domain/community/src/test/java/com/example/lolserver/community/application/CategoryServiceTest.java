@@ -119,11 +119,11 @@ class CategoryServiceTest {
     @Test
     void validateWritable_notFound() {
         // given
-        given(categoryPersistencePort.findCategoryByCode("GHOST"))
+        given(categoryPersistencePort.findCategoryById(999L))
                 .willReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> categoryService.validateWritable("GHOST"))
+        assertThatThrownBy(() -> categoryService.validateWritable(999L))
                 .isInstanceOf(CoreException.class)
                 .extracting(e -> ((CoreException) e).getErrorType())
                 .isEqualTo(ErrorType.INVALID_CATEGORY);
@@ -134,14 +134,15 @@ class CategoryServiceTest {
     void validateWritable_readOnly() {
         // given
         Category notice = Category.builder()
+                .id(7L)
                 .code("NOTICE").displayOrder(5).active(true).writable(false)
                 .labels(Map.of())
                 .build();
-        given(categoryPersistencePort.findCategoryByCode("NOTICE"))
+        given(categoryPersistencePort.findCategoryById(7L))
                 .willReturn(Optional.of(notice));
 
         // when & then
-        assertThatThrownBy(() -> categoryService.validateWritable("NOTICE"))
+        assertThatThrownBy(() -> categoryService.validateWritable(7L))
                 .isInstanceOf(CoreException.class)
                 .extracting(e -> ((CoreException) e).getErrorType())
                 .isEqualTo(ErrorType.INVALID_CATEGORY);
@@ -152,14 +153,15 @@ class CategoryServiceTest {
     void validateWritable_inactive() {
         // given: writable 만 보면 사이드바에서 내린 게시판에 글이 계속 쌓인다
         Category retired = Category.builder()
+                .id(8L)
                 .code("PATCH_NOTES").displayOrder(40).active(false).writable(true)
                 .labels(Map.of())
                 .build();
-        given(categoryPersistencePort.findCategoryByCode("PATCH_NOTES"))
+        given(categoryPersistencePort.findCategoryById(8L))
                 .willReturn(Optional.of(retired));
 
         // when & then
-        assertThatThrownBy(() -> categoryService.validateWritable("PATCH_NOTES"))
+        assertThatThrownBy(() -> categoryService.validateWritable(8L))
                 .isInstanceOf(CoreException.class)
                 .extracting(e -> ((CoreException) e).getErrorType())
                 .isEqualTo(ErrorType.INVALID_CATEGORY);
@@ -169,11 +171,12 @@ class CategoryServiceTest {
     @Test
     void validateWritable_success() {
         // given
-        given(categoryPersistencePort.findCategoryByCode("GENERAL"))
-                .willReturn(Optional.of(category("GENERAL", "COMMUNITY", 10, Map.of())));
+        Category general = category("GENERAL", "COMMUNITY", 10, Map.of());
+        given(categoryPersistencePort.findCategoryById(general.getId()))
+                .willReturn(Optional.of(general));
 
         // when & then
-        categoryService.validateWritable("GENERAL");
+        categoryService.validateWritable(general.getId());
     }
 
     private BoardGroup group(String code, int order, Map<String, String> labels, List<Category> categories) {
@@ -183,8 +186,10 @@ class CategoryServiceTest {
                 .build();
     }
 
+    /** id 는 code 해시로 만든다 — 값 자체에 의미는 없고 카테고리끼리 겹치지만 않으면 된다. */
     private Category category(String code, String groupCode, int order, Map<String, CategoryLabel> labels) {
         return Category.builder()
+                .id((long) Math.abs(code.hashCode()))
                 .code(code).groupCode(groupCode).displayOrder(order)
                 .active(true).writable(true)
                 .labels(labels)

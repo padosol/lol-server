@@ -159,18 +159,18 @@ class CategoryPersistenceAdapterTest extends RepositoryTestBase {
         assertThat(groups.get(0).getCategories()).isEmpty();
     }
 
-    @DisplayName("코드로 카테고리를 찾으면 쓰기 가능 여부를 판단할 수 있다")
+    @DisplayName("id 로 카테고리를 찾으면 쓰기 가능 여부를 판단할 수 있다")
     @Test
-    void findCategoryByCode() {
+    void findCategoryById() {
         // given
         Long community = saveGroup("COMMUNITY", 10);
-        saveCategory("GENERAL", community, 10);
-        saveReadOnlyCategory("NOTICE", community, 5);
+        Long generalId = saveCategory("GENERAL", community, 10);
+        Long noticeId = saveReadOnlyCategory("NOTICE", community, 5);
 
         // when
-        Optional<Category> general = categoryPersistenceAdapter.findCategoryByCode("GENERAL");
-        Optional<Category> notice = categoryPersistenceAdapter.findCategoryByCode("NOTICE");
-        Optional<Category> ghost = categoryPersistenceAdapter.findCategoryByCode("GHOST");
+        Optional<Category> general = categoryPersistenceAdapter.findCategoryById(generalId);
+        Optional<Category> notice = categoryPersistenceAdapter.findCategoryById(noticeId);
+        Optional<Category> ghost = categoryPersistenceAdapter.findCategoryById(-1L);
 
         // then
         assertThat(general).isPresent();

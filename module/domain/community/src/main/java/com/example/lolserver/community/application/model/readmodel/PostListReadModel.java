@@ -13,7 +13,7 @@ public class PostListReadModel {
 
     private final Long id;
     private final String title;
-    private final String category;
+    private final Long categoryId;
     private final int viewCount;
     private final int upvoteCount;
     private final int downvoteCount;

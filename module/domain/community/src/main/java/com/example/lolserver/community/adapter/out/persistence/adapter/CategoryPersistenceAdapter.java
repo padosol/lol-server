@@ -93,8 +93,8 @@ public class CategoryPersistenceAdapter implements CategoryPersistencePort {
      * 검증 경로라 라벨을 붙이지 않는다. 표시할 일이 없다.
      */
     @Override
-    public Optional<Category> findCategoryByCode(String code) {
-        return categoryRepository.findByCode(code)
+    public Optional<Category> findCategoryById(Long id) {
+        return categoryRepository.findById(id)
                 .map(entity -> toDomain(entity, null, Map.of()));
     }
 
@@ -103,6 +103,7 @@ public class CategoryPersistenceAdapter implements CategoryPersistencePort {
             String groupCode,
             Map<Long, Map<String, CategoryLabel>> labelsByCategoryId) {
         return Category.builder()
+                .id(entity.getId())
                 .code(entity.getCode())
                 .groupCode(groupCode)
                 .displayOrder(entity.getDisplayOrder())

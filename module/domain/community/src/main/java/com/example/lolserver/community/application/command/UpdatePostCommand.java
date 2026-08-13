@@ -14,5 +14,5 @@ import lombok.Setter;
 public class UpdatePostCommand {
     private String title;
     private String content;
-    private String category;
+    private Long categoryId;
 }

@@ -171,7 +171,7 @@ class BookmarkServiceTest {
         Long memberId = 1L;
         int page = 2;
         PostListReadModel item = PostListReadModel.builder()
-                .id(10L).title("제목").category("GENERAL")
+                .id(10L).title("제목").categoryId(1L)
                 .authorId(7L)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -227,7 +227,7 @@ class BookmarkServiceTest {
                 .memberId(2L)
                 .title("제목")
                 .content("내용")
-                .category("GENERAL")
+                .categoryId(1L)
                 .deleted(deleted)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())

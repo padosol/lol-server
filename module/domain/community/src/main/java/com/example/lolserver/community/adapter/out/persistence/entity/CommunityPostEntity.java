@@ -41,10 +41,9 @@ public class CommunityPostEntity {
      *
      * <p>표시용 {@code code} 문자열이 아니라 대리키를 들고 있다. code 는 라벨 성격이라
      * 바뀔 수 있고, 바뀌는 값을 FK 로 삼으면 참조 무결성이 리네임 자체를 막는다(V33).
-     * 도메인/API 가 쓰는 code 로의 변환은 {@code CategoryCodeResolver} 가 맡는다.
      *
-     * <p>{@code @ManyToOne} 을 걸지 않는 이유는 카테고리 엔티티 쪽과 같다 — 목록 조회가
-     * 필요로 하는 것은 code 한 컬럼뿐이라 연관을 타고 엔티티를 적재할 이유가 없다.
+     * <p>{@code @ManyToOne} 을 걸지 않는 이유는 카테고리 엔티티 쪽과 같다 — 게시글 조회가
+     * 카테고리 엔티티를 필요로 하지 않는다(라벨은 클라이언트가 카테고리 트리에서 해석한다).
      */
     @Column(name = "category_id", nullable = false)
     private Long categoryId;

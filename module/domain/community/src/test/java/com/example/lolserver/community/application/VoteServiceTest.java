@@ -241,7 +241,7 @@ class VoteServiceTest {
                 .memberId(1L)
                 .title("제목")
                 .content("내용")
-                .category("GENERAL")
+                .categoryId(1L)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();

@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 public record PostListResponse(
         Long id,
         String title,
-        String category,
+        Long categoryId,
         int viewCount,
         int upvoteCount,
         int downvoteCount,
@@ -20,7 +20,7 @@ public record PostListResponse(
         return new PostListResponse(
                 readModel.getId(),
                 readModel.getTitle(),
-                readModel.getCategory(),
+                readModel.getCategoryId(),
                 readModel.getViewCount(),
                 readModel.getUpvoteCount(),
                 readModel.getDownvoteCount(),

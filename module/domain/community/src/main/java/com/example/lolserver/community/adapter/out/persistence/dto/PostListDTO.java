@@ -7,9 +7,8 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * 목록 프로젝션. 카테고리는 저장된 그대로 id 이고, 응답이 쓰는 code 로는 어댑터가 옮긴다 —
- * 조인해서 code 를 직접 뽑지 않는 이유는 8행짜리 테이블을 페이지마다 조인하느니
- * 맵 한 번 받아 메모리에서 맞추는 편이 단순하고, 정렬/인덱스 계약도 건드리지 않기 때문이다.
+ * 목록 프로젝션. 카테고리는 저장된 그대로 id 이며 응답까지 id 로 나간다 —
+ * 라벨 해석은 클라이언트가 카테고리 트리로 하므로 게시글 조회에 조인이 필요 없다.
  */
 @Getter
 @NoArgsConstructor

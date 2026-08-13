@@ -47,12 +47,12 @@ public class PostService implements PostUseCase, PostQueryUseCase {
     @Override
     @Transactional
     public PostDetailResultModel createPost(Long memberId, CreatePostCommand command) {
-        validateCategory(command.getCategory());
+        validateCategory(command.getCategoryId());
 
         MemberProfileReadModel author = memberQueryUseCase.getMemberProfile(memberId);
 
         Post post = Post.create(memberId, command.getTitle(),
-                command.getContent(), command.getCategory());
+                command.getContent(), command.getCategoryId());
 
         Post saved = postPersistencePort.save(post);
 
@@ -63,14 +63,14 @@ public class PostService implements PostUseCase, PostQueryUseCase {
     @Override
     @Transactional
     public PostDetailResultModel updatePost(Long memberId, Long postId, UpdatePostCommand command) {
-        validateCategory(command.getCategory());
+        validateCategory(command.getCategoryId());
 
         Post post = postPersistencePort.findById(postId)
                 .orElseThrow(() -> new CoreException(ErrorType.POST_NOT_FOUND));
 
         post.validateOwner(memberId);
 
-        post.updateContent(command.getTitle(), command.getContent(), command.getCategory());
+        post.updateContent(command.getTitle(), command.getContent(), command.getCategoryId());
         Post saved = postPersistencePort.save(post);
 
         MemberProfileReadModel author = memberQueryUseCase.getMemberProfile(memberId);
@@ -177,7 +177,7 @@ public class PostService implements PostUseCase, PostQueryUseCase {
      * <p>존재 여부뿐 아니라 숨김/읽기 전용까지 함께 걸러진다 — enum 시절에는
      * 표현할 수 없던 검증이다.
      */
-    private void validateCategory(String category) {
-        categoryQueryUseCase.validateWritable(category);
+    private void validateCategory(Long categoryId) {
+        categoryQueryUseCase.validateWritable(categoryId);
     }
 }
