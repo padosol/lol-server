@@ -11,14 +11,18 @@ import com.example.lolserver.community.adapter.out.persistence.dsl.CommunityPost
 import com.example.lolserver.community.adapter.out.persistence.entity.CommunityPostEntity;
 import com.example.lolserver.community.adapter.out.persistence.mapper.CommunityPostMapper;
 import com.example.lolserver.community.adapter.out.persistence.repository.CommunityPostJpaRepository;
+import com.example.lolserver.community.adapter.out.persistence.support.CategoryCodeResolver;
 import com.example.lolserver.common.support.SliceResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -30,18 +34,19 @@ public class PostPersistenceAdapter implements PostPersistencePort {
     private final CommunityPostJpaRepository postJpaRepository;
     private final CommunityPostRepositoryCustom postRepositoryCustom;
     private final CommunityPostMapper postMapper;
+    private final CategoryCodeResolver categoryCodeResolver;
 
     @Override
     public Post save(Post post) {
-        CommunityPostEntity entity = postMapper.toEntity(post);
+        CommunityPostEntity entity = postMapper.toEntity(post, categoryCodeResolver.toId(post.getCategory()));
         CommunityPostEntity saved = postJpaRepository.save(entity);
-        return postMapper.toDomain(saved);
+        return postMapper.toDomain(saved, post.getCategory());
     }
 
     @Override
     public Optional<Post> findById(Long id) {
         return postJpaRepository.findById(id)
-                .map(postMapper::toDomain);
+                .map(entity -> postMapper.toDomain(entity, categoryCodeResolver.toCode(entity.getCategoryId())));
     }
 
     @Override
@@ -50,8 +55,17 @@ public class PostPersistenceAdapter implements PostPersistencePort {
         String sortType = command.getSortType() != null ? command.getSortType().name() : SortType.HOT.name();
         LocalDateTime since = resolveSince(command.getTimePeriod());
 
+        // 없는 코드로 필터하면 조건이 사라져 전체 목록이 나가버린다. 결과 0건으로 끊는다.
+        Long categoryId = null;
+        if (StringUtils.hasText(command.getCategory())) {
+            categoryId = categoryCodeResolver.findId(command.getCategory()).orElse(null);
+            if (categoryId == null) {
+                return new SliceResult<>(List.of(), false);
+            }
+        }
+
         Slice<PostListDTO> slice = postRepositoryCustom.findPosts(
-                command.getCategory(), sortType, since, pageable);
+                categoryId, sortType, since, pageable);
 
         return toPage(slice);
     }
@@ -73,12 +87,14 @@ public class PostPersistenceAdapter implements PostPersistencePort {
                 .findByMemberIdAndDeletedFalseOrderByCreatedAtDesc(
                         memberId, pageable);
 
+        Map<Long, String> codes = categoryCodeResolver.codesByIds();
+
         return new SliceResult<>(
                 slice.getContent().stream()
                         .map(entity -> PostListReadModel.builder()
                                 .id(entity.getId())
                                 .title(entity.getTitle())
-                                .category(entity.getCategory())
+                                .category(CategoryCodeResolver.codeOf(codes, entity.getCategoryId()))
                                 .viewCount(entity.getViewCount())
                                 .upvoteCount(entity.getUpvoteCount())
                                 .downvoteCount(entity.getDownvoteCount())
@@ -126,12 +142,14 @@ public class PostPersistenceAdapter implements PostPersistencePort {
     }
 
     private SliceResult<PostListReadModel> toPage(Slice<PostListDTO> slice) {
+        Map<Long, String> codes = categoryCodeResolver.codesByIds();
+
         return new SliceResult<>(
                 slice.getContent().stream()
                         .map(dto -> PostListReadModel.builder()
                                 .id(dto.getId())
                                 .title(dto.getTitle())
-                                .category(dto.getCategory())
+                                .category(CategoryCodeResolver.codeOf(codes, dto.getCategoryId()))
                                 .viewCount(dto.getViewCount())
                                 .upvoteCount(dto.getUpvoteCount())
                                 .downvoteCount(dto.getDownvoteCount())

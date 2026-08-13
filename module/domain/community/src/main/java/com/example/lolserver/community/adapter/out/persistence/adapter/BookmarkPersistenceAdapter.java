@@ -8,6 +8,7 @@ import com.example.lolserver.community.adapter.out.persistence.dto.PostListDTO;
 import com.example.lolserver.community.application.model.readmodel.PostListReadModel;
 import com.example.lolserver.community.adapter.out.persistence.mapper.CommunityBookmarkMapper;
 import com.example.lolserver.community.adapter.out.persistence.repository.CommunityBookmarkJpaRepository;
+import com.example.lolserver.community.adapter.out.persistence.support.CategoryCodeResolver;
 import com.example.lolserver.community.application.port.out.BookmarkPersistencePort;
 import com.example.lolserver.community.domain.Bookmark;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -27,6 +29,7 @@ public class BookmarkPersistenceAdapter implements BookmarkPersistencePort {
 
     private final CommunityBookmarkJpaRepository bookmarkJpaRepository;
     private final CommunityBookmarkMapper bookmarkMapper;
+    private final CategoryCodeResolver categoryCodeResolver;
 
     @Override
     public Bookmark save(Bookmark bookmark) {
@@ -64,12 +67,14 @@ public class BookmarkPersistenceAdapter implements BookmarkPersistencePort {
         Slice<PostListDTO> slice =
                 bookmarkJpaRepository.findBookmarkedPosts(memberId, pageable);
 
+        Map<Long, String> codes = categoryCodeResolver.codesByIds();
+
         return new SliceResult<>(
                 slice.getContent().stream()
                         .map(dto -> PostListReadModel.builder()
                                 .id(dto.getId())
                                 .title(dto.getTitle())
-                                .category(dto.getCategory())
+                                .category(CategoryCodeResolver.codeOf(codes, dto.getCategoryId()))
                                 .viewCount(dto.getViewCount())
                                 .upvoteCount(dto.getUpvoteCount())
                                 .downvoteCount(dto.getDownvoteCount())
