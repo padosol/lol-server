@@ -97,6 +97,6 @@ class VersionFinderTest {
     }
 
     private VersionReadModel createVersionReadModel(Long id, String versionValue) {
-        return new VersionReadModel(id, versionValue, LocalDateTime.now());
+        return new VersionReadModel(id, versionValue, "16.16.1", LocalDateTime.now());
     }
 }

@@ -19,7 +19,7 @@ class VersionMapperTest {
     void entityToReadModel_validEntity_returnsReadModel() throws Exception {
         // given
         LocalDateTime now = LocalDateTime.now();
-        VersionEntity entity = createVersionEntity(1L, "14.24.1", now);
+        VersionEntity entity = createVersionEntity(1L, "26.16", "16.16.1", now);
 
         // when
         VersionReadModel result = mapper.entityToReadModel(entity);
@@ -27,7 +27,8 @@ class VersionMapperTest {
         // then
         assertThat(result).isNotNull();
         assertThat(result.versionId()).isEqualTo(1L);
-        assertThat(result.versionValue()).isEqualTo("14.24.1");
+        assertThat(result.versionValue()).isEqualTo("26.16");
+        assertThat(result.patchVersionData()).isEqualTo("16.16.1");
         assertThat(result.createdAt()).isEqualTo(now);
     }
 
@@ -41,12 +42,12 @@ class VersionMapperTest {
         assertThat(result).isNull();
     }
 
-    @DisplayName("다양한 버전 형식을 올바르게 변환한다")
+    @DisplayName("데이터 버전이 비어 있는 엔티티는 patchVersionData 가 null 로 변환된다")
     @Test
-    void entityToReadModel_variousVersionFormats_returnsCorrectReadModel() throws Exception {
+    void entityToReadModel_nullPatchVersionData_returnsNullField() throws Exception {
         // given
         LocalDateTime now = LocalDateTime.now();
-        VersionEntity entity = createVersionEntity(2L, "15.1.1", now);
+        VersionEntity entity = createVersionEntity(2L, "26.1", null, now);
 
         // when
         VersionReadModel result = mapper.entityToReadModel(entity);
@@ -54,10 +55,13 @@ class VersionMapperTest {
         // then
         assertThat(result).isNotNull();
         assertThat(result.versionId()).isEqualTo(2L);
-        assertThat(result.versionValue()).isEqualTo("15.1.1");
+        assertThat(result.versionValue()).isEqualTo("26.1");
+        assertThat(result.patchVersionData()).isNull();
     }
 
-    private VersionEntity createVersionEntity(Long versionId, String versionValue, LocalDateTime createdAt) throws Exception {
+    private VersionEntity createVersionEntity(
+            Long versionId, String versionValue, String patchVersionData, LocalDateTime createdAt
+    ) throws Exception {
         java.lang.reflect.Constructor<VersionEntity> constructor = VersionEntity.class.getDeclaredConstructor();
         constructor.setAccessible(true);
         VersionEntity entity = constructor.newInstance();
@@ -69,6 +73,10 @@ class VersionMapperTest {
         Field versionValueField = VersionEntity.class.getDeclaredField("versionValue");
         versionValueField.setAccessible(true);
         versionValueField.set(entity, versionValue);
+
+        Field patchVersionDataField = VersionEntity.class.getDeclaredField("patchVersionData");
+        patchVersionDataField.setAccessible(true);
+        patchVersionDataField.set(entity, patchVersionData);
 
         Field createdAtField = VersionEntity.class.getDeclaredField("createdAt");
         createdAtField.setAccessible(true);

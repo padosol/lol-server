@@ -18,12 +18,13 @@ public interface VersionPersistencePort {
     Optional<VersionReadModel> findLatestVersion();
 
     /**
-     * 전체 버전 목록을 조회합니다.
+     * 최근 버전 목록을 조회합니다.
      * 최신 버전이 먼저 오도록 정렬됩니다.
      *
-     * @return 버전 목록
+     * @param limit 조회할 최대 개수
+     * @return 버전 목록 (최대 {@code limit} 개)
      */
-    List<VersionReadModel> findAllVersions();
+    List<VersionReadModel> findRecentVersions(int limit);
 
     /**
      * ID로 버전을 조회합니다.

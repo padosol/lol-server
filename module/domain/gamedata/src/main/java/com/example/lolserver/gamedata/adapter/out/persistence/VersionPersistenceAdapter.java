@@ -4,6 +4,7 @@ import com.example.lolserver.gamedata.application.model.readmodel.VersionReadMod
 import com.example.lolserver.gamedata.application.port.out.VersionPersistencePort;
 import com.example.lolserver.gamedata.adapter.out.persistence.mapper.VersionMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -23,8 +24,8 @@ public class VersionPersistenceAdapter implements VersionPersistencePort {
     }
 
     @Override
-    public List<VersionReadModel> findAllVersions() {
-        return versionJpaRepository.findAllOrderByVersionIdDesc()
+    public List<VersionReadModel> findRecentVersions(int limit) {
+        return versionJpaRepository.findRecentVersions(PageRequest.of(0, limit))
                 .stream()
                 .map(versionMapper::entityToReadModel)
                 .toList();
