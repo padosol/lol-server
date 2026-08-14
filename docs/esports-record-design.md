@@ -227,30 +227,41 @@ module/domain/esports/src/main/java/com/example/lolserver/esports/
 
 ## 6. DB 테이블 설계
 
-마이그레이션: **`lol-db-schema/db/migration/V33__add_esports_record_tables.sql` — 작성 완료**
-(`lol-db-schema` 브랜치 `feature/MP-XXX-esports-record`)
+마이그레이션: **`lol-db-schema/db/migration/V34__add_esports_record_tables.sql` — 작성 완료**
+(`lol-db-schema` 브랜치 `fix/MP-XXX-esports-migration-v34`)
 
 > `lol-db-schema` 는 **git 서브모듈**(`padosol/lol-db-schema`)이다. 마이그레이션은 그쪽 리포에 별도 PR 로 올리고,
 > 본 리포에서는 서브모듈 포인터 갱신 커밋을 함께 넣는다.
 >
 > **머지 순서 주의**: 현재 포인터는 서브모듈의 *브랜치* 커밋을 가리킨다.
 > 이 브랜치를 `develop` 에 머지하기 전에 서브모듈 PR 을 먼저 머지하고 포인터를 `main` 커밋으로 옮겨야 한다.
->
-> **버전 번호는 머지 직전에 다시 확인한다.** 서브모듈은 이 리포와 독립적으로 진행되므로
-> 그사이 `V33` 이 선점될 수 있다 (`V31`·`V32` 가 커뮤니티 작업으로 이미 그렇게 됐다).
-> `ls db/migration | sort -V | tail -1` 로 최신을 확인하고, 선점됐다면 파일명을 리넘버링한다
-> (서브모듈 README 의 Flyway checksum 가드 참고).
 
-| 서브모듈 최신 (`origin/main` `23723cc`) | 내용 |
+| 서브모듈 (`origin/main` + 본 PR) | 내용 |
 |---|---|
 | `V30__idempotent_guards.sql` | 멱등 가드 |
 | `V31__add_community_bookmark.sql` | 커뮤니티 북마크 |
 | `V32__add_community_category_tables.sql` | 커뮤니티 게시판 그룹·카테고리 |
-| **`V33__add_esports_record_tables.sql`** | **본 설계 (신규)** |
+| `V33__community_post_category_id.sql` | `community_post.category` → `category_id` FK 전환 |
+| **`V34__add_esports_record_tables.sql`** | **본 설계 (신규)** |
 
 V32 가 `community_board_group` 에 `ESPORTS` 그룹과 `LCK`·`LCK_NEWS` 카테고리를 시드하지만,
 그쪽은 **커뮤니티 게시판 분류**이고 본 설계의 `esports_*` 는 **기록 데이터**다.
-접두사가 달라 테이블·인덱스 충돌은 없다.
+접두사가 달라 테이블·인덱스 충돌은 없다. V33 과도 참조 관계가 없어 적용 순서가 결과를 바꾸지 않는다.
+
+#### 번호 충돌 사고 기록
+
+초판은 이 파일을 `V31` 로 잡았고, 이후 `V33` 으로 두 번 옮겼다. 두 번째는 실제 사고였다 —
+커뮤니티 `V33__community_post_category_id` 와 e스포츠 `V33__add_esports_record_tables` 가
+**둘 다 `main` 에 머지됐다.** 파일명이 달라 git 은 충돌을 내지 않았지만 Flyway 는 같은 버전이
+둘 이상이면 적용 전에 전체를 거부하므로, 그 시점의 `main` 으로는 어떤 환경도 부팅되지 않았다.
+
+git 이 막지 못하는 종류의 충돌이다. **두 PR 이 각자 `main` 기준으로 다음 번호를 집으면 반드시 재발한다.**
+번호를 예약해두는 것으로는 막을 수 없고(예약 자체가 다른 브랜치에 안 보인다), 머지 직전 육안 확인도
+이번처럼 놓친다. CI 가드가 유일하게 확실한 방법이다:
+
+```bash
+ls db/migration | sed -n 's/^\(V[0-9]*\)__.*/\1/p' | sort | uniq -d | grep . && exit 1
+```
 
 ### 6.1 마스터
 
@@ -704,13 +715,14 @@ SELECT 'lck_2026', team_id, 1, 'worlds_2026', 1 FROM esports_team WHERE team_cod
 
 ### 6.9 스키마 검증
 
-`V33` 을 단독으로 실행한 것이 아니라 **빈 DB 에 `V1`~`V33` 전체 마이그레이션 체인을 순서대로 적용**해
+`V34` 를 단독으로 실행한 것이 아니라 **빈 DB 에 `V1`~`V34` 전체 마이그레이션 체인을 순서대로 적용**해
 실제 스키마 위에 올라가는지 확인했다 (로컬 `postgres:16-alpine`). 이후 제약 동작은 `ROLLBACK` 으로 검증했다.
 
 | 확인 | 기대 | 실제 |
 |---|---|---|
-| V1~V33 전체 체인 적용 | 29개 파일 전부 성공 | **전부 성공** |
-| V33 이 만든 객체 | 테이블 15 · 인덱스 11 · 뷰 4 | **일치** (테이블 코멘트 누락 0) |
+| 버전 번호 중복 | 0 | **0** (리네임 전에는 `V33` 이 2개) |
+| V1~V34 전체 체인 적용 | 30개 파일 전부 성공 | **전부 성공** |
+| V34 가 만든 객체 | 테이블 15 · 인덱스 11 · 뷰 4 | **일치** (테이블 코멘트 누락 0) |
 | `btree_gist` 확장 | 생성됨 | **생성됨** |
 | `ck_roster_period` (`left_at <= joined_at`) | CHECK 가 거부 | **거부** |
 | `ck_esports_stage_format` (정의 밖 포맷) | CHECK 가 거부 | **거부** |
@@ -1144,8 +1156,8 @@ DDL → 시즌 구조 시드 → 매치 입력 → 검증 뷰 3종 → 집계 �
 **1단계 — 팀 순위표 (외부 의존 0)**
 
 1. `module/domain/esports` 생성 + `settings.gradle` / 컴포지션 루트 등록
-2. ~~`V33` 마이그레이션 (마스터 + 로스터 + 스테이지 + 원장 + 집계 + 이력 + 검증 뷰)~~
-   **완료** — V1~V33 전체 체인을 빈 DB 에 적용해 검증했다 (§6.9)
+2. ~~`V34` 마이그레이션 (마스터 + 로스터 + 스테이지 + 원장 + 집계 + 이력 + 검증 뷰)~~
+   **완료** — V1~V34 전체 체인을 빈 DB 에 적용해 검증했다 (§6.9)
 3. 마스터 시드: LCK 10팀 · `lck_2026` 시즌 · **스테이지 5개**(§8.1)
 4. **`StandingCalculator` · `GroupSplitter` · `TieBreakRule` 단위 테스트 먼저**
    — 동률 3팀(§2.4), 공동 순위, 누적 합산(§2.2) 시나리오를 재현
