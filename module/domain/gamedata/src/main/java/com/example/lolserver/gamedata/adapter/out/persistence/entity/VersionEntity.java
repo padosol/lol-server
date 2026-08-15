@@ -35,7 +35,8 @@ public class VersionEntity {
 
     /**
      * Data Dragon 정적 데이터 버전 (예: 16.16.1).
-     * 패치 번호인 {@link #versionValue}(예: 26.16)와 체계가 달라 별도로 들고 있는다.
+     * {@link #versionValue}(예: 16.16)에 마지막 자리를 붙인 형태이나, 핫픽스 때
+     * 그 자리가 달라질 수 있어 파생하지 않고 저장한다.
      * 이미 쌓인 행은 아직 값이 없을 수 있어 null 을 허용한다.
      */
     @Column(name = "patch_version_data", length = 20)

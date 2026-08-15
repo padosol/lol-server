@@ -60,9 +60,9 @@ class VersionPersistenceAdapterTest extends RepositoryTestBase {
     @Test
     void findRecentVersions_multipleVersions_returnsLimitedOrderedList() {
         // given
-        VersionEntity v1 = createVersionEntity("26.14", "16.14.1");
-        VersionEntity v2 = createVersionEntity("26.15", "16.15.1");
-        VersionEntity v3 = createVersionEntity("26.16", "16.16.1");
+        VersionEntity v1 = createVersionEntity("16.14", "16.14.1");
+        VersionEntity v2 = createVersionEntity("16.15", "16.15.1");
+        VersionEntity v3 = createVersionEntity("16.16", "16.16.1");
         versionJpaRepository.saveAll(List.of(v1, v2, v3));
 
         // when
@@ -70,9 +70,9 @@ class VersionPersistenceAdapterTest extends RepositoryTestBase {
 
         // then
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).versionValue()).isEqualTo("26.16");
+        assertThat(result.get(0).versionValue()).isEqualTo("16.16");
         assertThat(result.get(0).patchVersionData()).isEqualTo("16.16.1");
-        assertThat(result.get(1).versionValue()).isEqualTo("26.15");
+        assertThat(result.get(1).versionValue()).isEqualTo("16.15");
         assertThat(result.get(1).patchVersionData()).isEqualTo("16.15.1");
     }
 
@@ -80,7 +80,7 @@ class VersionPersistenceAdapterTest extends RepositoryTestBase {
     @Test
     void findRecentVersions_missingPatchVersionData_returnsNull() {
         // given
-        versionJpaRepository.save(createVersionEntity("26.16"));
+        versionJpaRepository.save(createVersionEntity("16.16"));
 
         // when
         List<VersionReadModel> result = adapter.findRecentVersions(2);

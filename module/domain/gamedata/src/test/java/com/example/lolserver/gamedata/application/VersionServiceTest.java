@@ -66,8 +66,8 @@ class VersionServiceTest {
     void getRecentVersions_최대2개조회() {
         // given
         List<VersionReadModel> versions = List.of(
-                createVersionReadModel(3L, "26.16", "16.16.1"),
-                createVersionReadModel(2L, "26.15", "16.15.1")
+                createVersionReadModel(3L, "16.16", "16.16.1"),
+                createVersionReadModel(2L, "16.15", "16.15.1")
         );
         given(versionPersistencePort.findRecentVersions(2)).willReturn(versions);
 
@@ -76,9 +76,9 @@ class VersionServiceTest {
 
         // then
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).versionValue()).isEqualTo("26.16");
+        assertThat(result.get(0).versionValue()).isEqualTo("16.16");
         assertThat(result.get(0).patchVersionData()).isEqualTo("16.16.1");
-        assertThat(result.get(1).versionValue()).isEqualTo("26.15");
+        assertThat(result.get(1).versionValue()).isEqualTo("16.15");
         then(versionPersistencePort).should().findRecentVersions(2);
     }
 

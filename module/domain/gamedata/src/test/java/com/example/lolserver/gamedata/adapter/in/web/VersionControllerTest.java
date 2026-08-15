@@ -40,7 +40,7 @@ class VersionControllerTest extends RestDocsSupport {
     void getLatestVersion_성공() throws Exception {
         // given
         VersionReadModel latestVersion = new VersionReadModel(
-                3L, "26.16", "16.16.1", LocalDateTime.of(2026, 8, 13, 10, 0)
+                3L, "16.16", "16.16.1", LocalDateTime.of(2026, 8, 13, 10, 0)
         );
 
         given(versionService.getLatestVersion()).willReturn(latestVersion);
@@ -63,7 +63,7 @@ class VersionControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.versionId").type(JsonFieldType.NUMBER)
                                         .description("버전 ID"),
                                 fieldWithPath("data.versionValue").type(JsonFieldType.STRING)
-                                        .description("패치 번호 (e.g., 26.16)"),
+                                        .description("패치 버전 (e.g., 16.16)"),
                                 fieldWithPath("data.patchVersionData").type(JsonFieldType.STRING)
                                         .description("Data Dragon 정적 데이터 버전 (e.g., 16.16.1). 챔피언 아이콘 등 리소스 URL 에 사용"),
                                 fieldWithPath("data.createdAt").type(JsonFieldType.STRING)
@@ -77,8 +77,8 @@ class VersionControllerTest extends RestDocsSupport {
     void getRecentVersions_성공() throws Exception {
         // given
         List<VersionReadModel> versions = List.of(
-                new VersionReadModel(3L, "26.16", "16.16.1", LocalDateTime.of(2026, 8, 13, 10, 0)),
-                new VersionReadModel(2L, "26.15", "16.15.1", LocalDateTime.of(2026, 7, 30, 10, 0))
+                new VersionReadModel(3L, "16.16", "16.16.1", LocalDateTime.of(2026, 8, 13, 10, 0)),
+                new VersionReadModel(2L, "16.15", "16.15.1", LocalDateTime.of(2026, 7, 30, 10, 0))
         );
 
         given(versionService.getRecentVersions()).willReturn(versions);
@@ -103,7 +103,7 @@ class VersionControllerTest extends RestDocsSupport {
                                 fieldWithPath("data[].versionId").type(JsonFieldType.NUMBER)
                                         .description("버전 ID"),
                                 fieldWithPath("data[].versionValue").type(JsonFieldType.STRING)
-                                        .description("패치 번호 (e.g., 26.16)"),
+                                        .description("패치 버전 (e.g., 16.16)"),
                                 fieldWithPath("data[].patchVersionData").type(JsonFieldType.STRING)
                                         .description("Data Dragon 정적 데이터 버전 (e.g., 16.16.1). 챔피언 아이콘 등 리소스 URL 에 사용"),
                                 fieldWithPath("data[].createdAt").type(JsonFieldType.STRING)
@@ -118,7 +118,7 @@ class VersionControllerTest extends RestDocsSupport {
         // given
         Long versionId = 1L;
         VersionReadModel version = new VersionReadModel(
-                versionId, "26.15", "16.15.1", LocalDateTime.of(2026, 7, 30, 10, 0)
+                versionId, "16.15", "16.15.1", LocalDateTime.of(2026, 7, 30, 10, 0)
         );
 
         given(versionService.getVersionById(versionId)).willReturn(version);
@@ -144,7 +144,7 @@ class VersionControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.versionId").type(JsonFieldType.NUMBER)
                                         .description("버전 ID"),
                                 fieldWithPath("data.versionValue").type(JsonFieldType.STRING)
-                                        .description("패치 번호 (e.g., 26.15)"),
+                                        .description("패치 버전 (e.g., 16.15)"),
                                 fieldWithPath("data.patchVersionData").type(JsonFieldType.STRING)
                                         .description("Data Dragon 정적 데이터 버전 (e.g., 16.15.1). 챔피언 아이콘 등 리소스 URL 에 사용"),
                                 fieldWithPath("data.createdAt").type(JsonFieldType.STRING)
