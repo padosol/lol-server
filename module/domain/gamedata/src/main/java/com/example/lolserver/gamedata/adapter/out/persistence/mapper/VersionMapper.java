@@ -17,6 +17,7 @@ public interface VersionMapper {
         return new VersionReadModel(
                 entity.getVersionId(),
                 entity.getVersionValue(),
+                entity.getPatchVersionData(),
                 entity.getCreatedAt()
         );
     }

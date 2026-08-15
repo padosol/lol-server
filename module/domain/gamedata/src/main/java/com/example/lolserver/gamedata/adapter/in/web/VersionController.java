@@ -26,8 +26,8 @@ public class VersionController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<VersionReadModel>>> getAllVersions() {
-        List<VersionReadModel> versions = versionService.getAllVersions();
+    public ResponseEntity<ApiResponse<List<VersionReadModel>>> getRecentVersions() {
+        List<VersionReadModel> versions = versionService.getRecentVersions();
         return ResponseEntity.ok(ApiResponse.success(versions));
     }
 

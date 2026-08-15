@@ -56,23 +56,38 @@ class VersionPersistenceAdapterTest extends RepositoryTestBase {
         assertThat(result).isEmpty();
     }
 
-    @DisplayName("전체 버전을 조회하면 최신순으로 정렬된 목록을 반환한다")
+    @DisplayName("최근 버전을 조회하면 limit 개수만큼 최신순으로 반환한다")
     @Test
-    void findAllVersions_multipleVersions_returnsOrderedList() {
+    void findRecentVersions_multipleVersions_returnsLimitedOrderedList() {
         // given
-        VersionEntity v1 = createVersionEntity("14.22.1");
-        VersionEntity v2 = createVersionEntity("14.23.1");
-        VersionEntity v3 = createVersionEntity("14.24.1");
+        VersionEntity v1 = createVersionEntity("16.14", "16.14.1");
+        VersionEntity v2 = createVersionEntity("16.15", "16.15.1");
+        VersionEntity v3 = createVersionEntity("16.16", "16.16.1");
         versionJpaRepository.saveAll(List.of(v1, v2, v3));
 
         // when
-        List<VersionReadModel> result = adapter.findAllVersions();
+        List<VersionReadModel> result = adapter.findRecentVersions(2);
 
         // then
-        assertThat(result).hasSize(3);
-        assertThat(result.get(0).versionValue()).isEqualTo("14.24.1");
-        assertThat(result.get(1).versionValue()).isEqualTo("14.23.1");
-        assertThat(result.get(2).versionValue()).isEqualTo("14.22.1");
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).versionValue()).isEqualTo("16.16");
+        assertThat(result.get(0).patchVersionData()).isEqualTo("16.16.1");
+        assertThat(result.get(1).versionValue()).isEqualTo("16.15");
+        assertThat(result.get(1).patchVersionData()).isEqualTo("16.15.1");
+    }
+
+    @DisplayName("데이터 버전이 없는 과거 버전은 null 로 조회된다")
+    @Test
+    void findRecentVersions_missingPatchVersionData_returnsNull() {
+        // given
+        versionJpaRepository.save(createVersionEntity("16.16"));
+
+        // when
+        List<VersionReadModel> result = adapter.findRecentVersions(2);
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).patchVersionData()).isNull();
     }
 
     @DisplayName("ID로 버전을 조회하면 해당 버전을 반환한다")
@@ -102,5 +117,9 @@ class VersionPersistenceAdapterTest extends RepositoryTestBase {
 
     private VersionEntity createVersionEntity(String versionValue) {
         return new VersionEntity(versionValue);
+    }
+
+    private VersionEntity createVersionEntity(String versionValue, String patchVersionData) {
+        return new VersionEntity(versionValue, patchVersionData);
     }
 }

@@ -29,7 +29,7 @@ class VersionRedisAdapterTest {
 
     private VersionRedisAdapter adapter;
 
-    private static final String CACHE_KEY = "version:latest";
+    private static final String CACHE_KEY = "version:latest:v2";
     private static final Duration CACHE_TTL = Duration.ofHours(24);
 
     @BeforeEach
@@ -41,7 +41,7 @@ class VersionRedisAdapterTest {
     @Test
     void findLatestVersion_cacheHit_returnsVersion() {
         // given
-        VersionReadModel cachedVersion = new VersionReadModel(1L, "14.24.1", LocalDateTime.now());
+        VersionReadModel cachedVersion = new VersionReadModel(1L, "16.16", "16.16.1", LocalDateTime.now());
 
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
         given(valueOperations.get(CACHE_KEY)).willReturn(cachedVersion);
@@ -51,7 +51,8 @@ class VersionRedisAdapterTest {
 
         // then
         assertThat(result).isEqualTo(cachedVersion);
-        assertThat(result.versionValue()).isEqualTo("14.24.1");
+        assertThat(result.versionValue()).isEqualTo("16.16");
+        assertThat(result.patchVersionData()).isEqualTo("16.16.1");
         then(redisTemplate).should().opsForValue();
         then(valueOperations).should().get(CACHE_KEY);
     }
@@ -76,7 +77,7 @@ class VersionRedisAdapterTest {
     @Test
     void saveLatestVersion_validData_savesWithTTL() {
         // given
-        VersionReadModel version = new VersionReadModel(1L, "14.24.1", LocalDateTime.now());
+        VersionReadModel version = new VersionReadModel(1L, "16.16", "16.16.1", LocalDateTime.now());
 
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
 

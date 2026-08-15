@@ -40,7 +40,7 @@ class VersionControllerTest extends RestDocsSupport {
     void getLatestVersion_성공() throws Exception {
         // given
         VersionReadModel latestVersion = new VersionReadModel(
-                3L, "14.24.1", LocalDateTime.of(2024, 12, 11, 10, 0)
+                3L, "16.16", "16.16.1", LocalDateTime.of(2026, 8, 13, 10, 0)
         );
 
         given(versionService.getLatestVersion()).willReturn(latestVersion);
@@ -63,24 +63,25 @@ class VersionControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.versionId").type(JsonFieldType.NUMBER)
                                         .description("버전 ID"),
                                 fieldWithPath("data.versionValue").type(JsonFieldType.STRING)
-                                        .description("버전 값 (e.g., 14.24.1)"),
+                                        .description("패치 버전 (e.g., 16.16)"),
+                                fieldWithPath("data.patchVersionData").type(JsonFieldType.STRING)
+                                        .description("Data Dragon 정적 데이터 버전 (e.g., 16.16.1). 챔피언 아이콘 등 리소스 URL 에 사용"),
                                 fieldWithPath("data.createdAt").type(JsonFieldType.STRING)
                                         .description("버전 생성 시간")
                         )
                 ));
     }
 
-    @DisplayName("전체 버전 목록 조회 API")
+    @DisplayName("최근 버전 목록 조회 API")
     @Test
-    void getAllVersions_성공() throws Exception {
+    void getRecentVersions_성공() throws Exception {
         // given
         List<VersionReadModel> versions = List.of(
-                new VersionReadModel(3L, "14.24.1", LocalDateTime.of(2024, 12, 11, 10, 0)),
-                new VersionReadModel(2L, "14.23.1", LocalDateTime.of(2024, 11, 27, 10, 0)),
-                new VersionReadModel(1L, "14.22.1", LocalDateTime.of(2024, 11, 13, 10, 0))
+                new VersionReadModel(3L, "16.16", "16.16.1", LocalDateTime.of(2026, 8, 13, 10, 0)),
+                new VersionReadModel(2L, "16.15", "16.15.1", LocalDateTime.of(2026, 7, 30, 10, 0))
         );
 
-        given(versionService.getAllVersions()).willReturn(versions);
+        given(versionService.getRecentVersions()).willReturn(versions);
 
         // when & then
         mockMvc.perform(
@@ -98,11 +99,13 @@ class VersionControllerTest extends RestDocsSupport {
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL)
                                         .description("에러 메시지 (정상 응답 시 null)"),
                                 fieldWithPath("data[]").type(JsonFieldType.ARRAY)
-                                        .description("버전 목록 (최신순 정렬)"),
+                                        .description("버전 목록 (최신순 정렬, 최대 2개)"),
                                 fieldWithPath("data[].versionId").type(JsonFieldType.NUMBER)
                                         .description("버전 ID"),
                                 fieldWithPath("data[].versionValue").type(JsonFieldType.STRING)
-                                        .description("버전 값 (e.g., 14.24.1)"),
+                                        .description("패치 버전 (e.g., 16.16)"),
+                                fieldWithPath("data[].patchVersionData").type(JsonFieldType.STRING)
+                                        .description("Data Dragon 정적 데이터 버전 (e.g., 16.16.1). 챔피언 아이콘 등 리소스 URL 에 사용"),
                                 fieldWithPath("data[].createdAt").type(JsonFieldType.STRING)
                                         .description("버전 생성 시간")
                         )
@@ -115,7 +118,7 @@ class VersionControllerTest extends RestDocsSupport {
         // given
         Long versionId = 1L;
         VersionReadModel version = new VersionReadModel(
-                versionId, "14.22.1", LocalDateTime.of(2024, 11, 13, 10, 0)
+                versionId, "16.15", "16.15.1", LocalDateTime.of(2026, 7, 30, 10, 0)
         );
 
         given(versionService.getVersionById(versionId)).willReturn(version);
@@ -141,7 +144,9 @@ class VersionControllerTest extends RestDocsSupport {
                                 fieldWithPath("data.versionId").type(JsonFieldType.NUMBER)
                                         .description("버전 ID"),
                                 fieldWithPath("data.versionValue").type(JsonFieldType.STRING)
-                                        .description("버전 값 (e.g., 14.22.1)"),
+                                        .description("패치 버전 (e.g., 16.15)"),
+                                fieldWithPath("data.patchVersionData").type(JsonFieldType.STRING)
+                                        .description("Data Dragon 정적 데이터 버전 (e.g., 16.15.1). 챔피언 아이콘 등 리소스 URL 에 사용"),
                                 fieldWithPath("data.createdAt").type(JsonFieldType.STRING)
                                         .description("버전 생성 시간")
                         )
