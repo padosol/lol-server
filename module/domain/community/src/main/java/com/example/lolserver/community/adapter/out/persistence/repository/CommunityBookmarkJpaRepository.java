@@ -31,7 +31,7 @@ public interface CommunityBookmarkJpaRepository
      */
     @Query("""
             SELECT new com.example.lolserver.community.adapter.out.persistence.dto.PostListDTO(
-                p.id, p.title, p.category, p.viewCount, p.upvoteCount, p.downvoteCount,
+                p.id, p.title, p.categoryId, p.viewCount, p.upvoteCount, p.downvoteCount,
                 p.commentCount, p.hotScore, p.createdAt, p.memberId)
             FROM CommunityPostEntity p
             JOIN CommunityBookmarkEntity b ON b.postId = p.id

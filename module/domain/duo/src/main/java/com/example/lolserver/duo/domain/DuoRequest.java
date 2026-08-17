@@ -42,6 +42,8 @@ public class DuoRequest {
             String requesterPuuid, Lane primaryLane, Lane desiredLane,
             boolean hasMicrophone, String memo, RiotAccountStats stats) {
         TierInfo tierInfo = stats.tierInfo();
+        tierInfo.validateRanked();
+
         LocalDateTime now = LocalDateTime.now();
         return DuoRequest.builder()
                 .duoPostId(duoPostId)

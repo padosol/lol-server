@@ -48,7 +48,7 @@ public class CommunityPostController {
         CreatePostCommand command = CreatePostCommand.builder()
                 .title(request.title())
                 .content(request.content())
-                .category(request.category())
+                .categoryId(request.categoryId())
                 .build();
 
         PostDetailResultModel readModel =
@@ -59,12 +59,12 @@ public class CommunityPostController {
 
     @GetMapping("/posts")
     public ResponseEntity<ApiResponse<SliceResponse<PostListResponse>>> getPosts(
-            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Long categoryId,
             @RequestParam(defaultValue = "HOT") String sort,
             @RequestParam(defaultValue = "ALL") String period,
             @RequestParam(defaultValue = "0") int page) {
         PostSearchCommand command = PostSearchCommand.builder()
-                .category(category)
+                .categoryId(categoryId)
                 .sortType(SortType.valueOf(sort))
                 .timePeriod(TimePeriod.valueOf(period))
                 .page(page)
@@ -94,7 +94,7 @@ public class CommunityPostController {
         UpdatePostCommand command = UpdatePostCommand.builder()
                 .title(request.title())
                 .content(request.content())
-                .category(request.category())
+                .categoryId(request.categoryId())
                 .build();
 
         PostDetailResultModel readModel = postUseCase.updatePost(

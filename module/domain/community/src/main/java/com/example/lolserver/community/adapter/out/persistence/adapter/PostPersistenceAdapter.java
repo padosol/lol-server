@@ -51,7 +51,7 @@ public class PostPersistenceAdapter implements PostPersistencePort {
         LocalDateTime since = resolveSince(command.getTimePeriod());
 
         Slice<PostListDTO> slice = postRepositoryCustom.findPosts(
-                command.getCategory(), sortType, since, pageable);
+                command.getCategoryId(), sortType, since, pageable);
 
         return toPage(slice);
     }
@@ -78,7 +78,7 @@ public class PostPersistenceAdapter implements PostPersistencePort {
                         .map(entity -> PostListReadModel.builder()
                                 .id(entity.getId())
                                 .title(entity.getTitle())
-                                .category(entity.getCategory())
+                                .categoryId(entity.getCategoryId())
                                 .viewCount(entity.getViewCount())
                                 .upvoteCount(entity.getUpvoteCount())
                                 .downvoteCount(entity.getDownvoteCount())
@@ -131,7 +131,7 @@ public class PostPersistenceAdapter implements PostPersistencePort {
                         .map(dto -> PostListReadModel.builder()
                                 .id(dto.getId())
                                 .title(dto.getTitle())
-                                .category(dto.getCategory())
+                                .categoryId(dto.getCategoryId())
                                 .viewCount(dto.getViewCount())
                                 .upvoteCount(dto.getUpvoteCount())
                                 .downvoteCount(dto.getDownvoteCount())

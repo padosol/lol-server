@@ -134,6 +134,8 @@ include::api/duo/duo-request-my-list.adoc[]
 [[Community-API]]
 == Community API
 
+include::api/community/community-category-list.adoc[]
+
 include::api/community/community-post-create.adoc[]
 
 include::api/community/community-post-list.adoc[]

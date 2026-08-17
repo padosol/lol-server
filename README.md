@@ -75,7 +75,7 @@ docker compose -f docker/docker-compose.monitoring.yml up -d
 
 ### 환경 설정
 
-- 활성 프로파일: `local`, `dev`, `prod`, `test`, `performance-test`
+- 활성 프로파일: `local`, `prod`, `test`, `performance-test`
 - 모듈별 yaml (`<module>-<profile>.yml`) 을 `module/app/application/src/main/resources/application.yml` 에서 프로파일별로 import
 - 주요 환경변수: `STATS_DATASOURCE=bigquery`, `DB_*`, Riot/RSO 클라이언트 자격증명, BigQuery 서비스 계정 경로
 - 메시지 broker 전환: `message.broker=rabbitmq` (기본) 또는 `kafka` — 한쪽만 활성. 어댑터에 `@ConditionalOnProperty` 가 걸려 있어 자동 분기

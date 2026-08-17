@@ -24,14 +24,14 @@ public class CommunityPostRepositoryCustomImpl implements CommunityPostRepositor
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public Slice<PostListDTO> findPosts(String category, String sortType, LocalDateTime since, Pageable pageable) {
+    public Slice<PostListDTO> findPosts(Long categoryId, String sortType, LocalDateTime since, Pageable pageable) {
         int pageSize = pageable.getPageSize();
 
         List<PostListDTO> result = jpaQueryFactory
                 .select(new QPostListDTO(
                         communityPostEntity.id,
                         communityPostEntity.title,
-                        communityPostEntity.category,
+                        communityPostEntity.categoryId,
                         communityPostEntity.viewCount,
                         communityPostEntity.upvoteCount,
                         communityPostEntity.downvoteCount,
@@ -43,7 +43,7 @@ public class CommunityPostRepositoryCustomImpl implements CommunityPostRepositor
                 .from(communityPostEntity)
                 .where(
                         communityPostEntity.deleted.isFalse(),
-                        categoryEq(category),
+                        categoryEq(categoryId),
                         createdAfter(since)
                 )
                 .orderBy(resolveOrder(sortType))
@@ -65,7 +65,7 @@ public class CommunityPostRepositoryCustomImpl implements CommunityPostRepositor
                 .select(new QPostListDTO(
                         communityPostEntity.id,
                         communityPostEntity.title,
-                        communityPostEntity.category,
+                        communityPostEntity.categoryId,
                         communityPostEntity.viewCount,
                         communityPostEntity.upvoteCount,
                         communityPostEntity.downvoteCount,
@@ -90,8 +90,8 @@ public class CommunityPostRepositoryCustomImpl implements CommunityPostRepositor
         return new SliceImpl<>(content, pageable, hasNext);
     }
 
-    private BooleanExpression categoryEq(String category) {
-        return StringUtils.hasText(category) ? communityPostEntity.category.eq(category) : null;
+    private BooleanExpression categoryEq(Long categoryId) {
+        return categoryId != null ? communityPostEntity.categoryId.eq(categoryId) : null;
     }
 
     private BooleanExpression createdAfter(LocalDateTime since) {

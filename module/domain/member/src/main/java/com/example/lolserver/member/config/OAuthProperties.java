@@ -8,6 +8,13 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 프로바이더별 부가 API 엔드포인트 설정.
+ *
+ * <p>인증(authorization/token 교환)에 필요한 값은 Spring Security 표준 설정
+ * (`spring.security.oauth2.client.*`) 이 관리한다. 여기에는 표준 설정이 다루지 않는
+ * 부가 조회 엔드포인트만 둔다 — 현재는 Riot PUUID 조회용 account-uri 뿐이다.
+ */
 @Getter
 @Setter
 @Component
@@ -25,18 +32,9 @@ public class OAuthProperties {
         return config;
     }
 
-    // 하위 호환용 — 기존 riot 필드 접근자 유지
-    private ProviderConfig riot = new ProviderConfig();
-
     @Getter
     @Setter
     public static class ProviderConfig {
-        private String clientId;
-        private String clientSecret;
-        private String tokenUri;
-        private String userInfoUri;
         private String accountUri;
-        private String authorizationUri;
-        private String scope;
     }
 }

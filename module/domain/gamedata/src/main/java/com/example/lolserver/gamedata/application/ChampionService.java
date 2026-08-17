@@ -33,4 +33,9 @@ public class ChampionService implements ChampionRotateUseCase {
             return newChampionRotate;
         }
     }
+
+    @Override
+    public void evictChampionRotate() {
+        championPersistencePort.evictChampionRotate();
+    }
 }

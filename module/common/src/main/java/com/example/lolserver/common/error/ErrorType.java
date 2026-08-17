@@ -30,7 +30,6 @@ public enum ErrorType {
     SOCIAL_ACCOUNT_ALREADY_LINKED(409, ErrorCode.E409, "이미 연동된 소셜 계정입니다."),
     SOCIAL_ACCOUNT_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 소셜 계정입니다."),
     MEMBER_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 회원입니다."),
-    INVALID_OAUTH_STATE(400, ErrorCode.E400, "유효하지 않은 OAuth state 입니다."),
 
     POST_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 게시글입니다."),
     COMMENT_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 댓글입니다."),
@@ -69,7 +68,12 @@ public enum ErrorType {
             "수락된 요청만 확인할 수 있습니다."),
     DUO_REQUEST_ALREADY_COMPLETED(400, ErrorCode.E400,
             "이미 처리 완료된 요청입니다."),
-    INVALID_LANE(400, ErrorCode.E400, "유효하지 않은 라인입니다.");
+    INVALID_LANE(400, ErrorCode.E400, "유효하지 않은 라인입니다."),
+    // 전적 데이터가 적재된 적 없는 계정과 실제 언랭 계정은 사용자가 취할 행동이 다르므로 구분한다.
+    SUMMONER_SEARCH_REQUIRED(400, ErrorCode.E400,
+            "전적 정보가 없습니다. 소환사 검색을 먼저 진행해주세요."),
+    DUO_UNRANKED_NOT_ALLOWED(400, ErrorCode.E400,
+            "솔로랭크 티어가 없는 계정은 듀오를 등록할 수 없습니다.");
 
     private final int httpStatus;
     private final ErrorCode errorCode;

@@ -61,25 +61,25 @@ class VersionServiceTest {
         then(versionFinder).should().findLatestVersion();
     }
 
-    @DisplayName("전체 버전 조회 - 목록 반환")
+    @DisplayName("최근 버전 조회 - 최대 2개까지만 요청한다")
     @Test
-    void getAllVersions_목록반환() {
+    void getRecentVersions_최대2개조회() {
         // given
         List<VersionReadModel> versions = List.of(
-                createVersionReadModel(3L, "14.24.1"),
-                createVersionReadModel(2L, "14.23.1"),
-                createVersionReadModel(1L, "14.22.1")
+                createVersionReadModel(3L, "16.16", "16.16.1"),
+                createVersionReadModel(2L, "16.15", "16.15.1")
         );
-        given(versionPersistencePort.findAllVersions()).willReturn(versions);
+        given(versionPersistencePort.findRecentVersions(2)).willReturn(versions);
 
         // when
-        List<VersionReadModel> result = versionService.getAllVersions();
+        List<VersionReadModel> result = versionService.getRecentVersions();
 
         // then
-        assertThat(result).hasSize(3);
-        assertThat(result.get(0).versionValue()).isEqualTo("14.24.1");
-        assertThat(result.get(2).versionValue()).isEqualTo("14.22.1");
-        then(versionPersistencePort).should().findAllVersions();
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).versionValue()).isEqualTo("16.16");
+        assertThat(result.get(0).patchVersionData()).isEqualTo("16.16.1");
+        assertThat(result.get(1).versionValue()).isEqualTo("16.15");
+        then(versionPersistencePort).should().findRecentVersions(2);
     }
 
     @DisplayName("ID로 버전 조회 - 해당 버전 반환")
@@ -116,6 +116,10 @@ class VersionServiceTest {
     }
 
     private VersionReadModel createVersionReadModel(Long id, String versionValue) {
-        return new VersionReadModel(id, versionValue, LocalDateTime.now());
+        return createVersionReadModel(id, versionValue, "16.16.1");
+    }
+
+    private VersionReadModel createVersionReadModel(Long id, String versionValue, String patchVersionData) {
+        return new VersionReadModel(id, versionValue, patchVersionData, LocalDateTime.now());
     }
 }

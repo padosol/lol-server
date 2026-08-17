@@ -6,6 +6,7 @@ import com.example.lolserver.community.application.command.UpdatePostCommand;
 import com.example.lolserver.community.application.model.readmodel.PostDetailReadModel;
 import com.example.lolserver.community.application.model.readmodel.PostListReadModel;
 import com.example.lolserver.community.application.model.resultmodel.PostDetailResultModel;
+import com.example.lolserver.community.application.port.in.CategoryQueryUseCase;
 import com.example.lolserver.community.application.port.out.BookmarkPersistencePort;
 import com.example.lolserver.community.application.port.out.PostPersistencePort;
 import com.example.lolserver.community.application.port.out.VotePersistencePort;
@@ -32,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
@@ -48,6 +50,14 @@ class PostServiceTest {
     @Mock
     private VotePersistencePort votePersistencePort;
 
+    /**
+     * 카테고리 검증이 enum 에서 DB 조회로 바뀌면서 협력 객체가 됐다. 유효한
+     * 카테고리는 stub 없이 통과하므로(void 메서드의 기본 동작) 나머지 테스트는
+     * 그대로 둔다.
+     */
+    @Mock
+    private CategoryQueryUseCase categoryQueryUseCase;
+
     @InjectMocks
     private PostService postService;
 
@@ -59,7 +69,7 @@ class PostServiceTest {
         CreatePostCommand command = CreatePostCommand.builder()
                 .title("테스트 제목")
                 .content("테스트 내용")
-                .category("GENERAL")
+                .categoryId(1L)
                 .build();
 
         Post savedPost = createPost(1L, memberId);
@@ -86,8 +96,11 @@ class PostServiceTest {
         CreatePostCommand command = CreatePostCommand.builder()
                 .title("제목")
                 .content("내용")
-                .category("INVALID")
+                .categoryId(999L)
                 .build();
+
+        willThrow(new CoreException(ErrorType.INVALID_CATEGORY))
+                .given(categoryQueryUseCase).validateWritable(999L);
 
         // when & then
         assertThatThrownBy(() -> postService.createPost(memberId, command))
@@ -105,7 +118,7 @@ class PostServiceTest {
         UpdatePostCommand command = UpdatePostCommand.builder()
                 .title("수정된 제목")
                 .content("수정된 내용")
-                .category("GENERAL")
+                .categoryId(1L)
                 .build();
 
         Post post = createPost(postId, memberId);
@@ -132,7 +145,7 @@ class PostServiceTest {
         Long memberId = 1L;
         Long postId = 1L;
         UpdatePostCommand command = UpdatePostCommand.builder()
-                .title("수정된 제목").content("수정된 내용").category("GENERAL")
+                .title("수정된 제목").content("수정된 내용").categoryId(1L)
                 .build();
         Post post = createPost(postId, memberId);
 
@@ -156,7 +169,7 @@ class PostServiceTest {
         // given
         Long memberId = 1L;
         CreatePostCommand command = CreatePostCommand.builder()
-                .title("제목").content("내용").category("GENERAL")
+                .title("제목").content("내용").categoryId(1L)
                 .build();
         given(memberQueryUseCase.getMemberProfile(memberId))
                 .willReturn(createProfile(memberId));
@@ -181,7 +194,7 @@ class PostServiceTest {
         UpdatePostCommand command = UpdatePostCommand.builder()
                 .title("수정")
                 .content("내용")
-                .category("GENERAL")
+                .categoryId(1L)
                 .build();
 
         Post post = createPost(postId, otherMemberId);
@@ -323,7 +336,7 @@ class PostServiceTest {
                 .build();
 
         PostListReadModel item = PostListReadModel.builder()
-                .id(10L).title("제목").category("GENERAL")
+                .id(10L).title("제목").categoryId(1L)
                 .authorId(1L)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -357,7 +370,7 @@ class PostServiceTest {
                 .memberId(memberId)
                 .title("테스트 제목")
                 .content("테스트 내용")
-                .category("GENERAL")
+                .categoryId(1L)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();

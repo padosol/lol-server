@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
@@ -113,5 +114,16 @@ class ChampionServiceTest {
         assertThat(result).isEqualTo(emptyRotate);
         then(championClientPort).should().getChampionRotate(platformId);
         then(championPersistencePort).should().saveChampionRotate(platformId, emptyRotate);
+    }
+
+    @DisplayName("로테이션 캐시 제거는 영속 포트에 위임하고 Riot 재조회를 유발하지 않는다")
+    @Test
+    void evictChampionRotate_포트에위임() {
+        // when
+        championService.evictChampionRotate();
+
+        // then: 제거만 하고, 다음 조회 요청이 들어올 때 비로소 클라이언트를 호출한다
+        then(championPersistencePort).should().evictChampionRotate();
+        then(championClientPort).should(never()).getChampionRotate(anyString());
     }
 }

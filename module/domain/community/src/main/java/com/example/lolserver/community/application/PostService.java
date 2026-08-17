@@ -7,6 +7,7 @@ import com.example.lolserver.community.application.model.readmodel.AuthorReadMod
 import com.example.lolserver.community.application.model.readmodel.PostDetailReadModel;
 import com.example.lolserver.community.application.model.readmodel.PostListReadModel;
 import com.example.lolserver.community.application.model.resultmodel.PostDetailResultModel;
+import com.example.lolserver.community.application.port.in.CategoryQueryUseCase;
 import com.example.lolserver.community.application.port.in.PostQueryUseCase;
 import com.example.lolserver.community.application.port.in.PostUseCase;
 import com.example.lolserver.community.application.port.out.BookmarkPersistencePort;
@@ -14,7 +15,6 @@ import com.example.lolserver.community.application.port.out.PostPersistencePort;
 import com.example.lolserver.community.application.port.out.VotePersistencePort;
 import com.example.lolserver.community.domain.Post;
 import com.example.lolserver.community.domain.Vote;
-import com.example.lolserver.community.domain.vo.PostCategory;
 import com.example.lolserver.community.domain.vo.VoteTargetType;
 import com.example.lolserver.member.application.model.readmodel.MemberProfileReadModel;
 import com.example.lolserver.member.application.port.in.MemberQueryUseCase;
@@ -42,16 +42,17 @@ public class PostService implements PostUseCase, PostQueryUseCase {
     private final MemberQueryUseCase memberQueryUseCase;
     private final BookmarkPersistencePort bookmarkPersistencePort;
     private final VotePersistencePort votePersistencePort;
+    private final CategoryQueryUseCase categoryQueryUseCase;
 
     @Override
     @Transactional
     public PostDetailResultModel createPost(Long memberId, CreatePostCommand command) {
-        validateCategory(command.getCategory());
+        validateCategory(command.getCategoryId());
 
         MemberProfileReadModel author = memberQueryUseCase.getMemberProfile(memberId);
 
         Post post = Post.create(memberId, command.getTitle(),
-                command.getContent(), command.getCategory());
+                command.getContent(), command.getCategoryId());
 
         Post saved = postPersistencePort.save(post);
 
@@ -62,14 +63,14 @@ public class PostService implements PostUseCase, PostQueryUseCase {
     @Override
     @Transactional
     public PostDetailResultModel updatePost(Long memberId, Long postId, UpdatePostCommand command) {
-        validateCategory(command.getCategory());
+        validateCategory(command.getCategoryId());
 
         Post post = postPersistencePort.findById(postId)
                 .orElseThrow(() -> new CoreException(ErrorType.POST_NOT_FOUND));
 
         post.validateOwner(memberId);
 
-        post.updateContent(command.getTitle(), command.getContent(), command.getCategory());
+        post.updateContent(command.getTitle(), command.getContent(), command.getCategoryId());
         Post saved = postPersistencePort.save(post);
 
         MemberProfileReadModel author = memberQueryUseCase.getMemberProfile(memberId);
@@ -169,11 +170,14 @@ public class PostService implements PostUseCase, PostQueryUseCase {
         return profile != null ? AuthorReadModel.of(profile) : null;
     }
 
-    private void validateCategory(String category) {
-        try {
-            PostCategory.valueOf(category);
-        } catch (IllegalArgumentException e) {
-            throw new CoreException(ErrorType.INVALID_CATEGORY);
-        }
+    /**
+     * 카테고리 목록이 DB 로 옮겨가면서 enum 검증을 대체했다. enum 을 남겨두면
+     * 게시판을 추가할 때마다 서버를 다시 배포해야 해서 DB 화의 의미가 없다.
+     *
+     * <p>존재 여부뿐 아니라 숨김/읽기 전용까지 함께 걸러진다 — enum 시절에는
+     * 표현할 수 없던 검증이다.
+     */
+    private void validateCategory(Long categoryId) {
+        categoryQueryUseCase.validateWritable(categoryId);
     }
 }

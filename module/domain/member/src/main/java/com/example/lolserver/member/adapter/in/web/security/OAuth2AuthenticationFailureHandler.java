@@ -19,7 +19,7 @@ public class OAuth2AuthenticationFailureHandler
         implements AuthenticationFailureHandler {
 
     private final OAuthCallbackProperties oAuthCallbackProperties;
-    private final CookieOAuth2AuthorizationRequestRepository
+    private final RedisOAuth2AuthorizationRequestRepository
             authorizationRequestRepository;
 
     @Override

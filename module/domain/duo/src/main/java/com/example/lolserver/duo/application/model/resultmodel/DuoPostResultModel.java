@@ -3,6 +3,7 @@ package com.example.lolserver.duo.application.model.resultmodel;
 import com.example.lolserver.duo.domain.DuoPost;
 import com.example.lolserver.duo.domain.vo.MostChampion;
 import com.example.lolserver.duo.domain.vo.RecentGameSummary;
+import com.example.lolserver.duo.domain.vo.TierInfo;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -38,7 +39,7 @@ public class DuoPostResultModel {
                 .leaguePoints(post.getLeaguePoints())
                 .memo(post.getMemo())
                 .status(post.getStatus().name())
-                .tierAvailable(post.getTier() != null)
+                .tierAvailable(!TierInfo.isUnranked(post.getTier()))
                 .mostChampions(post.getMostChampions())
                 .recentGameSummary(post.getRecentGameSummary())
                 .expiresAt(post.getExpiresAt())

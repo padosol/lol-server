@@ -8,7 +8,10 @@ public interface VersionQueryUseCase {
 
     VersionReadModel getLatestVersion();
 
-    List<VersionReadModel> getAllVersions();
+    /**
+     * 최신 패치부터 노출 상한만큼의 버전 목록을 반환합니다.
+     */
+    List<VersionReadModel> getRecentVersions();
 
     VersionReadModel getVersionById(Long versionId);
 }
