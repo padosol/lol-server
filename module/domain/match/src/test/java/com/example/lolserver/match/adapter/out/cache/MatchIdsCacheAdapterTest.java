@@ -6,7 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.RedisSystemException;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 
 import java.util.LinkedHashSet;
@@ -21,22 +22,22 @@ import static org.mockito.BDDMockito.given;
 class MatchIdsCacheAdapterTest {
 
     @Mock
-    private RedisTemplate<String, Object> redisTemplate;
+    private StringRedisTemplate stringRedisTemplate;
 
     @Mock
-    private ZSetOperations<String, Object> zSetOperations;
+    private ZSetOperations<String, String> zSetOperations;
 
     private MatchIdsCacheAdapter adapter;
 
     @BeforeEach
     void setUp() {
-        adapter = new MatchIdsCacheAdapter(redisTemplate);
+        adapter = new MatchIdsCacheAdapter(stringRedisTemplate);
     }
 
     @DisplayName("findIds 키 없음/빈 결과이면 Optional.empty 를 반환한다")
     @Test
     void findIds_missing_returnsEmptyOptional() {
-        given(redisTemplate.opsForZSet()).willReturn(zSetOperations);
+        given(stringRedisTemplate.opsForZSet()).willReturn(zSetOperations);
         given(zSetOperations.reverseRange("match:ids:v1:test-puuid", 0, -1)).willReturn(new LinkedHashSet<>());
 
         Optional<List<String>> result = adapter.findIds("test-puuid");
@@ -47,9 +48,9 @@ class MatchIdsCacheAdapterTest {
     @DisplayName("findIds 멤버가 있으면 최신순 리스트를 반환한다")
     @Test
     void findIds_populated_returnsIdsInOrder() {
-        given(redisTemplate.opsForZSet()).willReturn(zSetOperations);
+        given(stringRedisTemplate.opsForZSet()).willReturn(zSetOperations);
 
-        Set<Object> raw = new LinkedHashSet<>();
+        Set<String> raw = new LinkedHashSet<>();
         raw.add("KR_3");
         raw.add("KR_2");
         raw.add("KR_1");
@@ -59,6 +60,18 @@ class MatchIdsCacheAdapterTest {
 
         assertThat(result).isPresent();
         assertThat(result.get()).containsExactly("KR_3", "KR_2", "KR_1");
+    }
+
+    @DisplayName("findIds Redis 예외가 나면 Optional.empty 로 흡수한다")
+    @Test
+    void findIds_redisFailure_returnsEmptyOptional() {
+        given(stringRedisTemplate.opsForZSet()).willReturn(zSetOperations);
+        given(zSetOperations.reverseRange("match:ids:v1:test-puuid", 0, -1))
+                .willThrow(new RedisSystemException("boom", new IllegalStateException()));
+
+        Optional<List<String>> result = adapter.findIds("test-puuid");
+
+        assertThat(result).isEmpty();
     }
 
 }
