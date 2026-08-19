@@ -12,7 +12,7 @@
 
 - 게시글 본문 이미지 업로드 / 삽입 / 교체 / 삭제
 - 업로드된 이미지의 생명주기 추적 (고아 파일 정리 포함)
-- 로컬 개발환경에서 AWS 없이 동작
+- 로컬 개발환경에서 **운영과 같은 S3 경로**로 동작 (버킷만 분리해 격리 — D3)
 
 ### 이번 범위 밖 (의도적으로 제외)
 
@@ -67,8 +67,7 @@ module/domain/community/…/community/
     ├── in/web/CommunityImageController.java
     └── out/
         ├── storage/
-        │   ├── S3ImageStorageAdapter.java        @Profile("prod")
-        │   └── LocalFileImageStorageAdapter.java @Profile("local")
+        │   └── S3ImageStorageAdapter.java        ← 단일 구현 (로컬·운영 공용)
         └── persistence/{entity,repository,mapper,adapter}/
 ```
 
@@ -101,12 +100,70 @@ public interface ImageStoragePort {
 
 `MultipartFile` 은 컨트롤러(adapter.in)에서 `byte[]` + 메타로 풀어서 커맨드에 담는다. ArchUnit 의 "application 은 웹 타입 의존 금지" 규칙 때문이기도 하고, 포트를 웹 프레임워크에서 떼어놓는 게 맞기 때문이기도 하다.
 
-### D3. 스토리지 — 운영 S3+CloudFront / 로컬 파일시스템
+### D3. 스토리지 — 로컬도 실제 S3, 버킷을 분리해 격리한다
 
-- **prod**: S3 버킷(퍼블릭 액세스 차단) + CloudFront OAC 로 읽기 공개. 응답 URL 은 CloudFront 도메인 기준. 버킷 직접 URL 을 DB 에 넣지 않는다.
-- **local**: `LocalFileImageStorageAdapter` — `${storage.local.base-dir}` 아래 저장, `/uploads/**` 정적 리소스로 서빙. docker-compose 에 MinIO 를 추가하지 않는 이유는 로컬 개발 진입장벽을 낮추기 위해서다(현재 로컬은 Postgres/Redis/RabbitMQ 만으로도 무겁다).
+**어댑터는 하나뿐이다.** 로컬 파일시스템 어댑터를 두지 않고 `S3ImageStorageAdapter` 만 둔다.
+로컬과 운영이 **완전히 같은 코드 경로**를 타고, 다른 것은 설정값(버킷·prefix·CDN 도메인)뿐이다.
+"로컬에서 통과했으니 운영에서도 통과한다"가 성립하려면 검증 대상 코드가 같아야 한다 —
+로컬만 파일시스템을 타면 S3 권한·키 규칙·CDN 캐시·삭제 동작은 **운영에 배포한 뒤에야 처음 실행된다.**
 
-두 어댑터는 같은 포트를 구현하고 `@Profile` 로 갈린다. 프로파일별 어댑터 교체는 헥사고날이 실제로 값을 내는 지점이다.
+| | local | prod |
+|---|---|---|
+| 버킷 | `lol-community-images-dev` | `lol-community-images-prod` |
+| 키 prefix | `local/` | `prod/` |
+| CloudFront | dev 배포 | prod 배포 |
+| 크리덴셜 | 개발자 IAM 사용자 (`~/.aws/credentials`) | ECS Task Role |
+| Lifecycle | **30일 후 전량 만료** | 없음 |
+
+#### 격리를 버킷으로 하는 이유 (prefix 분리가 아니라)
+
+같은 버킷 안에서 prefix 로만 나누면, 로컬 크리덴셜이 **운영 객체에 접근할 권한을 물리적으로 갖는다.**
+IAM 조건(`s3:prefix`)으로 좁힐 수는 있지만, 정책 한 줄만 잘못 써도 개발자 노트북의 키가 운영
+이미지를 지울 수 있는 구조가 된다. 버킷을 나누면 **로컬 IAM 정책에 운영 버킷 ARN 자체가 등장하지 않는다** —
+실수의 여지가 정책 실수에서 "존재하지 않는 권한"으로 바뀐다.
+
+버킷 분리가 부수적으로 주는 것들:
+- **dev 버킷에만 Lifecycle 30일 만료**를 걸 수 있다. 여러 개발자가 각자 로컬 DB 로 붙으면 내 DB 에 없는
+  남의 파일은 정리 배치가 지우지 못해 dev 버킷에 고아가 쌓이는데, Lifecycle 이 이를 자동 청소한다.
+  운영에는 절대 걸면 안 되는 규칙이라 버킷이 같으면 이 설정을 쓸 수 없다.
+- dev 버킷은 통째로 비우거나 지워도 된다.
+- 비용·용량 지표가 환경별로 분리돼 보인다.
+
+#### 그럼에도 키 prefix 에 환경을 넣는다
+
+```
+{env}/community/{yyyy}/{MM}/{uuid}.{ext}
+   ↑ local | prod
+```
+
+버킷이 이미 갈렸는데 prefix 까지 넣는 건 **설정 실수에 대한 이중 안전장치**다. 누군가 로컬 설정에
+운영 버킷 이름을 넣더라도 객체가 `local/` 아래로 떨어져 운영 데이터와 섞이지 않고, 로그·콘솔에서
+어느 환경이 만든 객체인지 즉시 식별된다. 비용은 문자열 몇 바이트다.
+
+#### 크리덴셜 — 코드는 동일, 해석만 환경이 다르다
+
+`S3Client` 는 프로파일 분기 없이 단일 빈이고 `DefaultCredentialsProvider` 를 쓴다.
+운영에서는 ECS Task Role 을, 로컬에서는 `~/.aws/credentials` 프로필(또는 `.env` 의 액세스 키)을
+같은 체인이 알아서 해석한다. 코드에 `if (local)` 이 등장하지 않는다.
+
+로컬 개발자용 IAM 정책은 **dev 버킷 ARN 에 대해서만** `PutObject`·`GetObject`·`DeleteObject` 를 허용한다.
+
+#### dev 에도 CloudFront 를 둔다
+
+dev 버킷을 퍼블릭으로 열면 손쉽지만, 그러면 **"버킷 비공개 + OAC" 구성이 로컬에서 한 번도 검증되지 않는다** —
+이 설계에서 가장 틀리기 쉬운 부분이 정확히 그 지점이다. 트래픽이 없는 배포의 CloudFront 비용은 사실상 0 이므로
+dev 배포를 따로 만들어 URL 구조까지 운영과 같게 맞춘다.
+
+> **트레이드오프(수용).** 이 결정으로 **로컬 개발에 AWS 크리덴셜이 필수**가 된다. 신규 개발자 온보딩에
+> AWS 계정·프로필 설정 단계가 추가되고, 오프라인에서는 이미지 업로드 기능을 띄울 수 없다.
+> 파일시스템 어댑터가 주던 "AWS 없이 바로 실행"을 포기하는 대신, 운영 반영 전에 실제 경로를 검증하는 쪽을 택했다.
+
+#### 테스트는 S3 를 치지 않는다
+
+**로컬 실행(`bootRun`)과 테스트(`gradle test`)는 다른 이야기다.** 단위·서비스 테스트는 `ImageStoragePort` 를
+fake 구현으로 대체한다 — 포트를 둔 이유가 여기서 값을 낸다. CI 는 AWS 크리덴셜 없이 돌아야 하므로
+테스트가 실제 버킷을 치면 안 된다. S3 어댑터 자체의 검증이 필요하면 LocalStack testcontainer 를 쓰되,
+`@Tag("integration")` 으로 분리해 기본 `test` 태스크에서 제외한다.
 
 > ⚠️ **URL 을 DB 에 저장할지, 키만 저장할지**: `storage_key`(불변)와 `url`(파생) 둘 다 저장하되, **응답에는 `storage_key` + 설정된 base URL 로 조합한 값**을 쓴다. CDN 도메인이 바뀌어도 기존 행을 마이그레이션하지 않아도 되게 하기 위해서다. `url` 컬럼은 감사·디버깅용 스냅샷.
 
@@ -466,6 +523,8 @@ PostService.createPost(memberId, command)
 | **개인정보** | EXIF(GPS 포함) 전량 제거 |
 | **타 회원 이미지 도용** | `attachTo` 에서 업로더 == 작성자 검증 |
 | **버킷 노출** | 퍼블릭 액세스 차단 + CloudFront OAC. 쓰기 권한은 앱 IAM 역할만 |
+| **로컬이 운영 데이터를 건드림** | 버킷 분리 — 개발자 IAM 정책에 운영 버킷 ARN 이 아예 없다. 키 prefix(`local/`·`prod/`)로 이중 방어 (D3) |
+| **개발자 액세스 키 유출** | `~/.aws/credentials` 프로필 권장(레포 밖). `.env` 를 쓸 경우 `.gitignore` 확인 필수. dev 버킷 전용 권한이라 유출돼도 운영 영향 없음 |
 
 ---
 
@@ -475,9 +534,9 @@ PostService.createPost(memberId, command)
 
 | # | 범위 | 산출물 | 검증 |
 |---|---|---|---|
-| **0** | 인프라 준비 (코드 아님) | S3 버킷 + CloudFront + IAM 역할, GitHub/배포 환경변수 | 인프라 담당 확인 |
+| **0** | 인프라 준비 (코드 아님) | **버킷 2벌**(dev/prod) + CloudFront 2벌 + ECS Task Role + 개발자 IAM 사용자, dev 버킷 Lifecycle 30일, 배포 환경변수 | 로컬에서 dev 버킷에 put/get/delete 수동 확인 |
 | **1** | 스키마 | `lol-db-schema` V36 + 서브모듈 포인터 갱신 | `flyway migrate` 로컬 |
-| **2** | 스토리지 포트/어댑터 | `S3Config`(common), `ImageStoragePort`, `S3ImageStorageAdapter`, `LocalFileImageStorageAdapter`, `StorageProperties`, yml | 어댑터 단위 테스트(local), 수동 확인(prod 키) |
+| **2** | 스토리지 포트/어댑터 | `S3Config`(common), `ImageStoragePort`, `S3ImageStorageAdapter`(단일), `FakeImageStorage`(testFixtures), `StorageProperties`, yml | fake 로 단위 테스트 + 로컬 `bootRun` 으로 dev 버킷 실제 업로드 확인 |
 | **3** | 도메인 + 영속성 | `PostImage`, `ImageStatus`, 엔티티/리포지토리/매퍼/어댑터 | 도메인 단위 테스트(상태 전이), `archTest` |
 | **4** | 업로드 API | `ImageService`, `CommunityImageController`, `ErrorType`+`ErrorCode.E429` 추가, `CoreExceptionAdvice` 에 `MaxUploadSizeExceededException` 핸들러 추가, 검증 유틸 | 서비스 단위 테스트, RestDocs |
 | **5** | 게시글 연동 | `CreatePostRequest/UpdatePostRequest.imageIds`, `PostService` attach/detach, `PostResponse.images` | `PostServiceTest` 확장, RestDocs 갱신 |
@@ -508,15 +567,49 @@ community:
     pending-retention-hours: 24
     detached-retention-days: 7
 
+# storage 는 프로파일별로 값만 다르다. provider 스위치도, 어댑터 분기도 없다.
 storage:
-  provider: local            # prod: s3
-  local:
-    base-dir: ./.local-storage
-    base-url: http://localhost:8100/uploads
-  s3:                        # prod 만
+  s3:
     bucket: ${S3_BUCKET}
     region: ${AWS_REGION}
+    key-prefix: ${STORAGE_KEY_PREFIX}   # local | prod — 설정 실수에 대한 이중 안전장치
     base-url: ${CDN_BASE_URL}
+```
+
+프로파일별 실제 값:
+
+```yaml
+# api-local.yml — 개발자는 .env 로 덮어쓸 수 있다
+storage:
+  s3:
+    bucket: ${S3_BUCKET:lol-community-images-dev}
+    region: ${AWS_REGION:ap-northeast-2}
+    key-prefix: local
+    base-url: ${CDN_BASE_URL:https://dev-cdn.example.com}
+
+# api-prod.yml — 전부 환경변수 주입, 기본값 없음
+storage:
+  s3:
+    bucket: ${S3_BUCKET}
+    region: ${AWS_REGION}
+    key-prefix: prod
+    base-url: ${CDN_BASE_URL}
+```
+
+> `api-prod.yml` 에 기본값(`:`)을 두지 않는 이유는 기존 파일의 관례와 같다 — 운영 설정이 빠지면
+> 조용히 잘못된 버킷을 쓰는 대신 **부팅이 실패해야** 한다. 반대로 로컬은 기본값을 둬서
+> `.env` 없이도 팀 공용 dev 버킷으로 바로 붙는다.
+
+**로컬 크리덴셜.** 코드가 `DefaultCredentialsProvider` 를 쓰므로 아래 중 아무거나면 된다.
+
+```bash
+# ① ~/.aws/credentials 프로필 (권장 — 키가 레포 근처에 안 온다)
+export AWS_PROFILE=lol-dev
+
+# ② 루트 .env (bootRun 이 자동으로 읽어 환경변수로 주입한다)
+AWS_ACCESS_KEY_ID=…
+AWS_SECRET_ACCESS_KEY=…
+AWS_REGION=ap-northeast-2
 ```
 
 ### 추가되는 의존성
@@ -554,11 +647,13 @@ void application은_스토리지_SDK에_의존하지_않는다() {
 
 구현 착수 전에 답이 필요한 것들이다. 괄호 안은 답이 없을 때 진행할 기본값.
 
-1. **S3 버킷 + CloudFront 를 새로 만들 수 있는가?** 계정/비용/IaC 관리 주체 확인. (기본값: 만들 수 있다고 보고 PR 0 을 인프라 작업으로 분리)
-2. **에디터가 마크다운인가 HTML(WYSIWYG)인가?** 서버 설계는 동일하지만, HTML 이면 본문 sanitize(XSS) 정책이 **이 설계 밖에서** 별도로 필요하다. (기본값: 마크다운 가정)
-3. **`imageIds` 를 클라이언트가 보내는 계약에 프론트엔드가 동의하는가?** 본문 파싱 대안 대비 프론트 작업량이 조금 늘어난다. (기본값: 이 계약으로 진행)
-4. **댓글 이미지가 곧 필요한가?** 필요하다면 지금 `community_image` 에 `comment_id` 컬럼을 함께 넣는 편이 마이그레이션 한 번을 아낀다. (기본값: 넣지 않음)
-5. **Linear 이슈 번호(MP-XXX)** — 브랜치/커밋 컨벤션상 필요하다.
+1. **버킷·CloudFront 를 2벌(dev/prod) 만들 수 있는가?** 계정·비용·IaC 관리 주체 확인. dev 배포까지 두는 이유는 D3 참고. (기본값: 만들 수 있다고 보고 PR 0 을 인프라 작업으로 분리)
+2. **개발자 IAM 사용자를 어떻게 발급·회수하는가?** 인원이 늘면 개인별 사용자 대신 SSO/AssumeRole 이 낫다. (기본값: 팀 공용 dev 전용 IAM 사용자 1개)
+3. **dev 버킷을 개발자끼리 공유하는가, 개인별로 나누는가?** 공유해도 정리 배치는 자기 DB 기준이라 서로를 지우지 않는다. 남는 고아는 Lifecycle 30일이 청소한다. 개인별로 나눈다면 키 prefix 를 `local/{개발자}/…` 로 한 단계 더 쪼개면 된다. (기본값: 공유 + Lifecycle)
+4. **에디터가 마크다운인가 HTML(WYSIWYG)인가?** 서버 설계는 동일하지만, HTML 이면 본문 sanitize(XSS) 정책이 **이 설계 밖에서** 별도로 필요하다. (기본값: 마크다운 가정)
+5. **`imageIds` 를 클라이언트가 보내는 계약에 프론트엔드가 동의하는가?** 본문 파싱 대안 대비 프론트 작업량이 조금 늘어난다. (기본값: 이 계약으로 진행)
+6. **댓글 이미지가 곧 필요한가?** 필요하다면 지금 `community_image` 에 `comment_id` 컬럼을 함께 넣는 편이 마이그레이션 한 번을 아낀다. (기본값: 넣지 않음)
+7. **Linear 이슈 번호(MP-XXX)** — 브랜치/커밋 컨벤션상 필요하다.
 
 ---
 
