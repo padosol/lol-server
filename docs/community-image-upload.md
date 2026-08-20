@@ -1,6 +1,10 @@
 # 커뮤니티 이미지 업로드 설계
 
-> 상태: **설계 초안(구현 전)** · 대상 컨텍스트: `module/domain/community` · 관련 이슈: MP-XXX
+> 상태: **구현 완료(인프라 준비 대기)** · 대상 컨텍스트: `module/domain/community` · 관련 이슈: MP-XXX
+>
+> 코드는 브랜치 `feature/MP-XXX-community-image-upload` 에 있다. 남은 것은 8절 PR 0(버킷·CloudFront·IAM)과
+> `lol-db-schema` V36 머지뿐이며, 그 둘이 끝나면 바로 뜬다. 구현 과정에서 설계와 달라진 지점은
+> 각 절에 **구현 노트**로 표시했다.
 
 게시글 본문에 이미지를 첨부하는 기능의 설계다. 지금 이 레포에는 파일 업로드·오브젝트 스토리지 관련 코드가 **하나도 없다** — `MultipartFile` 사용처 0건, AWS SDK 의존 0건, 스토리지 설정 0건. 즉 이 문서는 "기존 업로드 파이프라인에 커뮤니티를 얹는" 설계가 아니라 **스토리지 경로를 처음 뚫는** 설계다.
 
@@ -92,13 +96,23 @@ module/domain/community/…/community/
 
 ```java
 public interface ImageStoragePort {
-    StoredImage store(byte[] content, String contentType, String extension);
+    StoredImageLocation allocate(String extension);              // 키·URL 선발급
+    void store(String storageKey, byte[] content, String contentType);
     void delete(String storageKey);
     void deleteAll(List<String> storageKeys);   // 정리 배치용 배치 삭제
 }
 ```
 
+> **구현 노트 — `allocate` 가 생긴 이유.** 최초 설계는 `store()` 가 키를 만들어 돌려주는 형태였다.
+> 그런데 D7 에서 순서를 "DB INSERT → S3 PUT" 으로 뒤집으면서, INSERT 시점에 이미 키를 알아야 하게 됐다.
+> 그래서 키 발급과 저장을 분리했다. 키 레이아웃(환경 prefix 포함)은 여전히 어댑터만 안다.
+
 `MultipartFile` 은 컨트롤러(adapter.in)에서 `byte[]` + 메타로 풀어서 커맨드에 담는다. ArchUnit 의 "application 은 웹 타입 의존 금지" 규칙 때문이기도 하고, 포트를 웹 프레임워크에서 떼어놓는 게 맞기 때문이기도 하다.
+
+> **구현 노트 — `ImageProcessorPort` 를 하나 더 뒀다.** 타입 판별(Tika)·크기 파싱·리사이즈(ImageIO)는
+> 기술에 강하게 묶인다. 이걸 서비스에 두면 애플리케이션이 Tika/ImageIO 를 의존하게 되고, 서비스
+> 단위테스트가 실제 이미지를 디코딩해야 돌아간다. 포트로 빼서 `adapter/out/image` 에 구현을 두고,
+> ArchUnit 에 `software.amazon.awssdk..`·`org.apache.tika..`·`javax.imageio..`·`java.awt..` 금지 규칙을 추가했다.
 
 ### D3. 스토리지 — 로컬도 실제 S3, 버킷을 분리해 격리한다
 
@@ -213,6 +227,16 @@ UPDATE community_image
 - 최대 폭 **1920px** 초과 시 축소(비율 유지). 원본 그대로 두면 4000px 사진이 목록에서 그대로 내려간다.
 - **EXIF 전량 제거** — 스마트폰 사진의 GPS 좌표가 그대로 공개되는 건 개인정보 사고다. `ImageIO` 로 디코드→리인코드하면 부수적으로 제거된다.
 - 리인코드는 GIF 를 제외하고 적용(애니메이션 GIF 는 `ImageIO` 로 재인코딩하면 첫 프레임만 남는다 → GIF 는 크기 검증만 하고 원본 저장).
+
+> **구현 노트 — WebP 도 재인코딩에서 빠진다.** JDK 표준 `ImageIO` 에는 WebP 리더/라이터가 아예 없다.
+> 설계대로 "GIF 만 예외"로 두면 WebP 업로드는 전부 `IMAGE_INVALID` 로 떨어졌을 것이다. GIF 와 같이
+> 원본 그대로 저장한다. **대가는 GIF/WebP 의 EXIF 가 남는다는 것**이다 — JPEG(스마트폰 사진, GPS 가
+> 실제로 붙는 경로)는 항상 재인코딩되므로 위험의 대부분은 덮이지만, 완전하지는 않다. 필요해지면
+> 메타데이터만 제거하는 경로를 따로 붙인다.
+>
+> 이 때문에 크기를 **헤더에서 직접 파싱**한다(`ImageDimensionReader`: JPEG SOF / PNG IHDR /
+> GIF 헤더 / WebP VP8·VP8L·VP8X). 폭탄 이미지 가드가 "디코드 전"에 서야 한다는 요구와도 맞물린다 —
+> `ImageIO.read()` 로 크기를 재면 이미 늦다.
 - 썸네일 세트는 Phase 1 에서 만들지 않는다. 필요해지면 CloudFront 앞단의 이미지 리사이즈(Lambda@Edge 또는 CloudFront Functions + S3 Object Lambda)로 붙이는 편이, 업로드 시점에 N 종을 굽는 것보다 운영이 편하다.
 
 ### D7. 고아 판별 — S3 를 스캔하지 않는다, DB 가 진실원천
@@ -399,6 +423,9 @@ file=<binary>
 | 손상된 이미지 / 디코드 실패 | 400 | `IMAGE_INVALID` |
 | 분당 업로드 한도 초과 | 429 | `IMAGE_UPLOAD_RATE_LIMITED` |
 | 스토리지 장애 | 500 | `IMAGE_STORAGE_FAILED` |
+| 없는 이미지 id (글 저장/삭제 시) | 404 | `IMAGE_NOT_FOUND` |
+| 이미 다른 글에 붙었거나 정리된 이미지 | 400 | `IMAGE_NOT_ATTACHABLE` |
+| 글당 첨부 상한 초과 | 400 | `IMAGE_COUNT_EXCEEDED` |
 
 > `ErrorType` 은 `module/common/error/ErrorType.java` 에 커뮤니티 블록과 나란히 추가한다. 현재 `ErrorCode` enum 은 `E400/E401/E403/E404/E409/E500/E503` 만 있으므로 **`E429` 를 함께 추가**해야 한다.
 
@@ -437,9 +464,17 @@ DELETE /api/community/images/{imageId}
  }
 ```
 
-- `imageIds` 는 **선택 필드**(없으면 빈 목록) — 기존 클라이언트가 깨지지 않는다.
-- `@Size(max = 10)` — 글당 이미지 상한.
-- 수정(`PUT`)은 **전체 교체 시맨틱**: 요청에 없는 기존 첨부는 DETACHED 로 전이.
+- `imageIds` 는 **선택 필드** — 기존 클라이언트가 깨지지 않는다.
+- `@Size(max = 10)` — 글당 이미지 상한(진실원천은 `community.image.max-count-per-post`, 어노테이션은 상수라 값이 중복된다).
+- 수정(`PUT`)은 **전체 교체 시맨틱**: 목록에 없는 기존 첨부는 DETACHED 로 전이.
+
+> **구현 노트 — 수정 시 `null` 과 `[]` 를 구분한다.**
+> `imageIds` 필드가 **아예 없으면** 첨부를 건드리지 않고, **빈 배열이면** 전부 해제한다.
+> 둘을 같게 취급하면(둘 다 "빈 목록") 제목만 고치는 화면이나 이 필드를 모르는 구 클라이언트가
+> PUT 을 보내는 순간 사용자가 손대지 않은 이미지가 조용히 떨어져 나가 본문이 즉시 깨진다.
+> 설계 문서가 "요청에 없는"을 목록 안의 원소 기준으로만 정의해 필드 부재는 미정의였고,
+> 한쪽 해석이 데이터 손실이라 안전한 쪽을 택했다. **프론트엔드는 목록을 보낼 때 유지할 이미지를
+> 모두 담아야 한다** — 그래서 상세 응답이 현재 첨부 목록을 함께 내려준다.
 
 응답 `PostResponse` 에 첨부 목록을 추가할지는 선택이다. 본문에 URL 이 이미 들어 있으므로 렌더링에는 불필요하지만, **수정 화면이 "현재 첨부 목록"을 알아야 하므로 추가하는 쪽을 권장**한다.
 
@@ -532,18 +567,25 @@ PostService.createPost(memberId, command)
 
 각 PR 은 독립적으로 머지 가능하도록 쪼갰다.
 
-| # | 범위 | 산출물 | 검증 |
+| # | 범위 | 산출물 | 상태 |
 |---|---|---|---|
-| **0** | 인프라 준비 (코드 아님) | **버킷 2벌**(dev/prod) + CloudFront 2벌 + ECS Task Role + 개발자 IAM 사용자, dev 버킷 Lifecycle 30일, 배포 환경변수 | 로컬에서 dev 버킷에 put/get/delete 수동 확인 |
-| **1** | 스키마 | `lol-db-schema` V36 + 서브모듈 포인터 갱신 | `flyway migrate` 로컬 |
-| **2** | 스토리지 포트/어댑터 | `S3Config`(common), `ImageStoragePort`, `S3ImageStorageAdapter`(단일), `FakeImageStorage`(testFixtures), `StorageProperties`, yml | fake 로 단위 테스트 + 로컬 `bootRun` 으로 dev 버킷 실제 업로드 확인 |
-| **3** | 도메인 + 영속성 | `PostImage`, `ImageStatus`, 엔티티/리포지토리/매퍼/어댑터 | 도메인 단위 테스트(상태 전이), `archTest` |
-| **4** | 업로드 API | `ImageService`, `CommunityImageController`, `ErrorType`+`ErrorCode.E429` 추가, `CoreExceptionAdvice` 에 `MaxUploadSizeExceededException` 핸들러 추가, 검증 유틸 | 서비스 단위 테스트, RestDocs |
-| **5** | 게시글 연동 | `CreatePostRequest/UpdatePostRequest.imageIds`, `PostService` attach/detach, `PostResponse.images` | `PostServiceTest` 확장, RestDocs 갱신 |
-| **6** | 정리 배치 | `ImageCleanupUseCase`, `OrphanImageCleanupScheduler` | 스케줄러 테스트(기존 `DuoPostExpirationSchedulerTest` 패턴) |
-| **7** | 문서 | `docs/ARCHITECTURE.md` 갱신, 이 문서 상태 전환, RestDocs 재생성 | `docs-check` CI |
+| **0** | 인프라 준비 (코드 아님) | **버킷 2벌**(dev/prod) + CloudFront 2벌 + ECS Task Role + 개발자 IAM 사용자, dev 버킷 Lifecycle 30일, 배포 환경변수 | ⬜ **미착수 — 유일한 블로커** |
+| **1** | 스키마 | `lol-db-schema` V36 + 서브모듈 포인터 갱신 | ✅ 파일 작성, 서브모듈 PR 머지 대기 |
+| **2** | 스토리지 포트/어댑터 | `S3Config`(common), `ImageStoragePort`, `S3ImageStorageAdapter`(단일), `ImageProcessorPort`+`DefaultImageProcessor`, `StorageProperties` | ✅ |
+| **3** | 도메인 + 영속성 | `PostImage`, `ImageStatus`, 엔티티/리포지토리/매퍼/어댑터 | ✅ `PostImageTest`, `ImagePersistenceAdapterTest` |
+| **4** | 업로드 API | `ImageService`, `CommunityImageController`, `ErrorType`+`ErrorCode.E429`, `CoreExceptionAdvice` 의 `MaxUploadSizeExceededException` 핸들러 | ✅ `ImageServiceTest`, RestDocs |
+| **5** | 게시글 연동 | `CreatePostRequest/UpdatePostRequest.imageIds`, `PostService` attach/replace/detach, `PostResponse.images` | ✅ `PostServiceTest` 확장 |
+| **6** | 정리 배치 | `ImageCleanupUseCase`/`ImageCleanupService`, `OrphanImageCleanupScheduler` | ✅ `ImageCleanupServiceTest` |
+| **7** | 문서 | 이 문서 갱신, RestDocs 스니펫 | ✅ (`docs/ARCHITECTURE.md` 는 제외 — 옛 레이어 구조 기준이라 이 변경만 얹을 수 없다) |
 
-> PR 2~6 은 `./gradlew compileJava compileTestJava` + `./gradlew archTest` 로 Docker 없이 선검증 가능하다.
+`./gradlew test archTest checkstyleMain checkstyleTest` 전부 통과한다(Docker 불필요).
+
+> **구현 노트 — `TestJpaConfig` 에 제외 필터 3개를 추가해야 했다.** `@DataJpaTest` 슬라이스가
+> `com.example.lolserver` 전체를 스캔하는데, 새 driven 어댑터 세 개가 각각 `S3Client` /
+> `CommunityImageProperties` / `StringRedisTemplate` 를 요구해 **커뮤니티의 기존 리포지토리 테스트가
+> 전부 컨텍스트 로딩에서 죽었다.** 기존 `client`/`messaging`/`cache`/`oauth` 와 같은 이유·같은 방식으로
+> `adapter.out.storage`·`adapter.out.image`·`adapter.out.ratelimit` 를 제외했다.
+> 새 driven 어댑터 패키지를 만들 때마다 반복될 함정이다.
 
 ### 추가되는 설정
 
@@ -628,36 +670,55 @@ implementation 'org.springframework.boot:spring-boot-starter-data-redis'  // rat
 
 > `common` 과 `community` 양쪽에 SDK 를 선언하는 건 `implementation` 이 전이되지 않는 이 레포의 기존 패턴(`match`/`championstats` 의 redis 선언)과 같다.
 
-### ArchUnit 규칙 추가 권장
+### ArchUnit 규칙 (추가 완료)
 
 ```java
 @Test
-void application은_스토리지_SDK에_의존하지_않는다() {
+void domain과_application은_스토리지_이미지_SDK에_의존하지_않는다() {
     noClasses()
         .that().resideInAnyPackage("..community.domain..", "..community.application..")
         .should().dependOnClassesThat()
-        .resideInAnyPackage("software.amazon.awssdk..", "org.apache.tika..")
+        .resideInAnyPackage("software.amazon.awssdk..", "org.apache.tika..",
+                "javax.imageio..", "java.awt..")
         .check(classes);
 }
 ```
+
+`javax.imageio`·`java.awt` 를 함께 막는 이유는, 리사이즈 코드가 "잠깐만" 서비스로 올라오는 게
+가장 흔한 새는 경로이기 때문이다.
 
 ---
 
 ## 9. 확정 필요 사항
 
-구현 착수 전에 답이 필요한 것들이다. 괄호 안은 답이 없을 때 진행할 기본값.
+코드는 이 답들과 무관하게 완성돼 있다 — 아래는 **뜨기 전에 사람이 정해야 하는 것**들이다.
+1~3 은 인프라(PR 0)라 답이 없으면 로컬에서도 실행되지 않고, 4~7 은 답이 늦어도 코드가 기다려 준다.
+괄호 안은 답이 없을 때 진행할 기본값.
 
 1. **버킷·CloudFront 를 2벌(dev/prod) 만들 수 있는가?** 계정·비용·IaC 관리 주체 확인. dev 배포까지 두는 이유는 D3 참고. (기본값: 만들 수 있다고 보고 PR 0 을 인프라 작업으로 분리)
 2. **개발자 IAM 사용자를 어떻게 발급·회수하는가?** 인원이 늘면 개인별 사용자 대신 SSO/AssumeRole 이 낫다. (기본값: 팀 공용 dev 전용 IAM 사용자 1개)
 3. **dev 버킷을 개발자끼리 공유하는가, 개인별로 나누는가?** 공유해도 정리 배치는 자기 DB 기준이라 서로를 지우지 않는다. 남는 고아는 Lifecycle 30일이 청소한다. 개인별로 나눈다면 키 prefix 를 `local/{개발자}/…` 로 한 단계 더 쪼개면 된다. (기본값: 공유 + Lifecycle)
 4. **에디터가 마크다운인가 HTML(WYSIWYG)인가?** 서버 설계는 동일하지만, HTML 이면 본문 sanitize(XSS) 정책이 **이 설계 밖에서** 별도로 필요하다. (기본값: 마크다운 가정)
-5. **`imageIds` 를 클라이언트가 보내는 계약에 프론트엔드가 동의하는가?** 본문 파싱 대안 대비 프론트 작업량이 조금 늘어난다. (기본값: 이 계약으로 진행)
+5. **`imageIds` 를 클라이언트가 보내는 계약에 프론트엔드가 동의하는가?** 본문 파싱 대안 대비 프론트 작업량이 조금 늘어난다. 특히 **수정 시 전체 교체**(목록을 보내면 빠진 것은 해제, 필드를 아예 빼면 그대로 유지)를 반드시 맞춰야 한다 — 5.3 구현 노트. (기본값: 이 계약으로 진행)
 6. **댓글 이미지가 곧 필요한가?** 필요하다면 지금 `community_image` 에 `comment_id` 컬럼을 함께 넣는 편이 마이그레이션 한 번을 아낀다. (기본값: 넣지 않음)
 7. **Linear 이슈 번호(MP-XXX)** — 브랜치/커밋 컨벤션상 필요하다.
 
 ---
 
 ## 10. 참고
+
+### 구현 위치
+
+| 관심사 | 파일 |
+|---|---|
+| 상태 전이 규칙 | `community/domain/PostImage.java` |
+| 업로드 파이프라인·첨부 확정 | `community/application/ImageService.java` |
+| 고아 정리 | `community/application/ImageCleanupService.java` + `app/config/OrphanImageCleanupScheduler.java` |
+| S3 키 레이아웃·PUT/DELETE | `community/adapter/out/storage/S3ImageStorageAdapter.java` |
+| 타입 판별·폭탄 가드·EXIF 제거 | `community/adapter/out/image/` (`DefaultImageProcessor`, `ImageDimensionReader`, `ImageNormalizer`) |
+| 업로드 rate limit | `community/adapter/out/ratelimit/RedisImageRateLimitAdapter.java` |
+| S3 클라이언트 빈 | `common/config/S3Config.java` |
+| 스키마 | `lol-db-schema/db/migration/V36__add_community_image.sql` |
 
 - `module/domain/community/ArchitectureTest` — 이 설계가 통과해야 하는 규칙
 - `module/app/application/config/DuoPostExpirationScheduler` — 정리 배치가 따를 패턴
