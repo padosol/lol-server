@@ -154,6 +154,12 @@ IAM 조건(`s3:prefix`)으로 좁힐 수는 있지만, 정책 한 줄만 잘못 
 운영 버킷 이름을 넣더라도 객체가 `local/` 아래로 떨어져 운영 데이터와 섞이지 않고, 로그·콘솔에서
 어느 환경이 만든 객체인지 즉시 식별된다. 비용은 문자열 몇 바이트다.
 
+> **구현 노트 — `StorageProperties` 는 common 에 둔다.** 값을 쓰는 쪽이 두 모듈에 걸쳐 있다.
+> `S3Config`(빈 생성, common)와 `S3ImageStorageAdapter`(키 조립·PUT/DELETE, community)가 같은
+> 값을 봐야 하는데, 어느 한쪽 컨텍스트로 내리면 나머지가 참조할 수 없다(common → community 의존 금지).
+> 설정값은 `@Value` 로 흩뿌리지 않고 `@ConfigurationProperties` **객체 하나**로 묶어 주입한다 —
+> 프로퍼티 이름이 한 곳에만 있고, 테스트에서 객체를 만들어 넣으면 되므로 컨텍스트가 필요 없다.
+
 #### 크리덴셜 — 코드는 동일, 해석만 환경이 다르다
 
 `S3Client` 는 프로파일 분기 없이 단일 빈이고 `DefaultCredentialsProvider` 를 쓴다.
@@ -571,7 +577,7 @@ PostService.createPost(memberId, command)
 |---|---|---|---|
 | **0** | 인프라 준비 (코드 아님) | **버킷 2벌**(dev/prod) + CloudFront 2벌 + ECS Task Role + 개발자 IAM 사용자, dev 버킷 Lifecycle 30일, 배포 환경변수 | ⬜ **미착수 — 유일한 블로커** |
 | **1** | 스키마 | `lol-db-schema` V36 + 서브모듈 포인터 갱신 | ✅ 파일 작성, 서브모듈 PR 머지 대기 |
-| **2** | 스토리지 포트/어댑터 | `S3Config`(common), `ImageStoragePort`, `S3ImageStorageAdapter`(단일), `ImageProcessorPort`+`DefaultImageProcessor`, `StorageProperties` | ✅ |
+| **2** | 스토리지 포트/어댑터 | `S3Config`+`StorageProperties`(common), `ImageStoragePort`, `S3ImageStorageAdapter`(단일), `ImageProcessorPort`+`DefaultImageProcessor` | ✅ |
 | **3** | 도메인 + 영속성 | `PostImage`, `ImageStatus`, 엔티티/리포지토리/매퍼/어댑터 | ✅ `PostImageTest`, `ImagePersistenceAdapterTest` |
 | **4** | 업로드 API | `ImageService`, `CommunityImageController`, `ErrorType`+`ErrorCode.E429`, `CoreExceptionAdvice` 의 `MaxUploadSizeExceededException` 핸들러 | ✅ `ImageServiceTest`, RestDocs |
 | **5** | 게시글 연동 | `CreatePostRequest/UpdatePostRequest.imageIds`, `PostService` attach/replace/detach, `PostResponse.images` | ✅ `PostServiceTest` 확장 |

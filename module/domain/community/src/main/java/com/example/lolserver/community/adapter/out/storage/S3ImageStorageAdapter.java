@@ -1,5 +1,6 @@
 package com.example.lolserver.community.adapter.out.storage;
 
+import com.example.lolserver.common.config.StorageProperties;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
 import com.example.lolserver.community.application.port.out.ImageStoragePort;
