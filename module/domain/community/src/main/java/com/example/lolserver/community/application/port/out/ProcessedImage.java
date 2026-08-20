@@ -29,14 +29,14 @@ public record ProcessedImage(
         if (this == o) {
             return true;
         }
-        if (!(o instanceof ProcessedImage other)) {
-            return false;
-        }
-        return width == other.width
-                && height == other.height
-                && Arrays.equals(content, other.content)
-                && contentType.equals(other.contentType)
-                && extension.equals(other.extension);
+        return o instanceof ProcessedImage(
+                byte[] otherContent, String otherType, String otherExtension,
+                int otherWidth, int otherHeight)
+                && width == otherWidth
+                && height == otherHeight
+                && Arrays.equals(content, otherContent)
+                && contentType.equals(otherType)
+                && extension.equals(otherExtension);
     }
 
     @Override
