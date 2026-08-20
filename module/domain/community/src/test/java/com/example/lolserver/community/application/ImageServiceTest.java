@@ -302,7 +302,7 @@ class ImageServiceTest {
     }
 
     private static PostImage attached(Long id) {
-        PostImage image = PostImage.builder()
+        return PostImage.builder()
                 .id(id)
                 .memberId(MEMBER_ID)
                 .postId(POST_ID)
@@ -312,6 +312,5 @@ class ImageServiceTest {
                 .sizeBytes(4L)
                 .status(ImageStatus.ATTACHED)
                 .build();
-        return image;
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -30,7 +31,10 @@ public class RedisImageRateLimitAdapter implements ImageRateLimitPort {
 
     @Override
     public boolean tryAcquire(Long memberId, int limitPerMinute) {
-        String key = KEY_PREFIX + memberId + ":" + LocalDateTime.now().format(MINUTE_BUCKET);
+        // 존은 무엇이든 창이 1분으로 유지되지만, 명시하지 않으면 인스턴스마다 다른 존을
+        // 잡아 같은 회원이 서로 다른 버킷 키를 써 한도가 사실상 배로 늘어난다.
+        String key = KEY_PREFIX + memberId + ":"
+                + LocalDateTime.now(ZoneId.systemDefault()).format(MINUTE_BUCKET);
         try {
             Long count = stringRedisTemplate.opsForValue().increment(key);
             if (count == null) {

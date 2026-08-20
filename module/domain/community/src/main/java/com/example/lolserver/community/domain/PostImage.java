@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 /**
  * 커뮤니티 게시글 본문 이미지.
@@ -46,7 +47,7 @@ public class PostImage {
      */
     public static PostImage uploading(Long memberId, String storageKey, String url,
             String contentType, long sizeBytes, Integer width, Integer height) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneId.systemDefault());
         return PostImage.builder()
                 .memberId(memberId)
                 .storageKey(storageKey)
@@ -120,7 +121,14 @@ public class PostImage {
         }
     }
 
+    /**
+     * 시각은 배포 환경의 기본 존으로 찍는다 — {@code Post}·{@code Comment} 등 커뮤니티의
+     * 다른 도메인이 모두 같은 방식이고, DB 컬럼도 존 정보 없는 {@code TIMESTAMP} 다.
+     * 여기만 다른 존을 쓰면 같은 화면에 뜨는 글과 이미지의 시각이 어긋나고, 정리 배치가
+     * {@code updated_at} 을 기준으로 계산하는 유예기간도 통째로 밀린다.
+     * (존을 옮긴다면 이 클래스가 아니라 커뮤니티 전체를 함께 옮겨야 한다.)
+     */
     private void touch() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(ZoneId.systemDefault());
     }
 }

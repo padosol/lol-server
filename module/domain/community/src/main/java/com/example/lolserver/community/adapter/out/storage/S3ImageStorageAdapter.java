@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
@@ -54,7 +55,9 @@ public class S3ImageStorageAdapter implements ImageStoragePort {
     public StoredImageLocation allocate(String extension) {
         String key = "%s/community/%s/%s.%s".formatted(
                 properties.getKeyPrefix(),
-                LocalDate.now().format(KEY_DATE),
+                // 키의 연·월은 사람이 버킷을 훑을 때 쓰는 구획일 뿐이지만, 존을 안 주면
+                // 배포 환경에 따라 월말 자정 근처의 객체가 다른 달로 떨어진다.
+                LocalDate.now(ZoneId.systemDefault()).format(KEY_DATE),
                 UUID.randomUUID(),
                 extension);
         return new StoredImageLocation(key, toUrl(key));

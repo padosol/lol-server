@@ -31,34 +31,51 @@ final class ImageDimensionReader {
         };
     }
 
-    /** SOF(Start Of Frame) 세그먼트에 크기가 들어 있다. 마커를 건너뛰며 찾는다. */
+    /**
+     * SOF(Start Of Frame) 세그먼트에 크기가 들어 있다. 마커를 건너뛰며 찾는다.
+     *
+     * <p>"건너뛸 바이트인가" 판단을 {@link #skipNonSegment} 로 분리해 루프 본문에서
+     * 분기 탈출(break·continue)을 없앴다. 판단과 전진이 섞이면 마커 규칙을 고칠 때
+     * 어느 경로가 인덱스를 얼마나 움직이는지 따라가기 어렵다.
+     */
     private static ImageDimensions readJpeg(byte[] c) {
         int i = 2;
         while (i + 9 < c.length) {
-            if ((c[i] & 0xFF) != 0xFF) {
-                i++;
-                continue;
+            int skipped = skipNonSegment(c, i);
+            if (skipped > i) {
+                i = skipped;
+            } else {
+                int length = u16be(c, i + 2);
+                if (length < 2) {
+                    // 세그먼트 길이가 자기 자신보다 짧다 = 손상된 파일.
+                    throw new CoreException(ErrorType.IMAGE_INVALID);
+                }
+                if (isStartOfFrame(c[i + 1] & 0xFF)) {
+                    return new ImageDimensions(u16be(c, i + 7), u16be(c, i + 5));
+                }
+                i += 2 + length;
             }
-            int marker = c[i + 1] & 0xFF;
-            // 0xFF 채움 바이트, SOI, TEM, RSTn 은 길이 필드가 없다.
-            if (marker == 0xFF) {
-                i++;
-                continue;
-            }
-            if (marker == 0xD8 || marker == 0x01 || (marker >= 0xD0 && marker <= 0xD7)) {
-                i += 2;
-                continue;
-            }
-            int length = u16be(c, i + 2);
-            if (length < 2) {
-                break;
-            }
-            if (isStartOfFrame(marker)) {
-                return new ImageDimensions(u16be(c, i + 7), u16be(c, i + 5));
-            }
-            i += 2 + length;
         }
         throw new CoreException(ErrorType.IMAGE_INVALID);
+    }
+
+    /**
+     * 길이 필드가 없어 그냥 지나쳐야 하는 바이트면 다음 위치를, 길이 필드를 가진
+     * 세그먼트의 시작이면 {@code i} 를 그대로 돌려준다.
+     */
+    private static int skipNonSegment(byte[] c, int i) {
+        if ((c[i] & 0xFF) != 0xFF) {
+            return i + 1;
+        }
+        int marker = c[i + 1] & 0xFF;
+        // 0xFF 채움 바이트, SOI, TEM, RSTn 은 길이 필드가 없다.
+        if (marker == 0xFF) {
+            return i + 1;
+        }
+        if (marker == 0xD8 || marker == 0x01 || (marker >= 0xD0 && marker <= 0xD7)) {
+            return i + 2;
+        }
+        return i;
     }
 
     /** 0xC4(DHT)·0xC8(JPG)·0xCC(DAC) 는 SOF 가 아니다. */

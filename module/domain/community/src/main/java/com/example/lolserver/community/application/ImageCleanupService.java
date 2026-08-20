@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -35,7 +36,9 @@ public class ImageCleanupService implements ImageCleanupUseCase {
 
     @Override
     public void cleanupOrphans() {
-        LocalDateTime now = LocalDateTime.now();
+        // 임계값은 PostImage 가 찍은 updated_at 과 같은 존이어야 한다. 다르면 유예기간이
+        // 존 차이만큼 통째로 밀려, 멀쩡한 이미지를 이르게 지우거나 고아를 못 지운다.
+        LocalDateTime now = LocalDateTime.now(ZoneId.systemDefault());
 
         // 업로드 도중 끊김(S3 PUT 실패 / 앱 크래시). 파일이 아예 없을 수 있지만
         // DeleteObject 는 멱등이라 그냥 지우면 된다.
