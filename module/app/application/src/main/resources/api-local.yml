@@ -7,6 +7,13 @@ server:
       pattern: "%{yyyy-MM-dd HH:mm:ss}t %s [%r] [Remote: %a] [Size: %b]"
 
 spring:
+  servlet:
+    multipart:
+      # 앱 레벨 검증(community.image.max-size-bytes)과 이중 방어. 이 한도를 넘기면
+      # 앱 코드에 닿기 전에 Spring 이 끊고, CoreExceptionAdvice 가 400 으로 변환한다.
+      max-file-size: 5MB
+      max-request-size: 6MB
+
   security:
     oauth2:
       client:
@@ -50,3 +57,25 @@ cors:
 cookie:
   secure: false
   same-site: Lax
+
+# 로컬도 실제 S3 를 쓴다. 어댑터도 프로파일 분기도 하나이고, 다른 것은 아래 값들뿐이다.
+# 격리는 코드가 아니라 버킷이 한다 — 개발자 IAM 정책에 운영 버킷 ARN 자체가 등장하지 않는다.
+# key-prefix 는 그 위의 이중 안전장치다(설정 실수로 운영 버킷을 가리켜도 local/ 아래로 떨어진다).
+storage:
+  s3:
+    bucket: ${S3_BUCKET:lol-community-images-dev}
+    region: ${AWS_REGION:ap-northeast-2}
+    key-prefix: local
+    base-url: ${CDN_BASE_URL:https://dev-cdn.example.com}
+
+community:
+  image:
+    max-size-bytes: 5242880
+    max-count-per-post: 10
+    max-pixels: 50000000
+    max-width: 1920
+    allowed-types: image/jpeg,image/png,image/gif,image/webp
+    upload-rate-per-minute: 10
+    uploading-retention-hours: 1
+    pending-retention-hours: 24
+    detached-retention-days: 7
