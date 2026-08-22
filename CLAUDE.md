@@ -47,6 +47,7 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
 
 상세는 각 모듈 CLAUDE.md. 공통 베이스라인만:
 - DI: `@RequiredArgsConstructor` + `private final` (생성자 주입)
+- 설정값: `@Value` 대신 `@Component` + `@ConfigurationProperties` **객체**로 묶어 주입 (`JwtProperties`, `StorageProperties`)
 - 트랜잭션: 조회 `@Transactional(readOnly = true)`, 변경 `@Transactional`
 - API 응답: `ResponseEntity<ApiResponse<T>>`, RESTful 상태 코드 (POST 201 / GET·PUT 200 / DELETE 204)
 - 도메인 규칙은 도메인 객체 `validate*` guard 가 직접 던진다 (서비스에서 boolean+throw 금지)

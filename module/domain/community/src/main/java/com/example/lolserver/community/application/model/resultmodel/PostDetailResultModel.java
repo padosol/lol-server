@@ -1,6 +1,7 @@
 package com.example.lolserver.community.application.model.resultmodel;
 
 import com.example.lolserver.community.application.model.readmodel.AuthorReadModel;
+import com.example.lolserver.community.application.model.readmodel.PostImageReadModel;
 import com.example.lolserver.community.domain.Post;
 import com.example.lolserver.community.domain.Vote;
 import com.example.lolserver.community.domain.vo.VoteType;
@@ -10,6 +11,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -27,11 +29,18 @@ public class PostDetailResultModel {
     private final AuthorReadModel author;
     private final VoteType currentUserVote;
     private final boolean currentUserBookmarked;
+    /** 방금 첨부가 확정된 이미지 목록. 생성·수정 응답이 곧바로 수정 화면을 채울 수 있게 한다. */
+    private final List<PostImageReadModel> images;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
     public static PostDetailResultModel of(Post post, MemberProfileReadModel author, Vote currentUserVote,
                                            boolean currentUserBookmarked) {
+        return of(post, author, currentUserVote, currentUserBookmarked, List.of());
+    }
+
+    public static PostDetailResultModel of(Post post, MemberProfileReadModel author, Vote currentUserVote,
+                                           boolean currentUserBookmarked, List<PostImageReadModel> images) {
         return PostDetailResultModel.builder()
                 .id(post.getId())
                 .title(post.getTitle())
@@ -46,6 +55,7 @@ public class PostDetailResultModel {
                         currentUserVote != null
                                 ? currentUserVote.getVoteType() : null)
                 .currentUserBookmarked(currentUserBookmarked)
+                .images(images)
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();

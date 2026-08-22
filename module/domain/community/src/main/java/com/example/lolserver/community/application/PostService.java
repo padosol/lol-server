@@ -5,9 +5,12 @@ import com.example.lolserver.community.application.command.PostSearchCommand;
 import com.example.lolserver.community.application.command.UpdatePostCommand;
 import com.example.lolserver.community.application.model.readmodel.AuthorReadModel;
 import com.example.lolserver.community.application.model.readmodel.PostDetailReadModel;
+import com.example.lolserver.community.application.model.readmodel.PostImageReadModel;
 import com.example.lolserver.community.application.model.readmodel.PostListReadModel;
 import com.example.lolserver.community.application.model.resultmodel.PostDetailResultModel;
 import com.example.lolserver.community.application.port.in.CategoryQueryUseCase;
+import com.example.lolserver.community.application.port.in.ImageAttachUseCase;
+import com.example.lolserver.community.application.port.in.ImageQueryUseCase;
 import com.example.lolserver.community.application.port.in.PostQueryUseCase;
 import com.example.lolserver.community.application.port.in.PostUseCase;
 import com.example.lolserver.community.application.port.out.BookmarkPersistencePort;
@@ -43,6 +46,9 @@ public class PostService implements PostUseCase, PostQueryUseCase {
     private final BookmarkPersistencePort bookmarkPersistencePort;
     private final VotePersistencePort votePersistencePort;
     private final CategoryQueryUseCase categoryQueryUseCase;
+    // 같은 컨텍스트의 port.in 이므로 아키텍처 규칙 위반이 아니고, 트랜잭션도 하나로 묶인다.
+    private final ImageAttachUseCase imageAttachUseCase;
+    private final ImageQueryUseCase imageQueryUseCase;
 
     @Override
     @Transactional
@@ -56,8 +62,14 @@ public class PostService implements PostUseCase, PostQueryUseCase {
 
         Post saved = postPersistencePort.save(post);
 
+        // 이미지 행은 업로드 API 가 이미 만들어 뒀다. 여기서 하는 일은 post_id·status 를
+        // UPDATE 하는 것뿐이고 S3 호출은 0회다 — 크기·MIME·width/height 는 업로드 때
+        // 서버가 디코드하면서 이미 알고 있던 값이다.
+        List<PostImageReadModel> images =
+                attachImages(memberId, saved.getId(), command.getImageIds());
+
         // 방금 만든 글이므로 북마크되어 있을 수 없다.
-        return PostDetailResultModel.of(saved, author, null, false);
+        return PostDetailResultModel.of(saved, author, null, false, images);
     }
 
     @Override
@@ -73,6 +85,14 @@ public class PostService implements PostUseCase, PostQueryUseCase {
         post.updateContent(command.getTitle(), command.getContent(), command.getCategoryId());
         Post saved = postPersistencePort.save(post);
 
+        // imageIds 를 보낸 요청만 첨부를 건드린다. 필드가 아예 없는 요청(구 클라이언트 /
+        // 제목만 고치는 화면)까지 "빈 목록"으로 해석하면 사용자가 손대지 않은 이미지가
+        // 조용히 떨어져 나가 본문이 곧바로 깨진다. 목록을 보냈다면 그때는 전체 교체다.
+        if (command.getImageIds() != null) {
+            imageAttachUseCase.replace(memberId, postId, command.getImageIds());
+        }
+        List<PostImageReadModel> images = imageQueryUseCase.getPostImages(postId);
+
         MemberProfileReadModel author = memberQueryUseCase.getMemberProfile(memberId);
 
         // false 로 고정하면 자기 글을 북마크한 뒤 수정했을 때 응답이 해제 상태로
@@ -80,7 +100,7 @@ public class PostService implements PostUseCase, PostQueryUseCase {
         boolean bookmarked = bookmarkPersistencePort
                 .existsByMemberIdAndPostId(memberId, postId);
 
-        return PostDetailResultModel.of(saved, author, null, bookmarked);
+        return PostDetailResultModel.of(saved, author, null, bookmarked, images);
     }
 
     @Override
@@ -93,6 +113,10 @@ public class PostService implements PostUseCase, PostQueryUseCase {
 
         post.markDeleted();
         postPersistencePort.save(post);
+
+        // 파일은 지우지 않는다. 글이 soft delete 이므로 복구 여지가 있고, 삭제 직후 CDN 에
+        // 남은 참조가 곧바로 404 를 뿜지 않게 하려는 것이다. 유예 후 정리 배치가 처리한다.
+        imageAttachUseCase.detachByPostId(postId);
     }
 
     @Override
@@ -120,7 +144,20 @@ public class PostService implements PostUseCase, PostQueryUseCase {
                 && bookmarkPersistencePort
                         .existsByMemberIdAndPostId(currentMemberId, postId);
 
-        return PostDetailReadModel.of(post, author, currentUserVote, currentUserBookmarked);
+        return PostDetailReadModel.of(post, author, currentUserVote, currentUserBookmarked,
+                imageQueryUseCase.getPostImages(postId));
+    }
+
+    /**
+     * 글 생성 시 첨부 확정. 목록이 비어 있으면 조회조차 하지 않는다 —
+     * 이미지 없는 글이 대다수인데 매번 SELECT 를 한 번 더 낼 이유가 없다.
+     */
+    private List<PostImageReadModel> attachImages(Long memberId, Long postId, List<Long> imageIds) {
+        if (imageIds == null || imageIds.isEmpty()) {
+            return List.of();
+        }
+        imageAttachUseCase.attach(memberId, postId, imageIds);
+        return imageQueryUseCase.getPostImages(postId);
     }
 
     @Override

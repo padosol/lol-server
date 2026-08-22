@@ -11,6 +11,11 @@ server:
       pattern: "%{yyyy-MM-dd HH:mm:ss}t %s [%r] [Remote: %a] [Size: %b]"
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
   security:
     oauth2:
       client:
@@ -54,3 +59,24 @@ cors:
 cookie:
   secure: true
   same-site: None
+
+# 기본값(`:`)을 두지 않는 것은 기존 운영 설정의 관례와 같다 — 값이 빠지면 조용히 잘못된
+# 버킷을 쓰는 대신 부팅이 실패해야 한다. 크리덴셜은 ECS Task Role 이 제공하므로 키가 없다.
+storage:
+  s3:
+    bucket: ${S3_BUCKET}
+    region: ${AWS_REGION}
+    key-prefix: prod
+    base-url: ${CDN_BASE_URL}
+
+community:
+  image:
+    max-size-bytes: 5242880
+    max-count-per-post: 10
+    max-pixels: 50000000
+    max-width: 1920
+    allowed-types: image/jpeg,image/png,image/gif,image/webp
+    upload-rate-per-minute: 10
+    uploading-retention-hours: 1
+    pending-retention-hours: 24
+    detached-retention-days: 7

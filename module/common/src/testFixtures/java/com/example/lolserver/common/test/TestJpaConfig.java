@@ -29,7 +29,12 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
             @ComponentScan.Filter(type = FilterType.REGEX, pattern = ".*\\.adapter\\.out\\.client\\..*"),
             @ComponentScan.Filter(type = FilterType.REGEX, pattern = ".*\\.adapter\\.out\\.messaging\\..*"),
             @ComponentScan.Filter(type = FilterType.REGEX, pattern = ".*\\.adapter\\.out\\.cache\\..*"),
-            @ComponentScan.Filter(type = FilterType.REGEX, pattern = ".*\\.adapter\\.out\\.oauth\\..*")
+            @ComponentScan.Filter(type = FilterType.REGEX, pattern = ".*\\.adapter\\.out\\.oauth\\..*"),
+            // 이미지 업로드 driven 어댑터. 각각 S3Client / CommunityImageProperties(.config 라
+            // 위에서 제외된다) / StringRedisTemplate 을 요구하는데 JPA 슬라이스에는 없다.
+            @ComponentScan.Filter(type = FilterType.REGEX, pattern = ".*\\.adapter\\.out\\.storage\\..*"),
+            @ComponentScan.Filter(type = FilterType.REGEX, pattern = ".*\\.adapter\\.out\\.image\\..*"),
+            @ComponentScan.Filter(type = FilterType.REGEX, pattern = ".*\\.adapter\\.out\\.ratelimit\\..*")
         })
 @Import(AsyncQueryConfig.class)
 public class TestJpaConfig {
