@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  *
  * <pre>
  *              local                          prod
- *   bucket     lol-community-images-dev       lol-community-images-prod
+ *   bucket     mmrtr-community-dev            mmrtr-community
  *   keyPrefix  local                          prod
  *   baseUrl    dev CloudFront                 prod CloudFront
  * </pre>

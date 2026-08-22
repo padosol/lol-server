@@ -63,7 +63,7 @@ cookie:
 # key-prefix 는 그 위의 이중 안전장치다(설정 실수로 운영 버킷을 가리켜도 local/ 아래로 떨어진다).
 storage:
   s3:
-    bucket: ${S3_BUCKET:lol-community-images-dev}
+    bucket: ${S3_BUCKET:mmrtr-community-dev}
     region: ${AWS_REGION:ap-northeast-2}
     key-prefix: local
     base-url: ${CDN_BASE_URL:https://dev-cdn.example.com}

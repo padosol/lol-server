@@ -123,7 +123,7 @@ public interface ImageStoragePort {
 
 | | local | prod |
 |---|---|---|
-| 버킷 | `lol-community-images-dev` | `lol-community-images-prod` |
+| 버킷 | `mmrtr-community-dev` | `mmrtr-community` |
 | 키 prefix | `local/` | `prod/` |
 | CloudFront | dev 배포 | prod 배포 |
 | 크리덴셜 | 개발자 IAM 사용자 (`~/.aws/credentials`) | ECS Task Role |
@@ -630,7 +630,7 @@ storage:
 # api-local.yml — 개발자는 .env 로 덮어쓸 수 있다
 storage:
   s3:
-    bucket: ${S3_BUCKET:lol-community-images-dev}
+    bucket: ${S3_BUCKET:mmrtr-community-dev}
     region: ${AWS_REGION:ap-northeast-2}
     key-prefix: local
     base-url: ${CDN_BASE_URL:https://dev-cdn.example.com}
