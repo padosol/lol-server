@@ -43,7 +43,7 @@ class ImageServiceTest {
     private static final Long MEMBER_ID = 1L;
     private static final Long OTHER_ID = 2L;
     private static final Long POST_ID = 10L;
-    private static final String STORAGE_KEY = "local/community/2026/08/uuid.jpg";
+    private static final String STORAGE_KEY = "community/2026/08/uuid.jpg";
     private static final String URL = "https://cdn.example.com/" + STORAGE_KEY;
 
     @Mock

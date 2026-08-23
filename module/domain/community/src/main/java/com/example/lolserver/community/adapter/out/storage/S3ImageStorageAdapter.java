@@ -46,15 +46,19 @@ public class S3ImageStorageAdapter implements ImageStoragePort {
     private final StorageProperties properties;
 
     /**
-     * {@code {env}/community/{yyyy}/{MM}/{uuid}.{ext}}
+     * {@code community/{yyyy}/{MM}/{uuid}.{ext}}
+     *
+     * <p>환경(local·prod)은 키가 아니라 <b>버킷</b>이 가른다. 키에 넣으면 공개 URL 에
+     * {@code prod/} 가 그대로 드러나는데, CDN 도메인이 이미 환경을 말해 주므로 중복이다.
+     * 이렇게 두면 URL 경로와 S3 키가 완전히 같아져 CloudFront 로그의 URI 를 그대로
+     * 키로 쓸 수 있다.
      *
      * <p>원본 파일명을 쓰지 않는다 — 경로 조작({@code ../}), 한글·특수문자 인코딩 문제,
      * 파일명으로 인한 정보 노출을 한 번에 없앤다.
      */
     @Override
     public StoredImageLocation allocate(String extension) {
-        String key = "%s/community/%s/%s.%s".formatted(
-                properties.getKeyPrefix(),
+        String key = "community/%s/%s.%s".formatted(
                 // 키의 연·월은 사람이 버킷을 훑을 때 쓰는 구획일 뿐이지만, 존을 안 주면
                 // 배포 환경에 따라 월말 자정 근처의 객체가 다른 달로 떨어진다.
                 LocalDate.now(ZoneId.systemDefault()).format(KEY_DATE),

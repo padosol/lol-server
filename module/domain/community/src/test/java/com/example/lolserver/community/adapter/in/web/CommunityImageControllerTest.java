@@ -59,7 +59,7 @@ class CommunityImageControllerTest extends RestDocsSupport {
         given(imageUseCase.upload(anyLong(), any(UploadImageCommand.class)))
                 .willReturn(PostImageReadModel.builder()
                         .imageId(1042L)
-                        .url("https://cdn.example.com/local/community/2026/08/9f2c.webp")
+                        .url("https://cdn.example.com/community/2026/08/9f2c.webp")
                         .width(1920)
                         .height(1080)
                         .sizeBytes(481203L)

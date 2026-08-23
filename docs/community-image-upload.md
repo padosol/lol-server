@@ -105,7 +105,7 @@ public interface ImageStoragePort {
 
 > **구현 노트 — `allocate` 가 생긴 이유.** 최초 설계는 `store()` 가 키를 만들어 돌려주는 형태였다.
 > 그런데 D7 에서 순서를 "DB INSERT → S3 PUT" 으로 뒤집으면서, INSERT 시점에 이미 키를 알아야 하게 됐다.
-> 그래서 키 발급과 저장을 분리했다. 키 레이아웃(환경 prefix 포함)은 여전히 어댑터만 안다.
+> 그래서 키 발급과 저장을 분리했다. 키 레이아웃은 여전히 어댑터만 안다.
 
 `MultipartFile` 은 컨트롤러(adapter.in)에서 `byte[]` + 메타로 풀어서 커맨드에 담는다. ArchUnit 의 "application 은 웹 타입 의존 금지" 규칙 때문이기도 하고, 포트를 웹 프레임워크에서 떼어놓는 게 맞기 때문이기도 하다.
 
@@ -117,14 +117,13 @@ public interface ImageStoragePort {
 ### D3. 스토리지 — 로컬도 실제 S3, 버킷을 분리해 격리한다
 
 **어댑터는 하나뿐이다.** 로컬 파일시스템 어댑터를 두지 않고 `S3ImageStorageAdapter` 만 둔다.
-로컬과 운영이 **완전히 같은 코드 경로**를 타고, 다른 것은 설정값(버킷·prefix·CDN 도메인)뿐이다.
+로컬과 운영이 **완전히 같은 코드 경로**를 타고, 다른 것은 설정값(버킷·CDN 도메인)뿐이다.
 "로컬에서 통과했으니 운영에서도 통과한다"가 성립하려면 검증 대상 코드가 같아야 한다 —
 로컬만 파일시스템을 타면 S3 권한·키 규칙·CDN 캐시·삭제 동작은 **운영에 배포한 뒤에야 처음 실행된다.**
 
 | | local | prod |
 |---|---|---|
 | 버킷 | `mmrtr-community-dev` | `mmrtr-community` |
-| 키 prefix | `local/` | `prod/` |
 | CloudFront | dev 배포 | prod 배포 |
 | 크리덴셜 | 개발자 IAM 사용자 (`~/.aws/credentials`) | ECS Task Role |
 | Lifecycle | **30일 후 전량 만료** | 없음 |
@@ -143,16 +142,21 @@ IAM 조건(`s3:prefix`)으로 좁힐 수는 있지만, 정책 한 줄만 잘못 
 - dev 버킷은 통째로 비우거나 지워도 된다.
 - 비용·용량 지표가 환경별로 분리돼 보인다.
 
-#### 그럼에도 키 prefix 에 환경을 넣는다
+#### 키에는 환경을 넣지 않는다
 
 ```
-{env}/community/{yyyy}/{MM}/{uuid}.{ext}
-   ↑ local | prod
+community/{yyyy}/{MM}/{uuid}.{ext}
 ```
 
-버킷이 이미 갈렸는데 prefix 까지 넣는 건 **설정 실수에 대한 이중 안전장치**다. 누군가 로컬 설정에
-운영 버킷 이름을 넣더라도 객체가 `local/` 아래로 떨어져 운영 데이터와 섞이지 않고, 로그·콘솔에서
-어느 환경이 만든 객체인지 즉시 식별된다. 비용은 문자열 몇 바이트다.
+초안은 키 앞에 `{env}/` 를 붙여 설정 실수의 이중 안전장치로 삼으려 했다. 실제로 CloudFront 를
+구성하면서 다시 보니 값이 없었다. 환경을 가르는 것은 버킷과 CDN 도메인이고, 키의 `prod/` 는
+**공개 URL 에 그대로 드러나면서** 아무것도 더 막지 못한다 — 운영은 `${S3_BUCKET}` 에 기본값이
+없어 빠지면 부팅이 실패하고, 로컬이 운영 버킷을 가리키려면 환경변수를 일부러 넣어야 한다
+(실수가 아니라 작정). 식별에도 지장이 없다: 업로드·삭제 실패 로그가 `bucket` 을 키와 함께 남긴다.
+
+덤으로 **URL 경로와 S3 키가 완전히 같아진다.** CloudFront 로그의 URI 를 그대로 S3 키로 쓸 수 있어
+장애 대응에서 변환 단계가 사라진다. CloudFront Origin Path 로 `prod/` 를 숨기는 방법도 있지만,
+정확히 이 대응 관계를 깨뜨려서 택하지 않았다.
 
 > **구현 노트 — `StorageProperties` 는 common 에 둔다.** 값을 쓰는 쪽이 두 모듈에 걸쳐 있다.
 > `S3Config`(빈 생성, common)와 `S3ImageStorageAdapter`(키 조립·PUT/DELETE, community)가 같은
@@ -564,7 +568,7 @@ PostService.createPost(memberId, command)
 | **개인정보** | EXIF(GPS 포함) 전량 제거 |
 | **타 회원 이미지 도용** | `attachTo` 에서 업로더 == 작성자 검증 |
 | **버킷 노출** | 퍼블릭 액세스 차단 + CloudFront OAC. 쓰기 권한은 앱 IAM 역할만 |
-| **로컬이 운영 데이터를 건드림** | 버킷 분리 — 개발자 IAM 정책에 운영 버킷 ARN 이 아예 없다. 키 prefix(`local/`·`prod/`)로 이중 방어 (D3) |
+| **로컬이 운영 데이터를 건드림** | 버킷 분리 — 개발자 IAM 정책에 운영 버킷 ARN 이 아예 없다 (D3) |
 | **개발자 액세스 키 유출** | `~/.aws/credentials` 프로필 권장(레포 밖). `.env` 를 쓸 경우 `.gitignore` 확인 필수. dev 버킷 전용 권한이라 유출돼도 운영 영향 없음 |
 
 ---
@@ -620,7 +624,6 @@ storage:
   s3:
     bucket: ${S3_BUCKET}
     region: ${AWS_REGION}
-    key-prefix: ${STORAGE_KEY_PREFIX}   # local | prod — 설정 실수에 대한 이중 안전장치
     base-url: ${CDN_BASE_URL}
 ```
 
@@ -632,7 +635,6 @@ storage:
   s3:
     bucket: ${S3_BUCKET:mmrtr-community-dev}
     region: ${AWS_REGION:ap-northeast-2}
-    key-prefix: local
     base-url: ${CDN_BASE_URL:https://dev-cdn.example.com}
 
 # api-prod.yml — 전부 환경변수 주입, 기본값 없음
@@ -640,7 +642,6 @@ storage:
   s3:
     bucket: ${S3_BUCKET}
     region: ${AWS_REGION}
-    key-prefix: prod
     base-url: ${CDN_BASE_URL}
 ```
 
@@ -703,7 +704,7 @@ void domain과_application은_스토리지_이미지_SDK에_의존하지_않는�
 
 1. **버킷·CloudFront 를 2벌(dev/prod) 만들 수 있는가?** 계정·비용·IaC 관리 주체 확인. dev 배포까지 두는 이유는 D3 참고. (기본값: 만들 수 있다고 보고 PR 0 을 인프라 작업으로 분리)
 2. **개발자 IAM 사용자를 어떻게 발급·회수하는가?** 인원이 늘면 개인별 사용자 대신 SSO/AssumeRole 이 낫다. (기본값: 팀 공용 dev 전용 IAM 사용자 1개)
-3. **dev 버킷을 개발자끼리 공유하는가, 개인별로 나누는가?** 공유해도 정리 배치는 자기 DB 기준이라 서로를 지우지 않는다. 남는 고아는 Lifecycle 30일이 청소한다. 개인별로 나눈다면 키 prefix 를 `local/{개발자}/…` 로 한 단계 더 쪼개면 된다. (기본값: 공유 + Lifecycle)
+3. **dev 버킷을 개발자끼리 공유하는가, 개인별로 나누는가?** 공유해도 정리 배치는 자기 DB 기준이라 서로를 지우지 않는다. 남는 고아는 Lifecycle 30일이 청소한다. 개인별로 나눈다면 버킷을 따로 파거나 키 앞에 `{개발자}/` 를 한 단계 넣으면 된다. (기본값: 공유 + Lifecycle)
 4. **에디터가 마크다운인가 HTML(WYSIWYG)인가?** 서버 설계는 동일하지만, HTML 이면 본문 sanitize(XSS) 정책이 **이 설계 밖에서** 별도로 필요하다. (기본값: 마크다운 가정)
 5. **`imageIds` 를 클라이언트가 보내는 계약에 프론트엔드가 동의하는가?** 본문 파싱 대안 대비 프론트 작업량이 조금 늘어난다. 특히 **수정 시 전체 교체**(목록을 보내면 빠진 것은 해제, 필드를 아예 빼면 그대로 유지)를 반드시 맞춰야 한다 — 5.3 구현 노트. (기본값: 이 계약으로 진행)
 6. **댓글 이미지가 곧 필요한가?** 필요하다면 지금 `community_image` 에 `comment_id` 컬럼을 함께 넣는 편이 마이그레이션 한 번을 아낀다. (기본값: 넣지 않음)

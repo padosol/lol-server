@@ -133,8 +133,8 @@ class PostImageTest {
     }
 
     private static PostImage createUploading() {
-        return PostImage.uploading(OWNER_ID, "local/community/2026/08/uuid.jpg",
-                "https://cdn.example.com/local/community/2026/08/uuid.jpg",
+        return PostImage.uploading(OWNER_ID, "community/2026/08/uuid.jpg",
+                "https://cdn.example.com/community/2026/08/uuid.jpg",
                 "image/jpeg", 1024L, 800, 600);
     }
 

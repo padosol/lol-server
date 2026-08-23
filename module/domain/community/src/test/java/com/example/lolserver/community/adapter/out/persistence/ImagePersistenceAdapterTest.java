@@ -36,8 +36,8 @@ class ImagePersistenceAdapterTest extends RepositoryTestBase {
     @Test
     void save_roundTripsStatusEnum() {
         PostImage saved = imagePersistenceAdapter.save(
-                PostImage.uploading(1L, "local/community/2026/08/a.jpg",
-                        "https://cdn/local/community/2026/08/a.jpg",
+                PostImage.uploading(1L, "community/2026/08/a.jpg",
+                        "https://cdn/community/2026/08/a.jpg",
                         "image/jpeg", 100L, 80, 60));
 
         assertThat(saved.getId()).isNotNull();
