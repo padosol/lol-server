@@ -49,9 +49,9 @@ public class S3ImageStorageAdapter implements ImageStoragePort {
      * {@code {key-root}/{yyyy}/{MM}/{uuid}.{ext}}
      *
      * <p>첫 세그먼트가 환경을 가른다 — {@code community/}(운영) · {@code community-dev/}(로컬).
-     * 도메인이 아니라 경로로 가르는 이유는 CloudFront 가 Host 가 아니라 <b>경로</b>로
-     * 라우팅하기 때문이다. 한 배포에 두 도메인을 붙여도 behavior·오리진·캐시가 그대로
-     * 공유되므로, 배포를 공유하면서 두 버킷을 쓰려면 경로가 갈리는 수밖에 없다.
+     * 버킷이 게임 정적 자산과 하나라서 이 세그먼트가 <b>유일한 경계</b>다. 도메인으로 가르지
+     * 않는 이유는 CloudFront 가 Host 가 아니라 경로로 라우팅하기 때문이다 — 한 배포에 두
+     * 도메인을 붙여도 behavior·오리진·캐시가 그대로 공유된다.
      *
      * <p>URL 은 {@code base-url + "/" + key} 라 <b>공개 경로와 S3 키가 완전히 같다.</b>
      * CloudFront 로그의 URI 를 그대로 키로 써서 객체를 찾을 수 있다.

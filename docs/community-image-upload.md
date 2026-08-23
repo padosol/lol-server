@@ -114,34 +114,62 @@ public interface ImageStoragePort {
 > 단위테스트가 실제 이미지를 디코딩해야 돌아간다. 포트로 빼서 `adapter/out/image` 에 구현을 두고,
 > ArchUnit 에 `software.amazon.awssdk..`·`org.apache.tika..`·`javax.imageio..`·`java.awt..` 금지 규칙을 추가했다.
 
-### D3. 스토리지 — 로컬도 실제 S3, 버킷을 분리해 격리한다
+### D3. 스토리지 — 로컬도 실제 S3, 정적 자산 버킷을 prefix 로 나눈다
 
 **어댑터는 하나뿐이다.** 로컬 파일시스템 어댑터를 두지 않고 `S3ImageStorageAdapter` 만 둔다.
-로컬과 운영이 **완전히 같은 코드 경로**를 타고, 다른 것은 설정값(버킷·키 루트·CDN 도메인)뿐이다.
+로컬과 운영이 **완전히 같은 코드 경로**를 타고, 다른 것은 설정값(키 루트) 하나뿐이다.
 "로컬에서 통과했으니 운영에서도 통과한다"가 성립하려면 검증 대상 코드가 같아야 한다 —
 로컬만 파일시스템을 타면 S3 권한·키 규칙·CDN 캐시·삭제 동작은 **운영에 배포한 뒤에야 처음 실행된다.**
 
 | | local | prod |
 |---|---|---|
-| 버킷 | `mmrtr-community-dev` | `mmrtr-community` |
+| 버킷 | `mmrtr-static` | `mmrtr-static` |
 | 키 루트 | `community-dev/` | `community/` |
-| CloudFront | `static.metapick.me` (배포 공유) | `static.metapick.me` |
+| CloudFront | `static.metapick.me` (기존 배포 그대로) | `static.metapick.me` |
 | 크리덴셜 | 개발자 IAM 사용자 (`~/.aws/credentials`) | ECS Task Role |
-| Lifecycle | **30일 후 전량 만료** | 없음 |
+| IAM 리소스 | `mmrtr-static/community-dev/*` | `mmrtr-static/community/*` |
+| Lifecycle | `community-dev/` prefix **30일 만료** | 없음 |
 
-#### 격리를 버킷으로 하는 이유 (prefix 분리가 아니라)
+#### 격리를 prefix 로 하는 이유 (버킷 분리가 아니라)
 
-같은 버킷 안에서 prefix 로만 나누면, 로컬 크리덴셜이 **운영 객체에 접근할 권한을 물리적으로 갖는다.**
-IAM 조건(`s3:prefix`)으로 좁힐 수는 있지만, 정책 한 줄만 잘못 써도 개발자 노트북의 키가 운영
-이미지를 지울 수 있는 구조가 된다. 버킷을 나누면 **로컬 IAM 정책에 운영 버킷 ARN 자체가 등장하지 않는다** —
-실수의 여지가 정책 실수에서 "존재하지 않는 권한"으로 바뀐다.
+> 이 절은 **한 번 뒤집힌 결정**이다. 처음에는 `mmrtr-community`(운영)·`mmrtr-community-dev`(로컬)로
+> 버킷을 나눴다. 논거는 "로컬 IAM 정책에 운영 버킷 ARN 자체가 등장하지 않으므로 실수의 여지가
+> 정책 실수에서 *존재하지 않는 권한* 으로 바뀐다"였고, 그 자체로는 지금도 맞다. 뒤집은 이유는
+> 아래의 대가가 예상보다 컸기 때문이다.
 
-버킷 분리가 부수적으로 주는 것들:
-- **dev 버킷에만 Lifecycle 30일 만료**를 걸 수 있다. 여러 개발자가 각자 로컬 DB 로 붙으면 내 DB 에 없는
-  남의 파일은 정리 배치가 지우지 못해 dev 버킷에 고아가 쌓이는데, Lifecycle 이 이를 자동 청소한다.
-  운영에는 절대 걸면 안 되는 규칙이라 버킷이 같으면 이 설정을 쓸 수 없다.
-- dev 버킷은 통째로 비우거나 지워도 된다.
-- 비용·용량 지표가 환경별로 분리돼 보인다.
+**버킷을 나누면 CloudFront 를 반드시 손대야 한다.** CloudFront 는 Host 가 아니라 경로로 라우팅하므로,
+버킷마다 오리진과 cache behavior 를 얹고 두 버킷의 정책을 각각 배포 ARN 에 열어야 한다. 그리고
+`key-root` 가 behavior 의 path pattern 과 어긋나는 순간 **업로드는 성공하는데 조회만 404** 가 된다 —
+코드에 흔적이 남지 않는 실패라 원인을 찾기 고약하다.
+
+**정적 자산 버킷에 넣으면 그 작업이 통째로 사라진다.** `static.metapick.me` 배포는 오리진이
+`mmrtr-static` 하나이고 기본 behavior 가 전 경로를 받는다. 즉 키를 이 버킷에 쓰는 순간 배포 설정을
+전혀 건드리지 않고 서빙된다(`/community-dev/` 로 실제 확인 — 200). 라우팅 계약이 사라지므로 위의
+404 실패 모드 자체가 없어진다. **덤으로 S3 키와 프론트가 참조하는 경로가 자동으로 같아진다.**
+
+**대가는 격리가 IAM 한 줄에 걸린다는 것이다.** 로컬 크리덴셜이 운영 이미지는 물론 게임 정적 자산까지
+접근할 권한을 물리적으로 갖는 구조가 된다. 그래서 개발자 정책의 리소스를 prefix 로 좁히는 것이
+선택이 아니라 **필수**다:
+
+```json
+{
+  "Effect": "Allow",
+  "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+  "Resource": "arn:aws:s3:::mmrtr-static/community-dev/*"
+}
+```
+
+운영 Task Role 도 같은 방식으로 `mmrtr-static/community/*` 로 좁힌다. 버킷 단위(`mmrtr-static/*`)로
+열어 두면 이 설계에 경계가 없어진다.
+
+부수적으로 잃은 것과 되찾은 방법:
+- **Lifecycle 30일 만료** — 버킷 단위 규칙은 못 쓰지만 S3 Lifecycle 은 prefix 필터를 지원한다.
+  `community-dev/` 로 필터한 만료 규칙을 `mmrtr-static` 에 걸면 동일하다. 여러 개발자가 각자 로컬 DB 로
+  붙으면 내 DB 에 없는 남의 파일은 정리 배치가 지우지 못해 고아가 쌓이는데, 이 규칙이 자동 청소한다.
+  **운영 prefix 에는 절대 걸지 않는다.**
+- **"dev 버킷을 통째로 비운다"** — 이제 불가능하다. `aws s3 rm s3://mmrtr-static/community-dev/ --recursive`
+  로 prefix 만 지운다. 경로를 잘못 적으면 운영을 지우므로 버킷 삭제만큼 편하지는 않다.
+- **환경별 비용·용량 지표** — 버킷 단위로는 안 보인다. 필요하면 S3 Storage Lens 의 prefix 집계를 쓴다.
 
 #### 키의 첫 세그먼트가 곧 CloudFront 경로다
 
@@ -151,15 +179,12 @@ community-dev/{yyyy}/{MM}/{uuid}.{ext}    <- 로컬
 ```
 
 초안은 `{env}/community/…` 로 환경을 앞에 붙여 **설정 실수의 이중 안전장치**로 삼으려 했다.
-그 명분은 실제로 없었다 — 운영은 `${S3_BUCKET}` 에 기본값이 없어 값이 빠지면 부팅이 실패하고,
-로컬이 운영 버킷을 가리키려면 환경변수를 일부러 넣어야 한다(실수가 아니라 작정). 식별도
-실패 로그가 `bucket` 을 키와 함께 남기므로 prefix 에 기대지 않는다.
+버킷이 갈려 있던 동안에는 그 명분이 없었다 — 버킷이 이미 경계였기 때문이다. 버킷을 합치면서
+이 세그먼트가 **유일한 경계**가 됐다. 다만 두 단계로 겹칠 필요는 없어서 한 세그먼트로 둔다.
 
-그럼에도 환경이 경로에 남아 있는 이유는 **다르다.** 배포를 하나로 공유하기로 하면서(아래)
-경로가 유일한 분기 수단이 됐다 — CloudFront 는 Host 가 아니라 경로로 라우팅한다. `/community/*` 는
-운영 버킷으로, `/community-dev/*` 는 dev 버킷으로 보내는 behavior 두 개가 이 두 값을 그대로 받는다.
-즉 `key-root` 는 안전장치가 아니라 **라우팅 계약**이고, 배포 설정과 어긋나면 업로드는 되는데
-조회만 404 가 난다.
+그래서 `key-root` 는 CloudFront 와의 계약이 아니라(기본 behavior 가 전 경로를 받으므로 라우팅에는
+아무 조건이 없다) **IAM 정책과의 계약**이다. 개발자 정책이 `community-dev/*` 로 좁혀져 있으므로,
+로컬 설정이 운영 값으로 새면 404 가 아니라 **403** 이 난다 — 조용히 운영에 쓰이는 것보다 낫다.
 
 그 대신 `{env}/` 를 앞에 덧붙이지는 않으므로 **공개 URL 경로와 S3 키가 완전히 같다.** CloudFront
 로그의 URI 를 그대로 키로 써서 객체를 찾을 수 있다. Origin Path 로 경로와 키를 어긋나게 만드는
@@ -177,30 +202,26 @@ community-dev/{yyyy}/{MM}/{uuid}.{ext}    <- 로컬
 운영에서는 ECS Task Role 을, 로컬에서는 `~/.aws/credentials` 프로필(또는 `.env` 의 액세스 키)을
 같은 체인이 알아서 해석한다. 코드에 `if (local)` 이 등장하지 않는다.
 
-로컬 개발자용 IAM 정책은 **dev 버킷 ARN 에 대해서만** `PutObject`·`GetObject`·`DeleteObject` 를 허용한다.
+로컬 개발자용 IAM 정책은 **`mmrtr-static/community-dev/*` prefix 에 대해서만** `PutObject`·`GetObject`·`DeleteObject` 를 허용한다. 버킷 전체로 열면 이 설계에 경계가 없어진다.
 
-#### CloudFront 는 기존 `static.metapick.me` 배포를 공유한다
+#### CloudFront 는 기존 `static.metapick.me` 배포를 그대로 쓴다
 
-dev 버킷을 퍼블릭으로 열면 손쉽지만, 그러면 **"버킷 비공개 + OAC" 구성이 로컬에서 한 번도 검증되지 않는다** —
+버킷을 퍼블릭으로 열면 손쉽지만, 그러면 **"버킷 비공개 + OAC" 구성이 로컬에서 한 번도 검증되지 않는다** —
 이 설계에서 가장 틀리기 쉬운 부분이 정확히 그 지점이다. 그래서 로컬도 CloudFront 를 통과시킨다.
 
-다만 배포를 새로 만들지 않고 게임 정적 자산용 `static.metapick.me` 배포에 오리진·behavior 를 얹는다.
-서브도메인을 추가하면 ACM 인증서(us-east-1)·Route 53 Alias 레코드가 따라붙는데, 그 비용을 지금
-치르지 않기로 했다.
+그리고 **배포에 추가할 설정이 없다.** `static.metapick.me` 는 오리진이 `mmrtr-static` 하나이고
+기본 behavior 가 전 경로를 받으므로, 이 버킷에 올린 키는 자동으로 서빙된다. 새 오리진도, behavior 도,
+버킷 정책 변경도 필요 없다 — OAC 는 이미 이 버킷에 걸려 있다.
 
-| path pattern | 오리진 | 쓰는 쪽 |
-|---|---|---|
-| `/community/*` | `mmrtr-community` | 운영 |
-| `/community-dev/*` | `mmrtr-community-dev` | 로컬 |
-| 그 외 (default, `/data/*`) | `mmrtr-static` | 게임 정적 자산 |
+**대가는 출처(origin)를 게임 자산과 공유한다는 것이다.** 이제 호스트뿐 아니라 **버킷까지 같다.**
+사용자 업로드물과 1차 자산이 한자리에 놓이므로, 업로드 검증이 뚫리면 `static.metapick.me` 전체의
+신뢰가 함께 흔들린다. 감수할 만하다고 본 근거는 그 호스트에 세션도 쿠키도 비밀도 없다는 점이다.
+그래도 SVG 금지(7절)와 `nosniff` 는 **이 구성에서 선택이 아니라 필수**가 된다 — 도메인이 갈려
+있을 때보다 실수의 대가가 크다. IAM prefix 제한도 같은 이유로 필수다(위).
 
-**대가는 출처(origin)를 게임 자산과 공유한다는 것이다.** 사용자 업로드물과 1차 자산이 한 호스트에
-놓이므로, 업로드 검증이 뚫리면 `static.metapick.me` 전체의 신뢰가 함께 흔들린다. 여기서 감수할 만하다고
-본 근거는 그 호스트에 세션도 쿠키도 비밀도 없다는 점이다. 그래도 SVG 금지(7절)와 `nosniff` 는
-**이 구성에서 선택이 아니라 필수**가 된다 — 도메인이 갈려 있을 때보다 실수의 대가가 크다.
-
-> 서브도메인(`img.metapick.me`)으로 옮기고 싶어지면 인증서·DNS·배포를 추가하고 `base-url` 만 바꾸면
-> 된다. `key-root` 는 그대로 두면 되므로 저장된 키를 건드릴 일은 없다.
+> 서브도메인(`img.metapick.me`)이나 전용 버킷으로 옮기고 싶어지면 인증서·DNS·배포 또는 오리진을
+> 추가하고 `base-url`·`bucket` 만 바꾸면 된다. `key-root` 는 그대로 두면 되므로 저장된 키를 건드릴
+> 일은 없다.
 
 > **트레이드오프(수용).** 이 결정으로 **로컬 개발에 AWS 크리덴셜이 필수**가 된다. 신규 개발자 온보딩에
 > AWS 계정·프로필 설정 단계가 추가되고, 오프라인에서는 이미지 업로드 기능을 띄울 수 없다.
@@ -592,8 +613,8 @@ PostService.createPost(memberId, command)
 | **개인정보** | EXIF(GPS 포함) 전량 제거 |
 | **타 회원 이미지 도용** | `attachTo` 에서 업로더 == 작성자 검증 |
 | **버킷 노출** | 퍼블릭 액세스 차단 + CloudFront OAC. 쓰기 권한은 앱 IAM 역할만 |
-| **로컬이 운영 데이터를 건드림** | 버킷 분리 — 개발자 IAM 정책에 운영 버킷 ARN 이 아예 없다 (D3) |
-| **개발자 액세스 키 유출** | `~/.aws/credentials` 프로필 권장(레포 밖). `.env` 를 쓸 경우 `.gitignore` 확인 필수. dev 버킷 전용 권한이라 유출돼도 운영 영향 없음 |
+| **로컬이 운영 데이터를 건드림** | 개발자 IAM 리소스를 `mmrtr-static/community-dev/*` 로 제한 (D3). 버킷을 공유하므로 **이 한 줄이 유일한 경계다** — 버킷 단위로 열면 방어가 사라진다 |
+| **개발자 액세스 키 유출** | `~/.aws/credentials` 프로필 권장(레포 밖). `.env` 를 쓸 경우 `.gitignore` 확인 필수. 권한이 `community-dev/*` prefix 로 좁혀져 있으면 유출돼도 운영·정적 자산에는 닿지 않는다 |
 
 ---
 
@@ -603,7 +624,7 @@ PostService.createPost(memberId, command)
 
 | # | 범위 | 산출물 | 상태 |
 |---|---|---|---|
-| **0** | 인프라 준비 (코드 아님) | **버킷 2벌**(dev/prod) + CloudFront 2벌 + ECS Task Role + 개발자 IAM 사용자, dev 버킷 Lifecycle 30일, 배포 환경변수 | ⬜ **미착수 — 유일한 블로커** |
+| **0** | 인프라 준비 (코드 아님) | 기존 `mmrtr-static` + `static.metapick.me` 배포 재사용(추가 설정 없음). 남은 것: prefix 로 좁힌 개발자 IAM·ECS Task Role, `community-dev/` Lifecycle 30일, 배포 환경변수 | 🟡 **버킷·CDN 은 확인 완료(200), IAM·Lifecycle 미적용** |
 | **1** | 스키마 | `lol-db-schema` V36 + 서브모듈 포인터 갱신 | ✅ 파일 작성, 서브모듈 PR 머지 대기 |
 | **2** | 스토리지 포트/어댑터 | `S3Config`+`StorageProperties`(common), `ImageStoragePort`, `S3ImageStorageAdapter`(단일), `ImageProcessorPort`+`DefaultImageProcessor` | ✅ |
 | **3** | 도메인 + 영속성 | `PostImage`, `ImageStatus`, 엔티티/리포지토리/매퍼/어댑터 | ✅ `PostImageTest`, `ImagePersistenceAdapterTest` |
@@ -648,7 +669,7 @@ storage:
   s3:
     bucket: ${S3_BUCKET}
     region: ${AWS_REGION}
-    key-root: ${STORAGE_KEY_ROOT:community}   # CloudFront behavior path 와 같아야 한다
+    key-root: ${STORAGE_KEY_ROOT:community}   # IAM 정책의 prefix 와 같아야 한다
     base-url: ${CDN_BASE_URL}
 ```
 
@@ -658,7 +679,7 @@ storage:
 # api-local.yml — 개발자는 .env 로 덮어쓸 수 있다
 storage:
   s3:
-    bucket: ${S3_BUCKET:mmrtr-community-dev}
+    bucket: ${S3_BUCKET:mmrtr-static}
     region: ${AWS_REGION:ap-northeast-2}
     key-root: community-dev
     base-url: ${CDN_BASE_URL:https://static.metapick.me}
@@ -673,8 +694,8 @@ storage:
 ```
 
 > `api-prod.yml` 에 기본값(`:`)을 두지 않는 이유는 기존 파일의 관례와 같다 — 운영 설정이 빠지면
-> 조용히 잘못된 버킷을 쓰는 대신 **부팅이 실패해야** 한다. 반대로 로컬은 기본값을 둬서
-> `.env` 없이도 팀 공용 dev 버킷으로 바로 붙는다.
+> 조용히 잘못된 설정으로 뜨는 대신 **부팅이 실패해야** 한다. 반대로 로컬은 기본값을 둬서
+> `.env` 없이도 `community-dev/` prefix 로 바로 붙는다.
 
 **로컬 크리덴셜.** 코드가 `DefaultCredentialsProvider` 를 쓰므로 아래 중 아무거나면 된다.
 
@@ -729,9 +750,9 @@ void domain과_application은_스토리지_이미지_SDK에_의존하지_않는�
 1~3 은 인프라(PR 0)라 답이 없으면 로컬에서도 실행되지 않고, 4~7 은 답이 늦어도 코드가 기다려 준다.
 괄호 안은 답이 없을 때 진행할 기본값.
 
-1. **버킷·CloudFront 를 2벌(dev/prod) 만들 수 있는가?** 계정·비용·IaC 관리 주체 확인. dev 배포까지 두는 이유는 D3 참고. (기본값: 만들 수 있다고 보고 PR 0 을 인프라 작업으로 분리)
+1. ~~**버킷·CloudFront 를 2벌(dev/prod) 만들 수 있는가?**~~ **해소** — 만들지 않기로 했다. 기존 `mmrtr-static`/`static.metapick.me` 를 prefix 로 나눠 쓴다(D3). 대신 IAM 을 prefix 로 좁히는 일이 필수가 됐다.
 2. **개발자 IAM 사용자를 어떻게 발급·회수하는가?** 인원이 늘면 개인별 사용자 대신 SSO/AssumeRole 이 낫다. (기본값: 팀 공용 dev 전용 IAM 사용자 1개)
-3. **dev 버킷을 개발자끼리 공유하는가, 개인별로 나누는가?** 공유해도 정리 배치는 자기 DB 기준이라 서로를 지우지 않는다. 남는 고아는 Lifecycle 30일이 청소한다. 개인별로 나눈다면 버킷을 따로 파거나 키 앞에 `{개발자}/` 를 한 단계 넣으면 된다. (기본값: 공유 + Lifecycle)
+3. **`community-dev/` 를 개발자끼리 공유하는가, 개인별로 나누는가?** 공유해도 정리 배치는 자기 DB 기준이라 서로를 지우지 않는다. 남는 고아는 Lifecycle 30일이 청소한다. 개인별로 나눈다면 `key-root` 를 `community-dev-{개발자}` 로 주고 IAM 도 같은 prefix 로 좁히면 된다. (기본값: 공유 + Lifecycle)
 4. **에디터가 마크다운인가 HTML(WYSIWYG)인가?** 서버 설계는 동일하지만, HTML 이면 본문 sanitize(XSS) 정책이 **이 설계 밖에서** 별도로 필요하다. (기본값: 마크다운 가정)
 5. **`imageIds` 를 클라이언트가 보내는 계약에 프론트엔드가 동의하는가?** 본문 파싱 대안 대비 프론트 작업량이 조금 늘어난다. 특히 **수정 시 전체 교체**(목록을 보내면 빠진 것은 해제, 필드를 아예 빼면 그대로 유지)를 반드시 맞춰야 한다 — 5.3 구현 노트. (기본값: 이 계약으로 진행)
 6. **댓글 이미지가 곧 필요한가?** 필요하다면 지금 `community_image` 에 `comment_id` 컬럼을 함께 넣는 편이 마이그레이션 한 번을 아낀다. (기본값: 넣지 않음)
