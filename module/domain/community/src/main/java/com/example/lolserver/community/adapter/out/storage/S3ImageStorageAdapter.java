@@ -46,19 +46,23 @@ public class S3ImageStorageAdapter implements ImageStoragePort {
     private final StorageProperties properties;
 
     /**
-     * {@code community/{yyyy}/{MM}/{uuid}.{ext}}
+     * {@code {key-root}/{yyyy}/{MM}/{uuid}.{ext}}
      *
-     * <p>환경(local·prod)은 키가 아니라 <b>버킷</b>이 가른다. 키에 넣으면 공개 URL 에
-     * {@code prod/} 가 그대로 드러나는데, CDN 도메인이 이미 환경을 말해 주므로 중복이다.
-     * 이렇게 두면 URL 경로와 S3 키가 완전히 같아져 CloudFront 로그의 URI 를 그대로
-     * 키로 쓸 수 있다.
+     * <p>첫 세그먼트가 환경을 가른다 — {@code community/}(운영) · {@code community-dev/}(로컬).
+     * 도메인이 아니라 경로로 가르는 이유는 CloudFront 가 Host 가 아니라 <b>경로</b>로
+     * 라우팅하기 때문이다. 한 배포에 두 도메인을 붙여도 behavior·오리진·캐시가 그대로
+     * 공유되므로, 배포를 공유하면서 두 버킷을 쓰려면 경로가 갈리는 수밖에 없다.
+     *
+     * <p>URL 은 {@code base-url + "/" + key} 라 <b>공개 경로와 S3 키가 완전히 같다.</b>
+     * CloudFront 로그의 URI 를 그대로 키로 써서 객체를 찾을 수 있다.
      *
      * <p>원본 파일명을 쓰지 않는다 — 경로 조작({@code ../}), 한글·특수문자 인코딩 문제,
      * 파일명으로 인한 정보 노출을 한 번에 없앤다.
      */
     @Override
     public StoredImageLocation allocate(String extension) {
-        String key = "community/%s/%s.%s".formatted(
+        String key = "%s/%s/%s.%s".formatted(
+                properties.getKeyRoot(),
                 // 키의 연·월은 사람이 버킷을 훑을 때 쓰는 구획일 뿐이지만, 존을 안 주면
                 // 배포 환경에 따라 월말 자정 근처의 객체가 다른 달로 떨어진다.
                 LocalDate.now(ZoneId.systemDefault()).format(KEY_DATE),

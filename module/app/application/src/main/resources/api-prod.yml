@@ -66,6 +66,7 @@ storage:
   s3:
     bucket: ${S3_BUCKET}
     region: ${AWS_REGION}
+    key-root: community
     base-url: ${CDN_BASE_URL}
 
 community:

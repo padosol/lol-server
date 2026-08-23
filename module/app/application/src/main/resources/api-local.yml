@@ -60,13 +60,15 @@ cookie:
 
 # 로컬도 실제 S3 를 쓴다. 어댑터도 프로파일 분기도 하나이고, 다른 것은 아래 값들뿐이다.
 # 격리는 코드가 아니라 버킷이 한다 — 개발자 IAM 정책에 운영 버킷 ARN 자체가 등장하지 않는다.
-# 키에는 환경을 넣지 않는다 — 버킷과 CDN 도메인이 이미 환경을 가르고,
-# 넣으면 공개 URL 에 prod/ 가 그대로 드러난다.
+# CDN 도메인은 운영과 공유하고(static.metapick.me) 경로로 갈린다.
+# key-root 는 CloudFront cache behavior 의 path pattern 과 반드시 같아야 한다 —
+# /community-dev/* 가 이 dev 버킷으로 오도록 배포에 behavior 가 걸려 있다.
 storage:
   s3:
     bucket: ${S3_BUCKET:mmrtr-community-dev}
     region: ${AWS_REGION:ap-northeast-2}
-    base-url: ${CDN_BASE_URL:https://dev-cdn.example.com}
+    key-root: community-dev
+    base-url: ${CDN_BASE_URL:https://static.metapick.me}
 
 community:
   image:

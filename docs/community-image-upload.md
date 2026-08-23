@@ -117,14 +117,15 @@ public interface ImageStoragePort {
 ### D3. 스토리지 — 로컬도 실제 S3, 버킷을 분리해 격리한다
 
 **어댑터는 하나뿐이다.** 로컬 파일시스템 어댑터를 두지 않고 `S3ImageStorageAdapter` 만 둔다.
-로컬과 운영이 **완전히 같은 코드 경로**를 타고, 다른 것은 설정값(버킷·CDN 도메인)뿐이다.
+로컬과 운영이 **완전히 같은 코드 경로**를 타고, 다른 것은 설정값(버킷·키 루트·CDN 도메인)뿐이다.
 "로컬에서 통과했으니 운영에서도 통과한다"가 성립하려면 검증 대상 코드가 같아야 한다 —
 로컬만 파일시스템을 타면 S3 권한·키 규칙·CDN 캐시·삭제 동작은 **운영에 배포한 뒤에야 처음 실행된다.**
 
 | | local | prod |
 |---|---|---|
 | 버킷 | `mmrtr-community-dev` | `mmrtr-community` |
-| CloudFront | dev 배포 | prod 배포 |
+| 키 루트 | `community-dev/` | `community/` |
+| CloudFront | `static.metapick.me` (배포 공유) | `static.metapick.me` |
 | 크리덴셜 | 개발자 IAM 사용자 (`~/.aws/credentials`) | ECS Task Role |
 | Lifecycle | **30일 후 전량 만료** | 없음 |
 
@@ -142,21 +143,27 @@ IAM 조건(`s3:prefix`)으로 좁힐 수는 있지만, 정책 한 줄만 잘못 
 - dev 버킷은 통째로 비우거나 지워도 된다.
 - 비용·용량 지표가 환경별로 분리돼 보인다.
 
-#### 키에는 환경을 넣지 않는다
+#### 키의 첫 세그먼트가 곧 CloudFront 경로다
 
 ```
-community/{yyyy}/{MM}/{uuid}.{ext}
+community/{yyyy}/{MM}/{uuid}.{ext}        <- 운영
+community-dev/{yyyy}/{MM}/{uuid}.{ext}    <- 로컬
 ```
 
-초안은 키 앞에 `{env}/` 를 붙여 설정 실수의 이중 안전장치로 삼으려 했다. 실제로 CloudFront 를
-구성하면서 다시 보니 값이 없었다. 환경을 가르는 것은 버킷과 CDN 도메인이고, 키의 `prod/` 는
-**공개 URL 에 그대로 드러나면서** 아무것도 더 막지 못한다 — 운영은 `${S3_BUCKET}` 에 기본값이
-없어 빠지면 부팅이 실패하고, 로컬이 운영 버킷을 가리키려면 환경변수를 일부러 넣어야 한다
-(실수가 아니라 작정). 식별에도 지장이 없다: 업로드·삭제 실패 로그가 `bucket` 을 키와 함께 남긴다.
+초안은 `{env}/community/…` 로 환경을 앞에 붙여 **설정 실수의 이중 안전장치**로 삼으려 했다.
+그 명분은 실제로 없었다 — 운영은 `${S3_BUCKET}` 에 기본값이 없어 값이 빠지면 부팅이 실패하고,
+로컬이 운영 버킷을 가리키려면 환경변수를 일부러 넣어야 한다(실수가 아니라 작정). 식별도
+실패 로그가 `bucket` 을 키와 함께 남기므로 prefix 에 기대지 않는다.
 
-덤으로 **URL 경로와 S3 키가 완전히 같아진다.** CloudFront 로그의 URI 를 그대로 S3 키로 쓸 수 있어
-장애 대응에서 변환 단계가 사라진다. CloudFront Origin Path 로 `prod/` 를 숨기는 방법도 있지만,
-정확히 이 대응 관계를 깨뜨려서 택하지 않았다.
+그럼에도 환경이 경로에 남아 있는 이유는 **다르다.** 배포를 하나로 공유하기로 하면서(아래)
+경로가 유일한 분기 수단이 됐다 — CloudFront 는 Host 가 아니라 경로로 라우팅한다. `/community/*` 는
+운영 버킷으로, `/community-dev/*` 는 dev 버킷으로 보내는 behavior 두 개가 이 두 값을 그대로 받는다.
+즉 `key-root` 는 안전장치가 아니라 **라우팅 계약**이고, 배포 설정과 어긋나면 업로드는 되는데
+조회만 404 가 난다.
+
+그 대신 `{env}/` 를 앞에 덧붙이지는 않으므로 **공개 URL 경로와 S3 키가 완전히 같다.** CloudFront
+로그의 URI 를 그대로 키로 써서 객체를 찾을 수 있다. Origin Path 로 경로와 키를 어긋나게 만드는
+구성도 가능하지만, 정확히 이 대응 관계를 깨뜨려서 택하지 않았다.
 
 > **구현 노트 — `StorageProperties` 는 common 에 둔다.** 값을 쓰는 쪽이 두 모듈에 걸쳐 있다.
 > `S3Config`(빈 생성, common)와 `S3ImageStorageAdapter`(키 조립·PUT/DELETE, community)가 같은
@@ -172,11 +179,28 @@ community/{yyyy}/{MM}/{uuid}.{ext}
 
 로컬 개발자용 IAM 정책은 **dev 버킷 ARN 에 대해서만** `PutObject`·`GetObject`·`DeleteObject` 를 허용한다.
 
-#### dev 에도 CloudFront 를 둔다
+#### CloudFront 는 기존 `static.metapick.me` 배포를 공유한다
 
 dev 버킷을 퍼블릭으로 열면 손쉽지만, 그러면 **"버킷 비공개 + OAC" 구성이 로컬에서 한 번도 검증되지 않는다** —
-이 설계에서 가장 틀리기 쉬운 부분이 정확히 그 지점이다. 트래픽이 없는 배포의 CloudFront 비용은 사실상 0 이므로
-dev 배포를 따로 만들어 URL 구조까지 운영과 같게 맞춘다.
+이 설계에서 가장 틀리기 쉬운 부분이 정확히 그 지점이다. 그래서 로컬도 CloudFront 를 통과시킨다.
+
+다만 배포를 새로 만들지 않고 게임 정적 자산용 `static.metapick.me` 배포에 오리진·behavior 를 얹는다.
+서브도메인을 추가하면 ACM 인증서(us-east-1)·Route 53 Alias 레코드가 따라붙는데, 그 비용을 지금
+치르지 않기로 했다.
+
+| path pattern | 오리진 | 쓰는 쪽 |
+|---|---|---|
+| `/community/*` | `mmrtr-community` | 운영 |
+| `/community-dev/*` | `mmrtr-community-dev` | 로컬 |
+| 그 외 (default, `/data/*`) | `mmrtr-static` | 게임 정적 자산 |
+
+**대가는 출처(origin)를 게임 자산과 공유한다는 것이다.** 사용자 업로드물과 1차 자산이 한 호스트에
+놓이므로, 업로드 검증이 뚫리면 `static.metapick.me` 전체의 신뢰가 함께 흔들린다. 여기서 감수할 만하다고
+본 근거는 그 호스트에 세션도 쿠키도 비밀도 없다는 점이다. 그래도 SVG 금지(7절)와 `nosniff` 는
+**이 구성에서 선택이 아니라 필수**가 된다 — 도메인이 갈려 있을 때보다 실수의 대가가 크다.
+
+> 서브도메인(`img.metapick.me`)으로 옮기고 싶어지면 인증서·DNS·배포를 추가하고 `base-url` 만 바꾸면
+> 된다. `key-root` 는 그대로 두면 되므로 저장된 키를 건드릴 일은 없다.
 
 > **트레이드오프(수용).** 이 결정으로 **로컬 개발에 AWS 크리덴셜이 필수**가 된다. 신규 개발자 온보딩에
 > AWS 계정·프로필 설정 단계가 추가되고, 오프라인에서는 이미지 업로드 기능을 띄울 수 없다.
@@ -559,7 +583,7 @@ PostService.createPost(memberId, command)
 | 항목 | 조치 |
 |---|---|
 | **Content-Type 위조** | 클라이언트 헤더 무시, 매직바이트(파일 시그니처)로 판별 |
-| **SVG 업로드** | **금지**. SVG 는 스크립트를 담을 수 있어 같은 도메인에서 서빙되면 저장형 XSS 가 된다 |
+| **SVG 업로드** | **금지**. SVG 는 스크립트를 담을 수 있어 같은 도메인에서 서빙되면 저장형 XSS 가 된다. 게임 자산과 `static.metapick.me` 를 공유하므로(D3) 더욱 |
 | **폭탄 이미지(decompression bomb)** | 디코드 전에 헤더의 width×height 로 픽셀 수 상한(예: 50MP) 검사 |
 | **용량** | 앱 레벨 검증 + `spring.servlet.multipart.max-file-size` 이중 방어 |
 | **경로 조작** | 원본 파일명 미사용, UUID 키 |
@@ -624,6 +648,7 @@ storage:
   s3:
     bucket: ${S3_BUCKET}
     region: ${AWS_REGION}
+    key-root: ${STORAGE_KEY_ROOT:community}   # CloudFront behavior path 와 같아야 한다
     base-url: ${CDN_BASE_URL}
 ```
 
@@ -635,13 +660,15 @@ storage:
   s3:
     bucket: ${S3_BUCKET:mmrtr-community-dev}
     region: ${AWS_REGION:ap-northeast-2}
-    base-url: ${CDN_BASE_URL:https://dev-cdn.example.com}
+    key-root: community-dev
+    base-url: ${CDN_BASE_URL:https://static.metapick.me}
 
 # api-prod.yml — 전부 환경변수 주입, 기본값 없음
 storage:
   s3:
     bucket: ${S3_BUCKET}
     region: ${AWS_REGION}
+    key-root: community
     base-url: ${CDN_BASE_URL}
 ```
 
