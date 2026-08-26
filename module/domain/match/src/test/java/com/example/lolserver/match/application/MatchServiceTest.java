@@ -17,6 +17,7 @@ import com.example.lolserver.common.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -39,6 +40,9 @@ import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class MatchServiceTest {
+
+    private static final String CURRENT_SEASON_VERSION = "16.16.804.9184";
+    private static final String PREVIOUS_SEASON_VERSION = "15.24.700.1000";
 
     @Mock
     private MatchPersistencePort matchPersistencePort;
@@ -176,133 +180,46 @@ class MatchServiceTest {
         assertThat(result.isHasNext()).isTrue();
     }
 
-    @DisplayName("getMatchesBatch ZSET 캐시 hit + 단건 캐시 all hit 이면 DB 조회를 하지 않는다")
+    @DisplayName("getMatchesBatch 캐시에만 있는 최신 매치를 DB 첫 페이지 위에 얹고 DB 꼬리는 자르지 않는다")
     @Test
-    void getMatchesBatch_zsetHitAndSingleAllHit_noDbCall() {
+    void getMatchesBatch_cacheOnlyMatch_prependedWithoutTruncatingDbPage() {
         // given
         MatchCommand command = MatchCommand.builder()
                 .puuid("test-puuid")
                 .pageNo(0)
                 .build();
-
-        List<String> ids = List.of("KR_1", "KR_2");
-        given(matchIdsCachePort.findIds("test-puuid")).willReturn(Optional.of(ids));
-
-        Map<String, GameReadModel> cached = new HashMap<>();
-        cached.put("KR_1", gameOf("KR_1", 420, 1000L));
-        cached.put("KR_2", gameOf("KR_2", 420, 2000L));
-        given(matchSingleCachePort.findByIds(ids)).willReturn(cached);
-
-        // when
-        SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);
-
-        // then
-        assertThat(result.getContent()).hasSize(2);
-        assertThat(result.isHasNext()).isFalse();
-        then(matchPersistencePort).should(never()).findMatchesByIds(anyCollection());
-        then(matchPersistencePort).should(never())
-                .getMatchesBatch(any(), any(), any(), any(PaginationRequest.class));
-    }
-
-    @DisplayName("getMatchesBatch ZSET 캐시 miss 시 DB 직조회로 떨어지고 캐시를 채우지 않는다")
-    @Test
-    void getMatchesBatch_zsetMiss_loadsFromDbDirectAndDoesNotWriteCache() {
-        // given
-        MatchCommand command = MatchCommand.builder()
-                .puuid("test-puuid")
-                .queueId(420)
-                .pageNo(0)
-                .build();
-
-        given(matchIdsCachePort.findIds("test-puuid")).willReturn(Optional.empty());
 
         SliceResult<GameReadModel> dbResult = new SliceResult<>(
-                List.of(gameOf("KR_A", 420, 1000L), gameOf("KR_B", 420, 2000L)), false);
-        given(matchPersistencePort.getMatchesBatch(
-                eq("test-puuid"), isNull(), eq(420), any(PaginationRequest.class)))
-                .willReturn(dbResult);
+                List.of(gameOf("KR_OLD_1", 420, 2_000L), gameOf("KR_OLD_2", 420, 1_000L)), true);
+        givenDbFirstPage(null, null, dbResult);
+
+        given(matchIdsCachePort.findIds("test-puuid"))
+                .willReturn(Optional.of(List.of("KR_NEW", "KR_OLD_1", "KR_OLD_2")));
+        given(matchSingleCachePort.findByIds(List.of("KR_NEW")))
+                .willReturn(Map.of("KR_NEW", gameOf("KR_NEW", 420, 3_000L)));
 
         // when
         SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);
 
         // then
-        assertThat(result).isSameAs(dbResult);
-        then(matchSingleCachePort).should(never()).findByIds(anyCollection());
-        then(matchPersistencePort).should(never()).findMatchesByIds(anyCollection());
-    }
-
-    @DisplayName("getMatchesBatch ZSET hit + 단건 캐시 partial miss 시 누락분만 DB IN 조회로 보강하고 캐시는 채우지 않는다")
-    @Test
-    void getMatchesBatch_zsetHitAndSinglePartialMiss_loadsMissingNoCacheWrite() {
-        // given
-        MatchCommand command = MatchCommand.builder()
-                .puuid("test-puuid")
-                .pageNo(0)
-                .build();
-
-        List<String> ids = List.of("KR_1", "KR_2", "KR_3");
-        given(matchIdsCachePort.findIds("test-puuid")).willReturn(Optional.of(ids));
-
-        Map<String, GameReadModel> cached = new HashMap<>();
-        cached.put("KR_1", gameOf("KR_1", 420, 1000L));
-        given(matchSingleCachePort.findByIds(ids)).willReturn(cached);
-
-        GameReadModel game2 = gameOf("KR_2", 420, 2000L);
-        GameReadModel game3 = gameOf("KR_3", 420, 3000L);
-        given(matchPersistencePort.findMatchesByIds(List.of("KR_2", "KR_3")))
-                .willReturn(List.of(game2, game3));
-
-        // when
-        SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);
-
-        // then
-        assertThat(result.getContent()).hasSize(3);
-        then(matchPersistencePort).should().findMatchesByIds(List.of("KR_2", "KR_3"));
-    }
-
-    @DisplayName("getMatchesBatch queueId 필터는 in-memory 로 동작한다")
-    @Test
-    void getMatchesBatch_queueIdFilter_appliedInMemory() {
-        // given
-        MatchCommand command = MatchCommand.builder()
-                .puuid("test-puuid")
-                .queueId(420)
-                .pageNo(0)
-                .build();
-
-        List<String> ids = List.of("KR_1", "KR_2", "KR_3");
-        given(matchIdsCachePort.findIds("test-puuid")).willReturn(Optional.of(ids));
-
-        Map<String, GameReadModel> cached = new HashMap<>();
-        cached.put("KR_1", gameOf("KR_1", 420, 1000L));
-        cached.put("KR_2", gameOf("KR_2", 440, 2000L)); // 다른 큐
-        cached.put("KR_3", gameOf("KR_3", 420, 3000L));
-        given(matchSingleCachePort.findByIds(ids)).willReturn(cached);
-
-        // when
-        SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);
-
-        // then
-        assertThat(result.getContent()).hasSize(2);
         assertThat(result.getContent())
-                .extracting(g -> g.getGameInfoData().getMatchId())
-                .containsExactly("KR_1", "KR_3");
+                .extracting(game -> game.getGameInfoData().getMatchId())
+                .containsExactly("KR_NEW", "KR_OLD_1", "KR_OLD_2");
+        assertThat(result.isHasNext()).isTrue();
     }
 
-    @DisplayName("getMatchesBatch season 필터는 캐시를 우회하고 DB getMatchesBatch 를 직접 호출한다")
+    @DisplayName("getMatchesBatch 두 번째 페이지부터는 캐시를 보지 않고 DB 결과를 그대로 반환한다")
     @Test
-    void getMatchesBatch_seasonFilter_bypassesCacheAndCallsDb() {
+    void getMatchesBatch_secondPage_returnsDbResultWithoutCache() {
         // given
         MatchCommand command = MatchCommand.builder()
                 .puuid("test-puuid")
-                .season(14)
-                .queueId(420)
-                .pageNo(0)
+                .pageNo(1)
                 .build();
 
-        SliceResult<GameReadModel> dbResult = new SliceResult<>(List.of(new GameReadModel()), true);
+        SliceResult<GameReadModel> dbResult = new SliceResult<>(List.of(gameOf("KR_21", 420, 500L)), false);
         given(matchPersistencePort.getMatchesBatch(
-                eq("test-puuid"), eq(14), eq(420), any(PaginationRequest.class)))
+                eq("test-puuid"), isNull(), isNull(), any(PaginationRequest.class)))
                 .willReturn(dbResult);
 
         // when
@@ -311,35 +228,240 @@ class MatchServiceTest {
         // then
         assertThat(result).isSameAs(dbResult);
         then(matchIdsCachePort).should(never()).findIds(any());
-        then(matchSingleCachePort).should(never()).findByIds(any());
+        then(matchSingleCachePort).should(never()).findByIds(anyCollection());
+
+        ArgumentCaptor<PaginationRequest> captor = ArgumentCaptor.forClass(PaginationRequest.class);
+        then(matchPersistencePort).should()
+                .getMatchesBatch(eq("test-puuid"), isNull(), isNull(), captor.capture());
+        assertThat(captor.getValue().page()).isEqualTo(1);
     }
 
-    @DisplayName("getMatchesBatch 빈 ZSET 캐시 hit 이면 빈 SliceResult 를 반환한다")
+    @DisplayName("getMatchesBatch ZSET 캐시 miss 여도 DB 결과를 그대로 반환한다")
     @Test
-    void getMatchesBatch_emptyIds_returnsEmptySlice() {
+    void getMatchesBatch_zsetMiss_returnsDbResult() {
+        // given
+        MatchCommand command = MatchCommand.builder()
+                .puuid("test-puuid")
+                .queueId(420)
+                .pageNo(0)
+                .build();
+
+        SliceResult<GameReadModel> dbResult = new SliceResult<>(
+                List.of(gameOf("KR_A", 420, 2_000L), gameOf("KR_B", 420, 1_000L)), false);
+        givenDbFirstPage(null, 420, dbResult);
+        given(matchIdsCachePort.findIds("test-puuid")).willReturn(Optional.empty());
+
+        // when
+        SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);
+
+        // then
+        assertThat(result).isSameAs(dbResult);
+        then(matchSingleCachePort).should(never()).findByIds(anyCollection());
+    }
+
+    @DisplayName("getMatchesBatch 빈 ZSET 캐시 hit 이면 DB 결과를 그대로 반환한다")
+    @Test
+    void getMatchesBatch_emptyIds_returnsDbResult() {
         // given
         MatchCommand command = MatchCommand.builder()
                 .puuid("test-puuid")
                 .pageNo(0)
                 .build();
 
+        SliceResult<GameReadModel> dbResult = new SliceResult<>(List.of(gameOf("KR_A", 420, 1_000L)), false);
+        givenDbFirstPage(null, null, dbResult);
         given(matchIdsCachePort.findIds("test-puuid")).willReturn(Optional.of(Collections.emptyList()));
 
         // when
         SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);
 
         // then
-        assertThat(result.getContent()).isEmpty();
-        assertThat(result.isHasNext()).isFalse();
-        then(matchSingleCachePort).should(never()).findByIds(any());
+        assertThat(result).isSameAs(dbResult);
+        then(matchSingleCachePort).should(never()).findByIds(anyCollection());
     }
 
-    private GameReadModel gameOf(String matchId, int queueId, long gameCreation) {
+    @DisplayName("getMatchesBatch DB 첫 페이지 최하단보다 오래된 캐시 매치는 오버레이하지 않는다")
+    @Test
+    void getMatchesBatch_olderThanPageFloor_excludedFromOverlay() {
+        // given
+        MatchCommand command = MatchCommand.builder()
+                .puuid("test-puuid")
+                .pageNo(0)
+                .build();
+
+        SliceResult<GameReadModel> dbResult = new SliceResult<>(
+                List.of(gameOf("KR_A", 420, 3_000L), gameOf("KR_B", 420, 2_000L)), true);
+        givenDbFirstPage(null, null, dbResult);
+
+        given(matchIdsCachePort.findIds("test-puuid")).willReturn(Optional.of(List.of("KR_OLDER")));
+        given(matchSingleCachePort.findByIds(List.of("KR_OLDER")))
+                .willReturn(Map.of("KR_OLDER", gameOf("KR_OLDER", 420, 1_500L)));
+
+        // when
+        SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);
+
+        // then
+        assertThat(result).isSameAs(dbResult);
+    }
+
+    @DisplayName("getMatchesBatch 단건 캐시에 없는 후보는 DB 폴백 없이 버린다")
+    @Test
+    void getMatchesBatch_singleCacheMiss_droppedWithoutDbFallback() {
+        // given
+        MatchCommand command = MatchCommand.builder()
+                .puuid("test-puuid")
+                .pageNo(0)
+                .build();
+
+        SliceResult<GameReadModel> dbResult = new SliceResult<>(List.of(gameOf("KR_A", 420, 1_000L)), false);
+        givenDbFirstPage(null, null, dbResult);
+
+        given(matchIdsCachePort.findIds("test-puuid")).willReturn(Optional.of(List.of("KR_NEW")));
+        given(matchSingleCachePort.findByIds(List.of("KR_NEW"))).willReturn(Collections.emptyMap());
+
+        // when
+        SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);
+
+        // then
+        assertThat(result).isSameAs(dbResult);
+        then(matchPersistencePort).should(never()).findMatchesByIds(anyCollection());
+    }
+
+    @DisplayName("getMatchesBatch season 필터는 DB 에 그대로 전달되고 오버레이는 gameVersion major 로 걸러진다")
+    @Test
+    void getMatchesBatch_seasonFilter_passedToDbAndAppliedToOverlay() {
+        // given
+        MatchCommand command = MatchCommand.builder()
+                .puuid("test-puuid")
+                .season(16)
+                .pageNo(0)
+                .build();
+
+        SliceResult<GameReadModel> dbResult = new SliceResult<>(List.of(gameOf("KR_A", 420, 1_000L)), true);
+        givenDbFirstPage(16, null, dbResult);
+
+        given(matchIdsCachePort.findIds("test-puuid"))
+                .willReturn(Optional.of(List.of("KR_S16", "KR_S15")));
+        given(matchSingleCachePort.findByIds(List.of("KR_S16", "KR_S15"))).willReturn(Map.of(
+                "KR_S16", gameOf("KR_S16", 420, 3_000L, "CLASSIC", CURRENT_SEASON_VERSION),
+                "KR_S15", gameOf("KR_S15", 420, 2_000L, "CLASSIC", PREVIOUS_SEASON_VERSION)));
+
+        // when
+        SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);
+
+        // then
+        assertThat(result.getContent())
+                .extracting(game -> game.getGameInfoData().getMatchId())
+                .containsExactly("KR_S16", "KR_A");
+        then(matchPersistencePort).should()
+                .getMatchesBatch(eq("test-puuid"), eq(16), isNull(), any(PaginationRequest.class));
+    }
+
+    @DisplayName("getMatchesBatch queueId 필터는 오버레이 후보에도 적용된다")
+    @Test
+    void getMatchesBatch_queueIdFilter_appliedToOverlay() {
+        // given
+        MatchCommand command = MatchCommand.builder()
+                .puuid("test-puuid")
+                .queueId(420)
+                .pageNo(0)
+                .build();
+
+        SliceResult<GameReadModel> dbResult = new SliceResult<>(List.of(gameOf("KR_A", 420, 1_000L)), true);
+        givenDbFirstPage(null, 420, dbResult);
+
+        given(matchIdsCachePort.findIds("test-puuid"))
+                .willReturn(Optional.of(List.of("KR_SOLO", "KR_FLEX")));
+        given(matchSingleCachePort.findByIds(List.of("KR_SOLO", "KR_FLEX"))).willReturn(Map.of(
+                "KR_SOLO", gameOf("KR_SOLO", 420, 3_000L),
+                "KR_FLEX", gameOf("KR_FLEX", 440, 2_000L)));
+
+        // when
+        SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);
+
+        // then
+        assertThat(result.getContent())
+                .extracting(game -> game.getGameInfoData().getMatchId())
+                .containsExactly("KR_SOLO", "KR_A");
+    }
+
+    @DisplayName("getMatchesBatch DB 목록에 없는 게임 모드는 오버레이하지 않는다")
+    @Test
+    void getMatchesBatch_nonListableGameMode_excludedFromOverlay() {
+        // given
+        MatchCommand command = MatchCommand.builder()
+                .puuid("test-puuid")
+                .pageNo(0)
+                .build();
+
+        SliceResult<GameReadModel> dbResult = new SliceResult<>(List.of(gameOf("KR_A", 420, 1_000L)), true);
+        givenDbFirstPage(null, null, dbResult);
+
+        given(matchIdsCachePort.findIds("test-puuid"))
+                .willReturn(Optional.of(List.of("KR_ARAM", "KR_ARENA")));
+        given(matchSingleCachePort.findByIds(List.of("KR_ARAM", "KR_ARENA"))).willReturn(Map.of(
+                "KR_ARAM", gameOf("KR_ARAM", 450, 3_000L, "ARAM", CURRENT_SEASON_VERSION),
+                "KR_ARENA", gameOf("KR_ARENA", 1700, 2_500L, "CHERRY", CURRENT_SEASON_VERSION)));
+
+        // when
+        SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);
+
+        // then
+        assertThat(result.getContent())
+                .extracting(game -> game.getGameInfoData().getMatchId())
+                .containsExactly("KR_ARENA", "KR_A");
+    }
+
+    @DisplayName("getMatchesBatch DB 첫 페이지가 비어 있어도 캐시 매치를 반환한다")
+    @Test
+    void getMatchesBatch_emptyDbPage_returnsOverlayOnly() {
+        // given
+        MatchCommand command = MatchCommand.builder()
+                .puuid("test-puuid")
+                .pageNo(0)
+                .build();
+
+        givenDbFirstPage(null, null, new SliceResult<>(Collections.emptyList(), false));
+
+        given(matchIdsCachePort.findIds("test-puuid"))
+                .willReturn(Optional.of(List.of("KR_NEW_1", "KR_NEW_2")));
+        given(matchSingleCachePort.findByIds(List.of("KR_NEW_1", "KR_NEW_2"))).willReturn(Map.of(
+                "KR_NEW_1", gameOf("KR_NEW_1", 420, 2_000L),
+                "KR_NEW_2", gameOf("KR_NEW_2", 420, 3_000L)));
+
+        // when
+        SliceResult<GameReadModel> result = matchService.getMatchesBatch(command);
+
+        // then
+        assertThat(result.getContent())
+                .extracting(game -> game.getGameInfoData().getMatchId())
+                .containsExactly("KR_NEW_2", "KR_NEW_1");
+        assertThat(result.isHasNext()).isFalse();
+    }
+
+    private void givenDbFirstPage(Integer season, Integer queueId, SliceResult<GameReadModel> dbResult) {
+        given(matchPersistencePort.getMatchesBatch(
+                eq("test-puuid"),
+                season == null ? isNull() : eq(season),
+                queueId == null ? isNull() : eq(queueId),
+                any(PaginationRequest.class)))
+                .willReturn(dbResult);
+    }
+
+    private GameReadModel gameOf(String matchId, int queueId, long gameEndTimestamp) {
+        return gameOf(matchId, queueId, gameEndTimestamp, "CLASSIC", CURRENT_SEASON_VERSION);
+    }
+
+    private GameReadModel gameOf(
+            String matchId, int queueId, long gameEndTimestamp, String gameMode, String gameVersion) {
         GameReadModel game = new GameReadModel();
         GameInfoReadModel info = new GameInfoReadModel();
         info.setMatchId(matchId);
         info.setQueueId(queueId);
-        info.setGameCreation(gameCreation);
+        info.setGameCreation(gameEndTimestamp);
+        info.setGameEndTimestamp(gameEndTimestamp);
+        info.setGameMode(gameMode);
+        info.setGameVersion(gameVersion);
         game.setGameInfoData(info);
         return game;
     }
