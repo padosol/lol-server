@@ -11,6 +11,7 @@ import com.example.lolserver.community.adapter.out.persistence.dsl.CommunityPost
 import com.example.lolserver.community.adapter.out.persistence.entity.CommunityPostEntity;
 import com.example.lolserver.community.adapter.out.persistence.mapper.CommunityPostMapper;
 import com.example.lolserver.community.adapter.out.persistence.repository.CommunityPostJpaRepository;
+import com.example.lolserver.community.adapter.out.persistence.support.PostImageFlagLoader;
 import com.example.lolserver.common.support.SliceResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -30,6 +32,7 @@ public class PostPersistenceAdapter implements PostPersistencePort {
     private final CommunityPostJpaRepository postJpaRepository;
     private final CommunityPostRepositoryCustom postRepositoryCustom;
     private final CommunityPostMapper postMapper;
+    private final PostImageFlagLoader postImageFlagLoader;
 
     @Override
     public Post save(Post post) {
@@ -73,23 +76,22 @@ public class PostPersistenceAdapter implements PostPersistencePort {
                 .findByMemberIdAndDeletedFalseOrderByCreatedAtDesc(
                         memberId, pageable);
 
-        return new SliceResult<>(
-                slice.getContent().stream()
-                        .map(entity -> PostListReadModel.builder()
-                                .id(entity.getId())
-                                .title(entity.getTitle())
-                                .categoryId(entity.getCategoryId())
-                                .viewCount(entity.getViewCount())
-                                .upvoteCount(entity.getUpvoteCount())
-                                .downvoteCount(entity.getDownvoteCount())
-                                .commentCount(entity.getCommentCount())
-                                .hotScore(entity.getHotScore())
-                                .authorId(entity.getMemberId())
-                                .createdAt(entity.getCreatedAt())
-                                .build())
-                        .toList(),
-                slice.hasNext()
-        );
+        List<PostListReadModel> content = slice.getContent().stream()
+                .map(entity -> PostListReadModel.builder()
+                        .id(entity.getId())
+                        .title(entity.getTitle())
+                        .categoryId(entity.getCategoryId())
+                        .viewCount(entity.getViewCount())
+                        .upvoteCount(entity.getUpvoteCount())
+                        .downvoteCount(entity.getDownvoteCount())
+                        .commentCount(entity.getCommentCount())
+                        .hotScore(entity.getHotScore())
+                        .authorId(entity.getMemberId())
+                        .createdAt(entity.getCreatedAt())
+                        .build())
+                .toList();
+
+        return new SliceResult<>(postImageFlagLoader.markPostsWithImage(content), slice.hasNext());
     }
 
     @Override
@@ -126,22 +128,21 @@ public class PostPersistenceAdapter implements PostPersistencePort {
     }
 
     private SliceResult<PostListReadModel> toPage(Slice<PostListDTO> slice) {
-        return new SliceResult<>(
-                slice.getContent().stream()
-                        .map(dto -> PostListReadModel.builder()
-                                .id(dto.getId())
-                                .title(dto.getTitle())
-                                .categoryId(dto.getCategoryId())
-                                .viewCount(dto.getViewCount())
-                                .upvoteCount(dto.getUpvoteCount())
-                                .downvoteCount(dto.getDownvoteCount())
-                                .commentCount(dto.getCommentCount())
-                                .hotScore(dto.getHotScore())
-                                .authorId(dto.getMemberId())
-                                .createdAt(dto.getCreatedAt())
-                                .build())
-                        .toList(),
-                slice.hasNext()
-        );
+        List<PostListReadModel> content = slice.getContent().stream()
+                .map(dto -> PostListReadModel.builder()
+                        .id(dto.getId())
+                        .title(dto.getTitle())
+                        .categoryId(dto.getCategoryId())
+                        .viewCount(dto.getViewCount())
+                        .upvoteCount(dto.getUpvoteCount())
+                        .downvoteCount(dto.getDownvoteCount())
+                        .commentCount(dto.getCommentCount())
+                        .hotScore(dto.getHotScore())
+                        .authorId(dto.getMemberId())
+                        .createdAt(dto.getCreatedAt())
+                        .build())
+                .toList();
+
+        return new SliceResult<>(postImageFlagLoader.markPostsWithImage(content), slice.hasNext());
     }
 }
