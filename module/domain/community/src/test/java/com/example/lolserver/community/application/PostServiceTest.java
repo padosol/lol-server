@@ -7,6 +7,8 @@ import com.example.lolserver.community.application.model.readmodel.PostDetailRea
 import com.example.lolserver.community.application.model.readmodel.PostListReadModel;
 import com.example.lolserver.community.application.model.resultmodel.PostDetailResultModel;
 import com.example.lolserver.community.application.port.in.CategoryQueryUseCase;
+import com.example.lolserver.community.application.port.in.ImageAttachUseCase;
+import com.example.lolserver.community.application.port.in.ImageQueryUseCase;
 import com.example.lolserver.community.application.port.out.BookmarkPersistencePort;
 import com.example.lolserver.community.application.port.out.PostPersistencePort;
 import com.example.lolserver.community.application.port.out.VotePersistencePort;
@@ -57,6 +59,16 @@ class PostServiceTest {
      */
     @Mock
     private CategoryQueryUseCase categoryQueryUseCase;
+
+    /**
+     * 이미지 첨부는 같은 컨텍스트의 port.in 으로 위임한다. imageIds 를 보내지 않는
+     * 기존 케이스는 attach 가 호출되지 않으므로(빈 목록 조기 반환) stub 없이 통과한다.
+     */
+    @Mock
+    private ImageAttachUseCase imageAttachUseCase;
+
+    @Mock
+    private ImageQueryUseCase imageQueryUseCase;
 
     @InjectMocks
     private PostService postService;

@@ -40,6 +40,18 @@ public enum ErrorType {
     BOOKMARK_ALREADY_EXISTS(409, ErrorCode.E409, "이미 북마크한 게시글입니다."),
     BOOKMARK_NOT_FOUND(404, ErrorCode.E404, "북마크를 찾을 수 없습니다."),
 
+    // 커뮤니티 이미지 업로드
+    IMAGE_FILE_REQUIRED(400, ErrorCode.E400, "이미지 파일이 필요합니다."),
+    IMAGE_SIZE_EXCEEDED(400, ErrorCode.E400, "이미지 용량이 허용 범위를 초과했습니다."),
+    IMAGE_TYPE_NOT_SUPPORTED(400, ErrorCode.E400, "지원하지 않는 이미지 형식입니다."),
+    IMAGE_INVALID(400, ErrorCode.E400, "이미지를 읽을 수 없습니다."),
+    IMAGE_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 이미지입니다."),
+    // 이미 다른 글에 붙었거나 정리된 이미지를 다시 첨부하려는 경우.
+    IMAGE_NOT_ATTACHABLE(400, ErrorCode.E400, "첨부할 수 없는 상태의 이미지입니다."),
+    IMAGE_COUNT_EXCEEDED(400, ErrorCode.E400, "게시글당 첨부 가능한 이미지 수를 초과했습니다."),
+    IMAGE_UPLOAD_RATE_LIMITED(429, ErrorCode.E429, "업로드 요청이 너무 많습니다. 잠시 후 다시 시도해주세요."),
+    IMAGE_STORAGE_FAILED(500, ErrorCode.E500, "이미지 저장에 실패했습니다."),
+
     MEMBER_ALREADY_WITHDRAWN(400, ErrorCode.E400,
             "이미 탈퇴한 회원입니다."),
     MEMBER_WITHDRAWN(403, ErrorCode.E403,

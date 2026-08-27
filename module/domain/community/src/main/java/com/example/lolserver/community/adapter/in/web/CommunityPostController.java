@@ -49,6 +49,7 @@ public class CommunityPostController {
                 .title(request.title())
                 .content(request.content())
                 .categoryId(request.categoryId())
+                .imageIds(request.imageIds())
                 .build();
 
         PostDetailResultModel readModel =
@@ -95,6 +96,7 @@ public class CommunityPostController {
                 .title(request.title())
                 .content(request.content())
                 .categoryId(request.categoryId())
+                .imageIds(request.imageIds())
                 .build();
 
         PostDetailResultModel readModel = postUseCase.updatePost(
