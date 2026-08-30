@@ -12,6 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          # 마이그레이션 SQL(lol-db-schema). 기본값 false 라 명시하지 않으면
+          # 서브모듈이 비어 bootJar 가드가 빌드를 세운다.
+          submodules: true
 
       - uses: actions/setup-java@v4
         with:
@@ -33,6 +37,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          # 마이그레이션 SQL(lol-db-schema). 기본값 false 라 명시하지 않으면
+          # 서브모듈이 비어 bootJar 가드가 빌드를 세운다.
+          submodules: true
 
       - uses: actions/setup-java@v4
         with:
@@ -54,6 +62,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          # 마이그레이션 SQL(lol-db-schema). 기본값 false 라 명시하지 않으면
+          # 서브모듈이 비어 bootJar 가드가 빌드를 세운다.
+          submodules: true
 
       - uses: actions/setup-java@v4
         with:

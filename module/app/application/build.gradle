@@ -29,6 +29,41 @@ dependencies {
 
     // PostgreSQL 드라이버 (runtimeOnly는 모듈간 전이되지 않으므로 직접 추가)
     runtimeOnly 'org.postgresql:postgresql'
+
+    // Flyway — 코드가 참조하지 않고 부트 오토컨피그가 클래스패스만 보므로 runtimeOnly.
+    // flyway-database-postgresql 을 빼면 안 된다: Flyway 10 부터 DB 별 지원이 분리돼
+    // core 만으로는 "No database found to handle jdbc:postgresql://..." 로 기동이 죽는다.
+    runtimeOnly 'org.flywaydb:flyway-core'
+    runtimeOnly 'org.flywaydb:flyway-database-postgresql'
+}
+
+/**
+ * 마이그레이션 SQL 을 클래스패스로 옮긴다.
+ *
+ * lol-db-schema 는 리포 루트의 서브모듈이라 src/main/resources 밖에 있다. 여기서
+ * db/migration 으로 복사해야 Flyway 기본 위치(classpath:db/migration)로 잡히고,
+ * bootJar 안에도 함께 실린다 — 컨테이너에는 소스 트리가 없으므로 filesystem: 로케이션은 쓸 수 없다.
+ */
+processResources {
+    from("$rootDir/lol-db-schema/db/migration") {
+        into 'db/migration'
+    }
+}
+
+/**
+ * 서브모듈이 비어 있으면 빌드를 멈춘다.
+ *
+ * 체크아웃에서 서브모듈을 빠뜨리면(actions/checkout 의 submodules 기본값이 false 다)
+ * 마이그레이션 0건짜리 jar 가 조용히 만들어진다. 그 앱은 빈 DB 에 스키마를 만들지 않고
+ * ddl-auto: validate 에서야 엉뚱한 메시지로 죽는다. 빌드에서 먼저 터뜨리는 편이 낫다.
+ */
+processResources.doFirst {
+    def migrations = file("$rootDir/lol-db-schema/db/migration")
+    if (!migrations.isDirectory() || migrations.listFiles({ f -> f.name.endsWith('.sql') } as FileFilter).length == 0) {
+        throw new GradleException(
+                "lol-db-schema/db/migration 에 마이그레이션이 없습니다. " +
+                        "서브모듈을 체크아웃하세요: git submodule update --init --recursive")
+    }
 }
 
 bootJar {

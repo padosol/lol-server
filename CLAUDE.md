@@ -34,8 +34,12 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
 
 ## 빌드 / 실행
 
+> **서브모듈 필수.** `lol-db-schema` 의 마이그레이션 SQL 이 `bootJar` 에 실린다. 서브모듈 없이
+> 클론했으면 빌드가 멈춘다 — `git submodule update --init --recursive` 로 받을 것.
+> 스키마 소유 구조는 [ADR 0003](docs/adr/0003-shared-flyway-ownership.md) 참고.
+
 ```bash
-./gradlew bootRun -Dspring.profiles.active=local   # Postgres/Redis/RabbitMQ Docker 필요
+./gradlew bootRun -Dspring.profiles.active=local   # Postgres/Redis/RabbitMQ Docker 필요 (스키마는 Flyway 가 만든다)
 ./gradlew test                                     # 전체 테스트
 ./gradlew compileJava compileTestJava              # Docker 없이 전 모듈 컴파일 검증 (리팩토링용)
 ./gradlew archTest                                 # Docker 없이 ArchUnit(*ArchitectureTest) 전 모듈 실행
