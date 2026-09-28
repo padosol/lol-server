@@ -95,6 +95,7 @@
 | 득실차 | `score` | ✅ | ✅ 세트 결과 |
 | 승률 | `winRate` | ✅ | ✅ 매치 결과 |
 | KDA · 킬 · 데스 · 어시스트 | `kda` `kills` `deaths` `assists` | ✅ | ⚠️ 세트별 선수 기록 필요 |
+| 선취 킬 · 타워 · 바론 | `firstKillRate` `firstTowerRate` `firstBaronRate` | ✅ | ⚠️ 세트별 선취 입력 필요 (§2.5) |
 
 **선수 순위표**
 
@@ -120,6 +121,49 @@
 
 앞의 두 줄이 §8.4 검증 뷰의 근거가 된다 — 세트 수는 매치 스코어와 맞아야 하고,
 득실차 총합은 순위표 단위로 반드시 0 이어야 한다.
+
+### 2.5 ★ 선취 지표는 비율이 아니라 지수다
+
+팀 `addInfo` 의 `firstKillRate` · `firstTowerRate` · `firstBaronRate` 는 **이름과 달리 비율이 아니다.**
+이름만 보고 퍼센트로 표시하면 화면 숫자가 참고 페이지와 달라진다.
+
+`lck_2026` 팀 순위표 10행 전량 (2026-09-28 스냅샷, 전 팀 26매치로 출전 수 동일):
+
+| 팀 | GEN | HLE | T1 | DK | KT | BRO | NS | BFX | KRX | DNS | 평균 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `firstKillRate` | 0.98 | 0.99 | 1.00 | 1.07 | 1.25 | 1.03 | 0.96 | 0.98 | 0.88 | 0.82 | **0.996** |
+| `firstTowerRate` | 1.19 | 1.24 | 1.21 | 1.07 | 0.85 | 0.88 | 1.24 | 1.14 | 0.66 | 0.50 | **0.998** |
+| `firstBaronRate` | 1.18 | 1.13 | 0.96 | 1.08 | 0.87 | 0.93 | 0.94 | 0.86 | 0.62 | 0.78 | **0.935** |
+
+두 가지가 동시에 읽힌다.
+
+1. **1 을 넘는 값이 있다** (최대 1.25). 확률이면 불가능하다.
+2. **평균이 정확히 1.0 근처다.** 선취 킬·타워는 세트마다 정확히 한 팀이 가져가므로
+   전 팀의 비율 평균은 구조적으로 0.5 다. 그 값이 1.0 으로 나온다는 건 **0.5 로 나눈 지수**라는 뜻이다.
+
+```
+firstKillRate = (선취킬을 가져간 세트 수 ÷ 출전 세트 수) ÷ 0.5
+              = 리그 평균(50%) 대비 배수.  1.00 = 평균, 1.25 = 평균의 1.25배
+```
+
+**바론만 평균이 0.935 로 낮은 것이 이 해석의 교차 검증이다.** 킬·타워와 달리 바론은
+**나오지 않고 끝나는 세트가 있다.** 분자만 줄고 분모(출전 세트)는 그대로이므로 평균이 1 아래로
+내려간다. 0.935 는 약 6.5% 의 세트가 바론 없이 끝났다는 뜻이고, 스노우볼 양상을 생각하면 타당하다.
+
+> **분모의 정체는 이 스냅샷만으로 갈리지 않는다.** 10팀이 모두 26매치를 치러 출전 수가 같기
+> 때문에 분모가 *세트*든 *매치*든 위 수치가 똑같이 나온다. 우리 집계는 **세트를 분모로 쓴다** —
+> 선취는 세트 단위 사건이라 그 외의 선택은 의미가 없다. 참고 화면과 수치가 미세하게 어긋나면
+> 여기를 가장 먼저 의심한다 (§12-12).
+
+설계에 미치는 영향은 세 가지다.
+
+- **원장에는 지수를 넣지 않는다.** `esports_game` 에 선취 팀을 그대로 남기고(§6.4),
+  집계는 카운트와 분모만 저장하며(§6.5), 지수는 응답에서 파생한다. 분모 정의가 바뀌어도
+  재집계 없이 표현만 고치면 된다.
+- **"바론이 안 나온 세트" 와 "아직 입력 안 한 세트" 를 반드시 구분해야 한다.** 둘 다 NULL 로
+  두면 분모가 조용히 틀어진다. `first_objectives_recorded` 플래그가 이 역할을 한다 (§6.4).
+- **API 는 `rate`(0~1)와 `index`(=rate÷0.5)를 함께 싣는다** (§9.1). 이름이 `*Rate` 인데 값이
+  1 을 넘는 참고 API 의 함정을 우리 응답에서 되풀이하지 않기 위해서다.
 
 ---
 
@@ -498,11 +542,24 @@ CREATE TABLE IF NOT EXISTS esports_game (
     game_no         SMALLINT    NOT NULL,
     winner_team_id  VARCHAR(30) NOT NULL,
     duration_sec    INTEGER,
+    -- 선취 오브젝트 (§2.5). 세트당 최대 한 팀이므로 카운트가 아니라 팀 참조로 둔다.
+    -- 카운트로 두면 "GEN 이 선취킬" 이라는 사실이 "양 팀 각각 몇 번" 으로 흩어지고,
+    -- 상대 팀 행과 합이 맞는지를 DB 가 검사할 수 없게 된다.
+    first_kill_team_id        VARCHAR(30),
+    first_tower_team_id       VARCHAR(30),
+    first_baron_team_id       VARCHAR(30),
+    -- ★ 분모를 지키는 플래그. TRUE 면 위 3컬럼의 NULL 은 "그 오브젝트가 나오지 않았다",
+    --   FALSE 면 "아직 입력하지 않았다" 는 뜻이다. 구분하지 않으면 바론 없이 끝난 세트와
+    --   미입력 세트가 한 덩어리가 되어 지수 분모가 조용히 틀어진다 (§2.5).
+    first_objectives_recorded BOOLEAN NOT NULL DEFAULT FALSE,
     created_at      TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_esports_game PRIMARY KEY (game_id),
     CONSTRAINT uk_esports_game UNIQUE (match_id, game_no),
     CONSTRAINT fk_game_match  FOREIGN KEY (match_id) REFERENCES esports_match (match_id) ON DELETE CASCADE,
-    CONSTRAINT fk_game_winner FOREIGN KEY (winner_team_id) REFERENCES esports_team (team_id)
+    CONSTRAINT fk_game_winner FOREIGN KEY (winner_team_id) REFERENCES esports_team (team_id),
+    CONSTRAINT fk_game_first_kill  FOREIGN KEY (first_kill_team_id)  REFERENCES esports_team (team_id),
+    CONSTRAINT fk_game_first_tower FOREIGN KEY (first_tower_team_id) REFERENCES esports_team (team_id),
+    CONSTRAINT fk_game_first_baron FOREIGN KEY (first_baron_team_id) REFERENCES esports_team (team_id)
 );
 
 -- 3단계. 약 4,000행이라 수기 입력 대상이 아니다 (§3.1, §12-4)
@@ -557,6 +614,13 @@ CREATE TABLE IF NOT EXISTS esports_team_standing (
     kills          INTEGER,
     deaths         INTEGER,
     assists        INTEGER,
+    -- 선취 지표 (§2.5). 지수가 아니라 원시 카운트와 분모를 저장한다.
+    -- 지수는 ReadModel 이 count / first_objective_sets / 0.5 로 파생하므로,
+    -- 분모 정의가 바뀌어도(§12-12) 재집계 없이 표현만 고치면 된다.
+    first_objective_sets INTEGER,               -- 선취가 입력된 출전 세트 수(분모). NULL 이면 미집계
+    first_kill_count     INTEGER,
+    first_tower_count    INTEGER,
+    first_baron_count    INTEGER,
     aggregated_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_esports_team_standing PRIMARY KEY (season_id, standing_key, team_id),
     CONSTRAINT fk_ets_season FOREIGN KEY (season_id) REFERENCES esports_season (season_id),
@@ -715,6 +779,8 @@ SELECT 'lck_2026', team_id, 1, 'worlds_2026', 1 FROM esports_team WHERE team_cod
 
 ### 6.9 스키마 검증
 
+**`V34` — 마스터 · 원장 · 집계**
+
 `V34` 를 단독으로 실행한 것이 아니라 **빈 DB 에 `V1`~`V34` 전체 마이그레이션 체인을 순서대로 적용**해
 실제 스키마 위에 올라가는지 확인했다 (로컬 `postgres:16-alpine`). 이후 제약 동작은 `ROLLBACK` 으로 검증했다.
 
@@ -737,6 +803,21 @@ SELECT 'lck_2026', team_id, 1, 'worlds_2026', 1 FROM esports_team WHERE team_cod
 | 시즌 로스터 유도 | lck_2025→GEN, lck_2026→GEN·T1·GEN, worlds_2026→GEN | 입력 없이 자동 산출 |
 | 특정 시점 소속 (2026-07-01) | T1 | T1 |
 
+**`V37` (선취 지표 — §2.5)** 도 같은 방식으로 확인했다. 빈 DB 에 `V1`~`V37` 33개 파일을
+순서대로 적용한 뒤, 2매치 5세트를 넣고 `ROLLBACK` 했다.
+
+| 확인 | 기대 | 실제 |
+|---|---|---|
+| V1~V37 전체 체인 적용 | 33개 파일 전부 성공 | **전부 성공** |
+| `V37` 재실행 | 멱등 (NOTICE 만) | **성공** — `ADD COLUMN IF NOT EXISTS` + `pg_constraint` 가드 |
+| 정상 입력 시 뷰 ①·④ | 0행 | **둘 다 0행** |
+| **선취킬 합 = 기록 세트 수** | 5 = 5 | **5 = 5** — 세트마다 정확히 한 팀이 가져간다는 §2.5 의 전제 |
+| **선취바론 합 < 기록 세트 수** | 3 < 5 | **3 < 5** — 바론 없이 끝난 세트 2개. 바론 지수 평균이 1 아래인 이유 |
+| 지수 산식 (GEN 5세트 중 선취킬 3) | `3/5÷0.5 = 1.20` | **1.20** |
+| 대진에 없는 팀을 선취 팀으로 | 뷰 ④ 검출 | `FIRST_KILL_TEAM_NOT_IN_MATCH` |
+| `recorded=TRUE` 인데 킬/타워 NULL | 뷰 ④ 검출 | `RECORDED_BUT_NO_FIRST_KILL` · `..._TOWER` |
+| 값은 넣고 플래그 안 올림 | 뷰 ④ 검출 | `FILLED_BUT_NOT_RECORDED` |
+
 ---
 
 ## 7. 집계 로직
@@ -756,6 +837,9 @@ SELECT 'lck_2026', team_id, 1, 'worlds_2026', 1 FROM esports_team WHERE team_cod
 | `overall_rank` | 그룹 무시 전체 정렬 순번 |
 | 팀 `kills/deaths/assists` | `esports_game_player` 를 팀·세트로 합산 (3단계) |
 | 팀 `kda` | `(kills + assists) / max(deaths, 1)` |
+| 팀 `first_objective_sets` | 팀이 출전한 세트 중 `esports_game.first_objectives_recorded = TRUE` 인 세트 수 |
+| 팀 `first_kill_count` 외 2종 | 해당 `first_*_team_id` 가 그 팀인 세트 수. **분모 세트 안에서만 센다** |
+| 선취 지수 (응답 파생) | `count / first_objective_sets ÷ 0.5`. 분모 0·NULL 이면 `null` (§2.5, §9.1) |
 | 선수 `compete_set_count` | 선수의 `esports_game_player` 행 수 |
 | 선수 `compete_times` | 출전 세트의 `duration_sec` 합 |
 | 선수 `kill_involve_rate` | `(선수 K + A) / 같은 세트 소속팀 총 킬` |
@@ -931,6 +1015,43 @@ SELECT st.season_id, st.standing_key,
   JOIN esports_team  t ON t.team_id IN (m.home_team_id, m.away_team_id)
  WHERE st.standing_key IS NOT NULL
  GROUP BY st.season_id, st.standing_key;
+
+-- ④ 선취 오브젝트 오입력 (§2.5). 지수의 분자·분모를 동시에 지킨다.
+--    선취 팀은 CHECK 로 막을 수 없다 -- 대진 팀이 esports_match 에 있어서
+--    esports_game 행 하나만으로는 검사할 수 없기 때문이다. 그래서 뷰로 잡는다.
+CREATE OR REPLACE VIEW v_esports_first_objective_invalid AS
+SELECT g.game_id, m.match_id, m.match_date, g.game_no,
+       h.team_code AS home, a.team_code AS away,
+       g.first_objectives_recorded,
+       g.first_kill_team_id, g.first_tower_team_id, g.first_baron_team_id,
+       CASE
+         -- 분자 오염: 그 세트에 없던 팀이 선취 팀으로 들어갔다
+         WHEN g.first_kill_team_id  IS NOT NULL
+          AND g.first_kill_team_id  NOT IN (m.home_team_id, m.away_team_id) THEN 'FIRST_KILL_TEAM_NOT_IN_MATCH'
+         WHEN g.first_tower_team_id IS NOT NULL
+          AND g.first_tower_team_id NOT IN (m.home_team_id, m.away_team_id) THEN 'FIRST_TOWER_TEAM_NOT_IN_MATCH'
+         WHEN g.first_baron_team_id IS NOT NULL
+          AND g.first_baron_team_id NOT IN (m.home_team_id, m.away_team_id) THEN 'FIRST_BARON_TEAM_NOT_IN_MATCH'
+         -- 분모 오염: 입력 완료로 표시됐는데 정작 값이 비어 있다.
+         -- 바론은 안 나올 수 있으므로 제외하고, 킬/타워만 본다.
+         WHEN g.first_objectives_recorded AND g.first_kill_team_id  IS NULL THEN 'RECORDED_BUT_NO_FIRST_KILL'
+         WHEN g.first_objectives_recorded AND g.first_tower_team_id IS NULL THEN 'RECORDED_BUT_NO_FIRST_TOWER'
+         -- 플래그 누락: 값은 넣고 플래그를 안 올렸다. 그대로 두면 분모에서 빠진다.
+         WHEN NOT g.first_objectives_recorded
+          AND (g.first_kill_team_id IS NOT NULL OR g.first_tower_team_id IS NOT NULL
+               OR g.first_baron_team_id IS NOT NULL) THEN 'FILLED_BUT_NOT_RECORDED'
+       END AS violation
+  FROM esports_game  g
+  JOIN esports_match m ON m.match_id = g.match_id
+  JOIN esports_team  h ON h.team_id  = m.home_team_id
+  JOIN esports_team  a ON a.team_id  = m.away_team_id
+ WHERE g.first_kill_team_id  IS NOT NULL AND g.first_kill_team_id  NOT IN (m.home_team_id, m.away_team_id)
+    OR g.first_tower_team_id IS NOT NULL AND g.first_tower_team_id NOT IN (m.home_team_id, m.away_team_id)
+    OR g.first_baron_team_id IS NOT NULL AND g.first_baron_team_id NOT IN (m.home_team_id, m.away_team_id)
+    OR (g.first_objectives_recorded AND (g.first_kill_team_id IS NULL OR g.first_tower_team_id IS NULL))
+    OR (NOT g.first_objectives_recorded
+        AND (g.first_kill_team_id IS NOT NULL OR g.first_tower_team_id IS NOT NULL
+             OR g.first_baron_team_id IS NOT NULL));
 ```
 
 집계 전 확인 순서:
@@ -938,6 +1059,8 @@ SELECT st.season_id, st.standing_key,
 1. **①이 0행** — 매치 결과와 세트 수가 전부 맞는다.
 2. **③의 `score_sum` 이 0** — 세트 점수가 제로섬을 만족한다.
 3. ②로 스테이지별 입력량이 예상과 맞는지 본다 (1~2R 90매치 / 3~5R 60매치 — §3.1).
+4. **④가 0행** — 선취를 입력했다면. 이 뷰는 선취 지표에만 영향을 주므로
+   순위·승패·득실차 집계를 막지는 않는다 (§2.5).
 
 같은 검증을 `Match` 도메인의 `validateGameConsistency()` 가 애플리케이션에서도 수행한다.
 
@@ -984,7 +1107,7 @@ DDL → 시즌 구조 시드 → 매치 입력 → 검증 뷰 3종 → 집계 �
 | 파라미터 | 기본 | 값 |
 |---|---|---|
 | `standingKey` | 시즌의 기본 순위표 | `REGULAR` 등 (스테이지 목록 API 로 조회) |
-| `sort` | `RANK` | `RANK`,`WINS`,`LOSES`,`SCORE`,`WIN_RATE`,`KDA`,`KILLS`,`DEATHS`,`ASSISTS` |
+| `sort` | `RANK` | `RANK`,`WINS`,`LOSES`,`SCORE`,`WIN_RATE`,`KDA`,`KILLS`,`DEATHS`,`ASSISTS`,`FIRST_KILL`,`FIRST_TOWER`,`FIRST_BARON` |
 | `order` | `RANK`→`ASC`, 그 외 `DESC` | `ASC` \| `DESC` |
 
 ```json
@@ -1009,7 +1132,13 @@ DDL → 시즌 구조 시드 → 매치 입력 → 검증 뷰 3종 → 집계 �
             "wins": 16, "loses": 6, "draws": 0,
             "setWins": 34, "setLoses": 13, "score": 21,
             "winRate": 0.7273,
-            "kda": null, "kills": null, "deaths": null, "assists": null
+            "kda": null, "kills": null, "deaths": null, "assists": null,
+            "firstObjectives": {
+              "recordedSets": 47,
+              "kill":  { "count": 23, "rate": 0.4894, "index": 0.98 },
+              "tower": { "count": 28, "rate": 0.5957, "index": 1.19 },
+              "baron": { "count": 26, "rate": 0.5532, "index": 1.11 }
+            }
           }
         ]
       },
@@ -1025,6 +1154,12 @@ DDL → 시즌 구조 시드 → 매치 입력 → 검증 뷰 3종 → 집계 �
   LCK 단독 순위표에서는 전 팀이 동일하므로 화면에서 생략하면 된다.
 - `GET /leagues` 응답에도 `region` 과 `international` 이 포함되어, 리그 필터에서
   지역 리그와 국제 대회를 구분해 그룹핑할 수 있다.
+- **`firstObjectives`** (§2.5) — 세 오브젝트가 **같은 분모** 를 쓰므로 `recordedSets` 를 한 번만 싣고
+  그 아래에 오브젝트별 값을 둔다. `rate` 는 실제 비율(0~1), `index` 는 참고 화면과 같은 축척
+  (`rate ÷ 0.5`, 1.00 = 리그 평균)이다. **화면이 쓰는 값은 `index`** 이고 `rate` 는 근거다.
+  참고 API 가 값이 1 을 넘는 필드에 `*Rate` 라는 이름을 붙여 둔 함정을 우리 응답에서 반복하지 않는다.
+  선취 입력이 없는 순위표에서는 `kda` 와 같은 규칙으로 **`firstObjectives` 전체가 `null`** 이다 (에러가 아니다).
+  `sort=FIRST_KILL` 등은 `index` 기준이며, `recordedSets` 가 0인 팀은 항상 끝으로 보낸다.
 
 ### 9.2 스테이지 목록
 
@@ -1166,6 +1301,11 @@ DDL → 시즌 구조 시드 → 매치 입력 → 검증 뷰 3종 → 집계 �
 7. **1~2R 매치 90건 입력** → 검증 뷰 0행 → 집계 → 그룹 확정 → **3~5R 입력** → 재집계
 8. 참고 화면과 순위·승패·득실차 대조
 
+   > **선취 지표(§2.5)는 7번에 얹힌다.** 세트 행(`esports_game`)은 어차피 입력하므로
+   > 행이 늘지 않고 컬럼 3개를 더 적을 뿐이다. 입력을 건너뛴 세트는
+   > `first_objectives_recorded = FALSE` 로 남아 분모에서 빠지므로,
+   > 일부만 입력해도 순위·승패·득실차는 영향을 받지 않는다. 대조 시에는 ④ 뷰(§8.4)가 0행인지 함께 본다.
+
 **2단계 — POG · 선수 순위표 골격**
 
 9. 로스터 입력 + 선수 커리어·팀 로스터 API
@@ -1196,6 +1336,8 @@ DDL → 시즌 구조 시드 → 매치 입력 → 검증 뷰 3종 → 집계 �
 | 9 | 국제 대회 도입 시점 | LCK 만 먼저 할지, 롤드컵·MSI 를 같이 열지. **테이블은 이미 커버하므로(§6.8) 시드 데이터와 입력량 문제일 뿐이다** |
 | 10 | **팀 리브랜딩 시 "당시 팀명"** | 팀이 이름을 바꾸면(`DWG KIA → Dplus KIA` — 공식 데이터에도 `slug='dwg-kia'`, `name='Dplus KIA'` 로 흔적이 남아 있다) `team_id` 는 그대로라 **과거 기록도 새 이름으로 표시된다.** 커리어에 "2022 DWG KIA" 로 보여야 한다면 `esports_team_name_history` 가 필요하다. 현재 범위에서는 최신 이름으로 통일 |
 | 11 | 코치·감독 로스터 | `esports_roster.position` 이 선수 포지션 5종 전제다. 코칭스태프를 넣으려면 `role`(PLAYER/COACH) 구분이 필요 |
+| 12 | **선취 지수의 분모** | ×0.5 정규화는 수치로 확정했으나(§2.5), 분모가 *출전 세트* 인지 *매치* 인지는 전 팀 출전 수가 같은 스냅샷에서 갈리지 않는다. 우리는 세트를 쓴다. 팀별 출전 세트 수가 달라지는 시점(플레이오프 진출 팀 등)에 참고 화면과 대조하면 확정된다 |
+| 13 | 선취 입력 출처 | 세트당 선취 킬·타워·바론은 중계 기록을 보고 사람이 적어야 한다. 매치 입력(§8.2) 한 줄에 3컬럼이 더 붙는 정도지만, 3단계(`esports_game_player`)가 열리면 그쪽에서 유도할 수 있는지 재검토 |
 
 ---
 
@@ -1203,11 +1345,12 @@ DDL → 시즌 구조 시드 → 매치 입력 → 검증 뷰 3종 → 집계 �
 
 설계 근거를 재확인할 때 쓴다. **채택한 데이터 경로가 아니다** (§3.2).
 
-**브라우저에서 바로 열림**
+**브라우저에서 바로 열림** (아래 3종은 2026-09-28 에 응답을 직접 받아 §2.5 를 도출했다)
 
 ```
 https://esports-api.game.naver.com/service/v1/ranking/lck_2026/team
 https://esports-api.game.naver.com/service/v1/ranking/lck_2026/player
+https://esports-api.game.naver.com/service/v1/lounges/League_of_Legends/ranking/topLeagues/team
 https://esports-api.game.naver.com/service/v1/meta/lck/leagues
 https://feed.lolesports.com/livestats/v1/window/116951349275512133
 ```
