@@ -16,6 +16,9 @@ jobs:
           # 마이그레이션 SQL(lol-db-schema). 기본값 false 라 명시하지 않으면
           # 서브모듈이 비어 bootJar 가드가 빌드를 세운다.
           submodules: true
+          # lol-db-schema 는 private 이다. 기본 GITHUB_TOKEN 은 이 리포에만 권한이 있어
+          # 서브모듈 fetch 가 403 으로 죽는다 — lol-repository 와 같은 PAT 를 쓴다.
+          token: ${{ secrets.SUBMODULE_PAT }}
 
       - uses: actions/setup-java@v4
         with:
@@ -41,6 +44,9 @@ jobs:
           # 마이그레이션 SQL(lol-db-schema). 기본값 false 라 명시하지 않으면
           # 서브모듈이 비어 bootJar 가드가 빌드를 세운다.
           submodules: true
+          # lol-db-schema 는 private 이다. 기본 GITHUB_TOKEN 은 이 리포에만 권한이 있어
+          # 서브모듈 fetch 가 403 으로 죽는다 — lol-repository 와 같은 PAT 를 쓴다.
+          token: ${{ secrets.SUBMODULE_PAT }}
 
       - uses: actions/setup-java@v4
         with:
@@ -66,6 +72,9 @@ jobs:
           # 마이그레이션 SQL(lol-db-schema). 기본값 false 라 명시하지 않으면
           # 서브모듈이 비어 bootJar 가드가 빌드를 세운다.
           submodules: true
+          # lol-db-schema 는 private 이다. 기본 GITHUB_TOKEN 은 이 리포에만 권한이 있어
+          # 서브모듈 fetch 가 403 으로 죽는다 — lol-repository 와 같은 PAT 를 쓴다.
+          token: ${{ secrets.SUBMODULE_PAT }}
 
       - uses: actions/setup-java@v4
         with:
