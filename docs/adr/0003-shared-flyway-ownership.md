@@ -58,11 +58,13 @@ Accepted (2026-08-31)
 ## 영향
 
 - `docker/Dockerfile` 이 `lol-db-schema` 를 복사한다. 빠지면 마이그레이션 0건짜리 이미지가 된다.
-- `ci.yml` · `deploy-service.yml` 의 `actions/checkout` 에 `submodules: true` 가 필요하다
-  (기본값이 `false`). **`token: ${{ secrets.SUBMODULE_PAT }}` 도 같이 넘겨야 한다** —
-  `lol-db-schema` 가 private 이고 기본 `GITHUB_TOKEN` 은 워크플로가 도는 리포에만 권한이
-  있어, 토큰을 바꾸지 않으면 서브모듈 fetch 가 403 으로 죽는다. `lol-repository` 가 쓰는
-  것과 같은 시크릿이다.
+- **CI 는 서브모듈을 별도 스텝에서 받는다.** `lol-db-schema` 가 private 이라 기본
+  `GITHUB_TOKEN`(워크플로가 도는 리포에만 권한) 으로는 못 받는다. 그렇다고
+  `actions/checkout` 의 `token` 을 `SUBMODULE_PAT` 로 바꾸면 **메인 리포 체크아웃까지**
+  그 PAT 를 타서, PAT 에 `lol-server` 권한이 없거나 만료되면 체크아웃이
+  `could not read Username` 으로 죽는다(실제로 겪었다). 그래서 메인 체크아웃은 기본
+  토큰으로 두고, `url.<...>.insteadOf` 로 서브모듈만 PAT 로 받는다. PAT 에는
+  `lol-db-schema` 읽기 권한만 있으면 된다.
 - 서브모듈이 필요한 잡에만 켠다. `deploy-service.yml` 의 `trigger-cd` 는 `build.gradle` 의
   버전만 읽으므로 켜지 않는다 — 켜면 클론 시간과 실패 지점만 늘어난다.
 - 서브모듈이 비면 `processResources` 가드가 빌드를 세운다 — 조용히 빈 jar 가 나가는 것보다 낫다.
