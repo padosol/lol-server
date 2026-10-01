@@ -21,6 +21,8 @@ jobs:
         env:
           PAT: ${{ secrets.SUBMODULE_PAT }}
         run: |
+          # 시크릿 값에 개행이 섞여 있으면 git config 키가 깨진다 — 실제로 그렇게 실패했다.
+          PAT=$(printf '%s' "$PAT" | tr -d '\r\n')
           git config --global url."https://x-access-token:$PAT@github.com/".insteadOf "https://github.com/"
           git submodule update --init --recursive
           git config --global --unset-all url."https://x-access-token:$PAT@github.com/".insteadOf
@@ -54,6 +56,8 @@ jobs:
         env:
           PAT: ${{ secrets.SUBMODULE_PAT }}
         run: |
+          # 시크릿 값에 개행이 섞여 있으면 git config 키가 깨진다 — 실제로 그렇게 실패했다.
+          PAT=$(printf '%s' "$PAT" | tr -d '\r\n')
           git config --global url."https://x-access-token:$PAT@github.com/".insteadOf "https://github.com/"
           git submodule update --init --recursive
           git config --global --unset-all url."https://x-access-token:$PAT@github.com/".insteadOf
@@ -87,6 +91,8 @@ jobs:
         env:
           PAT: ${{ secrets.SUBMODULE_PAT }}
         run: |
+          # 시크릿 값에 개행이 섞여 있으면 git config 키가 깨진다 — 실제로 그렇게 실패했다.
+          PAT=$(printf '%s' "$PAT" | tr -d '\r\n')
           git config --global url."https://x-access-token:$PAT@github.com/".insteadOf "https://github.com/"
           git submodule update --init --recursive
           git config --global --unset-all url."https://x-access-token:$PAT@github.com/".insteadOf
