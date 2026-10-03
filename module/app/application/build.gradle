@@ -30,10 +30,11 @@ dependencies {
     // PostgreSQL 드라이버 (runtimeOnly는 모듈간 전이되지 않으므로 직접 추가)
     runtimeOnly 'org.postgresql:postgresql'
 
-    // Flyway — 코드가 참조하지 않고 부트 오토컨피그가 클래스패스만 보므로 runtimeOnly.
-    // flyway-database-postgresql 을 빼면 안 된다: Flyway 10 부터 DB 별 지원이 분리돼
-    // core 만으로는 "No database found to handle jdbc:postgresql://..." 로 기동이 죽는다.
-    runtimeOnly 'org.flywaydb:flyway-core'
+    // Flyway — FlywayValidateOnlyConfig 가 Flyway 타입을 참조하므로 implementation.
+    // flyway-database-postgresql 은 오토컨피그가 클래스패스만 보므로 runtimeOnly 로 둔다.
+    // 빼면 안 된다: Flyway 10 부터 DB 별 지원이 분리돼 core 만으로는
+    // "No database found to handle jdbc:postgresql://..." 로 기동이 죽는다.
+    implementation 'org.flywaydb:flyway-core'
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
 }
 
