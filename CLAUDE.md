@@ -35,7 +35,8 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
 ## 빌드 / 실행
 
 ```bash
-./gradlew bootRun -Dspring.profiles.active=local   # Postgres/Redis/RabbitMQ Docker 필요
+git submodule update --init --recursive            # 필수: lol-db-schema 의 SQL 이 bootJar 에 실린다. 없으면 빌드가 멈춘다 (docs/adr/0003-shared-flyway-ownership.md)
+./gradlew bootRun -Dspring.profiles.active=local   # Postgres/Redis/RabbitMQ Docker 필요 (스키마는 Flyway 가 만든다)
 ./gradlew test                                     # 전체 테스트
 ./gradlew compileJava compileTestJava              # Docker 없이 전 모듈 컴파일 검증 (리팩토링용)
 ./gradlew archTest                                 # Docker 없이 ArchUnit(*ArchitectureTest) 전 모듈 실행

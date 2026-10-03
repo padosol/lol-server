@@ -13,6 +13,10 @@ COPY build.gradle settings.gradle ./
 COPY buildSrc buildSrc
 COPY module module
 
+# 마이그레이션 SQL (서브모듈). bootJar 가 db/migration 으로 싣는다 —
+# 빠뜨리면 processResources 가드가 빌드를 세운다.
+COPY lol-db-schema lol-db-schema
+
 # 빌드 실행
 RUN ./gradlew :module:app:application:bootJar -x test --no-daemon
 

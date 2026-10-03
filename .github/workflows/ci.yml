@@ -13,6 +13,20 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      # 마이그레이션 SQL(lol-db-schema). 없으면 processResources 가드가 빌드를 세운다.
+      # private 이라 자격증명이 필요한데, 메인 체크아웃은 기본 GITHUB_TOKEN 으로 두고
+      # 서브모듈만 PAT 로 받는다 — PAT 에 이 리포 권한이 없어도 되고, PAT 가 죽어도
+      # 메인 체크아웃은 살아 실패 지점이 분명해진다. 배경은 ADR 0003.
+      - name: Checkout lol-db-schema
+        env:
+          PAT: ${{ secrets.SUBMODULE_PAT }}
+        run: |
+          # 시크릿 값에 개행이 섞여 있으면 git config 키가 깨진다 — 실제로 그렇게 실패했다.
+          PAT=$(printf '%s' "$PAT" | tr -d '\r\n')
+          git config --global url."https://x-access-token:$PAT@github.com/".insteadOf "https://github.com/"
+          git submodule update --init --recursive
+          git config --global --unset-all url."https://x-access-token:$PAT@github.com/".insteadOf
+
       - uses: actions/setup-java@v4
         with:
           java-version: '21'
@@ -34,6 +48,20 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      # 마이그레이션 SQL(lol-db-schema). 없으면 processResources 가드가 빌드를 세운다.
+      # private 이라 자격증명이 필요한데, 메인 체크아웃은 기본 GITHUB_TOKEN 으로 두고
+      # 서브모듈만 PAT 로 받는다 — PAT 에 이 리포 권한이 없어도 되고, PAT 가 죽어도
+      # 메인 체크아웃은 살아 실패 지점이 분명해진다. 배경은 ADR 0003.
+      - name: Checkout lol-db-schema
+        env:
+          PAT: ${{ secrets.SUBMODULE_PAT }}
+        run: |
+          # 시크릿 값에 개행이 섞여 있으면 git config 키가 깨진다 — 실제로 그렇게 실패했다.
+          PAT=$(printf '%s' "$PAT" | tr -d '\r\n')
+          git config --global url."https://x-access-token:$PAT@github.com/".insteadOf "https://github.com/"
+          git submodule update --init --recursive
+          git config --global --unset-all url."https://x-access-token:$PAT@github.com/".insteadOf
+
       - uses: actions/setup-java@v4
         with:
           java-version: '21'
@@ -54,6 +82,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
+      # 마이그레이션 SQL(lol-db-schema). 없으면 processResources 가드가 빌드를 세운다.
+      # private 이라 자격증명이 필요한데, 메인 체크아웃은 기본 GITHUB_TOKEN 으로 두고
+      # 서브모듈만 PAT 로 받는다 — PAT 에 이 리포 권한이 없어도 되고, PAT 가 죽어도
+      # 메인 체크아웃은 살아 실패 지점이 분명해진다. 배경은 ADR 0003.
+      - name: Checkout lol-db-schema
+        env:
+          PAT: ${{ secrets.SUBMODULE_PAT }}
+        run: |
+          # 시크릿 값에 개행이 섞여 있으면 git config 키가 깨진다 — 실제로 그렇게 실패했다.
+          PAT=$(printf '%s' "$PAT" | tr -d '\r\n')
+          git config --global url."https://x-access-token:$PAT@github.com/".insteadOf "https://github.com/"
+          git submodule update --init --recursive
+          git config --global --unset-all url."https://x-access-token:$PAT@github.com/".insteadOf
 
       - uses: actions/setup-java@v4
         with:

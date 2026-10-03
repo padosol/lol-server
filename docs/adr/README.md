@@ -7,3 +7,4 @@
 |---|---|---|---|
 | 0001 | [익명 기반 듀오 매칭 — 상호 동의 전까지 신원 비공개](./0001-anonymous-duo-matching.md) | Accepted | 2026-06-04 |
 | 0002 | [듀오 매칭 플로우 — 3-way handshake · 선착순 확정 · 양방향 공개](./0002-duo-matching-flow.md) | Accepted | 2026-06-12 |
+| 0003 | [적용은 lol-repository, lol-server 는 검증 — local 만 예외](./0003-shared-flyway-ownership.md) | Accepted | 2026-10-03 |

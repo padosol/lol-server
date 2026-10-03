@@ -1,9 +1,12 @@
 spring:
-  # 스키마 마이그레이션은 lol-repository 가 단독으로 소유한다 (lol-db-schema 서브모듈을
-  # 이미지에 싣고 기동 시 Flyway 로 적용). lol-server 는 스키마를 만들지 않고
-  # ddl-auto: validate 로 검증만 한다.
+  # 운영에서 lol-server 는 스키마를 적용하지 않고 검증만 한다. 적용 주체는
+  # lol-repository 다. enabled: true 는 Flyway 를 켜는 것이고, 무엇을 할지는
+  # FlywayValidateOnlyConfig 의 전략 빈이 정한다 — migrate() 대신 validate().
+  #
+  # 배포 순서가 묶인다: 새 마이그레이션이 생기면 lol-repository 가 먼저 적용돼야
+  # lol-server 가 뜬다(pending 이면 validate 실패). 자세한 배경은 ADR 0003.
   flyway:
-    enabled: false
+    enabled: true
 
   jpa:
     open-in-view: false
