@@ -1,10 +1,11 @@
 -- MP-120 (P1) 서비스별 DB 계정 · 권한 · search_path
 --
--- 실행: 슈퍼유저(POSTGRES_USER)로, 대상 DB 에서. 몇 번을 다시 돌려도 결과가 같다 (멱등).
---   psql -v ON_ERROR_STOP=1 \
---        -v lol_server_password="$LOL_SERVER_DB_PASSWORD" \
---        -v lol_repository_password="$LOL_REPOSITORY_DB_PASSWORD" \
---        -f 01-roles.sql
+-- 실행: 슈퍼유저(POSTGRES_USER)로, 대상 DB 에서. 몇 번을 다시 돌려도 결과가 같다 (멱등). psql 15 이상 필요(\getenv).
+-- 비밀번호는 명령행(-v)이 아니라 환경변수로 넘긴다 — 명령행 인자는 실행 중 ps 에 보인다.
+--   read -rs LOL_SERVER_DB_PASSWORD && export LOL_SERVER_DB_PASSWORD
+--   read -rs LOL_REPOSITORY_DB_PASSWORD && export LOL_REPOSITORY_DB_PASSWORD
+--   psql -v ON_ERROR_STOP=1 -f 01-roles.sql
+-- 비밀번호가 담긴 ALTER ROLE 문이 서버 로그·pg_stat_statements 에 남지 않도록 트랜잭션 안에서 기록을 끈다.
 --
 -- 테이블은 아직 public 에 있다 (스키마 이동 전). 따라서 권한은 public 테이블 단위로 준다.
 --   lol_repository : public 전 객체 소유 (전환기 동안 유일한 Flyway 실행 주체 — 앱 테이블 마이그레이션 포함)
@@ -15,22 +16,29 @@
 --   app  = member, member_withdrawal, social_account, community_*, duo_*
 --   riot = 그 외 전부 (flyway_schema_history 는 이력으로 public 에 남음)
 
+\set ON_ERROR_STOP on
+
+-- 변수가 없으면 오류로 끝낸다 (\quit 은 종료 코드 0 이라 자동화가 성공으로 오인한다)
+\getenv lol_server_password LOL_SERVER_DB_PASSWORD
+\getenv lol_repository_password LOL_REPOSITORY_DB_PASSWORD
 \if :{?lol_server_password}
 \else
-  \echo 'lol_server_password 변수가 필요합니다 (-v lol_server_password=...)'
-  \quit
+  DO $$ BEGIN RAISE EXCEPTION 'LOL_SERVER_DB_PASSWORD 환경변수가 필요합니다'; END $$;
 \endif
 \if :{?lol_repository_password}
 \else
-  \echo 'lol_repository_password 변수가 필요합니다 (-v lol_repository_password=...)'
-  \quit
+  DO $$ BEGIN RAISE EXCEPTION 'LOL_REPOSITORY_DB_PASSWORD 환경변수가 필요합니다'; END $$;
 \endif
-
-\set ON_ERROR_STOP on
 
 SELECT current_database() AS dbname \gset
 
 BEGIN;
+
+-- 비밀번호 평문이 담긴 문장을 기록하지 않는다 (이 트랜잭션 한정)
+SET LOCAL log_statement = 'none';
+SET LOCAL log_min_error_statement = 'panic';
+SET LOCAL log_min_duration_statement = -1;
+SET LOCAL pg_stat_statements.track_utility = off;   -- 확장 미로드여도 무해 (placeholder)
 
 -- 1. 계정 -----------------------------------------------------------------
 DO $$

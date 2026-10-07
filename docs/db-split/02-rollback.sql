@@ -4,12 +4,23 @@
 -- 실행: 슈퍼유저로.  psql -v ON_ERROR_STOP=1 -f 02-rollback.sql
 -- 결과 상태 = 01-roles.sql 직후 (public 전 객체 소유 lol_repository, lol_server 는 앱 RW · 그 외 SELECT).
 -- 주의: app/riot 에 이동 후 새로 만든 객체가 있으면 함께 public 으로 돌아간다. 이름이 public 의 것과 겹치면 실패한다.
+-- 잠금은 02-move-schema.sql 과 같은 방식: 전부 한 문장으로 먼저 잡고 총 대기 5초 상한. 실패하면 다시 실행.
 
 \set ON_ERROR_STOP on
 \timing on
 
 BEGIN;
-SET LOCAL lock_timeout = '3s';
+
+SET LOCAL statement_timeout = '5s';
+SET LOCAL lock_timeout = '2s';
+SELECT format('LOCK TABLE %s IN ACCESS EXCLUSIVE MODE',
+              string_agg(format('%I.%I', n.nspname, c.relname), ', ' ORDER BY n.nspname, c.relname))
+FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname IN ('app', 'riot')
+  AND c.relkind IN ('r', 'p', 'v', 'm')
+\gexec
+
+SET LOCAL statement_timeout = '10s';
 
 DO $$
 DECLARE

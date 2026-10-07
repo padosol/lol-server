@@ -5,7 +5,7 @@ Linear 프로젝트 「DB 계정·스키마 분리」의 P1(서비스별 계정)
 | 파일 | 용도 | 실행 시점 |
 |---|---|---|
 | [`01-roles.sql`](01-roles.sql) | `lol_repository`·`lol_server` 계정, 계정별 search_path, public 테이블 단위 권한 (멱등) | P1 (MP-120 작성 / MP-127 적용) |
-| [`02-move-schema.sql`](02-move-schema.sql) | `public` → `app`·`riot` 이동 (테이블·독립 시퀀스·뷰), 단일 트랜잭션 + `lock_timeout` | P2 (MP-136) |
+| [`02-move-schema.sql`](02-move-schema.sql) | `public` → `app`·`riot` 이동 (테이블·독립 시퀀스·뷰), 단일 트랜잭션, 잠금 선점 + 총 대기 5초 상한 | P2 (MP-136) |
 | [`02-rollback.sql`](02-rollback.sql) | 역방향 이동 + 권한 복구 | P2 롤백 |
 | [`03-verify.sql`](03-verify.sql) | 현재 단계(P1/P2)를 판별해 계정·권한·위치 검증, 위반 시 실패 (읽기 전용) | 매 단계 직후 |
 | [`rehearse.sh`](rehearse.sh) | 로컬 Docker 로 전 과정 리허설 | 변경 시마다 |
@@ -39,6 +39,7 @@ V1~V36 기준 테이블 64개(+history), 시퀀스 42개(컬럼 소속 39 + 독�
 2. **lol-server Hibernate `ddl-auto: validate` 가 riot 테이블을 못 찾음 → 기동 실패**
    기본 메타데이터 추출 전략(`grouped`)은 현재 스키마(`app`) 하나만 조회 → `Schema-validation: missing table [building_events]`.
    → **lol-server `postgresql-{local,prod}.yml` 에 `hibernate.hbm2ddl.jdbc_metadata_extraction_strategy: individually`** (이 브랜치에 반영). 테이블마다 search_path 전체에서 찾는다. P1·P2 모두에서 기동 확인.
+   주의: 현재 스키마에서 못 찾은 테이블은 모든 스키마에서 찾으므로, **같은 이름의 테이블이 두 스키마 이상에 있으면 기동이 실패한다** (`More than one table found`). 백업용으로 테이블을 다른 스키마에 복사해 두지 말 것. 엔티티에 `@Table(schema = ...)` 를 박는 방식은 이동 전(P1)에 스키마가 없어 기동이 깨지므로 쓰지 않는다.
 3. **롤백 시 lol_server 의 앱 테이블 쓰기 권한 소실** — 소유자를 `lol_server` → `lol_repository` 로 되돌리면 `lol_server` 앞 GRANT 가 사라진다 (`permission denied for table duo_post`). `02-rollback.sql` 이 권한을 다시 준다.
 4. (로컬 전용) lol-server local 프로필의 `db/seed/season-local.sql` 은 Riot 테이블(`season`·`patch_version`)에 쓴다. 로컬에서 `lol_server` 계정으로 띄우면 실패하므로 로컬은 계속 슈퍼유저를 쓰거나 `spring.sql.init.mode=never`.
 
@@ -63,7 +64,10 @@ ORDER BY calls DESC;
 ### 3.2 적용 순서 (MP-127)
 
 1. SSM 에 서비스별 자격증명 추가 (예: `/lol/prod/db-username-lol-server`, `/lol/prod/db-password-lol-server`, `…-lol-repository`). 비밀번호는 생성해서 SSM 에만 둔다.
-2. 슈퍼유저로 `01-roles.sql` 실행 (비밀번호는 `-v` 변수로 전달, 셸 이력에 남기지 말 것) → `03-verify.sql` 통과 확인.
+2. 슈퍼유저로 `01-roles.sql` 실행 → `03-verify.sql` 통과 확인. psql 15 이상(`\getenv`).
+   - 비밀번호는 환경변수 `LOL_SERVER_DB_PASSWORD`·`LOL_REPOSITORY_DB_PASSWORD` 로 넘긴다. 명령행(`-v`, `kubectl exec -- env X=…`)에 쓰면 실행 중 `ps` 에 보이므로, 파드 셸 안에서 `read -rs LOL_SERVER_DB_PASSWORD && export LOL_SERVER_DB_PASSWORD` 로 입력한다.
+   - 스크립트는 비밀번호가 담긴 `ALTER ROLE` 이 서버 로그·`pg_stat_statements` 에 남지 않도록 트랜잭션 안에서 `log_statement`·`log_min_error_statement`·`track_utility` 를 끈다.
+   - 환경변수가 없으면 아무것도 바꾸지 않고 0 이 아닌 종료 코드로 끝난다.
    - 이 시점엔 앱이 아직 슈퍼유저로 접속 중이라 동작 변화 없음.
 3. lol-deploy: `app/templates/external-secrets.yaml` 에 서비스별 키 추가, `lol-server.yaml`·`lol-repository.yaml` 의 `DB_USERNAME`/`DB_PASSWORD` 를 각자 키로 교체. `POSTGRES_USER` 는 infra(Postgres StatefulSet)에서만 쓴다.
 4. lol-repository 먼저 롤아웃 → Flyway validate·배치 정상 → lol-server 롤아웃.
@@ -93,14 +97,17 @@ ORDER BY calls DESC;
    ORDER BY xact_age DESC NULLS LAST;
    ```
    수 초 넘는 트랜잭션이 있으면 끝날 때까지 기다린다. `MatchBatchProcessor`(1초 주기)의 짧은 쓰기는 멈출 필요 없다.
-2. `psql -v ON_ERROR_STOP=1 -f 02-move-schema.sql` — 리허설 기준 트랜잭션 본문 약 25ms. `lock_timeout`(3초) 초과로 실패하면 전부 롤백되므로 1단계부터 재시도.
-3. `03-verify.sql` 통과 확인. 출력의 스키마별 객체 수: app 14 테이블 / riot 50 테이블·30 시퀀스·6 뷰 / public 1 테이블.
+2. `psql -v ON_ERROR_STOP=1 -f 02-move-schema.sql`
+   - 이동 대상 테이블·뷰 전부를 `LOCK TABLE` 한 문장으로 먼저 잡는다. 잠금 하나당 대기 2초(`lock_timeout`), 잠금 전체 대기 5초(`statement_timeout`)가 상한이다. 대기 중엔 그 테이블의 조회도 줄을 서므로 **서비스가 멈출 수 있는 최대 시간 ≈ 5초**.
+   - 잠금을 다 잡은 뒤의 이동은 리허설 기준 15~25ms.
+   - 상한을 넘으면 `canceling statement due to lock timeout` / `statement timeout` 으로 아무것도 바뀌지 않은 채 롤백된다 → 1단계부터 다시.
+3. 출력 끝의 스키마별 객체 수(`02-move-schema.sql` 이 출력)가 app 14 테이블·12 시퀀스 / riot 50 테이블·30 시퀀스·6 뷰 / public 1 테이블인지 확인하고, `03-verify.sql` 이 P2 로 판별해 통과하는지 확인.
 4. 확인: lol-server 주요 API(전적·랭킹·커뮤니티·듀오), lol-repository 랭킹 계산·백필 1회(`BATCH_*` 시퀀스 포함), 두 서비스 로그의 `does not exist`·`permission denied` 0건. 두 서비스를 한 번씩 재시작해 기동 시 검증(Flyway validate, Hibernate validate)도 확인한다.
 5. 실행 기록: 시각, 소요 시간(`\timing` 출력), 재시도 횟수를 MP-136 에 남긴다.
 
 ### 4.3 롤백
 
-`psql -v ON_ERROR_STOP=1 -f 02-rollback.sql` → `03-verify.sql` (P1 으로 판별돼야 함). 데이터 미변경이라 즉시 끝난다. 앱 설정(2절 1·2)은 P1 에서도 무해하므로 되돌리지 않는다.
+`psql -v ON_ERROR_STOP=1 -f 02-rollback.sql` → `03-verify.sql` (P1 으로 판별돼야 함). 데이터 미변경이라 즉시 끝난다. 잠금은 이동과 같은 방식(선점, 총 5초 상한)이며 시간 초과로 실패하면 변경 없이 롤백되니 다시 실행한다. 앱 설정(2절 1·2)은 P1 에서도 무해하므로 되돌리지 않는다.
 
 ## 5. 다음 단계 (P3, 이 런북 범위 밖)
 
@@ -135,6 +142,14 @@ SPRING_PROFILES_ACTIVE=local java -jar module/app/application/build/libs/applica
 | 단계 | lol-repository | lol-server |
 |---|---|---|
 | P1 (01 적용) | 기동, Flyway 32건 validate | 기동 (validate), Riot 쓰기 `permission denied`, 앱 RW·riot 읽기 정상 |
-| 앱 기동 중 02 이동 (21~25ms) | 랭킹 계산 200, 백필 Job 메타 기록(`riot.batch_*`) | 전적·챔피언 랭크·타임라인·커뮤니티·듀오·시즌·랭킹·티어컷 200 |
+| 앱 기동 중 02 이동 (15~25ms) | 랭킹 계산 200, 백필 Job 메타 기록(`riot.batch_*`) | 전적·챔피언 랭크·타임라인·커뮤니티·듀오·시즌·랭킹·티어컷 200 |
 | P2 재기동 | `default-schema` 미지정: **기동 실패**(2절 1) / 지정: 기동 | `grouped`: **기동 실패**(2절 2) / `individually`: 기동 |
 | 롤백 → 재이동 | `03-verify` 통과 (P1 / P2) | 롤백 권한 소실 버그 수정 후 통과 |
+
+잠금 경합 리허설 (`rehearse.sh` 에 포함):
+
+| 상황 | 결과 |
+|---|---|
+| 다른 세션이 `match` 를 15초 잡음 | 2.0초에 `lock timeout`, 변경 없음 (P1 유지) |
+| 테이블 4개를 1.8초 간격으로 놓아 줌 (하나당 대기 < 2초, 합 > 5초) | 5.1초에 `statement timeout`, 변경 없음 |
+| `01-roles.sql` 비밀번호 환경변수 없음 | 0 이 아닌 종료 코드, 변경 없음 |
