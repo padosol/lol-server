@@ -1,6 +1,8 @@
 ## 관련 이슈
-<!-- Linear 키 필수: MP-<번호> -->
-- MP-
+<!-- 필수. 매직워드 + Linear 키 (키만 적으면 연결되지 않음)
+     이슈를 끝내는 PR: Closes MP-<번호>  /  이슈 일부만 다루는 PR: Part of MP-<번호>
+     자세한 규칙: docs/workflow.md 5절 -->
+Closes MP-
 
 ## 변경 유형
 - [ ] feat

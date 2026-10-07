@@ -54,17 +54,18 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
 - ReadModel 변환은 `*ReadModel.of(domain)` 정적 팩토리에서만
 - 매직 스트링 금지: `OAuthProvider.RIOT.name()`, `QueueType.RANKED_SOLO_5x5.name()` 등 enum 사용
 - Redis 값 직렬화는 `GenericJackson2JsonRedisSerializer`(`@class` FQN 포함) — 캐시되는 값 클래스 이동/리네임 시 기존 엔트리 역직렬화 실패, 배포 때 해당 키 flush
-- 커밋 메시지: `<type>: MP-<번호> <한글 설명>` (Linear 키 필수; 타입 `feat`, `fix`, `refactor`, `docs`, `chore`)
-- 브랜치: `<type>/MP-<번호>-*` 형식. 기본 흐름은 `develop` → `main`, `hotfix`만 `main` → `develop` 역반영. type 6종:
+- 커밋 메시지: `<type>: <한글 설명>` (타입 `feat`, `fix`, `refactor`, `docs`, `chore`). **이슈 키 넣지 않음**
+- Linear 이슈 연결: **PR 본문**에 `Closes MP-<번호>` (이슈 일부만 다루면 `Part of MP-<번호>`). 키만 적으면 연결되지 않는다 — `docs/workflow.md` 5절
+- 브랜치: `<type>/<kebab 설명>` 형식 (**이슈 키 넣지 않음**). 기본 흐름은 `develop` → `main`, `hotfix`만 `main` → `develop` 역반영. type 6종:
 
   | prefix | 용도 | 예시 |
   |---|---|---|
-  | `feature` | 새 기능·요구사항 추가 | `feature/MP-7-summoner-search` |
-  | `fix` | 버그 수정 | `fix/MP-12-match-null-check` |
-  | `refactor` | 동작 변화 없는 내부 구조 개선 | `refactor/MP-7-mapper-cleanup` |
-  | `chore` | 코드 영향 없는 산출물·문서·CI·도구 변경 (예: 의존 업그레이드, audit 산출물, lint 룰 추가) | `chore/MP-41-claude-md-prefix-table` |
-  | `docs` | 문서 추가·갱신 | `docs/MP-20-workflow-guide` |
-  | `hotfix` | 긴급 수정 (`main` 직접 → `develop` 역반영) | `hotfix/MP-34-login-500` |
+  | `feature` | 새 기능·요구사항 추가 | `feature/summoner-search` |
+  | `fix` | 버그 수정 | `fix/match-null-check` |
+  | `refactor` | 동작 변화 없는 내부 구조 개선 | `refactor/mapper-cleanup` |
+  | `chore` | 코드 영향 없는 산출물·문서·CI·도구 변경 (예: 의존 업그레이드, audit 산출물, lint 룰 추가) | `chore/claude-md-prefix-table` |
+  | `docs` | 문서 추가·갱신 | `docs/workflow-guide` |
+  | `hotfix` | 긴급 수정 (`main` 직접 → `develop` 역반영) | `hotfix/login-500` |
 
   > 커밋 type 과 브랜치 prefix 는 의도적으로 다름 — commit `feat:`, branch `feature/...` (관용).
 
