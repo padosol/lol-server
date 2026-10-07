@@ -9,9 +9,11 @@ import com.example.lolserver.summoner.application.model.readmodel.SummonerReadMo
 import com.example.lolserver.common.web.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,6 +29,64 @@ public class SummonerController {
 
     private final SummonerQueryUseCase summonerQueryUseCase;
     private final SummonerUseCase summonerUseCase;
+
+    /**
+     * Riot ID 로 소환사 조회
+     * @param gameName 유저 게임명 (gameName-tagLine)
+     * @param platform 플랫폼 ID (예: kr)
+     */
+    @GetMapping("/v1/summoners/by-riot-id/{gameName}")
+    public ResponseEntity<ApiResponse<SummonerReadModel>> getSummonerByRiotId(
+            @PathVariable("gameName") String gameName,
+            @RequestParam String platform
+    ) {
+        SummonerReadModel summoner = summonerQueryUseCase.getSummoner(GameName.create(gameName), platform);
+        return ResponseEntity.ok(ApiResponse.success(summoner));
+    }
+
+    /**
+     * puuid 로 저장된 소환사 조회. 플랫폼은 저장된 값을 쓴다.
+     */
+    @GetMapping("/v1/summoners/{puuid}")
+    public ResponseEntity<ApiResponse<SummonerReadModel>> getSummonerByPuuid(
+            @PathVariable("puuid") String puuid
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(summonerQueryUseCase.getSummonerByPuuid(puuid)));
+    }
+
+    @GetMapping("/v1/summoners/autocomplete")
+    public ResponseEntity<ApiResponse<List<SummonerAutoReadModel>>> autoCompleteByPlatform(
+            @RequestParam String q,
+            @RequestParam String platform
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(
+                summonerQueryUseCase.getAllSummonerAutoComplete(q, platform)));
+    }
+
+    /**
+     * 소환사 전적 갱신 요청. 실제 갱신은 비동기로 처리되므로 202 를 반환하고,
+     * 클라이언트는 {@code GET /v1/summoners/{puuid}/renewal} 로 상태를 폴링한다.
+     */
+    @PostMapping("/v1/summoners/{puuid}/renewal")
+    public ResponseEntity<ApiResponse<SummonerRenewalResponse>> requestRenewal(
+            @PathVariable("puuid") String puuid
+    ) {
+        SummonerRenewal summonerRenewal = summonerUseCase.renewalSummonerInfo(puuid);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ApiResponse.success(
+                new SummonerRenewalResponse(
+                        summonerRenewal.getPuuid(), summonerRenewal.getStatus().name()
+                )
+        ));
+    }
+
+    @GetMapping("/v1/summoners/{puuid}/renewal")
+    public ResponseEntity<ApiResponse<SummonerRenewalResponse>> getRenewalStatus(
+            @PathVariable("puuid") String puuid
+    ) {
+        return summonerRenewalStatus(puuid);
+    }
+
+    // ---- legacy: lol-ui 전환 후 MP-156 에서 제거 ----
 
     /**
      * 유저 상세 정보 API

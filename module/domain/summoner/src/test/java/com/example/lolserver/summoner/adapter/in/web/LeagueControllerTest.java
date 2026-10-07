@@ -91,7 +91,7 @@ class LeagueControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/leagues/by-puuid/{puuid}", puuid)
+                        get("/api/v1/summoners/{puuid}/leagues", puuid)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
