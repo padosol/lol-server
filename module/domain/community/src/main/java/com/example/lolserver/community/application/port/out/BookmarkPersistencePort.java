@@ -11,6 +11,11 @@ public interface BookmarkPersistencePort {
     Bookmark save(Bookmark bookmark);
 
     /**
+     * 같은 회원·게시글 북마크가 이미 있으면 아무것도 하지 않는다. 동시 요청도 예외 없이 수렴한다.
+     */
+    void saveIfAbsent(Bookmark bookmark);
+
+    /**
      * 중복 북마크(409)와 미존재 북마크 해제(404)를 모두 이 한 번의 조회로 판정한다.
      * VotePersistencePort 의 findByMemberIdAndTargetTypeAndTargetId 와 같은 역할.
      */

@@ -7,6 +7,7 @@ import com.example.lolserver.summoner.application.port.in.SummonerUseCase;
 import com.example.lolserver.summoner.domain.SummonerRenewal;
 import com.example.lolserver.summoner.application.model.readmodel.SummonerReadModel;
 import com.example.lolserver.common.web.response.ApiResponse;
+import com.example.lolserver.shared.RenewalStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -64,15 +65,21 @@ public class SummonerController {
     }
 
     /**
-     * 소환사 전적 갱신 요청. 실제 갱신은 비동기로 처리되므로 202 를 반환하고,
-     * 클라이언트는 {@code GET /v1/summoners/{puuid}/renewal} 로 상태를 폴링한다.
+     * 소환사 전적 갱신 요청.
+     *
+     * <ul>
+     *   <li>접수(또는 이미 진행 중) → 202, 클라이언트는 {@code GET /v1/summoners/{puuid}/renewal} 을 폴링</li>
+     *   <li>쿨다운으로 거절(FAILED) → 200 + status FAILED. 갱신이 시작되지 않았으므로 폴링하지 않는다</li>
+     * </ul>
      */
     @PostMapping("/v1/summoners/{puuid}/renewal")
     public ResponseEntity<ApiResponse<SummonerRenewalResponse>> requestRenewal(
             @PathVariable("puuid") String puuid
     ) {
         SummonerRenewal summonerRenewal = summonerUseCase.renewalSummonerInfo(puuid);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ApiResponse.success(
+        HttpStatus status = summonerRenewal.getStatus() == RenewalStatus.FAILED
+                ? HttpStatus.OK : HttpStatus.ACCEPTED;
+        return ResponseEntity.status(status).body(ApiResponse.success(
                 new SummonerRenewalResponse(
                         summonerRenewal.getPuuid(), summonerRenewal.getStatus().name()
                 )

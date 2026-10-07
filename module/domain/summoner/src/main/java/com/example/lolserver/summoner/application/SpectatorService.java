@@ -24,10 +24,10 @@ public class SpectatorService implements SpectatorQueryUseCase {
 
     @Override
     public CurrentGameInfoReadModel getCurrentGameInfo(String puuid) {
-        String platformId = summonerPersistencePort.findById(puuid)
-                .map(Summoner::getPlatformId)
+        Summoner summoner = summonerPersistencePort.findById(puuid)
                 .orElseThrow(() -> new CoreException(
                         ErrorType.NOT_FOUND_PUUID, "존재하지 않는 PUUID 입니다. " + puuid));
-        return spectatorFinder.getCurrentGameInfo(puuid, platformId);
+        summoner.validatePlatformId();
+        return spectatorFinder.getCurrentGameInfo(puuid, summoner.getPlatformId());
     }
 }

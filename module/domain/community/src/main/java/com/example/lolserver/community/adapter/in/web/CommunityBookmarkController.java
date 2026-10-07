@@ -1,7 +1,5 @@
 package com.example.lolserver.community.adapter.in.web;
 
-import com.example.lolserver.common.error.CoreException;
-import com.example.lolserver.common.error.ErrorType;
 import com.example.lolserver.common.support.SliceResult;
 import com.example.lolserver.common.web.response.ApiResponse;
 import com.example.lolserver.common.web.response.SliceResponse;
@@ -43,19 +41,14 @@ public class CommunityBookmarkController {
     private final BookmarkQueryUseCase bookmarkQueryUseCase;
 
     /**
-     * 북마크 추가 (멱등). 이미 북마크돼 있으면 — 동시 요청이 유니크 제약에 걸린 경우 포함 — 성공으로 본다.
+     * 북마크 추가 (멱등). 이미 북마크돼 있으면 — 동시 요청 포함 — 그대로 200.
+     * 해제({@code DELETE})도 북마크가 없으면 그대로 204.
      */
     @PutMapping("/posts/{postId}/bookmark")
     public ResponseEntity<ApiResponse<Void>> putBookmark(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long postId) {
-        try {
-            bookmarkUseCase.addBookmark(member.memberId(), postId);
-        } catch (CoreException e) {
-            if (e.getErrorType() != ErrorType.BOOKMARK_ALREADY_EXISTS) {
-                throw e;
-            }
-        }
+        bookmarkUseCase.addBookmarkIfAbsent(member.memberId(), postId);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
@@ -63,7 +56,8 @@ public class CommunityBookmarkController {
     public ResponseEntity<Void> deleteBookmark(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long postId) {
-        return removeBookmark(member, postId);
+        bookmarkUseCase.removeBookmarkIfPresent(member.memberId(), postId);
+        return ResponseEntity.noContent().build();
     }
 
     // ---- legacy: lol-ui 전환 후 MP-156 에서 제거 ----

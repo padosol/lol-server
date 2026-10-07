@@ -1,7 +1,5 @@
 package com.example.lolserver.gamedata.adapter.in.web;
 
-import com.example.lolserver.common.error.CoreException;
-import com.example.lolserver.common.error.ErrorType;
 import com.example.lolserver.common.web.response.ApiResponse;
 import com.example.lolserver.gamedata.application.port.in.TierCutoffQueryUseCase;
 import com.example.lolserver.gamedata.application.model.readmodel.TierCutoffReadModel;
@@ -36,14 +34,8 @@ public class TierCutoffController {
             @RequestParam(required = false) String queue,
             @RequestParam(required = false) String tier
     ) {
-        if (tier != null) {
-            if (queue == null) {
-                throw new CoreException(ErrorType.INVALID_INPUT, "tier 필터는 queue 와 함께 지정해야 합니다.");
-            }
-            return ResponseEntity.ok(ApiResponse.success(
-                    List.of(tierCutoffService.getTierCutoff(platform, queue, tier))));
-        }
-        return getTierCutoffs(platform, queue);
+        return ResponseEntity.ok(ApiResponse.success(
+                tierCutoffService.findTierCutoffs(platform, queue, tier)));
     }
 
     // ---- legacy: lol-ui 전환 후 MP-156 에서 제거 ----

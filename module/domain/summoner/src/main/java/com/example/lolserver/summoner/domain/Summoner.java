@@ -1,5 +1,7 @@
 package com.example.lolserver.summoner.domain;
 
+import com.example.lolserver.common.error.CoreException;
+import com.example.lolserver.common.error.ErrorType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,5 +37,16 @@ public class Summoner {
         }
 
         return true;
+    }
+
+    /**
+     * 플랫폼을 알아야 하는 작업(갱신 메시지, 관전 조회) 전에 호출한다.
+     * 플랫폼이 없는 소환사는 Riot API 를 어느 지역으로 호출할지 정할 수 없다.
+     */
+    public void validatePlatformId() {
+        if (this.platformId == null || this.platformId.isBlank()) {
+            throw new CoreException(ErrorType.UNKNOWN_SUMMONER_PLATFORM,
+                    "플랫폼 정보가 없는 소환사입니다. " + this.puuid);
+        }
     }
 }

@@ -115,19 +115,24 @@ public class SummonerService implements SummonerQueryUseCase, SummonerUseCase {
      */
     @Transactional
     public SummonerRenewal renewalSummonerInfo(String platformId, String puuid) {
-        return renewal(puuid, summoner -> platformId);
+        return renewal(puuid, platformId);
     }
 
     /**
      * 저장된 소환사의 platformId 로 갱신을 요청한다 ({@code POST /api/v1/summoners/{puuid}/renewal}).
+     *
+     * <p>플랫폼을 알 수 없는 소환사는 클릭 쿨다운을 걸기 <b>전에</b> 거절한다.
      */
     @Override
     @Transactional
     public SummonerRenewal renewalSummonerInfo(String puuid) {
-        return renewal(puuid, this::requirePlatformId);
+        Summoner summoner = summonerPersistencePort.findById(puuid)
+                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_PUUID, "존재하지 않는 PUUID 입니다. " + puuid));
+        summoner.validatePlatformId();
+        return renewal(puuid, summoner.getPlatformId());
     }
 
-    private SummonerRenewal renewal(String puuid, Function<Summoner, String> platformIdOf) {
+    private SummonerRenewal renewal(String puuid, String platformId) {
         log.debug("소환사 갱신 요청 - puuid: {}", puuid);
 
         // 이미 갱신이 진행 중이면 중복 요청을 방지한다
@@ -152,7 +157,6 @@ public class SummonerService implements SummonerQueryUseCase, SummonerUseCase {
         // 마지막 Riot API 호출로부터 2분이 경과했는지 확인한다
         LocalDateTime clickDateTime = LocalDateTime.now();
         if (summoner.isRevision(clickDateTime)) {
-            String platformId = platformIdOf.apply(summoner);
             summonerCachePort.createSummonerRenewal(puuid);      // Redis에 갱신 세션 마커를 생성한다 (진행 상태 추적용)
             // 메시지 브로커로 갱신 메시지를 발행하여 비동기 처리를 시작한다
             summonerMessagePort.sendMessage(
@@ -206,14 +210,6 @@ public class SummonerService implements SummonerQueryUseCase, SummonerUseCase {
                 .map(SummonerReadModel::of)
                 .orElseThrow(() -> new CoreException(
                         ErrorType.NOT_FOUND_PUUID, "존재하지 않는 PUUID 입니다. " + puuid));
-    }
-
-    private String requirePlatformId(Summoner summoner) {
-        if (summoner.getPlatformId() == null) {
-            throw new CoreException(ErrorType.NOT_FOUND_PUUID,
-                    "플랫폼 정보가 없는 소환사입니다. " + summoner.getPuuid());
-        }
-        return summoner.getPlatformId();
     }
 
     public Optional<SummonerReadModel> findSummonerByPuuid(String puuid) {

@@ -26,6 +26,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -104,6 +105,17 @@ class SummonerRouteMappingTest {
 
         mockMvc.perform(post("/api/v1/summoners/puuid-1/renewal"))
                 .andExpect(status().isAccepted());
+    }
+
+    @DisplayName("POST /summoners/{puuid}/renewal 이 쿨다운으로 거절되면 202 가 아니라 200 + FAILED")
+    @Test
+    void renewalRequest_거절_200() throws Exception {
+        given(summonerUseCase.renewalSummonerInfo("puuid-1"))
+                .willReturn(new SummonerRenewal("puuid-1", RenewalStatus.FAILED));
+
+        mockMvc.perform(post("/api/v1/summoners/puuid-1/renewal"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("FAILED"));
     }
 
     @DisplayName("/summoners/by-riot-id/{gameName} 은 platform query 로 Riot ID 조회를 한다")

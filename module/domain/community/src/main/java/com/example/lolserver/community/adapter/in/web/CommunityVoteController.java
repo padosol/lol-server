@@ -46,7 +46,8 @@ public class CommunityVoteController {
     public ResponseEntity<Void> deletePostVote(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long postId) {
-        return removeVote(member, VoteTargetType.POST, postId);
+        voteUseCase.removeVoteIfPresent(member.memberId(), VoteTargetType.POST, postId);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/comments/{commentId}/vote")
@@ -62,7 +63,8 @@ public class CommunityVoteController {
     public ResponseEntity<Void> deleteCommentVote(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long commentId) {
-        return removeVote(member, VoteTargetType.COMMENT, commentId);
+        voteUseCase.removeVoteIfPresent(member.memberId(), VoteTargetType.COMMENT, commentId);
+        return ResponseEntity.noContent().build();
     }
 
     private VoteResponse putVote(

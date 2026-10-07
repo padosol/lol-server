@@ -46,7 +46,7 @@ class TierCutoffControllerTest extends RestDocsSupport {
                 new TierCutoffReadModel(4L, "RANKED_FLEX_SR", "GRANDMASTER", "KR", 600, 2, 500, "2026-01-15T12:00:00")
         );
 
-        given(tierCutoffService.getTierCutoffsByRegion(platformId)).willReturn(tierCutoffs);
+        given(tierCutoffService.findTierCutoffs(platformId, null, null)).willReturn(tierCutoffs);
 
         // when & then
         mockMvc.perform(
@@ -100,7 +100,7 @@ class TierCutoffControllerTest extends RestDocsSupport {
                 new TierCutoffReadModel(2L, "RANKED_SOLO_5x5", "GRANDMASTER", "KR", 800, 5, 700, "2026-01-15T12:00:00")
         );
 
-        given(tierCutoffService.getTierCutoffsByRegionAndQueue(platformId, queue)).willReturn(tierCutoffs);
+        given(tierCutoffService.findTierCutoffs(platformId, queue, null)).willReturn(tierCutoffs);
 
         // when & then
         mockMvc.perform(
@@ -156,7 +156,7 @@ class TierCutoffControllerTest extends RestDocsSupport {
                 1L, "RANKED_SOLO_5x5", "CHALLENGER", "KR", 1500, 10, 300, "2026-01-15T12:00:00"
         );
 
-        given(tierCutoffService.getTierCutoff(platformId, queue, tier)).willReturn(tierCutoff);
+        given(tierCutoffService.findTierCutoffs(platformId, queue, tier)).willReturn(List.of(tierCutoff));
 
         // when & then
         mockMvc.perform(

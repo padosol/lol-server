@@ -30,6 +30,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
@@ -207,6 +208,61 @@ class SummonerServiceTest {
         // then
         assertThat(result).isEmpty();
         then(summonerPersistencePort).should().getSummonerAuthComplete(query, platformId);
+    }
+
+    // ========== renewalSummonerInfo(puuid) — 저장된 플랫폼 사용 ==========
+
+    @DisplayName("puuid 갱신은 저장된 소환사의 platformId 로 메시지를 발행한다")
+    @Test
+    void renewalSummonerInfo_puuid_저장된플랫폼사용() {
+        // given
+        String puuid = "puuid-stored";
+        Summoner summoner = Summoner.builder()
+                .puuid(puuid).platformId("kr")
+                .revisionDate(LocalDateTime.now().minusMinutes(10))
+                .lastRiotCallDate(LocalDateTime.now().minusMinutes(3))
+                .build();
+        given(summonerPersistencePort.findById(puuid)).willReturn(Optional.of(summoner));
+        given(summonerCachePort.isUpdating(puuid)).willReturn(false);
+        given(summonerCachePort.isClickCooldown(puuid)).willReturn(false);
+
+        // when
+        SummonerRenewal result = summonerService.renewalSummonerInfo(puuid);
+
+        // then
+        assertThat(result.getStatus()).isEqualTo(RenewalStatus.SUCCESS);
+        then(summonerMessagePort).should().sendMessage(eq("kr"), eq(puuid), any());
+    }
+
+    @DisplayName("플랫폼이 없는 소환사의 puuid 갱신은 쿨다운을 걸기 전에 거절된다")
+    @Test
+    void renewalSummonerInfo_puuid_플랫폼없음_쿨다운전거절() {
+        // given
+        String puuid = "puuid-no-platform";
+        Summoner summoner = Summoner.builder().puuid(puuid).build();
+        given(summonerPersistencePort.findById(puuid)).willReturn(Optional.of(summoner));
+
+        // when & then
+        assertThatThrownBy(() -> summonerService.renewalSummonerInfo(puuid))
+                .isInstanceOf(CoreException.class)
+                .extracting(e -> ((CoreException) e).getErrorType())
+                .isEqualTo(ErrorType.UNKNOWN_SUMMONER_PLATFORM);
+        then(summonerCachePort).should(never()).setClickCooldown(any());
+        then(summonerMessagePort).should(never()).sendMessage(any(), any(), any());
+    }
+
+    @DisplayName("저장되지 않은 소환사의 puuid 갱신은 NOT_FOUND_PUUID")
+    @Test
+    void renewalSummonerInfo_puuid_미저장() {
+        // given
+        given(summonerPersistencePort.findById("puuid-none")).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> summonerService.renewalSummonerInfo("puuid-none"))
+                .isInstanceOf(CoreException.class)
+                .extracting(e -> ((CoreException) e).getErrorType())
+                .isEqualTo(ErrorType.NOT_FOUND_PUUID);
+        then(summonerCachePort).should(never()).setClickCooldown(any());
     }
 
     // ========== renewalSummonerInfo 테스트 ==========

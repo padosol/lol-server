@@ -68,7 +68,7 @@ public class ChampionStatsController {
             @RequestParam("patch") String patch,
             @RequestParam("tier") String tier
     ) {
-        String riotPlatformId = Platform.valueOfName(platformId).getPlatformId();
+        String riotPlatformId = toRiotPlatformId(platformId);
         TierFilter tierFilter = parseTierFilter(tier);
         ChampionStatsReadModel response = championStatsService.getChampionStats(
                 championId, patch, riotPlatformId, tierFilter);
@@ -81,7 +81,7 @@ public class ChampionStatsController {
             @RequestParam("patch") String patch,
             @RequestParam("tier") String tier
     ) {
-        String riotPlatformId = Platform.valueOfName(platformId).getPlatformId();
+        String riotPlatformId = toRiotPlatformId(platformId);
         TierFilter tierFilter = parseTierFilter(tier);
         List<PositionChampionStatsReadModel> response =
                 championStatsService.getChampionStatsByPosition(patch, riotPlatformId, tierFilter);

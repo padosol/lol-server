@@ -22,6 +22,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -69,7 +70,8 @@ public class CommunityPostController {
             @RequestParam(defaultValue = "ALL") String period,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page) {
-        if (keyword != null) {
+        // 빈 검색창(keyword=)은 검색이 아니라 일반 목록 — 카테고리·정렬 조건을 그대로 쓴다
+        if (StringUtils.hasText(keyword)) {
             return searchPosts(keyword, page);
         }
         PostSearchCommand command = PostSearchCommand.builder()

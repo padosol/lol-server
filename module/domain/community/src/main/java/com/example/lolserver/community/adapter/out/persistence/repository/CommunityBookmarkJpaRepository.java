@@ -5,9 +5,11 @@ import com.example.lolserver.community.adapter.out.persistence.entity.CommunityB
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface CommunityBookmarkJpaRepository
@@ -16,6 +18,22 @@ public interface CommunityBookmarkJpaRepository
     Optional<CommunityBookmarkEntity> findByMemberIdAndPostId(Long memberId, Long postId);
 
     boolean existsByMemberIdAndPostId(Long memberId, Long postId);
+
+    /**
+     * 이미 있으면 아무것도 하지 않는 삽입 (PUT 멱등). 동시 요청이 uq_cb_member_post 에
+     * 걸려도 예외가 아니라 0건 삽입으로 끝나므로 트랜잭션이 rollback-only 가 되지 않는다.
+     *
+     * @return 삽입된 행 수 (0 또는 1)
+     */
+    @Modifying
+    @Query(value = """
+            INSERT INTO community_bookmark (member_id, post_id, created_at)
+            VALUES (:memberId, :postId, :createdAt)
+            ON CONFLICT DO NOTHING
+            """, nativeQuery = true)
+    int insertIfAbsent(@Param("memberId") Long memberId,
+                       @Param("postId") Long postId,
+                       @Param("createdAt") LocalDateTime createdAt);
 
     /**
      * 북마크한 게시글 목록.

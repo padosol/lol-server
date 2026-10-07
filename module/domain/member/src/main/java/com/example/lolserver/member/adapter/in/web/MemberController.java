@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,10 +56,10 @@ public class MemberController {
      * 내 정보 부분 수정. 지금 수정 가능한 필드는 {@code nickname} 뿐이다.
      */
     @PatchMapping("/me")
-    public ApiResponse<MemberResponse> updateMyProfile(
+    public ResponseEntity<ApiResponse<MemberResponse>> updateMyProfile(
             @AuthenticationPrincipal AuthenticatedMember member,
             @Valid @RequestBody NicknameUpdateRequest request) {
-        return updateNickname(member, request);
+        return ResponseEntity.ok(updateNickname(member, request));
     }
 
     // legacy: lol-ui 전환 후 MP-156 에서 제거

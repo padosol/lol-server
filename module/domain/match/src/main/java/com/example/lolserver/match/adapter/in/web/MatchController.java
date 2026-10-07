@@ -65,11 +65,14 @@ public class MatchController {
                 DailyGameCountResponse.from(matchService.getDailyGameCounts(puuid, season, queueId))));
     }
 
+    /**
+     * 소환사별 매치 ID 목록. page 는 0부터 시작한다 (lol-ui 기본값과 동일).
+     */
     @GetMapping("/summoners/{puuid}/match-ids")
     public ResponseEntity<ApiResponse<SliceResponse<String>>> getSummonerMatchIds(
             @PathVariable("puuid") String puuid,
             @RequestParam(required = false) Integer queueId,
-            @RequestParam(required = false) Integer page) {
+            @RequestParam(defaultValue = "0") int page) {
         MatchCommand matchCommand = MatchCommand.builder()
                 .puuid(puuid)
                 .queueId(queueId)

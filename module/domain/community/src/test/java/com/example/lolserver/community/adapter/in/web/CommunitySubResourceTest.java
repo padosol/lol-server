@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
@@ -59,33 +60,34 @@ class CommunitySubResourceTest {
                 .build();
     }
 
-    @DisplayName("PUT bookmark 는 이미 북마크돼 있어도 200 (멱등)")
+    @DisplayName("PUT bookmark 는 멱등 추가를 호출하고 200")
     @Test
-    void putBookmark_멱등() throws Exception {
-        willThrow(new CoreException(ErrorType.BOOKMARK_ALREADY_EXISTS))
-                .given(bookmarkUseCase).addBookmark(anyLong(), any());
-
+    void putBookmark() throws Exception {
         mockMvc.perform(put("/api/v1/community/posts/10/bookmark"))
                 .andExpect(status().isOk());
+
+        verify(bookmarkUseCase).addBookmarkIfAbsent(anyLong(), eq(10L));
+        verify(bookmarkUseCase, never()).addBookmark(anyLong(), any());
     }
 
-    @DisplayName("PUT bookmark 는 다른 오류는 그대로 돌려준다")
+    @DisplayName("PUT bookmark 는 게시글이 없으면 404")
     @Test
     void putBookmark_게시글없음() throws Exception {
         willThrow(new CoreException(ErrorType.POST_NOT_FOUND))
-                .given(bookmarkUseCase).addBookmark(anyLong(), any());
+                .given(bookmarkUseCase).addBookmarkIfAbsent(anyLong(), any());
 
         mockMvc.perform(put("/api/v1/community/posts/10/bookmark"))
                 .andExpect(status().isNotFound());
     }
 
-    @DisplayName("DELETE bookmark 는 204")
+    @DisplayName("DELETE bookmark 는 멱등 해제를 호출하고 204")
     @Test
     void deleteBookmark() throws Exception {
         mockMvc.perform(delete("/api/v1/community/posts/10/bookmark"))
                 .andExpect(status().isNoContent());
 
-        verify(bookmarkUseCase).removeBookmark(anyLong(), any());
+        verify(bookmarkUseCase).removeBookmarkIfPresent(anyLong(), eq(10L));
+        verify(bookmarkUseCase, never()).removeBookmark(anyLong(), any());
     }
 
     @DisplayName("PUT posts/{id}/vote 는 경로의 대상(POST)과 본문의 의미로 투표한다")
@@ -141,6 +143,6 @@ class CommunitySubResourceTest {
         mockMvc.perform(delete("/api/v1/community/comments/7/vote"))
                 .andExpect(status().isNoContent());
 
-        verify(voteUseCase).removeVote(anyLong(), any(), any());
+        verify(voteUseCase).removeVoteIfPresent(anyLong(), eq(VoteTargetType.COMMENT), eq(7L));
     }
 }
