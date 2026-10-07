@@ -50,7 +50,8 @@ class TierCutoffControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/{platformId}/tier-cutoffs", platformId)
+                        get("/api/v1/rankings/tier-cutoffs")
+                                .param("platform", platformId)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
@@ -58,8 +59,8 @@ class TierCutoffControllerTest extends RestDocsSupport {
                 .andDo(document("tier-cutoff-list",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        pathParameters(
-                                parameterWithName("platformId").description("플랫폼 ID (예: kr, na, euw)")
+                        queryParameters(
+                                parameterWithName("platform").description("플랫폼 ID (예: kr)")
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING)
@@ -103,7 +104,8 @@ class TierCutoffControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/{platformId}/tier-cutoffs", platformId)
+                        get("/api/v1/rankings/tier-cutoffs")
+                                .param("platform", platformId)
                                 .param("queue", queue)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
@@ -112,10 +114,8 @@ class TierCutoffControllerTest extends RestDocsSupport {
                 .andDo(document("tier-cutoff-list-by-queue",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        pathParameters(
-                                parameterWithName("platformId").description("플랫폼 ID (예: kr, na, euw)")
-                        ),
                         queryParameters(
+                                parameterWithName("platform").description("플랫폼 ID (예: kr)"),
                                 parameterWithName("queue").description("큐 타입 필터 (예: RANKED_SOLO_5x5, RANKED_FLEX_SR)")
                         ),
                         responseFields(
@@ -160,7 +160,10 @@ class TierCutoffControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/{platformId}/tier-cutoffs/{queue}/{tier}", platformId, queue, tier)
+                        get("/api/v1/rankings/tier-cutoffs")
+                                .param("platform", platformId)
+                                .param("queue", queue)
+                                .param("tier", tier)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
@@ -168,31 +171,33 @@ class TierCutoffControllerTest extends RestDocsSupport {
                 .andDo(document("tier-cutoff-detail",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        pathParameters(
-                                parameterWithName("platformId").description("플랫폼 ID (예: kr, na, euw)"),
+                        queryParameters(
+                                parameterWithName("platform").description("플랫폼 ID (예: kr)"),
                                 parameterWithName("queue").description("큐 타입 (예: RANKED_SOLO_5x5, RANKED_FLEX_SR)"),
-                                parameterWithName("tier").description("티어 (CHALLENGER, GRANDMASTER)")
+                                parameterWithName("tier").description("티어 (CHALLENGER, GRANDMASTER) — queue 와 함께 지정")
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING)
                                         .description("API 응답 결과 (SUCCESS, FAIL)"),
                                 fieldWithPath("errorMessage").type(JsonFieldType.NULL)
                                         .description("에러 메시지 (정상 응답 시 null)"),
-                                fieldWithPath("data.id").type(JsonFieldType.NUMBER)
+                                fieldWithPath("data[]").type(JsonFieldType.ARRAY)
+                                        .description("티어 컷오프 목록 (단건)"),
+                                fieldWithPath("data[].id").type(JsonFieldType.NUMBER)
                                         .description("티어 컷오프 ID"),
-                                fieldWithPath("data.queue").type(JsonFieldType.STRING)
+                                fieldWithPath("data[].queue").type(JsonFieldType.STRING)
                                         .description("큐 타입 (예: RANKED_SOLO_5x5, RANKED_FLEX_SR)"),
-                                fieldWithPath("data.tier").type(JsonFieldType.STRING)
+                                fieldWithPath("data[].tier").type(JsonFieldType.STRING)
                                         .description("티어 (CHALLENGER, GRANDMASTER)"),
-                                fieldWithPath("data.platformId").type(JsonFieldType.STRING)
+                                fieldWithPath("data[].platformId").type(JsonFieldType.STRING)
                                         .description("플랫폼 ID"),
-                                fieldWithPath("data.minLeaguePoints").type(JsonFieldType.NUMBER)
+                                fieldWithPath("data[].minLeaguePoints").type(JsonFieldType.NUMBER)
                                         .description("해당 티어 진입에 필요한 최소 리그 포인트"),
-                                fieldWithPath("data.lpChange").type(JsonFieldType.NUMBER)
+                                fieldWithPath("data[].lpChange").type(JsonFieldType.NUMBER)
                                         .description("이전 갱신 대비 LP 변동량"),
-                                fieldWithPath("data.userCount").type(JsonFieldType.NUMBER)
+                                fieldWithPath("data[].userCount").type(JsonFieldType.NUMBER)
                                         .description("해당 티어 유저 수"),
-                                fieldWithPath("data.updatedAt").type(JsonFieldType.STRING)
+                                fieldWithPath("data[].updatedAt").type(JsonFieldType.STRING)
                                         .description("데이터 갱신 일시")
                         )
                 ));

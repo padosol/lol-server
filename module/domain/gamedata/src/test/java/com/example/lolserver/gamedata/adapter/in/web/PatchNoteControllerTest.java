@@ -51,7 +51,7 @@ class PatchNoteControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/patch-notes")
+                        get("/api/v1/game-data/patch-notes")
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
@@ -90,7 +90,7 @@ class PatchNoteControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/patch-notes/{versionId}", versionId)
+                        get("/api/v1/game-data/patch-notes/{versionId}", versionId)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
