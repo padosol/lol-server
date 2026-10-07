@@ -45,10 +45,10 @@ public class CoreExceptionAdvice {
      * <p>이 핸들러가 없으면 아래 {@code exception(Exception)} 폴백이 잡아 500 이 나간다.
      */
     @ExceptionHandler({
-            MissingServletRequestParameterException.class,
-            UnsatisfiedServletRequestParameterException.class,
-            MethodArgumentTypeMismatchException.class,
-            HttpMessageNotReadableException.class
+        MissingServletRequestParameterException.class,
+        UnsatisfiedServletRequestParameterException.class,
+        MethodArgumentTypeMismatchException.class,
+        HttpMessageNotReadableException.class
     })
     public ResponseEntity<ApiResponse<ErrorMessage>> badRequestParameter(Exception e) {
         log.debug("Bad request parameter : {}", e.getMessage());
