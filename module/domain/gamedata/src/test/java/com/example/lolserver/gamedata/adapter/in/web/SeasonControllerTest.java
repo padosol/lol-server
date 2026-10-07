@@ -47,7 +47,7 @@ class SeasonControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/seasons")
+                        get("/api/v1/game-data/seasons")
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
@@ -85,7 +85,7 @@ class SeasonControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/seasons/{seasonId}", seasonId)
+                        get("/api/v1/game-data/seasons/{seasonId}", seasonId)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())

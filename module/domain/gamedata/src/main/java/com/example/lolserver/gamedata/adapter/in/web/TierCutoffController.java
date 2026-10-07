@@ -1,5 +1,7 @@
 package com.example.lolserver.gamedata.adapter.in.web;
 
+import com.example.lolserver.common.error.CoreException;
+import com.example.lolserver.common.error.ErrorType;
 import com.example.lolserver.common.web.response.ApiResponse;
 import com.example.lolserver.gamedata.application.port.in.TierCutoffQueryUseCase;
 import com.example.lolserver.gamedata.application.model.readmodel.TierCutoffReadModel;
@@ -21,6 +23,30 @@ import java.util.List;
 public class TierCutoffController {
 
     private final TierCutoffQueryUseCase tierCutoffService;
+
+    /**
+     * 티어 컷오프 목록. 티어 컷오프는 매일 바뀌는 랭킹 데이터라 {@code rankings} 아래에 둔다.
+     * @param platform 플랫폼 ID (예: kr)
+     * @param queue 큐 타입 필터 (선택)
+     * @param tier 티어 필터 (선택, queue 와 함께 줘야 한다)
+     */
+    @GetMapping("/v1/rankings/tier-cutoffs")
+    public ResponseEntity<ApiResponse<List<TierCutoffReadModel>>> getRankingTierCutoffs(
+            @RequestParam String platform,
+            @RequestParam(required = false) String queue,
+            @RequestParam(required = false) String tier
+    ) {
+        if (tier != null) {
+            if (queue == null) {
+                throw new CoreException(ErrorType.INVALID_INPUT, "tier 필터는 queue 와 함께 지정해야 합니다.");
+            }
+            return ResponseEntity.ok(ApiResponse.success(
+                    List.of(tierCutoffService.getTierCutoff(platform, queue, tier))));
+        }
+        return getTierCutoffs(platform, queue);
+    }
+
+    // ---- legacy: lol-ui 전환 후 MP-156 에서 제거 ----
 
     /**
      * 지역별 티어 컷오프 목록 조회 API

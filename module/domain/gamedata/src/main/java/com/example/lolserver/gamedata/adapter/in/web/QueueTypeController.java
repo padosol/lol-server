@@ -19,6 +19,15 @@ public class QueueTypeController {
 
     private final QueueTypeUseCase queueTypeUseCase;
 
+    /**
+     * 큐 목록. 지금은 탭에 노출되는 큐 목록만 제공하므로 {@code tab=true} 를 요구한다.
+     * 옛 경로 {@code /v1/queue-tab} 은 lol-ui 전환 후 MP-156 에서 제거.
+     */
+    @GetMapping(value = "/v1/game-data/queues", params = "tab=true")
+    public ResponseEntity<ApiResponse<List<QueueInfoResponse>>> findQueues() {
+        return findAllQueueInfoForTab();
+    }
+
     @GetMapping("/v1/queue-tab")
     public ResponseEntity<ApiResponse<List<QueueInfoResponse>>> findAllQueueInfoForTab() {
         List<QueueInfo> queueInfos = queueTypeUseCase.findAllByIsTabTrue();
