@@ -31,7 +31,7 @@ import java.util.Set;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/members")
+@RequestMapping({"/api/v1/members", "/api/members"})
 @RequiredArgsConstructor
 public class MemberController {
 
@@ -51,6 +51,17 @@ public class MemberController {
         return ApiResponse.success(MemberResponse.from(readModel));
     }
 
+    /**
+     * 내 정보 부분 수정. 지금 수정 가능한 필드는 {@code nickname} 뿐이다.
+     */
+    @PatchMapping("/me")
+    public ApiResponse<MemberResponse> updateMyProfile(
+            @AuthenticationPrincipal AuthenticatedMember member,
+            @Valid @RequestBody NicknameUpdateRequest request) {
+        return updateNickname(member, request);
+    }
+
+    // legacy: lol-ui 전환 후 MP-156 에서 제거
     @PatchMapping("/me/nickname")
     public ApiResponse<MemberResponse> updateNickname(
             @AuthenticationPrincipal AuthenticatedMember member,

@@ -46,7 +46,7 @@ class AuthCookieManagerTest {
 
         // then
         List<String> setCookieHeaders = response.getHeaders("Set-Cookie");
-        assertThat(setCookieHeaders).hasSize(2);
+        assertThat(setCookieHeaders).hasSize(3);
 
         String accessCookie = setCookieHeaders.stream()
                 .filter(c -> c.startsWith("accessToken="))
@@ -60,17 +60,21 @@ class AuthCookieManagerTest {
         assertThat(accessCookie).contains("Max-Age=1800");
         assertThat(accessCookie).contains("SameSite=Lax");
 
-        String refreshCookie = setCookieHeaders.stream()
+        // 병행 기간에는 같은 refresh 토큰을 새 Path·옛 Path 에 모두 발급한다
+        List<String> refreshCookies = setCookieHeaders.stream()
                 .filter(c -> c.startsWith("refreshToken="))
-                .findFirst()
-                .orElse(null);
-        assertThat(refreshCookie).isNotNull();
-        assertThat(refreshCookie).contains("refreshToken=refresh-token-value");
-        assertThat(refreshCookie).contains("HttpOnly");
-        assertThat(refreshCookie).contains("Secure");
-        assertThat(refreshCookie).contains("Path=/api/auth/refresh");
-        assertThat(refreshCookie).contains("Max-Age=604800");
-        assertThat(refreshCookie).contains("SameSite=Lax");
+                .toList();
+        assertThat(refreshCookies).hasSize(2);
+        assertThat(refreshCookies).allSatisfy(refreshCookie -> {
+            assertThat(refreshCookie).contains("refreshToken=refresh-token-value");
+            assertThat(refreshCookie).contains("HttpOnly");
+            assertThat(refreshCookie).contains("Secure");
+            assertThat(refreshCookie).contains("Max-Age=604800");
+            assertThat(refreshCookie).contains("SameSite=Lax");
+        });
+        assertThat(refreshCookies)
+                .anyMatch(c -> c.contains("Path=/api/v1/auth/refresh"))
+                .anyMatch(c -> c.contains("Path=/api/auth/refresh"));
     }
 
     @DisplayName("clearAuthCookies - Max-Age=0으로 삭제 쿠키가 설정된다")
@@ -84,7 +88,7 @@ class AuthCookieManagerTest {
 
         // then
         List<String> setCookieHeaders = response.getHeaders("Set-Cookie");
-        assertThat(setCookieHeaders).hasSize(2);
+        assertThat(setCookieHeaders).hasSize(3);
 
         String accessCookie = setCookieHeaders.stream()
                 .filter(c -> c.startsWith("accessToken="))
@@ -94,13 +98,14 @@ class AuthCookieManagerTest {
         assertThat(accessCookie).contains("Max-Age=0");
         assertThat(accessCookie).contains("Path=/");
 
-        String refreshCookie = setCookieHeaders.stream()
+        // logout 은 두 Path 의 refresh 쿠키를 모두 지운다
+        List<String> refreshCookies = setCookieHeaders.stream()
                 .filter(c -> c.startsWith("refreshToken="))
-                .findFirst()
-                .orElse(null);
-        assertThat(refreshCookie).isNotNull();
-        assertThat(refreshCookie).contains("Max-Age=0");
-        assertThat(refreshCookie).contains("Path=/api/auth/refresh");
+                .toList();
+        assertThat(refreshCookies).hasSize(2)
+                .allMatch(c -> c.contains("Max-Age=0"))
+                .anyMatch(c -> c.contains("Path=/api/v1/auth/refresh"))
+                .anyMatch(c -> c.contains("Path=/api/auth/refresh"));
     }
 
     @DisplayName("extractAccessToken - 쿠키에서 accessToken을 올바르게 추출한다")
