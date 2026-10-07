@@ -20,16 +20,16 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/duo")
+@RequestMapping({"/api/v1/duo", "/api/duo"})
 @RequiredArgsConstructor
 public class DuoRequestController {
 
@@ -70,7 +70,8 @@ public class DuoRequestController {
         return ResponseEntity.ok(ApiResponse.success(responses));
     }
 
-    @PutMapping("/requests/{requestId}/accept")
+    // 상태 전이는 POST (P6). PUT 은 legacy — lol-ui 전환 후 MP-156 에서 제거
+    @RequestMapping(value = "/requests/{requestId}/accept", method = {RequestMethod.POST, RequestMethod.PUT})
     public ResponseEntity<ApiResponse<DuoMatchResultResponse>> acceptDuoRequest(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long requestId) {
@@ -81,7 +82,8 @@ public class DuoRequestController {
                 ApiResponse.success(DuoMatchResultResponse.from(result)));
     }
 
-    @PutMapping("/requests/{requestId}/confirm")
+    // 상태 전이는 POST (P6). PUT 은 legacy — lol-ui 전환 후 MP-156 에서 제거
+    @RequestMapping(value = "/requests/{requestId}/confirm", method = {RequestMethod.POST, RequestMethod.PUT})
     public ResponseEntity<ApiResponse<DuoMatchResultResponse>> confirmDuoRequest(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long requestId) {
@@ -92,7 +94,8 @@ public class DuoRequestController {
                 ApiResponse.success(DuoMatchResultResponse.from(result)));
     }
 
-    @PutMapping("/requests/{requestId}/reject")
+    // 상태 전이는 POST (P6). PUT 은 legacy — lol-ui 전환 후 MP-156 에서 제거
+    @RequestMapping(value = "/requests/{requestId}/reject", method = {RequestMethod.POST, RequestMethod.PUT})
     public ResponseEntity<Void> rejectDuoRequest(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long requestId) {
@@ -101,7 +104,8 @@ public class DuoRequestController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/requests/{requestId}/cancel")
+    // 상태 전이는 POST (P6). PUT 은 legacy — lol-ui 전환 후 MP-156 에서 제거
+    @RequestMapping(value = "/requests/{requestId}/cancel", method = {RequestMethod.POST, RequestMethod.PUT})
     public ResponseEntity<Void> cancelDuoRequest(
             @AuthenticationPrincipal AuthenticatedMember member,
             @PathVariable Long requestId) {
