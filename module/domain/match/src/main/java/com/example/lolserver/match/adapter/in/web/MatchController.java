@@ -37,6 +37,73 @@ public class MatchController {
         return ResponseEntity.ok(ApiResponse.success(gameData));
     }
 
+    /**
+     * 소환사별 전적. match 컨텍스트는 platformId 를 쓰지 않으므로 경로에 두지 않는다.
+     */
+    @GetMapping("/summoners/{puuid}/matches")
+    public ResponseEntity<ApiResponse<SliceResponse<GameResponse>>> getSummonerMatches(
+            @PathVariable("puuid") String puuid,
+            @RequestParam(required = false) Integer season,
+            @RequestParam(required = false) Integer queueId,
+            @RequestParam(required = false) Integer page) {
+        MatchCommand matchCommand = MatchCommand.builder()
+                .puuid(puuid)
+                .season(season)
+                .queueId(queueId)
+                .pageNo(page != null ? page : 1)
+                .build();
+        SliceResult<GameReadModel> matches = matchService.getMatchesBatch(matchCommand);
+        return ResponseEntity.ok(ApiResponse.success(toGameResponseSlice(matches)));
+    }
+
+    @GetMapping("/summoners/{puuid}/matches/daily-count")
+    public ResponseEntity<ApiResponse<DailyGameCountResponse>> getSummonerDailyGameCounts(
+            @PathVariable("puuid") String puuid,
+            @RequestParam Integer season,
+            @RequestParam(required = false) Integer queueId) {
+        return ResponseEntity.ok(ApiResponse.success(
+                DailyGameCountResponse.from(matchService.getDailyGameCounts(puuid, season, queueId))));
+    }
+
+    /**
+     * 소환사별 매치 ID 목록. page 는 0부터 시작한다 (lol-ui 기본값과 동일).
+     */
+    @GetMapping("/summoners/{puuid}/match-ids")
+    public ResponseEntity<ApiResponse<SliceResponse<String>>> getSummonerMatchIds(
+            @PathVariable("puuid") String puuid,
+            @RequestParam(required = false) Integer queueId,
+            @RequestParam(defaultValue = "0") int page) {
+        MatchCommand matchCommand = MatchCommand.builder()
+                .puuid(puuid)
+                .queueId(queueId)
+                .pageNo(page)
+                .build();
+        return ResponseEntity.ok(ApiResponse.success(
+                SliceResponse.of(matchService.findAllMatchIds(matchCommand))));
+    }
+
+    /**
+     * 소환사별 모스트 챔피언
+     */
+    @GetMapping("/summoners/{puuid}/champions")
+    public ResponseEntity<ApiResponse<RankChampionsResponse>> getSummonerChampions(
+            @PathVariable("puuid") String puuid,
+            @RequestParam(required = false) Integer season) {
+        MSChampionCommand command = new MSChampionCommand();
+        command.setPuuid(puuid);
+        command.setSeason(season);
+        return ResponseEntity.ok(ApiResponse.success(
+                RankChampionsResponse.from(matchService.getRankChampions(command))));
+    }
+
+    @GetMapping("/matches/{matchId}/timeline")
+    public ResponseEntity<ApiResponse<TimelineResponse>> getMatchTimeline(
+            @PathVariable("matchId") String matchId) {
+        return getTimeline(matchId);
+    }
+
+    // ---- legacy: lol-ui 전환 후 MP-156 에서 제거 ----
+
     @GetMapping("/{platformId}/matches/matchIds")
     public ResponseEntity<ApiResponse<SliceResponse<String>>> findAllMatchIds(
             @PathVariable("platformId") String platformId,

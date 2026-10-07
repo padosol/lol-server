@@ -76,8 +76,9 @@ class RankControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/{platformId}/rank", platformId)
-                                .param("rankType", searchDto.getRankType().name())
+                        get("/api/v1/rankings")
+                                .param("platform", platformId)
+                                .param("queue", searchDto.getRankType().name())
                                 .param("page", String.valueOf(searchDto.getPage()))
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
@@ -86,11 +87,9 @@ class RankControllerTest extends RestDocsSupport {
                 .andDo(document("rank-get",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        pathParameters(
-                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)")
-                        ),
                         queryParameters(
-                                parameterWithName("rankType").description("게임 타입 (SOLO, FLEX)").optional(),
+                                parameterWithName("platform").description("플랫폼 ID (예: kr)"),
+                                parameterWithName("queue").description("게임 타입 (SOLO, FLEX, 기본값 SOLO)").optional(),
                                 parameterWithName("page").description("페이지 번호 (1부터 시작, 페이지당 50개)").optional(),
                                 parameterWithName("tier").description("조회할 티어 (e.g., CHALLENGER, GOLD)").optional()
                         ),

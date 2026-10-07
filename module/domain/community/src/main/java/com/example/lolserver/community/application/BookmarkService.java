@@ -63,6 +63,23 @@ public class BookmarkService implements BookmarkUseCase, BookmarkQueryUseCase {
     }
 
     @Override
+    @Transactional
+    public void addBookmarkIfAbsent(Long memberId, Long postId) {
+        Post post = postPersistencePort.findById(postId)
+                .orElseThrow(() -> new CoreException(ErrorType.POST_NOT_FOUND));
+        post.validateNotDeleted();
+
+        bookmarkPersistencePort.saveIfAbsent(Bookmark.create(memberId, postId));
+    }
+
+    @Override
+    @Transactional
+    public void removeBookmarkIfPresent(Long memberId, Long postId) {
+        bookmarkPersistencePort.findByMemberIdAndPostId(memberId, postId)
+                .ifPresent(bookmarkPersistencePort::delete);
+    }
+
+    @Override
     public SliceResult<PostListReadModel> getMyBookmarks(Long memberId, int page) {
         // PageRequest.of 는 음수에 IllegalArgumentException 을 던지고, 그건 처리되지 않아
         // 500 이 된다. 잘못된 입력이므로 400 으로 돌려준다.

@@ -75,6 +75,19 @@ public class VoteService implements VoteUseCase {
         recalculateCounts(targetType, targetId, null);
     }
 
+    @Override
+    @Transactional
+    public void removeVoteIfPresent(
+            Long memberId, VoteTargetType targetType, Long targetId) {
+        votePersistencePort
+                .findByMemberIdAndTargetTypeAndTargetId(
+                        memberId, targetType, targetId)
+                .ifPresent(vote -> {
+                    votePersistencePort.delete(vote);
+                    recalculateCounts(targetType, targetId, null);
+                });
+    }
+
     private void validateTarget(
             VoteTargetType targetType, Long targetId) {
         if (targetType == VoteTargetType.POST) {

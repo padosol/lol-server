@@ -1,6 +1,7 @@
 package com.example.lolserver.community.adapter.in.web;
 
 import com.example.lolserver.community.adapter.in.web.request.VoteRequest;
+import com.example.lolserver.community.adapter.in.web.request.VoteTypeRequest;
 import com.example.lolserver.community.adapter.in.web.response.VoteResponse;
 import com.example.lolserver.common.web.security.AuthenticatedMember;
 import com.example.lolserver.common.web.response.ApiResponse;
@@ -17,16 +18,66 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/community")
+@RequestMapping({"/api/v1/community", "/api/community"})
 @RequiredArgsConstructor
 public class CommunityVoteController {
 
     private final VoteUseCase voteUseCase;
+
+    /**
+     * 게시글 투표 (멱등). 같은 의미로 다시 보내면 변화 없음, 다른 의미면 변경된다.
+     */
+    @PutMapping("/posts/{postId}/vote")
+    public ResponseEntity<ApiResponse<VoteResponse>> putPostVote(
+            @AuthenticationPrincipal AuthenticatedMember member,
+            @PathVariable Long postId,
+            @Valid @RequestBody VoteTypeRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(
+                putVote(member, VoteTargetType.POST, postId, request.voteType())));
+    }
+
+    @DeleteMapping("/posts/{postId}/vote")
+    public ResponseEntity<Void> deletePostVote(
+            @AuthenticationPrincipal AuthenticatedMember member,
+            @PathVariable Long postId) {
+        voteUseCase.removeVoteIfPresent(member.memberId(), VoteTargetType.POST, postId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/comments/{commentId}/vote")
+    public ResponseEntity<ApiResponse<VoteResponse>> putCommentVote(
+            @AuthenticationPrincipal AuthenticatedMember member,
+            @PathVariable Long commentId,
+            @Valid @RequestBody VoteTypeRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(
+                putVote(member, VoteTargetType.COMMENT, commentId, request.voteType())));
+    }
+
+    @DeleteMapping("/comments/{commentId}/vote")
+    public ResponseEntity<Void> deleteCommentVote(
+            @AuthenticationPrincipal AuthenticatedMember member,
+            @PathVariable Long commentId) {
+        voteUseCase.removeVoteIfPresent(member.memberId(), VoteTargetType.COMMENT, commentId);
+        return ResponseEntity.noContent().build();
+    }
+
+    private VoteResponse putVote(
+            AuthenticatedMember member, VoteTargetType targetType, Long targetId, VoteType voteType) {
+        VoteCommand command = VoteCommand.builder()
+                .targetType(targetType)
+                .targetId(targetId)
+                .voteType(voteType)
+                .build();
+        return VoteResponse.from(voteUseCase.vote(member.memberId(), command));
+    }
+
+    // ---- legacy: lol-ui 전환 후 MP-156 에서 제거 ----
 
     @PostMapping("/votes")
     public ResponseEntity<ApiResponse<VoteResponse>> vote(

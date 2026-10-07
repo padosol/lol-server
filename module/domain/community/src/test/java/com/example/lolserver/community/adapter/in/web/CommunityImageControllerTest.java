@@ -69,7 +69,7 @@ class CommunityImageControllerTest extends RestDocsSupport {
                 "file", "screenshot.png", "image/png",
                 "fake-image-bytes".getBytes(StandardCharsets.UTF_8));
 
-        mockMvc.perform(multipart("/api/community/images").file(file))
+        mockMvc.perform(multipart("/api/v1/community/images").file(file))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.imageId").value(1042))
                 .andDo(document("community-image-upload",
@@ -96,7 +96,7 @@ class CommunityImageControllerTest extends RestDocsSupport {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "x.png", "image/png", new byte[] {1, 2, 3});
 
-        mockMvc.perform(multipart("/api/community/images").file(file))
+        mockMvc.perform(multipart("/api/v1/community/images").file(file))
                 .andExpect(status().isCreated());
 
         ArgumentCaptor<UploadImageCommand> captor =
@@ -109,7 +109,7 @@ class CommunityImageControllerTest extends RestDocsSupport {
     @DisplayName("이미지 삭제 API")
     @Test
     void deleteImage() throws Exception {
-        mockMvc.perform(delete("/api/community/images/{imageId}", 1042L))
+        mockMvc.perform(delete("/api/v1/community/images/{imageId}", 1042L))
                 .andExpect(status().isNoContent())
                 .andDo(document("community-image-delete",
                         pathParameters(

@@ -27,7 +27,7 @@ public class LeagueController {
      * @param puuid 소환사 puuid
      * @return 리그 정보
      */
-    @GetMapping("/v1/leagues/by-puuid/{puuid}")
+    @GetMapping({"/v1/summoners/{puuid}/leagues", "/v1/leagues/by-puuid/{puuid}"})
     public ResponseEntity<ApiResponse<LeagueResponse>> fetchLeaguesBySummoner(
             @PathVariable("puuid") String puuid
     ) {

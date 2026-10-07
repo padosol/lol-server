@@ -31,6 +31,24 @@ class BookmarkPersistenceAdapterTest extends RepositoryTestBase {
     @Autowired
     private CommunityPostJpaRepository postJpaRepository;
 
+    @DisplayName("saveIfAbsent 를 두 번 호출해도 북마크는 하나이고 예외가 나지 않는다 (ON CONFLICT DO NOTHING)")
+    @Test
+    void saveIfAbsent_idempotent() {
+        // given
+        Long memberId = 1L;
+        Long postId = savePost("글", false);
+
+        // when
+        bookmarkPersistenceAdapter.saveIfAbsent(Bookmark.create(memberId, postId));
+        bookmarkPersistenceAdapter.saveIfAbsent(Bookmark.create(memberId, postId));
+
+        // then
+        assertThat(bookmarkPersistenceAdapter.existsByMemberIdAndPostId(memberId, postId)).isTrue();
+        SliceResult<PostListReadModel> result =
+                bookmarkPersistenceAdapter.findBookmarkedPosts(memberId, 0);
+        assertThat(result.getContent()).hasSize(1);
+    }
+
     @DisplayName("북마크한 글 목록은 글 작성 시각이 아니라 북마크한 시각의 최신순으로 나온다")
     @Test
     void findBookmarkedPosts_orderedByBookmarkedAt() {
