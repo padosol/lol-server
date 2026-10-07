@@ -17,6 +17,14 @@ public class SpectatorController {
 
     private final SpectatorQueryUseCase spectatorService;
 
+    @GetMapping("/v1/summoners/{puuid}/active-game")
+    public ResponseEntity<ApiResponse<CurrentGameInfoReadModel>> getActiveGame(
+            @PathVariable("puuid") String puuid
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(spectatorService.getCurrentGameInfo(puuid)));
+    }
+
+    // legacy: lol-ui 전환 후 MP-156 에서 제거
     @GetMapping("/v1/{platformId}/spectator/active-games/by-puuid/{puuid}")
     public ResponseEntity<ApiResponse<CurrentGameInfoReadModel>> getCurrentGameInfo(
             @PathVariable("platformId") String platformId,
