@@ -57,7 +57,7 @@ class CommunityCategoryControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/community/categories")
+                        get("/api/v1/community/categories")
                                 .param("locale", "ko")
                                 .contentType(MediaType.APPLICATION_JSON)
                 )

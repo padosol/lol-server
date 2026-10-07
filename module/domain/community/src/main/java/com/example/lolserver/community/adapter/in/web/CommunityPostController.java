@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/community")
+@RequestMapping({"/api/v1/community", "/api/community"})
 @RequiredArgsConstructor
 public class CommunityPostController {
 
@@ -58,12 +58,20 @@ public class CommunityPostController {
                 .body(ApiResponse.success(PostResponse.from(readModel)));
     }
 
+    /**
+     * 게시글 목록. {@code keyword} 가 있으면 검색 결과를 돌려준다 (옛 {@code GET /posts/search} 통합).
+     * 검색은 기존과 같이 카테고리·정렬·기간 조건을 쓰지 않는다.
+     */
     @GetMapping("/posts")
     public ResponseEntity<ApiResponse<SliceResponse<PostListResponse>>> getPosts(
             @RequestParam(required = false) Long categoryId,
             @RequestParam(defaultValue = "HOT") String sort,
             @RequestParam(defaultValue = "ALL") String period,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page) {
+        if (keyword != null) {
+            return searchPosts(keyword, page);
+        }
         PostSearchCommand command = PostSearchCommand.builder()
                 .categoryId(categoryId)
                 .sortType(SortType.valueOf(sort))
@@ -113,6 +121,7 @@ public class CommunityPostController {
         return ResponseEntity.noContent().build();
     }
 
+    // legacy: lol-ui 전환 후 MP-156 에서 제거 (GET /posts?keyword= 로 통합)
     @GetMapping("/posts/search")
     public ResponseEntity<ApiResponse<SliceResponse<PostListResponse>>> searchPosts(
             @RequestParam String keyword,
