@@ -9,6 +9,7 @@ public enum ErrorType {
     EXTERNAL_API_ERROR(400, ErrorCode.E400, "외부 API 호출 에러"),
 
     NOT_FOUND_PUUID(404, ErrorCode.E404, "존재하지 않는 PUUID 입니다."),
+    UNKNOWN_SUMMONER_PLATFORM(404, ErrorCode.E404, "플랫폼 정보가 없는 소환사입니다."),
     NOT_FOUND_MATCH_ID(404, ErrorCode.E404, "존재하지 않는 MatchId 입니다."),
 
     NOT_FOUND_USER(404, ErrorCode.E404, "존재하지 않는 유저 입니다."),

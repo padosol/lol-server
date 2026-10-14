@@ -28,6 +28,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
@@ -73,7 +74,8 @@ class SummonerControllerTest extends RestDocsSupport {
 
         // when
         ResultActions result = mockMvc.perform(
-                get(BASE_URL + "/{platformId}/{gameName}", "kr", "hide on bush-KR1"));
+                get(BASE_URL + "/by-riot-id/{gameName}", "hide on bush-KR1")
+                        .param("platform", "kr"));
 
         // then
         result.andExpect(status().isOk())
@@ -81,8 +83,10 @@ class SummonerControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("platformId").description("플랫폼 ID"),
-                                parameterWithName("gameName").description("게임 유저명")
+                                parameterWithName("gameName").description("게임 유저명 (gameName-tagLine)")
+                        ),
+                        queryParameters(
+                                parameterWithName("platform").description("플랫폼 ID (예: kr)")
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
@@ -114,11 +118,11 @@ class SummonerControllerTest extends RestDocsSupport {
                 .lastRevisionClickDateTime(now.toString())
                 .build();
 
-        given(summonerQueryUseCase.getSummonerByPuuid(anyString(), anyString())).willReturn(response);
+        given(summonerQueryUseCase.getSummonerByPuuid(anyString())).willReturn(response);
 
         // when
         ResultActions result = mockMvc.perform(
-                get("/api/v1/{platformId}/summoners/{puuid}", "kr", "test-puuid"));
+                get(BASE_URL + "/{puuid}", "test-puuid"));
 
         // then
         result.andExpect(status().isOk())
@@ -126,7 +130,6 @@ class SummonerControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("platformId").description("플랫폼 ID"),
                                 parameterWithName("puuid").description("소환사 고유 PUUID")
                         ),
                         responseFields(
@@ -155,19 +158,18 @@ class SummonerControllerTest extends RestDocsSupport {
         given(summonerQueryUseCase.getAllSummonerAutoComplete(anyString(), anyString())).willReturn(responses);
 
         // when
-        ResultActions result = mockMvc.perform(get("/api/v1/{platformId}/summoners/autocomplete", "kr")
-                .param("q", "hide on bush"));
+        ResultActions result = mockMvc.perform(get(BASE_URL + "/autocomplete")
+                .param("q", "hide on bush")
+                .param("platform", "kr"));
 
         // then
         result.andExpect(status().isOk())
                 .andDo(document("summoner-autocomplete",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        pathParameters(
-                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)")
-                        ),
                         queryParameters(
-                                parameterWithName("q").description("자동완성 검색어")
+                                parameterWithName("q").description("자동완성 검색어"),
+                                parameterWithName("platform").description("플랫폼 ID (예: kr)")
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 성공 여부"),
@@ -188,21 +190,19 @@ class SummonerControllerTest extends RestDocsSupport {
     void renewalSummonerInfo() throws Exception {
         // given
         String puuid = "test-puuid";
-        String platformId = "kr";
 
         SummonerRenewal serviceResponse = new SummonerRenewal(puuid, RenewalStatus.SUCCESS);
-        given(summonerUseCase.renewalSummonerInfo(anyString(), anyString())).willReturn(serviceResponse);
+        given(summonerUseCase.renewalSummonerInfo(anyString())).willReturn(serviceResponse);
 
         // when
-        ResultActions result = mockMvc.perform(get("/api/v1/{platformId}/summoners/{puuid}/renewal", platformId, puuid));
+        ResultActions result = mockMvc.perform(post(BASE_URL + "/{puuid}/renewal", puuid));
 
         // then
-        result.andExpect(status().isOk())
+        result.andExpect(status().isAccepted())
                 .andDo(document("summoner-renewal",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("platformId").description("플랫폼 ID"),
                                 parameterWithName("puuid").description("소환사 고유 PUUID")
                         ),
                         responseFields(
@@ -226,7 +226,7 @@ class SummonerControllerTest extends RestDocsSupport {
         given(summonerQueryUseCase.renewalSummonerStatus(anyString())).willReturn(serviceResponse);
 
         // when
-        ResultActions result = mockMvc.perform(get(BASE_URL + "/{puuid}/renewal-status", puuid));
+        ResultActions result = mockMvc.perform(get(BASE_URL + "/{puuid}/renewal", puuid));
 
         // then
         result.andExpect(status().isOk())
@@ -257,7 +257,7 @@ class SummonerControllerTest extends RestDocsSupport {
         given(summonerQueryUseCase.renewalSummonerStatus(anyString())).willReturn(serviceResponse);
 
         // when
-        ResultActions result = mockMvc.perform(get(BASE_URL + "/{puuid}/renewal-status", puuid));
+        ResultActions result = mockMvc.perform(get(BASE_URL + "/{puuid}/renewal", puuid));
 
         // then
         result.andExpect(status().isOk())

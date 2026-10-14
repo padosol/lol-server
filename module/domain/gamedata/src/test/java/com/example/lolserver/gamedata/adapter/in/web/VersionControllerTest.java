@@ -47,7 +47,7 @@ class VersionControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/versions/latest")
+                        get("/api/v1/game-data/versions/latest")
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
@@ -85,7 +85,7 @@ class VersionControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/versions")
+                        get("/api/v1/game-data/versions")
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
@@ -125,7 +125,7 @@ class VersionControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/versions/{versionId}", versionId)
+                        get("/api/v1/game-data/versions/{versionId}", versionId)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
@@ -163,7 +163,7 @@ class VersionControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/versions/{versionId}", versionId)
+                        get("/api/v1/game-data/versions/{versionId}", versionId)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())

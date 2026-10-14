@@ -18,6 +18,8 @@ import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.docu
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.queryParameters;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -47,7 +49,8 @@ class QueueTypeControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/queue-tab")
+                        get("/api/v1/game-data/queues")
+                                .param("tab", "true")
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
@@ -55,6 +58,9 @@ class QueueTypeControllerTest extends RestDocsSupport {
                 .andDo(document("queue-tab",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
+                        queryParameters(
+                                parameterWithName("tab").description("탭 노출 큐만 조회 (true 고정)")
+                        ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING)
                                         .description("API 응답 결과 (SUCCESS, FAIL)"),

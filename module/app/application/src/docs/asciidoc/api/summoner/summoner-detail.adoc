@@ -4,6 +4,7 @@
 ==== HTTP Request
 include::{snippets}/summoner-detail/http-request.adoc[]
 include::{snippets}/summoner-detail/path-parameters.adoc[]
+include::{snippets}/summoner-detail/query-parameters.adoc[]
 
 ==== HTTP Response
 include::{snippets}/summoner-detail/http-response.adoc[]

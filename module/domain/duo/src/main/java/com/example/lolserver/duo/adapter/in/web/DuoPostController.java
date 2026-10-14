@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/duo")
+@RequestMapping({"/api/v1/duo", "/api/duo"})
 @RequiredArgsConstructor
 public class DuoPostController {
 

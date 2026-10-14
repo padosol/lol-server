@@ -57,6 +57,12 @@ public class BookmarkPersistenceAdapter implements BookmarkPersistencePort {
     }
 
     @Override
+    public void saveIfAbsent(Bookmark bookmark) {
+        bookmarkJpaRepository.insertIfAbsent(
+                bookmark.getMemberId(), bookmark.getPostId(), bookmark.getCreatedAt());
+    }
+
+    @Override
     public void delete(Bookmark bookmark) {
         bookmarkJpaRepository.deleteById(bookmark.getId());
     }

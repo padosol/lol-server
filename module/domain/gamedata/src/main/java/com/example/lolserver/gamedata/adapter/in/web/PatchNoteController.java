@@ -26,7 +26,7 @@ public class PatchNoteController {
      * 전체 패치노트 목록 조회 API
      * @return 패치노트 요약 목록 (versionId, title)
      */
-    @GetMapping("/v1/patch-notes")
+    @GetMapping({"/v1/game-data/patch-notes", "/v1/patch-notes"})
     public ResponseEntity<ApiResponse<List<PatchNoteSummaryReadModel>>> getAllPatchNotes() {
         log.info("getAllPatchNotes");
         List<PatchNoteSummaryReadModel> patchNotes = patchNoteService.getAllPatchNotes();
@@ -38,7 +38,7 @@ public class PatchNoteController {
      * @param versionId 패치노트 버전 ID
      * @return 패치노트 상세 정보 (versionId, title, content)
      */
-    @GetMapping("/v1/patch-notes/{versionId}")
+    @GetMapping({"/v1/game-data/patch-notes/{versionId}", "/v1/patch-notes/{versionId}"})
     public ResponseEntity<ApiResponse<PatchNoteReadModel>> getPatchNoteByVersionId(
             @PathVariable String versionId
     ) {

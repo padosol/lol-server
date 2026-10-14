@@ -23,6 +23,24 @@ public class TierCutoffController {
     private final TierCutoffQueryUseCase tierCutoffService;
 
     /**
+     * 티어 컷오프 목록. 티어 컷오프는 매일 바뀌는 랭킹 데이터라 {@code rankings} 아래에 둔다.
+     * @param platform 플랫폼 ID (예: kr)
+     * @param queue 큐 타입 필터 (선택)
+     * @param tier 티어 필터 (선택, queue 와 함께 줘야 한다)
+     */
+    @GetMapping("/v1/rankings/tier-cutoffs")
+    public ResponseEntity<ApiResponse<List<TierCutoffReadModel>>> getRankingTierCutoffs(
+            @RequestParam String platform,
+            @RequestParam(required = false) String queue,
+            @RequestParam(required = false) String tier
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(
+                tierCutoffService.findTierCutoffs(platform, queue, tier)));
+    }
+
+    // ---- legacy: lol-ui 전환 후 MP-156 에서 제거 ----
+
+    /**
      * 지역별 티어 컷오프 목록 조회 API
      * @param platformId 플랫폼 ID (예: kr, na)
      * @param queue 큐 타입 필터 (선택, 예: RANKED_SOLO_5x5)

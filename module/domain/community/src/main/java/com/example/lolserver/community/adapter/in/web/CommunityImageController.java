@@ -35,7 +35,7 @@ import java.io.IOException;
  * 덮는다 — GET 만 permitAll 이므로 별도 규칙 추가가 필요 없다.
  */
 @RestController
-@RequestMapping("/api/community")
+@RequestMapping({"/api/v1/community", "/api/community"})
 @RequiredArgsConstructor
 public class CommunityImageController {
 

@@ -9,4 +9,9 @@ public interface VoteUseCase {
     VoteResultModel vote(Long memberId, VoteCommand command);
 
     void removeVote(Long memberId, VoteTargetType targetType, Long targetId);
+
+    /**
+     * 멱등 취소 ({@code DELETE .../vote}). 투표가 없으면 아무것도 하지 않는다.
+     */
+    void removeVoteIfPresent(Long memberId, VoteTargetType targetType, Long targetId);
 }

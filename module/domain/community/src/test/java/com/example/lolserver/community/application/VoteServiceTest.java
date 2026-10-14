@@ -24,8 +24,10 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class VoteServiceTest {
@@ -193,6 +195,44 @@ class VoteServiceTest {
 
         // then
         then(votePersistencePort).should().delete(vote);
+    }
+
+    @DisplayName("멱등 취소는 투표가 없으면 삭제·재집계 없이 끝난다")
+    @Test
+    void removeVoteIfPresent_absent() {
+        // given
+        given(votePersistencePort
+                .findByMemberIdAndTargetTypeAndTargetId(
+                        1L, VoteTargetType.POST, 1L))
+                .willReturn(Optional.empty());
+
+        // when
+        voteService.removeVoteIfPresent(1L, VoteTargetType.POST, 1L);
+
+        // then
+        then(votePersistencePort).should(never()).delete(any());
+        then(postPersistencePort).should(never()).updateVoteCounts(any(), anyInt(), anyInt());
+    }
+
+    @DisplayName("멱등 취소는 투표가 있으면 삭제하고 재집계한다")
+    @Test
+    void removeVoteIfPresent_present() {
+        // given
+        Vote vote = Vote.builder()
+                .id(1L).memberId(1L).targetType(VoteTargetType.COMMENT)
+                .targetId(5L).voteType(VoteType.UPVOTE)
+                .createdAt(LocalDateTime.now()).build();
+        given(votePersistencePort
+                .findByMemberIdAndTargetTypeAndTargetId(
+                        1L, VoteTargetType.COMMENT, 5L))
+                .willReturn(Optional.of(vote));
+
+        // when
+        voteService.removeVoteIfPresent(1L, VoteTargetType.COMMENT, 5L);
+
+        // then
+        then(votePersistencePort).should().delete(vote);
+        then(commentPersistencePort).should().updateVoteCounts(5L, 0, 0);
     }
 
     @DisplayName("존재하지 않는 투표를 취소하면 예외가 발생한다")

@@ -61,6 +61,50 @@ class BookmarkServiceTest {
         then(bookmarkPersistencePort).should().save(any(Bookmark.class));
     }
 
+    @DisplayName("멱등 추가는 존재 여부를 따로 묻지 않고 saveIfAbsent 로 저장한다")
+    @Test
+    void addBookmarkIfAbsent_success() {
+        // given
+        given(postPersistencePort.findById(10L))
+                .willReturn(Optional.of(createPost(10L, false)));
+
+        // when
+        bookmarkService.addBookmarkIfAbsent(1L, 10L);
+
+        // then
+        then(bookmarkPersistencePort).should().saveIfAbsent(any(Bookmark.class));
+        then(bookmarkPersistencePort).should(never()).save(any());
+    }
+
+    @DisplayName("멱등 추가도 삭제된 게시글이면 예외가 발생한다")
+    @Test
+    void addBookmarkIfAbsent_deletedPost() {
+        // given
+        given(postPersistencePort.findById(10L))
+                .willReturn(Optional.of(createPost(10L, true)));
+
+        // when & then
+        assertThatThrownBy(() -> bookmarkService.addBookmarkIfAbsent(1L, 10L))
+                .isInstanceOf(CoreException.class)
+                .extracting(e -> ((CoreException) e).getErrorType())
+                .isEqualTo(ErrorType.POST_NOT_FOUND);
+        then(bookmarkPersistencePort).should(never()).saveIfAbsent(any());
+    }
+
+    @DisplayName("멱등 해제는 북마크가 없으면 아무것도 하지 않는다")
+    @Test
+    void removeBookmarkIfPresent_absent() {
+        // given
+        given(bookmarkPersistencePort.findByMemberIdAndPostId(1L, 10L))
+                .willReturn(Optional.empty());
+
+        // when
+        bookmarkService.removeBookmarkIfPresent(1L, 10L);
+
+        // then
+        then(bookmarkPersistencePort).should(never()).delete(any());
+    }
+
     @DisplayName("이미 북마크한 게시글을 다시 북마크하면 예외가 발생한다")
     @Test
     void addBookmark_alreadyExists() {
