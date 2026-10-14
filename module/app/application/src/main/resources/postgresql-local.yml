@@ -21,6 +21,10 @@ spring:
       ddl-auto: validate
     properties:
       hibernate:
+        # 테이블이 app·riot 스키마로 나뉘어도 search_path(app, riot, public) 전체에서 찾도록 테이블 단위로 조회.
+        # 기본값(grouped)은 현재 스키마(app) 하나만 봐서 riot 테이블을 못 찾고 validate 가 실패한다.
+        hbm2ddl:
+          jdbc_metadata_extraction_strategy: individually
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
         use_sql_comments: true
