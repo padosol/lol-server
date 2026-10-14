@@ -137,14 +137,15 @@ module/
 - 도메인 규칙은 도메인 객체의 `validate*` guard 가 직접 던진다 (서비스에서 boolean+throw 금지)
 - ReadModel 변환은 `*ReadModel.of(domain)` 정적 팩토리에서만
 - 매직 스트링 금지: `OAuthProvider.RIOT.name()`, `QueueType.RANKED_SOLO_5x5.name()` 등 enum 사용
-- 커밋 메시지: `<type>: MP-<번호> <한글 설명>` (Linear 키 필수; 타입 `feat`, `fix`, `refactor`, `docs`, `chore`)
-- 브랜치: `feature/MP-<번호>-*`, `fix/MP-<번호>-*`, `refactor/MP-<번호>-*` → `develop` → `main`; hotfix 는 `hotfix/MP-<번호>-* → main → develop`
+- 커밋 메시지: `<type>: <한글 설명>` (타입 `feat`, `fix`, `refactor`, `docs`, `chore`)
+- 브랜치: `feature/*`, `fix/*`, `refactor/*` (`<type>/<kebab 설명>`) → `develop` → `main`; hotfix 는 `hotfix/* → main → develop`
+- Linear 이슈 연결: 브랜치·커밋이 아니라 PR 본문에 `Closes MP-<번호>` (일부만 다루면 `Part of MP-<번호>`)
 
 ## 문서
 
 - [`CLAUDE.md`](CLAUDE.md) — 모듈 라우팅 / 작업 별 진입점
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — 모듈 의존 그래프 + 데이터 흐름 (mermaid) + 변경 영향 표
-- [`docs/workflow.md`](docs/workflow.md) — Linear (`MP-*`) 키 기반 브랜치 / 커밋 / 이슈 생명주기
+- [`docs/workflow.md`](docs/workflow.md) — 브랜치 / 커밋 규칙, PR 본문 기반 Linear (`MP-*`) 이슈 연결 · 생명주기
 - [`docs/docs-maintenance.md`](docs/docs-maintenance.md) — CLAUDE.md / 문서 동기화 절차 (PR 시점 / 분기 리뷰 / CI 게이트)
 - [`docs/oauth2-login.md`](docs/oauth2-login.md), [`docs/rso-oauth2-troubleshooting.md`](docs/rso-oauth2-troubleshooting.md) — OAuth/RSO 흐름 디테일
 - `module/infra/api/src/docs/asciidoc/index.adoc` — 생성된 API 문서 entry
