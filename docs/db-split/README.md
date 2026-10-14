@@ -122,18 +122,18 @@ docs/db-split/rehearse.sh          # Postgres 16 컨테이너(localhost:55432)�
 KEEP=1 docs/db-split/rehearse.sh   # 끝난 뒤 P2 상태 DB 를 남김 (앱 기동 리허설용)
 ```
 
-앱 기동 리허설은 위 DB 에 각 jar 를 서비스 계정으로 붙여서 한다 (Redis·RabbitMQ 컨테이너 별도):
+앱 기동 리허설은 위 DB 에 각 jar 를 서비스 계정으로 붙여서 한다 (Redis·RabbitMQ 컨테이너 별도). 비밀번호는 `KEEP=1` 실행 끝에 출력된 값을 export 한다:
 
 ```bash
 # lol-repository (P2 에서는 default-schema 지정 필수)
 SPRING_PROFILES_ACTIVE=local java -jar <lol-repository>/module/app/application/build/libs/application-*.jar \
   --spring.datasource.url=jdbc:postgresql://localhost:55432/postgres \
-  --spring.datasource.username=lol_repository --spring.datasource.password=repopw \
+  --spring.datasource.username=lol_repository --spring.datasource.password="$LOL_REPOSITORY_DB_PASSWORD" \
   --spring.flyway.default-schema=public
 # lol-server (local seed 는 Riot 테이블 쓰기라 끈다)
 SPRING_PROFILES_ACTIVE=local java -jar module/app/application/build/libs/application-*.jar \
   --spring.datasource.url=jdbc:postgresql://localhost:55432/postgres \
-  --spring.datasource.username=lol_server --spring.datasource.password=srvpw \
+  --spring.datasource.username=lol_server --spring.datasource.password="$LOL_SERVER_DB_PASSWORD" \
   --spring.sql.init.mode=never
 ```
 
