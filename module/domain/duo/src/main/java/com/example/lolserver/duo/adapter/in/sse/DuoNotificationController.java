@@ -16,7 +16,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  * (503 방지 + 프록시 버퍼 flush).
  */
 @RestController
-@RequestMapping("/api/duo")
+@RequestMapping({"/api/v1/duo", "/api/duo"})
 @RequiredArgsConstructor
 public class DuoNotificationController {
 
@@ -24,7 +24,9 @@ public class DuoNotificationController {
 
     private final SseEmitterRegistry sseEmitterRegistry;
 
-    @GetMapping(value = "/notifications/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    // /notifications/subscribe 는 legacy — lol-ui 전환 후 MP-156 에서 제거
+    @GetMapping(value = {"/notifications/stream", "/notifications/subscribe"},
+            produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribe(@AuthenticationPrincipal AuthenticatedMember member) {
         SseEmitter emitter = sseEmitterRegistry.register(
                 member.memberId(), new SseEmitter(TIMEOUT_MILLIS));

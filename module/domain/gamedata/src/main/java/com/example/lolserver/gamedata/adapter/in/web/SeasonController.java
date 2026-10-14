@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/seasons")
+@RequestMapping({"/api/v1/game-data/seasons", "/api/v1/seasons"})
 @RequiredArgsConstructor
 public class SeasonController {
 

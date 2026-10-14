@@ -139,10 +139,9 @@ class MatchControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/{platformId}/matches/matchIds", request.getPlatformId())
-                                .param("puuid", request.getPuuid())
+                        get("/api/v1/summoners/{puuid}/match-ids", request.getPuuid())
                                 .param("queueId", String.valueOf(request.getQueueId()))
-                                .param("pageNo", String.valueOf(request.getPageNo()))
+                                .param("page", String.valueOf(request.getPageNo()))
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
@@ -151,12 +150,11 @@ class MatchControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)")
+                                parameterWithName("puuid").description("조회할 유저의 PUUID")
                         ),
                         queryParameters(
-                                parameterWithName("puuid").description("조회할 유저의 PUUID"),
                                 parameterWithName("queueId").description("큐 ID (e.g., 420:솔로랭크, 430:일반, 450:칼바람)").optional(),
-                                parameterWithName("pageNo").description("페이지 번호 (1부터 시작)").optional()
+                                parameterWithName("page").description("페이지 번호 (1부터 시작)").optional()
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
@@ -290,10 +288,10 @@ class MatchControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/{platformId}/summoners/{puuid}/matches", "kr", puuid)
+                        get("/api/v1/summoners/{puuid}/matches", puuid)
                                 .param("season", "2025")
                                 .param("queueId", "420")
-                                .param("pageNo", "1")
+                                .param("page", "1")
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
@@ -302,13 +300,12 @@ class MatchControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)"),
                                 parameterWithName("puuid").description("조회할 소환사의 PUUID")
                         ),
                         queryParameters(
                                 parameterWithName("season").description("시즌 (연도)").optional(),
                                 parameterWithName("queueId").description("큐 ID (e.g., 420:솔로랭크, 430:일반, 450:칼바람)").optional(),
-                                parameterWithName("pageNo").description("페이지 번호 (1부터 시작)").optional()
+                                parameterWithName("page").description("페이지 번호 (1부터 시작)").optional()
                         ),
                         responseFields(
                                 fieldWithPath("result").type(JsonFieldType.STRING).description("API 응답 결과 (SUCCESS, FAIL)"),
@@ -481,8 +478,7 @@ class MatchControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/rank/champions")
-                                .param("puuid", request.getPuuid())
+                        get("/api/v1/summoners/{puuid}/champions", request.getPuuid())
                                 .param("season", String.valueOf(request.getSeason()))
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
@@ -491,8 +487,10 @@ class MatchControllerTest extends RestDocsSupport {
                 .andDo(document("match-get-rank-champions",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
+                        pathParameters(
+                                parameterWithName("puuid").description("조회할 유저의 PUUID")
+                        ),
                         queryParameters(
-                                parameterWithName("puuid").description("조회할 유저의 PUUID"),
                                 parameterWithName("season").description("시즌").optional()
                         ),
                         responseFields(
@@ -547,7 +545,7 @@ class MatchControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/{platformId}/summoners/{puuid}/matches/daily-count", "kr", puuid)
+                        get("/api/v1/summoners/{puuid}/matches/daily-count", puuid)
                                 .param("season", "2025")
                                 .param("queueId", "420")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -558,7 +556,6 @@ class MatchControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)"),
                                 parameterWithName("puuid").description("조회할 소환사의 PUUID")
                         ),
                         queryParameters(
@@ -594,7 +591,7 @@ class MatchControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/match/timeline/{matchId}", matchId)
+                        get("/api/v1/matches/{matchId}/timeline", matchId)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())

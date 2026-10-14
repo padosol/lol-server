@@ -96,7 +96,7 @@ class MemberControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/members/me")
+                        get("/api/v1/members/me")
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
@@ -165,7 +165,7 @@ class MemberControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        patch("/api/members/me/nickname")
+                        patch("/api/v1/members/me")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                 )
@@ -216,7 +216,7 @@ class MemberControllerTest extends RestDocsSupport {
     void initSocialAccountLink() throws Exception {
         // when & then
         mockMvc.perform(
-                        get("/api/members/me/social-accounts/link/{provider}", "google")
+                        get("/api/v1/members/me/social-accounts/link/{provider}", "google")
                 )
                 .andDo(print())
                 .andExpect(status().is3xxRedirection())
@@ -236,7 +236,7 @@ class MemberControllerTest extends RestDocsSupport {
     void unlinkSocialAccount() throws Exception {
         // when & then
         mockMvc.perform(
-                        delete("/api/members/me/social-accounts/{socialAccountId}", 1L)
+                        delete("/api/v1/members/me/social-accounts/{socialAccountId}", 1L)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
@@ -266,7 +266,7 @@ class MemberControllerTest extends RestDocsSupport {
     void withdraw() throws Exception {
         // when & then
         mockMvc.perform(
-                        delete("/api/members/me")
+                        delete("/api/v1/members/me")
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())

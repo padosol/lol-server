@@ -29,7 +29,7 @@ CLAUDE.md, ARCHITECTURE.md, `docs/*.md` 같은 AI/팀 공유 문서가 코드와
 4. broken refs 확인: `python3 ~/.claude-marketplaces/local/plugins/ai-ready-audit/skills/audit-codebase/scripts/audit.py . --pretty | jq '.signals.broken_path_refs_in_docs'`
 5. 의심 모듈 1개 골라서 `/ai-ready-audit:audit-codebase` 재실행 — 점수 회귀 여부 확인
 
-분기 리뷰 결과는 `chore/MP-<번호>-quarterly-doc-review` 브랜치 + PR 한 건으로 묶는다.
+분기 리뷰 결과는 `chore/quarterly-doc-review` 브랜치 + PR 한 건으로 묶는다 (이슈는 PR 본문 `Closes MP-<번호>`).
 
 ## 3. 자동 게이트 (CI)
 

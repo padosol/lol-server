@@ -41,7 +41,6 @@ class SpectatorControllerTest extends RestDocsSupport {
     @Test
     void getCurrentGameInfo_게임중인경우_성공() throws Exception {
         // given
-        String platformId = "kr";
         String puuid = "test-puuid-12345";
 
         PerksReadModel perks = new PerksReadModel(8100L, 8300L, List.of(8112L, 8126L, 8138L, 8135L, 8233L, 8237L));
@@ -70,11 +69,11 @@ class SpectatorControllerTest extends RestDocsSupport {
                 bannedChampions
         );
 
-        given(spectatorService.getCurrentGameInfo(puuid, platformId)).willReturn(gameInfo);
+        given(spectatorService.getCurrentGameInfo(puuid)).willReturn(gameInfo);
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/{platformId}/spectator/active-games/by-puuid/{puuid}", platformId, puuid)
+                        get("/api/v1/summoners/{puuid}/active-game", puuid)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
@@ -83,7 +82,6 @@ class SpectatorControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("platformId").description("플랫폼 ID (kr, na, euw 등)"),
                                 parameterWithName("puuid").description("소환사 PUUID")
                         ),
                         responseFields(
@@ -151,14 +149,13 @@ class SpectatorControllerTest extends RestDocsSupport {
     @Test
     void getCurrentGameInfo_게임중아닌경우_성공() throws Exception {
         // given
-        String platformId = "kr";
         String puuid = "test-puuid-12345";
 
-        given(spectatorService.getCurrentGameInfo(puuid, platformId)).willReturn(null);
+        given(spectatorService.getCurrentGameInfo(puuid)).willReturn(null);
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/{platformId}/spectator/active-games/by-puuid/{puuid}", platformId, puuid)
+                        get("/api/v1/summoners/{puuid}/active-game", puuid)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
@@ -167,7 +164,6 @@ class SpectatorControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("platformId").description("플랫폼 ID (kr, na, euw 등)"),
                                 parameterWithName("puuid").description("소환사 PUUID")
                         ),
                         responseFields(

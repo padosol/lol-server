@@ -3,6 +3,7 @@
 
 ==== HTTP Request
 include::{snippets}/match-get-rank-champions/http-request.adoc[]
+include::{snippets}/match-get-rank-champions/path-parameters.adoc[]
 include::{snippets}/match-get-rank-champions/query-parameters.adoc[]
 
 ==== HTTP Response

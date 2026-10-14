@@ -21,33 +21,67 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/{platformId}/champion-stats")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class ChampionStatsController {
 
     private final ChampionStatsQueryUseCase championStatsService;
 
-    @GetMapping
+    /**
+     * 포지션별 챔피언 통계 목록. {@code patch} 는 필수다 (MP-121).
+     */
+    @GetMapping("/champion-stats")
+    public ResponseEntity<ApiResponse<List<PositionChampionStatsReadModel>>> getChampionStatsList(
+            @RequestParam("platform") String platform,
+            @RequestParam("patch") String patch,
+            @RequestParam("tier") String tier
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(championStatsService.getChampionStatsByPosition(
+                patch, toRiotPlatformId(platform), parseTierFilter(tier))));
+    }
+
+    @GetMapping("/champion-stats/{championId}")
+    public ResponseEntity<ApiResponse<ChampionStatsReadModel>> getChampionStatsDetail(
+            @PathVariable("championId") int championId,
+            @RequestParam("platform") String platform,
+            @RequestParam("patch") String patch,
+            @RequestParam("tier") String tier
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(championStatsService.getChampionStats(
+                championId, patch, toRiotPlatformId(platform), parseTierFilter(tier))));
+    }
+
+    private String toRiotPlatformId(String platform) {
+        Platform resolved = Platform.valueOfName(platform);
+        if (resolved == null) {
+            throw new CoreException(ErrorType.INVALID_INPUT, "유효하지 않은 platform 입니다: " + platform);
+        }
+        return resolved.getPlatformId();
+    }
+
+    // ---- legacy: lol-ui 전환 후 MP-156 에서 제거 ----
+
+    @GetMapping("/{platformId}/champion-stats")
     public ResponseEntity<ApiResponse<ChampionStatsReadModel>> getChampionStats(
             @PathVariable("platformId") String platformId,
             @RequestParam("championId") int championId,
             @RequestParam("patch") String patch,
             @RequestParam("tier") String tier
     ) {
-        String riotPlatformId = Platform.valueOfName(platformId).getPlatformId();
+        String riotPlatformId = toRiotPlatformId(platformId);
         TierFilter tierFilter = parseTierFilter(tier);
         ChampionStatsReadModel response = championStatsService.getChampionStats(
                 championId, patch, riotPlatformId, tierFilter);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @GetMapping("/positions")
+    @GetMapping("/{platformId}/champion-stats/positions")
     public ResponseEntity<ApiResponse<List<PositionChampionStatsReadModel>>> getChampionStatsByPosition(
             @PathVariable("platformId") String platformId,
             @RequestParam("patch") String patch,
             @RequestParam("tier") String tier
     ) {
-        String riotPlatformId = Platform.valueOfName(platformId).getPlatformId();
+        String riotPlatformId = toRiotPlatformId(platformId);
         TierFilter tierFilter = parseTierFilter(tier);
         List<PositionChampionStatsReadModel> response =
                 championStatsService.getChampionStatsByPosition(patch, riotPlatformId, tierFilter);
