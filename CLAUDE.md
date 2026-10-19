@@ -27,7 +27,7 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
 
 - 새 도메인/비즈니스 규칙 추가 → 해당 컨텍스트 `module/domain/<ctx>/`의 `domain` + `application`
 - 새 REST 엔드포인트 → 해당 컨텍스트의 `adapter/in/web`
-- 새 영속화/쿼리 → 해당 컨텍스트의 `adapter/out/persistence` (JPA + QueryDSL + MapStruct)
+- 새 영속화/쿼리 → 해당 컨텍스트의 `adapter/out/persistence` (JPA + QueryDSL + MapStruct). app 테이블(member·community·duo) DDL 은 `module/app/application/src/main/resources/db/migration/app` 에 새 버전으로
 - 챔피언 통계 OLAP 쿼리 → `module/domain/championstats/adapter/out/bigquery`
 - 외부 Riot/OAuth API 호출 → `module/domain/summoner/adapter/out/client`, `module/domain/member/adapter/out/oauth`
 - 모듈 조립/프로파일/실행 → [`app/application/CLAUDE.md`](module/app/application/CLAUDE.md)
