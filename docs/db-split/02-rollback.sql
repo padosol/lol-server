@@ -4,6 +4,8 @@
 -- 실행: 슈퍼유저로.  psql -v ON_ERROR_STOP=1 -f 02-rollback.sql
 -- 결과 상태 = 01-roles.sql 직후 (public 전 객체 소유 lol_repository, lol_server 는 앱 RW · 그 외 SELECT).
 -- 주의: app/riot 에 이동 후 새로 만든 객체가 있으면 함께 public 으로 돌아간다. 이름이 public 의 것과 겹치면 실패한다.
+-- 주의: lol-server 가 app Flyway 체인으로 기동한 뒤라면 lol-server 이미지를 먼저 이전 버전으로 되돌린다.
+--       새 이미지는 app 테이블이 public 에 있으면 기동을 거부한다 (db/migration/app/beforeMigrate.sql).
 -- 잠금은 02-move-schema.sql 과 같은 방식: 전부 한 문장으로 먼저 잡고 총 대기 5초 상한. 실패하면 다시 실행.
 
 \set ON_ERROR_STOP on
@@ -59,6 +61,7 @@ BEGIN
     FOR r IN
         SELECT c.relname FROM pg_class c
         WHERE c.relnamespace = 'app'::regnamespace AND c.relkind IN ('r', 'p')
+          AND c.relname <> 'flyway_schema_history'  -- lol-server Flyway 이력 — 아래에서 삭제
     LOOP
         EXECUTE format('ALTER TABLE app.%I OWNER TO lol_repository', r.relname);
         EXECUTE format('ALTER TABLE app.%I SET SCHEMA public', r.relname);
@@ -86,6 +89,10 @@ $$;
 
 ALTER DEFAULT PRIVILEGES FOR ROLE lol_repository IN SCHEMA riot
     REVOKE SELECT ON TABLES FROM lol_server;
+
+-- lol-server Flyway(app 체인) 이력. public 의 것과 이름이 겹쳐 옮길 수 없고, 롤백 뒤에는 쓸모가 없다.
+-- 다시 이동하면 lol-server 가 기동하며 baseline 부터 새로 쓴다 (V2 이후는 IF NOT EXISTS 라 재실행 무해).
+DROP TABLE IF EXISTS app.flyway_schema_history;
 
 -- 비어 있지 않으면 실패한다 (CASCADE 쓰지 않음)
 DROP SCHEMA riot;
