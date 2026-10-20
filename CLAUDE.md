@@ -1,23 +1,19 @@
 # lol-server
 
-Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔드. **헥사고날 (Ports & Adapters)** 구조이며, 의존은 항상 `infra → core` 단방향 — 역방향(`core → infra`) 금지.
+Spring Boot 3.3 + JDK 21, League of Legends 전적 검색 서비스의 회원·커뮤니티·듀오 백엔드. Riot 데이터(소환사·전적·랭킹·게임 데이터)는 lol-repository 가 소유하고, lol-server 는 DB 가 아니라 그 API 로만 받는다(app 스키마만 소유 — `docs/db-split/README.md`). **헥사고날 (Ports & Adapters)** 구조이며, 의존은 항상 `infra → core` 단방향 — 역방향(`core → infra`) 금지.
 
 ## 모듈
 
 | 모듈 | 역할 |
 |---|---|
 | [`module/app/application`](module/app/application/CLAUDE.md) | Spring Boot 진입점, 컴포지션 루트, bootJar |
-| `module/common` | 공유 커널 (web·error·support·security + persistence·redis·client config, testFixtures) — 도메인 아님 |
-| `module/shared` | `QueueType`, `Tier`, `Platform` 등 공유 enum + `TierFilter` VO |
+| `module/common` | 공유 커널 (web·error·support·security + persistence·redis·S3 config, testFixtures) — 도메인 아님 |
+| `module/shared` | `Tier`, `Platform` 공유 enum + `TierFilter` VO (championstats 용) |
 | `module/support/logging` | `@LogExecutionTime` AOP 등 횡단 유틸 |
-| `module/domain/leaderboard` | 랭킹 리더보드 조회 |
-| `module/domain/match` | 전적/매치·타임라인 조회 + 2-tier Redis 캐시 |
-| `module/domain/championstats` | 챔피언 통계 OLAP (BigQuery) + Redisson single-flight 캐시 |
-| `module/domain/gamedata` | 게임 정적 데이터 (챔피언·버전·시즌·패치노트·티어컷오프·큐타입) |
-| `module/domain/summoner` | 소환사·리그(티어)·관전 조회 (Riot client + JPA + Redis) |
+| `module/domain/championstats` | 챔피언 통계 OLAP (BigQuery) + Redisson single-flight 캐시 — lol-repository 로 이전 예정 (MP-158) |
 | `module/domain/member` | 회원·인증 (OAuth/RSO 연동) |
 | `module/domain/community` | 커뮤니티 게시글·댓글·투표 |
-| `module/domain/duo` | 듀오 모집글·신청 + Riot 계정 통계 집계 |
+| `module/domain/duo` | 듀오 모집글·신청. Riot 계정 통계·Riot ID 는 lol-repository 내부 API(`/internal/v1/summoners/{puuid}/duo-profile`)로 받아 생성 시점에 스냅샷 저장 |
 
 > 모듈 단일 진실원천은 `settings.gradle`. `module/infra/`·`module/core/lol-server-domain/` 등은 레이어→수직 컨텍스트 재구성(77b945e5) 잔재 디렉터리로 빌드에 미포함. `docs/ARCHITECTURE.md`·일부 build 커맨드(`:module:infra:api:asciidoctor`)는 옛 구조 기준(stale).
 
@@ -29,13 +25,13 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
 - 새 REST 엔드포인트 → 해당 컨텍스트의 `adapter/in/web`
 - 새 영속화/쿼리 → 해당 컨텍스트의 `adapter/out/persistence` (JPA + QueryDSL + MapStruct). app 테이블(member·community·duo) DDL 은 `module/app/application/src/main/resources/db/migration/app` 에 새 버전으로
 - 챔피언 통계 OLAP 쿼리 → `module/domain/championstats/adapter/out/bigquery`
-- 외부 Riot/OAuth API 호출 → `module/domain/summoner/adapter/out/client`, `module/domain/member/adapter/out/oauth`
+- 외부 API 호출 → lol-repository 내부 API `module/domain/duo/adapter/out/client`, OAuth/RSO `module/domain/member/adapter/out/oauth`. Riot 데이터 테이블에 엔티티·쿼리를 만들지 않는다 — 필요한 값은 lol-repository API 로
 - 모듈 조립/프로파일/실행 → [`app/application/CLAUDE.md`](module/app/application/CLAUDE.md)
 
 ## 빌드 / 실행
 
 ```bash
-./gradlew bootRun -Dspring.profiles.active=local   # Postgres/Redis/RabbitMQ Docker 필요
+./gradlew bootRun -Dspring.profiles.active=local   # Postgres/Redis Docker 필요 (duo 글 생성은 lol-repository 내부 포트 8112)
 ./gradlew test                                     # 전체 테스트
 ./gradlew compileJava compileTestJava              # Docker 없이 전 모듈 컴파일 검증 (리팩토링용)
 ./gradlew archTest                                 # Docker 없이 ArchUnit(*ArchitectureTest) 전 모듈 실행
@@ -52,7 +48,7 @@ Spring Boot 3.3 + JDK 21, Riot API 기반 League of Legends 전적 검색 백엔
 - API 응답: `ResponseEntity<ApiResponse<T>>`, RESTful 상태 코드 (POST 201 / GET·PUT 200 / DELETE 204)
 - 도메인 규칙은 도메인 객체 `validate*` guard 가 직접 던진다 (서비스에서 boolean+throw 금지)
 - ReadModel 변환은 `*ReadModel.of(domain)` 정적 팩토리에서만
-- 매직 스트링 금지: `OAuthProvider.RIOT.name()`, `QueueType.RANKED_SOLO_5x5.name()` 등 enum 사용
+- 매직 스트링 금지: `OAuthProvider.RIOT.name()`, `DuoPostStatus.ACTIVE.name()` 등 enum 사용
 - Redis 값 직렬화는 `GenericJackson2JsonRedisSerializer`(`@class` FQN 포함) — 캐시되는 값 클래스 이동/리네임 시 기존 엔트리 역직렬화 실패, 배포 때 해당 키 flush
 - 커밋 메시지: `<type>: <한글 설명>` (타입 `feat`, `fix`, `refactor`, `docs`, `chore`). **이슈 키 넣지 않음**
 - Linear 이슈 연결: **PR 본문**에 `Closes MP-<번호>` (이슈 일부만 다루면 `Part of MP-<번호>`). 키만 적으면 연결되지 않는다 — `docs/workflow.md` 5절

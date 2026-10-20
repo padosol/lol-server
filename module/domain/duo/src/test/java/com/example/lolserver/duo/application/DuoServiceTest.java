@@ -47,6 +47,7 @@ import java.util.function.Supplier;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -154,7 +155,7 @@ class DuoServiceTest {
                     new MostChampion(1, "Ahri", 50, 30, 20));
             RecentGameSummary recentGameSummary = new RecentGameSummary(12, 8, List.of(
                     new RecentGameSummary.PlayedChampion(1, "Ahri")));
-            RiotAccountStats stats = new RiotAccountStats(tierInfo, mostChampions, recentGameSummary);
+            RiotAccountStats stats = new RiotAccountStats("Hide on bush", "KR1", tierInfo, mostChampions, recentGameSummary);
 
             givenLockPassThrough();
             given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
@@ -200,7 +201,9 @@ class DuoServiceTest {
             assertThat(result.getStatus()).isEqualTo("ACTIVE");
             assertThat(result.getMostChampions()).hasSize(1);
             assertThat(result.getRecentGameSummary().wins()).isEqualTo(12);
-            then(duoPostPersistencePort).should().save(any(DuoPost.class));
+            // 매칭 상대에게 보여 줄 Riot ID 도 통계와 함께 스냅샷으로 저장한다
+            then(duoPostPersistencePort).should().save(argThat(post ->
+                    "Hide on bush".equals(post.getGameName()) && "KR1".equals(post.getTagLine())));
             then(duoLockPort).should()
                     .executeWithLock(eq("duo:member:post:" + memberId), any());
         }
@@ -219,7 +222,7 @@ class DuoServiceTest {
                     .build();
 
             RiotAccountStats stats = new RiotAccountStats(
-                    TierInfo.UNRANKED, Collections.emptyList(),
+                    "Hide on bush", "KR1", TierInfo.UNRANKED, Collections.emptyList(),
                     new RecentGameSummary(0, 0, Collections.emptyList()));
 
             givenLockPassThrough();
@@ -280,7 +283,7 @@ class DuoServiceTest {
                     .memo("듀오 구합니다")
                     .build();
             RiotAccountStats stats = new RiotAccountStats(
-                    new TierInfo("GOLD", "I", 50), Collections.emptyList(),
+                    "Hide on bush", "KR1", new TierInfo("GOLD", "I", 50), Collections.emptyList(),
                     new RecentGameSummary(0, 0, Collections.emptyList()));
             List<DuoPost> savedPosts = Collections.synchronizedList(new ArrayList<>());
 

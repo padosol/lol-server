@@ -70,7 +70,7 @@ class AppSchemaMigrationTest {
             flyway("postgresql-local.yml").migrate();
 
             // then
-            assertThat(appliedVersions()).containsExactly("1", "2");
+            assertThat(appliedVersions()).containsExactly("1", "2", "3");
             assertThat(appTableCount()).isEqualTo(APP_TABLE_COUNT);
             assertThat(queryInt("SELECT count(*) FROM app.community_category")).isEqualTo(8);
             validateAppEntities();
@@ -86,7 +86,7 @@ class AppSchemaMigrationTest {
             flyway("postgresql-local.yml").migrate();
 
             // then
-            assertThat(appliedVersions()).containsExactly("1", "2");
+            assertThat(appliedVersions()).containsExactly("1", "2", "3");
             assertThat(tableExists("app", "member")).isTrue();
             validateAppEntities();
         }
@@ -108,7 +108,7 @@ class AppSchemaMigrationTest {
             assertThat(schemaExists("app")).isFalse();
         }
 
-        @DisplayName("이동 직후(테이블만 있고 이력 없음)면 V1 을 baseline 으로 기록하고 V2 만 적용하며, 새 객체도 lol_server 소유다")
+        @DisplayName("이동 직후(테이블만 있고 이력 없음)면 V1 을 baseline 으로 기록하고 V2 부터 적용하며, 새 객체도 lol_server 소유다")
         @Test
         void baselinesMovedSchemaAndAppliesV2() throws Exception {
             // given — 운영(V35) 상태의 app 테이블이 02-move-schema.sql 로 옮겨진 상태
@@ -118,7 +118,8 @@ class AppSchemaMigrationTest {
             flyway("postgresql-prod.yml").migrate();
 
             // then
-            assertThat(historyTypes()).containsExactly(Map.entry("1", "BASELINE"), Map.entry("2", "SQL"));
+            assertThat(historyTypes()).containsExactly(
+                    Map.entry("1", "BASELINE"), Map.entry("2", "SQL"), Map.entry("3", "SQL"));
             assertThat(appTableCount()).isEqualTo(APP_TABLE_COUNT);
             assertThat(appObjectsNotOwnedByLolServer()).isEmpty();
             assertThat(tableExists("public", "flyway_schema_history")).isFalse();
@@ -135,7 +136,8 @@ class AppSchemaMigrationTest {
             flyway("postgresql-prod.yml").migrate();
 
             // then
-            assertThat(historyTypes()).containsExactly(Map.entry("1", "BASELINE"), Map.entry("2", "SQL"));
+            assertThat(historyTypes()).containsExactly(
+                    Map.entry("1", "BASELINE"), Map.entry("2", "SQL"), Map.entry("3", "SQL"));
             assertThat(appObjectsNotOwnedByLolServer()).isEmpty();
             validateAppEntities();
         }
@@ -181,7 +183,7 @@ class AppSchemaMigrationTest {
     /** 운영과 같은 search_path·네이밍 전략으로 app 엔티티만 ddl-auto=validate 한다. 불일치면 예외. */
     private static void validateAppEntities() {
         var dataSource = new DriverManagerDataSource(
-                POSTGRES.getJdbcUrl() + "&currentSchema=app,public",
+                POSTGRES.getJdbcUrl() + "&currentSchema=app",
                 POSTGRES.getUsername(), POSTGRES.getPassword());
         var emf = new LocalContainerEntityManagerFactoryBean();
         emf.setDataSource(dataSource);
@@ -189,7 +191,6 @@ class AppSchemaMigrationTest {
         emf.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
         emf.setJpaPropertyMap(Map.of(
                 "hibernate.hbm2ddl.auto", "validate",
-                "hibernate.hbm2ddl.jdbc_metadata_extraction_strategy", "individually",
                 "hibernate.physical_naming_strategy", CamelCaseToUnderscoresNamingStrategy.class.getName(),
                 "hibernate.implicit_naming_strategy", SpringImplicitNamingStrategy.class.getName()));
         emf.afterPropertiesSet();

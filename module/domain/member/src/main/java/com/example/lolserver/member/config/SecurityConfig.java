@@ -94,8 +94,9 @@ public class SecurityConfig {
      *
      * <p>{@code /api/v1/**} 를 일괄 {@code permitAll} 하면 회원·커뮤니티·듀오를 {@code /api/v1}
      * 로 옮기는 순간 아래 {@code authenticated()} 규칙이 모두 무력화된다. 그래서 공개 범위를
-     * 최상위 리소스 단위로 명시한다. 옛 platformId-prefix 경로({@code /api/v1/*}{@code /rank} 등)는
+     * 최상위 리소스 단위로 명시한다. 옛 platformId-prefix 경로({@code /api/v1/*}{@code /champion-stats})는
      * 와일드카드가 다른 리소스를 덮지 않도록 회원·커뮤니티·듀오 규칙 <b>뒤에</b> 둔다.
+     * 그 밖의 Riot 데이터(소환사·전적·랭킹·게임 데이터)는 lol-repository 가 받으므로 여기 규칙이 없다.
      */
     private void authorizeRequests(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>
@@ -110,14 +111,8 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // Riot 데이터 — 공개 조회
-                .requestMatchers(HttpMethod.GET,
-                        "/api/v1/summoners/**", "/api/v1/matches/**",
-                        "/api/v1/rankings/**", "/api/v1/champion-stats/**",
-                        "/api/v1/game-data/**").permitAll()
-                // 갱신 요청은 비로그인 사용자도 할 수 있다 (옛 GET .../renewal 과 동일)
-                .requestMatchers(HttpMethod.POST,
-                        "/api/v1/summoners/*/renewal").permitAll()
+                // 챔피언 통계 — 공개 조회
+                .requestMatchers(HttpMethod.GET, "/api/v1/champion-stats/**").permitAll()
 
                 // 커뮤니티
                 .requestMatchers(HttpMethod.GET,
@@ -149,16 +144,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/**", "/api/v1/admin/**")
                         .hasRole("ADMIN")
 
-                // 옛 Riot 데이터 경로 — lol-ui 전환 후 MP-156 에서 제거
-                .requestMatchers(HttpMethod.GET,
-                        "/api/v1/*/rank", "/api/v1/*/tier-cutoffs/**",
-                        "/api/v1/*/champion-stats/**", "/api/v1/*/champion/**",
-                        "/api/v1/*/spectator/**", "/api/v1/*/summoners/**",
-                        "/api/v1/*/matches/**", "/api/v1/match/timeline/**",
-                        "/api/v1/leagues/**", "/api/v1/rank/champions",
-                        "/api/v1/versions/**", "/api/v1/seasons/**",
-                        "/api/v1/patch-notes/**", "/api/v1/queue-tab")
-                        .permitAll()
+                // 옛 챔피언 통계 경로 — lol-ui 전환 후 MP-156 에서 제거
+                .requestMatchers(HttpMethod.GET, "/api/v1/*/champion-stats/**").permitAll()
                 .anyRequest().authenticated();
     }
 

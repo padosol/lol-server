@@ -24,6 +24,8 @@ public class DuoPost {
     private Long id;
     private Long memberId;
     private String puuid;
+    private String gameName;
+    private String tagLine;
     private Lane primaryLane;
     private Lane desiredLane;
     private boolean hasMicrophone;
@@ -48,6 +50,8 @@ public class DuoPost {
         return DuoPost.builder()
                 .memberId(memberId)
                 .puuid(puuid)
+                .gameName(stats.gameName())
+                .tagLine(stats.tagLine())
                 .primaryLane(primaryLane)
                 .desiredLane(desiredLane)
                 .hasMicrophone(hasMicrophone)

@@ -23,27 +23,26 @@ lol-server 는 **app 스키마(회원·커뮤니티·듀오)만 소유**한다. 
 
 1. **지금 계정으로 새 이미지를 띄우면 app 객체 소유자가 어긋난다** — Flyway 가 만드는 `app.flyway_schema_history`·V2 이후 테이블이 접속 계정(슈퍼유저) 소유가 되고, 나중에 `lol_server` 로 전환하면 거기에 쓰지 못한다.
    → prod `spring.flyway.init-sqls: SET ROLE lol_server`. 접속 계정은 슈퍼유저이거나 `lol_server` 의 멤버여야 한다 (`GRANT lol_server TO <계정>`). 덤으로 app 체인이 슈퍼유저 권한에 기대는 마이그레이션을 만들면 바로 실패한다.
-2. **그 `SET ROLE` 이 앱 커넥션 풀에 남으면 기동 실패** — Spring Boot Flyway 는 기본적으로 앱 DataSource(Hikari)를 빌려 쓰므로, `SET ROLE` 이 걸린 커넥션이 풀로 돌아가 Hibernate 가 `lol_server` 로 app 밖 테이블을 조회한다 (`permission denied for table <app 밖 테이블>`, 리허설에서 재현).
+2. **그 `SET ROLE` 이 앱 커넥션 풀에 남는다** — Spring Boot Flyway 는 기본적으로 앱 DataSource(Hikari)를 빌려 쓰므로, `SET ROLE` 이 걸린 커넥션이 풀로 돌아가 일부 앱 요청이 `lol_server` 권한으로 돈다. riot 모듈이 있던 이미지에서는 Hibernate 가 그 커넥션으로 app 밖 테이블을 조회하다 기동이 깨졌다 (`permission denied for table <app 밖 테이블>`, 리허설에서 재현).
    → prod `spring.flyway.user`/`password` 지정 — Spring Boot 가 Flyway 전용 커넥션(풀 없음)을 따로 만든다. `AppSchemaMigrationTest` 가 "init-sqls 가 있으면 user 도 있어야 한다"를 강제한다.
-3. **Hibernate `ddl-auto: validate` 가 app 밖 테이블을 못 찾음 → 기동 실패** — app 밖을 직접 읽는 과도기 모듈의 엔티티가 남아 있는 동안, 기본 전략(`grouped`)은 현재 스키마(`app`) 하나만 본다.
-   → `hibernate.hbm2ddl.jdbc_metadata_extraction_strategy: individually` + `currentSchema=app,public`. 그 모듈이 빠지면 둘 다 되돌린다 (5절). 현재 스키마에서 못 찾은 테이블은 모든 스키마에서 찾으므로 같은 이름의 테이블이 두 스키마 이상에 있으면 실패한다 (`More than one table found`).
+3. **app 밖 테이블에 엔티티를 만들면 기동 실패** — Hibernate `ddl-auto: validate` 는 현재 스키마(`currentSchema=app`)만 본다. app 밖을 직접 읽던 riot 모듈(gamedata·leaderboard·summoner·match)이 빠지면서 과도기 설정(`individually` + `currentSchema=app,public`)도 지웠다.
+   → app 밖 데이터는 엔티티가 아니라 lol-repository API 로 받는다.
 4. **이동 후 공유 체인(lol-db-schema)이 V36 이후의 app 마이그레이션을 적용하면 실패** — V36(`community_image`)은 `member`·`community_post` 를 FK 로 참조하는데 그 테이블이 `public` 에 없다 (`relation "member" does not exist`, 리허설에서 재현). app 마이그레이션은 이 레포 체인으로 옮겨졌으니 공유 체인을 쓰는 쪽(lol-repository)은 V35 에 머물거나 자기 체인으로 옮겨야 한다.
-5. (로컬 전용) local 프로필의 `db/seed/season-local.sql` 은 app 밖 테이블에 쓴다 (과도기 gamedata 모듈용). 로컬은 슈퍼유저로 접속한다.
 
 ## 3. 단계
 
 | 단계 | 내용 | 언제 | lol-server 접속 계정 |
 |---|---|---|---|
 | **A. app 스키마 이동** (MP-136) | `01` → `02` → 새 이미지 롤아웃 | 지금. develop 은 MP-144 이후 A 없이는 prod 에 배포할 수 없다 (가드) | 지금 계정 그대로 — Flyway 만 `SET ROLE lol_server` |
-| **B. `lol_server` 계정 전환** (MP-127 · MP-162) | 자격증명 교체 | lol-server 에서 app 밖을 읽는 코드가 모두 빠진 뒤 | `lol_server` |
+| **B. `lol_server` 계정 전환** (MP-127 · MP-162) | 자격증명 교체 | riot 모듈을 지운 이미지가 운영에 롤아웃된 뒤 | `lol_server` |
 
-나누는 이유: `lol_server` 는 app 밖 권한이 없으므로, app 밖 테이블을 직접 읽는 모듈(gamedata·leaderboard·summoner·match, duo 의 summoner·match 호출)이 남아 있을 때 전환하면 그 API 가 `permission denied` 로 깨진다. 지금 계정은 그 모듈이 빠질 때까지 과도기로만 유지한다.
+나누는 이유: `lol_server` 는 app 밖 권한이 없으므로, app 밖 테이블을 직접 읽는 모듈(gamedata·leaderboard·summoner·match, duo 의 summoner·match 호출)이 들어 있는 이미지로 전환하면 그 API 가 `permission denied` 로 깨진다. 지금 계정은 그 이미지가 운영에서 빠질 때까지 과도기로만 유지한다.
 
 ## 4. A — app 스키마 이동 (MP-136)
 
 ### 4.1 사전 조건
 
-- [ ] lol-server 새 이미지(app 체인 + 가드 + `SET ROLE` + Flyway 전용 커넥션 + `currentSchema=app,public` + `individually`) 빌드 완료, **아직 롤아웃하지 않음** — 이 이미지는 이동 전 DB 에서는 의도적으로 기동에 실패한다 (`create-schemas: false` + `db/migration-guard`)
+- [ ] lol-server 새 이미지(app 체인 + 가드 + `SET ROLE` + Flyway 전용 커넥션) 빌드 완료, **아직 롤아웃하지 않음** — 이 이미지는 이동 전 DB 에서는 의도적으로 기동에 실패한다 (`create-schemas: false` + `db/migration-guard`)
 - [ ] 지금 접속 계정이 슈퍼유저이거나 `lol_server` 멤버 (2절 1)
 - [ ] lol-db-schema 에 app 마이그레이션이 더 추가되지 않았음
 - [ ] 직전 pg_dump 백업 (데이터는 바뀌지 않지만 카탈로그 변경이므로)
@@ -76,19 +75,19 @@ lol-server 는 **app 스키마(회원·커뮤니티·듀오)만 소유**한다. 
 
 ## 5. B — `lol_server` 계정 전환 (MP-127 · MP-162)
 
-**사전 조건**: lol-server 에 app 밖 테이블을 읽는 코드가 없다 — JPA 엔티티가 member·community·duo 패키지뿐이고, duo 가 계정 정보를 lol-repository 내부 API 로 받는다 (MP-149, MP-157~160).
+**사전 조건**: 운영 lol-server 이미지에 app 밖 테이블을 읽는 코드가 없다 — riot 모듈(gamedata·leaderboard·summoner·match)을 지우고 duo 가 Riot 계정 정보를 lol-repository 내부 API 로 받는 이미지(MP-149, MP-157·159·160)가 롤아웃돼 있다. 그 이미지는 `currentSchema=app` 만 쓴다.
 
 1. lol-deploy: `app/templates/external-secrets.yaml` 에 lol-server 키 추가, `lol-server.yaml` 의 `DB_USERNAME`/`DB_PASSWORD` 를 `lol_server` 로 교체. `lol-repository.yaml` 은 건드리지 않는다.
 2. 롤아웃 → Flyway `Schema "app" is up to date` → `Started LolServerApplication`.
 3. 확인: `SELECT usename, application_name, count(*) FROM pg_stat_activity GROUP BY 1, 2;` 로 `lol_server` 접속, 로그 `permission denied` 0건, `03-verify.sql` 통과.
-4. 정리 PR: `currentSchema=app` 만 남기고 `individually` 를 지운다. `init-sqls`·Flyway 전용 커넥션은 남겨도 무해하다 (자기 자신으로 `SET ROLE`).
+4. `init-sqls`·Flyway 전용 커넥션은 남겨도 무해하다 (자기 자신으로 `SET ROLE`).
 5. 롤백: lol-deploy 자격증명 키를 되돌리기만 하면 된다.
 
 ## 6. 로컬 DB
 
 local 프로필은 슈퍼유저로 접속하고 기동하며 app 스키마를 직접 만든다 (`create-schemas` 기본값 true, 가드·`SET ROLE` 없음 — 로컬엔 `lol_server` 계정이 없다).
 
-- 빈 DB: lol-server 가 app 에 V1·V2 를 적용한다. app 밖을 직접 읽는 과도기 모듈이 남아 있는 동안은 lol-repository 를 한 번 띄워 그 테이블을 만들어야 Hibernate 검증이 통과한다.
+- 빈 DB: lol-server 가 app 에 V1 부터 적용한다. lol-repository 없이 기동한다 (듀오 글·신청 생성만 lol-repository 내부 API 가 필요하다).
 - 예전 DB(lol-repository 가 public 에 전부 만든 것): lol-server 가 app 에 새 테이블을 만든다. public 의 회원·게시글 등은 쓰이지 않는 사본으로 남는다 (search_path 상 app 이 먼저). 로컬 데이터를 이어 쓰려면 `INSERT INTO app.<t> SELECT * FROM public.<t>` 후 시퀀스를 맞춘다.
 - lol-repository 가 공유 체인으로 public 에 app 테이블까지 만드는 동안은 로컬에서 항상 걸리므로 "public 에 app 테이블이 있으면 거부" 가드는 prod 에만 둔다.
 
@@ -99,7 +98,7 @@ docs/db-split/rehearse.sh          # Postgres 16 컨테이너(localhost:55432)�
 KEEP=1 docs/db-split/rehearse.sh   # 끝난 뒤 DB 를 남김
 ```
 
-이동 전 상태는 app 체인 V1 을 `public` 에 적용해 만든다 (운영 V35 의 app 테이블과 같다 — 1절). app 밖 객체는 이름 없는 테이블 하나(`other_service`)로 대신해, 이동이 그 테이블을 잠그지 않는지와 `lol_server` 가 그 테이블을 읽지 못하는지를 본다. 실제 jar 기동은 app 밖을 읽는 과도기 모듈 때문에 그 테이블들이 있는 DB 가 필요하다 — 아래 2026-10-20 기동 확인은 lol-repository 가 만든 운영과 같은 DB 에서 했다.
+이동 전 상태는 app 체인 V1 을 `public` 에 적용해 만든다 (운영 V35 의 app 테이블과 같다 — 1절). app 밖 객체는 이름 없는 테이블 하나(`other_service`)로 대신해, 이동이 그 테이블을 잠그지 않는지와 `lol_server` 가 그 테이블을 읽지 못하는지를 본다. 아래 2026-10-20 jar 기동 확인은 lol-repository 가 만든 운영과 같은 DB 에서 했다.
 
 2026-10-20 리허설 (Postgres 16):
 
@@ -113,3 +112,5 @@ KEEP=1 docs/db-split/rehearse.sh   # 끝난 뒤 DB 를 남김
 | `01-roles.sql` 비밀번호 환경변수 없음 | 0 이 아닌 종료 코드, 변경 없음 |
 | lol-server jar, 운영과 같은 DB(app 밖 테이블이 public 에 있음) → 01 → 02, 슈퍼유저 접속 + prod Flyway 설정 | Flyway 를 앱 풀로 돌리면 app 밖 테이블에서 `permission denied` 로 실패(2절 2) / 전용 커넥션이면 baseline → V2 → `Started LolServerApplication`, app 객체 27개 `lol_server` 소유 |
 | 이동 후 공유 체인 V36 적용 (2절 4) | `relation "member" does not exist` 로 실패·롤백 |
+| riot 모듈 삭제 후 jar, 같은 DB → 01 → 02, 슈퍼유저 + prod Flyway 설정 | baseline → V2 → V3 → `Started LolServerApplication`, app 객체 27개 `lol_server` 소유 |
+| 이어서 `lol_server` 계정으로 jar 기동 (B) | `Schema "app" is up to date` → `Started LolServerApplication`, 듀오 목록 200, `03` 통과 |

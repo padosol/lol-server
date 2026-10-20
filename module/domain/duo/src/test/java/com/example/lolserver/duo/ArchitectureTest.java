@@ -11,10 +11,10 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 /**
  * duo 컨텍스트의 헥사고날 레이어 + 컨텍스트 경계 규칙.
  *
- * <p>duo 는 member / summoner / match 에 의존하는 하위(다운스트림) 컨텍스트다.
+ * <p>duo 는 member 에 의존하는 하위(다운스트림) 컨텍스트다.
  * 경계 정책(순수 경계): 상위 컨텍스트는 application.port.in(UseCase) + application.model(ReadModel)
  * + application.command(입력 DTO) 로만 의존 가능하며, 상위의 domain / adapter / application.port.out
- * 에는 의존하지 않는다.
+ * 에는 의존하지 않는다. Riot 계정 정보는 lol-repository 내부 API 로 받는다(adapter.out.client).
  */
 class ArchitectureTest {
 
@@ -66,21 +66,15 @@ class ArchitectureTest {
 
     @Test
     void 상위컨텍스트의_내부에_의존하지_않는다() {
-        // 규칙: member/summoner/match 는 application.port.in + application.model + application.command 로만
-        // 의존 가능. 각 상위 컨텍스트의 domain / adapter / application.port.out 직접 의존은 금지한다.
+        // 규칙: member 는 application.port.in + application.model + application.command 로만
+        // 의존 가능. 상위 컨텍스트의 domain / adapter / application.port.out 직접 의존은 금지한다.
         ArchRule rule = noClasses()
                 .that().resideInAPackage("..duo..")
                 .should().dependOnClassesThat()
                 .resideInAnyPackage(
                         "com.example.lolserver.member.domain..",
                         "com.example.lolserver.member.adapter..",
-                        "com.example.lolserver.member.application.port.out..",
-                        "com.example.lolserver.summoner.domain..",
-                        "com.example.lolserver.summoner.adapter..",
-                        "com.example.lolserver.summoner.application.port.out..",
-                        "com.example.lolserver.match.domain..",
-                        "com.example.lolserver.match.adapter..",
-                        "com.example.lolserver.match.application.port.out..")
+                        "com.example.lolserver.member.application.port.out..")
                 .as("duo 는 상위 컨텍스트의 내부(domain/adapter/port.out)가 아닌 port.in + model 로만 의존한다");
         rule.check(classes);
     }
@@ -91,11 +85,9 @@ class ArchitectureTest {
                 .that().resideInAPackage("..duo..")
                 .should().dependOnClassesThat()
                 .resideInAnyPackage(
-                        "com.example.lolserver.leaderboard..",
-                        "com.example.lolserver.gamedata..",
                         "com.example.lolserver.championstats..",
                         "com.example.lolserver.community..")
-                .as("duo 는 member/summoner/match 외 다른 컨텍스트에 의존하지 않는다");
+                .as("duo 는 member 외 다른 컨텍스트에 의존하지 않는다");
         rule.check(classes);
     }
 }

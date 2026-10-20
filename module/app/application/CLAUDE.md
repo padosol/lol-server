@@ -12,16 +12,15 @@ Spring Boot 진입점 + 컴포지션 루트. **모든 인프라 모듈을 implem
 
 - `LolServerApplication.java` — `@SpringBootApplication @EnableAsync @EnableScheduling` 메인
 - `config/ExecutorConfig.java` — `taskExecutor` (`ThreadPoolTaskExecutor`), `schedulerTask` (`ThreadPoolTaskScheduler`) 빈
-- `config/CacheConfig.java` — `@EnableCaching`, `ConcurrentMapCacheManager("rotation")` (in-memory, 노드 로컬)
-- `config/CacheScheduler.java` — `@Scheduled` cron 으로 로테이션 캐시 evict
-- `src/main/resources/application.yml` — 프로파일별 (`local`/`prod`) 모듈 설정 import + RabbitMQ/Kafka AutoConfiguration exclude
+- `config/DuoPostExpirationScheduler.java`, `config/OrphanImageCleanupScheduler.java` — 듀오 글 만료·고아 이미지 정리 `@Scheduled`
+- `src/main/resources/application-{local,prod}.yml` — 프로파일별 모듈 yaml import 카탈로그
 
 ## Key Files
 
 - `LolServerApplication.java` — main, 패키지 베이스 (`com.example.lolserver`) 컴포넌트 스캔의 출발점
-- `src/main/resources/application.yml` — 프로파일별 모듈 yaml import 카탈로그 + `message.broker` 기본값 (`rabbitmq`)
-- `config/ExecutorConfig.java` — 일반 `@Async`/`@Scheduled` 용 풀. (Virtual Thread 풀 `queryExecutor` 는 `infra:persistence:postgresql:AsyncQueryConfig` 에 별도 정의)
-- `config/CacheConfig.java` — `rotation` 캐시 정의 위치. 신규 캐시 추가 시 여기 cacheNames 추가
+- `src/main/resources/application-{local,prod}.yml` — 프로파일별 모듈 yaml import 카탈로그
+- `src/main/resources/client-repository-{local,prod}.yml` — lol-repository 내부 API 주소 (`lol.repository.internal-url`, prod `LOL_REPOSITORY_INTERNAL_URL` = 내부 포트 8081)
+- `config/ExecutorConfig.java` — 일반 `@Async`/`@Scheduled` 용 풀. (Virtual Thread 풀 `queryExecutor` 는 `common:config:AsyncQueryConfig` 에 별도 정의)
 - `build.gradle` — 모듈 결합 spec 의 single source of truth (`bootJar { enabled = true }`)
 - `src/main/resources/db/migration/app` — app 스키마(member·community·duo) Flyway 체인. lol-server 가 가진 DDL 은 이것뿐이고 app 밖 데이터는 lol-repository API 로 받는다. `AppSchemaMigrationTest`(Testcontainers)가 엔티티와 대조. 운영 적용 절차는 `docs/db-split/README.md`
 
@@ -38,10 +37,8 @@ Spring Boot 진입점 + 컴포지션 루트. **모든 인프라 모듈을 implem
   ✅ `app/application/build.gradle` 에 `runtimeOnly 'org.postgresql:postgresql'` 처럼 직접 추가 (이미 패턴 있음)
 - ❌ `@SpringBootApplication` 패키지보다 위쪽에 `@Component` 추가 — 컴포넌트 스캔 누락
   ✅ 모든 어댑터/서비스는 `com.example.lolserver.*` 하위에 둘 것 (멀티 모듈이지만 베이스 패키지 통일)
-- ❌ Kafka/RabbitMQ 둘 다 활성화 — 같은 `*MessagePort` 에 여러 빈 등록
-  ✅ `application.yml` 의 `message.broker` 가 `kafka` 또는 `rabbitmq` 중 하나만 — 어댑터 측 `@ConditionalOnProperty` 로 자동 분기
-- ❌ broker 어댑터 미존재 환경에서 부팅 — `RabbitAutoConfiguration` 이 connection 시도하다 실패
-  ✅ `application.yml` 의 `spring.autoconfigure.exclude` 에 두 AutoConfiguration 모두 명시 (이미 처리됨)
+- ❌ Riot 데이터(소환사·전적·랭킹·게임 데이터) 테이블에 엔티티·쿼리 추가 — lol-server 는 app 스키마 밖에 DB 권한이 없다
+  ✅ lol-repository API 로 받는다 (duo 는 `/internal/v1/**`). Hibernate validate 도 현재 스키마(`app`)만 본다
 - ❌ 적용된 app 마이그레이션(V1·V2…) 수정 — 체크섬 불일치로 운영 기동 실패
   ✅ 새 버전(V3~)으로 추가. V1 은 운영에선 baseline 이라 실행되지 않으니 빈 DB 전용
 - ❌ 비즈니스 로직을 `LolServerApplication` 또는 이 모듈의 config 에 작성 — 헥사고날 위반
@@ -49,9 +46,9 @@ Spring Boot 진입점 + 컴포지션 루트. **모든 인프라 모듈을 implem
 
 ## Cross-Module Dependencies
 
-- depends on (implementation): 모든 모듈 (`core:lol-server-domain`, `core:enum`, `infra:api`, `infra:client:lol-repository`, `infra:client:oauth`, `infra:message:rabbitmq`, `infra:message:kafka`, `infra:persistence:postgresql`, `infra:persistence:redis`, `infra:persistence:bigquery`, `support:logging`)
+- depends on (implementation): 모든 모듈 (`common`, `shared`, `support:logging`, `domain:{championstats,member,community,duo}`) — 단일 진실원천은 `build.gradle`
 - consumed by: 없음 (terminal, bootJar 산출)
-- 빌드: `./gradlew bootRun -Dspring.profiles.active=local` — Postgres/Redis/RabbitMQ 등 Docker 서비스 필요
+- 빌드: `./gradlew bootRun -Dspring.profiles.active=local` — Postgres/Redis Docker 서비스 필요
 
 ## Quick Commands
 
