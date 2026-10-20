@@ -1,9 +1,12 @@
 package com.example.lolserver.duo.config;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 
 import java.time.Duration;
 
@@ -16,11 +19,20 @@ import java.time.Duration;
  */
 @Getter
 @Setter
+@Validated
 @Component
 @ConfigurationProperties(prefix = "lol.repository")
 public class LolRepositoryClientProperties {
 
-    /** 내부 포트 주소 (prod: {@code http://lol-repository:8081}). 공개 포트는 {@code /internal} 을 404 로 받는다. */
+    /**
+     * 내부 포트 주소 (prod: {@code http://lol-repository:8081}). 공개 포트는 {@code /internal} 을 404 로 받는다.
+     *
+     * <p>prod 에서 {@code LOL_REPOSITORY_INTERNAL_URL} 이 빠지면 바인딩은 {@code ${...}} 를 글자 그대로 넣고 기동한다.
+     * 그러면 duo 글·신청 생성만 500 으로 깨지므로, http(s) 주소가 아니면 기동에서 막는다.
+     */
+    @NotBlank
+    @Pattern(regexp = "https?://[^\\s${}]+",
+            message = "http(s) 주소여야 한다 — prod 는 LOL_REPOSITORY_INTERNAL_URL 환경변수")
     private String internalUrl;
 
     private Duration connectTimeout = Duration.ofSeconds(1);
