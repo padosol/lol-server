@@ -106,12 +106,13 @@ class AppSchemaMigrationTest {
             assertThat(schemaExists("app")).isFalse();
         }
 
-        @DisplayName("이동 직후(테이블만 있고 이력 없음)면 V1 을 baseline 으로 기록하고 V2 만 적용한다")
+        @DisplayName("app 만 옮긴 직후(이력 없음, Riot 테이블은 public 에 남음)면 V1 을 baseline 으로 기록하고 V2 만 적용한다")
         @Test
         void baselinesMovedSchemaAndAppliesV2() throws Exception {
-            // given — 운영(V35) 상태의 app 테이블이 02-move-schema.sql 로 옮겨진 상태
+            // given — 운영(V35) 상태의 app 테이블만 02-move-schema.sql 로 옮겨지고 Riot 테이블은 public 에 남은 상태
             execute("CREATE SCHEMA app;");
             runScript("app", "V1__init_app_schema.sql");
+            execute("CREATE TABLE public.match (match_id VARCHAR(30) PRIMARY KEY);");
 
             // when
             flyway("postgresql-prod.yml").migrate();
@@ -119,6 +120,7 @@ class AppSchemaMigrationTest {
             // then
             assertThat(historyTypes()).containsExactly(Map.entry("1", "BASELINE"), Map.entry("2", "SQL"));
             assertThat(appTableCount()).isEqualTo(APP_TABLE_COUNT);
+            assertThat(tableExists("public", "flyway_schema_history")).isFalse();
             validateAppEntities();
         }
 
