@@ -4,6 +4,7 @@ lol-server 는 **app 스키마(회원·커뮤니티·듀오)만 소유**한다. 
 
 | 파일 | 용도 | 실행 시점 |
 |---|---|---|
+| [`00-community-image-public.sql`](00-community-image-public.sql) | 중간 릴리스(develop `50feadc1`)용 — 운영 `public` 에 `community_image` 를 app 체인 V2 와 같은 DDL 로 생성 (멱등, A 뒤에는 실패) | 0단계. A 를 마치면 지운다 |
 | [`01-roles.sql`](01-roles.sql) | `lol_server` 계정 (search_path `app`, app 밖 권한 없음, 멱등) | A-1 |
 | [`02-move-schema.sql`](02-move-schema.sql) | app 테이블만 `public` → `app` 이동 + 소유자 `lol_server`, 단일 트랜잭션, app 테이블 잠금 선점 + 총 대기 5초 상한 | A-3 |
 | [`02-rollback.sql`](02-rollback.sql) | 역방향 이동 + 소유자 복구 | A 롤백 |
@@ -33,16 +34,35 @@ lol-server 는 **app 스키마(회원·커뮤니티·듀오)만 소유**한다. 
 
 | 단계 | 내용 | 언제 | lol-server 접속 계정 |
 |---|---|---|---|
-| **A. app 스키마 이동** (MP-136) | `01` → `02` → 새 이미지 롤아웃 | 지금. develop 은 MP-144 이후 A 없이는 prod 에 배포할 수 없다 (가드) | 지금 계정 그대로 — Flyway 만 `SET ROLE lol_server` |
+| **0. 중간 릴리스** (develop `50feadc1`) | `00` → 릴리스 롤아웃 (3.1) | 지금. A·lol-repository 없이 된다 | 지금 계정 그대로 |
+| **A. app 스키마 이동** (MP-136) | `01` → `02` → 새 이미지(develop `6d6fcaf7`) 롤아웃 | 점검 창. develop 은 MP-144 이후 A 없이는 prod 에 배포할 수 없다 (가드). develop HEAD 는 #169 로 riot API 가 빠져 Ingress·lol-ui 전환 전에는 못 올리므로, A 는 riot 모듈이 남은 마지막 커밋 `6d6fcaf7` 로 한다 | 지금 계정 그대로 — Flyway 만 `SET ROLE lol_server` |
 | **B. `lol_server` 계정 전환** (MP-127 · MP-162) | 자격증명 교체 | riot 모듈을 지운 이미지가 운영에 롤아웃된 뒤 | `lol_server` |
 
 나누는 이유: `lol_server` 는 app 밖 권한이 없으므로, app 밖 테이블을 직접 읽는 모듈(gamedata·leaderboard·summoner·match, duo 의 summoner·match 호출)이 들어 있는 이미지로 전환하면 그 API 가 `permission denied` 로 깨진다. 지금 계정은 그 이미지가 운영에서 빠질 때까지 과도기로만 유지한다.
+
+### 3.1 0단계 — 중간 릴리스 (develop `50feadc1`)
+
+lol-repository·스키마 이동 없이 지금 운영에 올릴 수 있는 가장 작은 상태다. 커뮤니티 이미지 업로드(#159)와 `/api/v1` 새 경로(#163, 옛 경로도 그대로 제공)가 나가므로 lol-ui develop 배포와 lol-ui 의 새 경로 전환을 lol-repository 를 기다리지 않고 시작할 수 있다. Flyway 는 꺼져 있고 테이블은 전부 `public` 에서 찾는다 — 운영 main 이미지와 같다.
+
+**사전 조건**
+
+- [ ] lol-deploy MP-165(S3 설정) 머지·동기화 — `S3_BUCKET`·`AWS_REGION`·`CDN_BASE_URL` 이 없으면 기동하지 못한다. 그 PR 은 IAM 사용자와 SSM 키를 먼저 등록해야 새 파드가 뜬다
+- [ ] lol-deploy MP-167(RabbitMQ·`LOL_REPOSITORY_URL` 제거)은 **머지하지 않은 상태** — 이 이미지도, A 의 `6d6fcaf7` 도 둘 다 필수로 읽는다. riot 모듈을 지운 이미지(#169 이후)가 나간 뒤에 머지한다
+
+**실행**
+
+1. 슈퍼유저로 `psql -v ON_ERROR_STOP=1 -f 00-community-image-public.sql` → 마지막 줄 `public.community_image owner=<지금 계정>`. 없으면 `Schema-validation: missing table [community_image]` 로 기동하지 못한다 (운영 DB 는 공유 체인 V35 라 이 테이블이 없다). FK 를 만드는 동안 `member`·`community_post` 쓰기가 잠깐 막히고, 잠금 대기는 총 5초가 상한이다.
+2. 릴리스 PR(`50feadc1` → main) 머지 → CI → 이미지 → lol-deploy 태그 갱신 → ArgoCD 롤아웃.
+3. 확인: `Started LolServerApplication`, 회원·커뮤니티·듀오·전적 화면, (자격증명이 있으면) 이미지 업로드 → `https://static.metapick.me/community/…` 200.
+
+**롤백**: lol-deploy `values-prod.yaml` 의 `lolServer.image.tag` 를 `0.0.1-SNAPSHOT-4049e9c` 로 되돌린다. `public.community_image` 는 지금 이미지가 모르는 테이블이라 남겨도 무해하다 — A 를 할 거면 남겨 둔다 (`02` 가 `community_*` 로 함께 옮기고, Flyway V2 는 `IF NOT EXISTS` 라 아무것도 하지 않는다).
 
 ## 4. A — app 스키마 이동 (MP-136)
 
 ### 4.1 사전 조건
 
-- [ ] lol-server 새 이미지(app 체인 + 가드 + `SET ROLE` + Flyway 전용 커넥션) 빌드 완료, **아직 롤아웃하지 않음** — 이 이미지는 이동 전 DB 에서는 의도적으로 기동에 실패한다 (`create-schemas: false` + `db/migration-guard`)
+- [ ] lol-server 새 이미지 = develop `6d6fcaf7` (app 체인 + 가드 + `SET ROLE` + Flyway 전용 커넥션, riot 모듈은 아직 있음). main 머지가 곧 롤아웃이므로 **릴리스 PR 은 점검 창을 시작하며 머지한다** — 이 이미지는 이동 전 DB 에서 의도적으로 기동에 실패하고(`create-schemas: false` + `db/migration-guard`), `maxUnavailable: 0` 이라 그동안 옛 파드가 계속 서빙한다. 새 파드가 가드에 걸려 재시작을 기다리는 상태가 2단계의 출발점이다
+- [ ] 0단계를 했다면 `public.community_image` 가 있다 — `02` 가 함께 옮긴다
 - [ ] 지금 접속 계정이 슈퍼유저이거나 `lol_server` 멤버 (2절 1)
 - [ ] lol-db-schema 에 app 마이그레이션이 더 추가되지 않았음
 - [ ] 직전 pg_dump 백업 (데이터는 바뀌지 않지만 카탈로그 변경이므로)
@@ -53,6 +73,7 @@ lol-server 는 **app 스키마(회원·커뮤니티·듀오)만 소유**한다. 
    - 비밀번호는 환경변수 `LOL_SERVER_DB_PASSWORD` 로 넘긴다. 명령행(`-v`, `kubectl exec -- env X=…`)에 쓰면 실행 중 `ps` 에 보이므로 파드 셸 안에서 `read -rs LOL_SERVER_DB_PASSWORD && export LOL_SERVER_DB_PASSWORD` 로 입력한다. 없으면 아무것도 바꾸지 않고 0 이 아닌 종료 코드로 끝난다.
    - 스크립트는 비밀번호가 담긴 `ALTER ROLE` 이 서버 로그·`pg_stat_statements` 에 남지 않도록 트랜잭션 안에서 기록을 끈다.
 2. app 테이블을 오래 잡는 트랜잭션이 없는 때를 고른다. app 밖 작업(배치 등)은 기다릴 필요 없다 — 이동은 app 테이블만 잠근다.
+   - **`02` 가 커밋되는 순간부터 새 파드가 Ready 가 될 때까지 옛 파드의 회원·커뮤니티·듀오 API 는 500 이다** (`relation "community_post" does not exist` — 옛 이미지는 search_path 의 `public` 에서 찾는다. 떠 있는 파드도 마찬가지이고 커넥션 풀로 버티지 않는다). riot API 는 영향 없다. 그래서 4.1 대로 새 파드를 미리 띄워 두고 5단계를 곧바로 이어 간다.
 
    ```sql
    SELECT pid, usename, state, now() - xact_start AS xact_age, left(query, 80)
@@ -61,10 +82,10 @@ lol-server 는 **app 스키마(회원·커뮤니티·듀오)만 소유**한다. 
    ORDER BY xact_age DESC NULLS LAST;
    ```
 3. `psql -v ON_ERROR_STOP=1 -f 02-move-schema.sql`
-   - app 테이블 전부를 `LOCK TABLE` 한 문장으로 먼저 잡는다. 잠금 하나당 대기 2초(`lock_timeout`), 전체 대기 5초(`statement_timeout`)가 상한이다. 대기 중엔 그 테이블 조회도 줄을 서므로 **회원·커뮤니티·듀오 요청이 멈출 수 있는 최대 시간 ≈ 5초**.
+   - app 테이블 전부를 `LOCK TABLE` 한 문장으로 먼저 잡는다. 잠금 하나당 대기 2초(`lock_timeout`), 전체 대기 5초(`statement_timeout`)가 상한이다. 대기 중엔 그 테이블 조회도 줄을 서므로 **잠금 대기로 회원·커뮤니티·듀오 요청이 멈추는 시간 ≈ 최대 5초** (그 뒤 새 파드가 뜰 때까지의 500 은 2단계).
    - 잠금을 다 잡은 뒤의 이동은 수십 ms. 상한을 넘으면 `lock timeout` / `statement timeout` 으로 아무것도 바뀌지 않은 채 롤백된다 → 2단계부터 다시.
-4. 출력이 app 13 테이블·11 시퀀스(`lol_server`)인지, `03-verify.sql` 이 P2 로 판별해 통과하는지 확인.
-5. **lol-server 새 이미지 롤아웃**. 기동 로그에 `Successfully baselined schema with version: 1` → `Successfully applied 1 migration to schema "app", now at version v2` → `Started LolServerApplication`. 옛 파드는 커넥션 풀로 이동 후에도 동작하지만 재시작하면 `grouped` 검증으로 죽으므로 롤아웃을 미루지 않는다. 이후 `03-verify.sql` 을 다시 돌려 통과 확인 (app 14 테이블, 이력·`community_image` 까지 `lol_server` 소유).
+4. 출력이 app 13 테이블·11 시퀀스(`lol_server`, 0단계를 했으면 14·12)인지, `03-verify.sql` 이 P2 로 판별해 통과하는지 확인.
+5. **곧바로 새 파드를 다시 띄운다** — 가드에 걸려 재시작을 기다리는 새 파드를 `kubectl -n app delete pod <새 파드>` 로 지우면 CrashLoopBackOff 대기 없이 바로 뜬다. 500 공백 ≈ 새 파드 기동 + startupProbe 주기(10초). 로컬 기동은 약 11초이고, 운영은 지금 파드 로그의 `Started LolServerApplication in N seconds` 로 가늠한다. 기동 로그에 `Successfully baselined schema with version: 1` → `Successfully applied 1 migration to schema "app", now at version v2` → `Started LolServerApplication`. 옛 파드는 재시작해도 회복되지 않는다 (main 은 `missing table` 로 기동 실패, `50feadc1` 은 기동하지만 app API 500). 이후 `03-verify.sql` 을 다시 돌려 통과 확인 (app 14 테이블, 이력·`community_image` 까지 `lol_server` 소유).
 6. 확인: 회원·커뮤니티·듀오·커뮤니티 이미지 업로드, 그리고 아직 lol-server 가 서빙하는 app 밖 API(전적 등)도 정상, 로그의 `does not exist`·`permission denied` 0건.
 7. 실행 기록: 시각, 소요 시간(`\timing` 출력), 재시도 횟수를 MP-136 에 남긴다.
 
@@ -114,3 +135,15 @@ KEEP=1 docs/db-split/rehearse.sh   # 끝난 뒤 DB 를 남김
 | 이동 후 공유 체인 V36 적용 (2절 4) | `relation "member" does not exist` 로 실패·롤백 |
 | riot 모듈 삭제 후 jar, 같은 DB → 01 → 02, 슈퍼유저 + prod Flyway 설정 | baseline → V2 → V3 → `Started LolServerApplication`, app 객체 27개 `lol_server` 소유 |
 | 이어서 `lol_server` 계정으로 jar 기동 (B) | `Schema "app" is up to date` → `Started LolServerApplication`, 듀오 목록 200, `03` 통과 |
+
+2026-10-20 0단계·A 순서 검증 (lol-db-schema V1~V35 를 Flyway 로 적용한 DB, 운영 main `4049e9c` · `50feadc1` · `6d6fcaf7` jar):
+
+| 확인 | 결과 |
+|---|---|
+| `50feadc1`, `community_image` 없음 | `Schema-validation: missing table [community_image]` 로 기동 실패 |
+| `00` → `00` 재실행 → `50feadc1` | 멱등(`already exists, skipping`), `Started LolServerApplication` |
+| lol-ui 운영(main)이 부르는 경로 29개(익명 23·인증 6)를 main / `50feadc1` / `6d6fcaf7` 에 | 응답 코드 같음. daily-count 하나만 main 500 → 400 (#163 입력 검증) |
+| `00` → `50feadc1` → `01` → `02` → `6d6fcaf7` | app 14 테이블·12 시퀀스, baseline 1 → V2(`IF NOT EXISTS` 라 변경 없음) → `Started LolServerApplication`, `03` 통과 |
+| `02` 뒤 `00` | 가드로 실패, 변경 없음 |
+| 떠 있는 main · `50feadc1` 에서 `02` | 이동 직후부터 회원·커뮤니티·듀오 500(`relation ... does not exist`), riot API 200 — 커넥션 풀로 버티지 않는다 |
+| `02` 뒤 재시작: main / `50feadc1` | main 은 `missing table [community_board_group]` 기동 실패 / `50feadc1` 은 기동하지만(`individually` 검증은 app 에서 찾음) app API 500 |
