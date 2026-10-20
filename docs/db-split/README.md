@@ -137,10 +137,12 @@ KEEP=1 docs/db-split/rehearse.sh   # 끝난 뒤 P2 상태 DB 를 남김 (앱 기
 SHARED_TARGET=36 docs/db-split/rehearse.sh  # 공유 체인 V36 까지 적용된 경우 (V2 가 무해한지)
 ```
 
+공유 체인은 이 레포의 `lol-db-schema` 서브모듈로 만든다. V1~V35 가 lol-repository 배포본(서브모듈 `d25aec8`)과 바이트 단위로 같아야 lol-repository 가 Flyway 체크섬 검증을 통과한다 — 지금 포인터 `2ad34f2`(lol-db-schema main)는 같고 V36 만 더 있다.
+
 앱 기동 리허설은 위 DB 에 각 jar 를 서비스 계정으로 붙여서 한다 (Redis·RabbitMQ 컨테이너 별도). 비밀번호는 `KEEP=1` 실행 끝에 출력된 값을 export 한다:
 
 ```bash
-# lol-repository (P2 에서는 default-schema 지정 필수)
+# lol-repository (P2 에서는 default-schema 지정 필수 — MP-163 이후 jar 는 yml 에 있어 마지막 인자 생략 가능)
 SPRING_PROFILES_ACTIVE=local java -jar <lol-repository>/module/app/application/build/libs/application-*.jar \
   --spring.datasource.url=jdbc:postgresql://localhost:55432/postgres \
   --spring.datasource.username=lol_repository --spring.datasource.password="$LOL_REPOSITORY_DB_PASSWORD" \
@@ -154,6 +156,8 @@ SPRING_PROFILES_ACTIVE=local java -jar module/app/application/build/libs/applica
 ```
 
 2026-10-20 lol-server app 체인 리허설 (공유 V35 → 01 → 02 이동 → lol-server jar 를 `lol_server` 로 기동): `Successfully baselined schema with version: 1` → V2 적용 → 전체 엔티티 Hibernate 검증 통과 → `Started LolServerApplication`. 이동 전 DB 에서는 prod 설정이 아무것도 만들지 않고 실패한다 (`rehearse.sh`, `AppSchemaMigrationTest`).
+
+2026-10-20 lol-repository 리허설 (MP-163 브랜치 jar, `default-schema` 인자 없이 `lol_repository` 로 기동): `Current version of schema "public": 35` → up to date → `Started LolRepositoryApplication`, `riot` 에 history 안 생김. 같은 DB 에 `default-schema` 없이 Flyway 를 돌리면 2절 1 그대로 V3 에서 실패. 서브모듈이 `e9889fa`(V35 COMMENT 보강 전)였을 때는 V35 체크섬 불일치로 기동이 막혔다.
 
 2026-10-07 리허설 결과 (Postgres 16, V1~V36):
 

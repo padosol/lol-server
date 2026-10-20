@@ -10,6 +10,7 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
+# V1~V35 는 lol-repository 배포본과 같아야 한다 — 다르면 lol-repository 기동 리허설이 체크섬 검증에서 막힌다 (런북 부록)
 MIGRATIONS="$(cd "$HERE/../../lol-db-schema/db/migration" && pwd)"
 APP_RESOURCES="$(cd "$HERE/../../module/app/application/src/main/resources/db" && pwd)"
 SHARED_TARGET="${SHARED_TARGET:-35}"  # prod 는 V35 (lol-repository 마지막 배포 기준)
