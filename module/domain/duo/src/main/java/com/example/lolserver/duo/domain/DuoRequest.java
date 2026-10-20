@@ -25,6 +25,8 @@ public class DuoRequest {
     private Long duoPostId;
     private Long requesterId;
     private String requesterPuuid;
+    private String gameName;
+    private String tagLine;
     private Lane primaryLane;
     private Lane desiredLane;
     private boolean hasMicrophone;
@@ -49,6 +51,8 @@ public class DuoRequest {
                 .duoPostId(duoPostId)
                 .requesterId(requesterId)
                 .requesterPuuid(requesterPuuid)
+                .gameName(stats.gameName())
+                .tagLine(stats.tagLine())
                 .primaryLane(primaryLane)
                 .desiredLane(desiredLane)
                 .hasMicrophone(hasMicrophone)

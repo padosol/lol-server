@@ -8,7 +8,7 @@ dependencies {
     // 공유 인프라 config(RedisConfig/RedissonConfig)용. 컨텍스트로 전이되지 않도록 implementation.
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.redisson:redisson-spring-boot-starter:3.46.0'
-    // RestClientConfig(외부 API 클라이언트 베이스)의 JavaTimeModule 직렬화용
+    // RedisConfig 의 JavaTimeModule 직렬화용
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
     // 공유 인프라 config(S3Config)용. RedisConfig 와 같은 자리다 — 기술 빈 생성만 여기 있고

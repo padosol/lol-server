@@ -6,16 +6,6 @@ import lombok.Getter;
 public enum ErrorType {
     DEFAULT_ERROR(500, ErrorCode.E500, "알 수 없는 오류가 발생했습니다."),
 
-    EXTERNAL_API_ERROR(400, ErrorCode.E400, "외부 API 호출 에러"),
-
-    NOT_FOUND_PUUID(404, ErrorCode.E404, "존재하지 않는 PUUID 입니다."),
-    UNKNOWN_SUMMONER_PLATFORM(404, ErrorCode.E404, "플랫폼 정보가 없는 소환사입니다."),
-    NOT_FOUND_MATCH_ID(404, ErrorCode.E404, "존재하지 않는 MatchId 입니다."),
-
-    NOT_FOUND_USER(404, ErrorCode.E404, "존재하지 않는 유저 입니다."),
-    NOT_FOUND_PATCH_NOTE(404, ErrorCode.E404, "존재하지 않는 패치노트 입니다."),
-    NOT_FOUND_TIER_CUTOFF(404, ErrorCode.E404, "존재하지 않는 티어 컷오프입니다."),
-
     INVALID_TIER_FILTER(400, ErrorCode.E400, "유효하지 않은 티어 필터입니다."),
 
     LOCK_ACQUISITION_FAILED(503, ErrorCode.E503, "잠시 후 다시 시도해주세요."),
@@ -85,6 +75,9 @@ public enum ErrorType {
     // 전적 데이터가 적재된 적 없는 계정과 실제 언랭 계정은 사용자가 취할 행동이 다르므로 구분한다.
     SUMMONER_SEARCH_REQUIRED(400, ErrorCode.E400,
             "전적 정보가 없습니다. 소환사 검색을 먼저 진행해주세요."),
+    // 전적 정보는 lol-repository 가 갖는다. 그쪽이 응답하지 않으면 듀오 글·신청을 만들 수 없다.
+    RIOT_ACCOUNT_STATS_UNAVAILABLE(503, ErrorCode.E503,
+            "전적 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요."),
     DUO_UNRANKED_NOT_ALLOWED(400, ErrorCode.E400,
             "솔로랭크 티어가 없는 계정은 듀오를 등록할 수 없습니다.");
 

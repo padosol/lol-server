@@ -62,47 +62,11 @@ class SecurityConfigAuthorizationTest {
     @DisplayName("비로그인 사용자에게 공개된 경로 — 새 경로·옛 경로 모두")
     @ParameterizedTest(name = "{0} {1}")
     @CsvSource({
-        // Riot 데이터 — 새 경로
-        "GET, /api/v1/summoners/by-riot-id/hide-KR1",
-        "GET, /api/v1/summoners/autocomplete",
-        "GET, /api/v1/summoners/puuid-1",
-        "GET, /api/v1/summoners/puuid-1/renewal",
-        "POST, /api/v1/summoners/puuid-1/renewal",
-        "GET, /api/v1/summoners/puuid-1/leagues",
-        "GET, /api/v1/summoners/puuid-1/active-game",
-        "GET, /api/v1/summoners/puuid-1/matches",
-        "GET, /api/v1/summoners/puuid-1/champions",
-        "GET, /api/v1/matches/KR_1",
-        "GET, /api/v1/matches/KR_1/timeline",
-        "GET, /api/v1/rankings",
-        "GET, /api/v1/rankings/tier-cutoffs",
+        // 챔피언 통계 (새 경로·옛 경로)
         "GET, /api/v1/champion-stats",
         "GET, /api/v1/champion-stats/266",
-        "GET, /api/v1/game-data/versions/latest",
-        "GET, /api/v1/game-data/queues",
-        "GET, /api/v1/game-data/champion-rotations",
-        // Riot 데이터 — 옛 경로
-        "GET, /api/v1/summoners/kr/hide-KR1",
-        "GET, /api/v1/kr/summoners/puuid-1",
-        "GET, /api/v1/kr/summoners/puuid-1/renewal",
-        "GET, /api/v1/summoners/puuid-1/renewal-status",
-        "GET, /api/v1/kr/summoners/puuid-1/matches",
-        "GET, /api/v1/kr/matches/matchIds",
-        "GET, /api/v1/kr/matches",
-        "GET, /api/v1/rank/champions",
-        "GET, /api/v1/match/timeline/KR_1",
-        "GET, /api/v1/leagues/by-puuid/puuid-1",
-        "GET, /api/v1/kr/spectator/active-games/by-puuid/puuid-1",
-        "GET, /api/v1/kr/rank",
-        "GET, /api/v1/kr/tier-cutoffs",
-        "GET, /api/v1/kr/tier-cutoffs/RANKED_SOLO_5x5/CHALLENGER",
         "GET, /api/v1/kr/champion-stats",
         "GET, /api/v1/kr/champion-stats/positions",
-        "GET, /api/v1/kr/champion/rotation",
-        "GET, /api/v1/versions",
-        "GET, /api/v1/seasons/1",
-        "GET, /api/v1/patch-notes",
-        "GET, /api/v1/queue-tab",
         // 인증 — refresh 는 액세스 토큰 없이 호출된다
         "POST, /api/v1/auth/refresh",
         "POST, /api/auth/refresh",
@@ -161,9 +125,12 @@ class SecurityConfigAuthorizationTest {
         "GET, /api/duo/posts/1/requests",
         "PUT, /api/duo/requests/1/accept",
         "GET, /api/duo/notifications/subscribe",
-        // Riot 데이터는 조회와 갱신 요청만 공개
-        "POST, /api/v1/summoners/puuid-1",
-        "DELETE, /api/v1/game-data/versions/1",
+        // 챔피언 통계는 조회만 공개
+        "POST, /api/v1/champion-stats",
+        // 소환사·전적·랭킹·게임 데이터는 lol-repository 가 받는다 — lol-server 에서는 정의되지 않은 리소스
+        "GET, /api/v1/summoners/puuid-1",
+        "GET, /api/v1/kr/rank",
+        "GET, /api/v1/versions",
         // 정의되지 않은 리소스
         "GET, /api/v1/unknown",
     })

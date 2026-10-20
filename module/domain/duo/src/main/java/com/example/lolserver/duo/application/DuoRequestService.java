@@ -17,8 +17,6 @@ import com.example.lolserver.duo.domain.DuoRequest;
 import com.example.lolserver.duo.domain.vo.DuoRequestStatus;
 import com.example.lolserver.duo.domain.vo.Lane;
 import com.example.lolserver.duo.domain.vo.RiotAccountStats;
-import com.example.lolserver.summoner.application.model.readmodel.SummonerReadModel;
-import com.example.lolserver.summoner.application.port.in.SummonerQueryUseCase;
 import com.example.lolserver.common.support.SliceResult;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
@@ -39,7 +37,6 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
 
     private final DuoRequestPersistencePort duoRequestPersistencePort;
     private final DuoPostPersistencePort duoPostPersistencePort;
-    private final SummonerQueryUseCase summonerQueryUseCase;
     private final RiotAccountResolver riotAccountResolver;
     private final DuoLockPort duoLockPort;
     private final DuoNotificationPort duoNotificationPort;
@@ -137,9 +134,6 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
                     duoRequestPersistencePort.closeAllOpenExcept(
                             duoPost.getId(), duoRequest.getId());
 
-                    SummonerReadModel partnerSummoner = summonerQueryUseCase
-                            .findSummonerByPuuid(duoPost.getPuuid()).orElse(null);
-
                     duoNotificationPort.notify(new DuoNotificationEvent(
                             DuoNotificationType.MATCH_CONFIRMED,
                             duoPost.getMemberId(), duoPost.getId(), duoRequest.getId()));
@@ -150,7 +144,7 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
                             new DuoNotificationEvent(DuoNotificationType.REQUEST_CLOSED,
                                     losing.getRequesterId(), duoPost.getId(), losing.getId())));
 
-                    return DuoMatchResultModel.of(duoPost, duoRequest, partnerSummoner);
+                    return DuoMatchResultModel.forRequester(duoPost, duoRequest);
                 });
     }
 
@@ -209,18 +203,12 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
                 .findConfirmedByDuoPostId(duoPostId)
                 .orElseThrow(() -> new CoreException(ErrorType.DUO_REQUEST_NOT_FOUND));
 
-        String partnerPuuid;
         if (duoPost.isOwner(memberId)) {
-            partnerPuuid = confirmedRequest.getRequesterPuuid();
-        } else if (confirmedRequest.getRequesterId().equals(memberId)) {
-            partnerPuuid = duoPost.getPuuid();
-        } else {
-            throw new CoreException(ErrorType.FORBIDDEN);
+            return DuoMatchResultModel.forPostOwner(duoPost, confirmedRequest);
         }
-
-        SummonerReadModel partnerSummoner = summonerQueryUseCase
-                .findSummonerByPuuid(partnerPuuid).orElse(null);
-
-        return DuoMatchResultModel.of(duoPost, confirmedRequest, partnerSummoner);
+        if (confirmedRequest.getRequesterId().equals(memberId)) {
+            return DuoMatchResultModel.forRequester(duoPost, confirmedRequest);
+        }
+        throw new CoreException(ErrorType.FORBIDDEN);
     }
 }

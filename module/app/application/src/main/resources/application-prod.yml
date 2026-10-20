@@ -5,8 +5,6 @@ spring:
       - api-prod.yml
       - client-repository-prod.yml
       - oauth-prod.yml
-      - rabbitmq-prod.yml
-      - kafka-prod.yml
       - postgresql-prod.yml
       - redis-prod.yml
       - bigquery-prod.yml

@@ -6,10 +6,6 @@ spring:
   jackson:
     time-zone: Asia/Seoul
 
-riot:
-  api:
-    key: ""
-
 management:
   endpoints:
     web:
@@ -26,6 +22,4 @@ management:
 
 logging:
   level:
-    com.example.lolserver.domain.summoner: DEBUG
-    com.example.lolserver.riot: INFO
     com.example.lolserver.aspect: INFO

@@ -39,6 +39,13 @@ public class DuoPostEntity {
     @Column(nullable = false, length = 78)
     private String puuid;
 
+    // 생성 시점 Riot ID 스냅샷. V3 이전 행은 NULL
+    @Column(name = "game_name")
+    private String gameName;
+
+    @Column(name = "tag_line")
+    private String tagLine;
+
     @Column(name = "primary_lane", nullable = false, length = 20)
     private String primaryLane;
 
