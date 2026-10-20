@@ -24,7 +24,7 @@ Riot 데이터(소환사·전적·리그/랭킹·게임 데이터)는 lol-reposi
 
 - PostgreSQL: `localhost:5432` (DB `postgres`, user `postgres`, password `1234` 기본)
 - Redis: `localhost:6379`
-- lol-repository 내부 API: `http://localhost:8112` (듀오 글·신청 생성 시 Riot 계정 통계 조회. 없으면 그 요청만 503)
+- (선택) lol-repository 내부 API: `http://localhost:8112` — 듀오 글·신청에 붙일 Riot 계정 통계 조회. 없으면 통계 없이 만들어진다
 - BigQuery 자격증명 (`stats.datasource=bigquery` 사용 시)
 
 로컬 인프라는 `docker/docker-compose-local.yml` 로 한 번에 기동할 수 있습니다.
@@ -95,7 +95,7 @@ module/
 ### 데이터 소스 의사결정
 
 - **lol-server 는 app 스키마(회원·커뮤니티·듀오)만 소유한다.** Riot 데이터 테이블에 엔티티·쿼리를 만들지 않고 lol-repository API 로 받는다.
-- **듀오의 Riot 계정 통계·Riot ID** 는 `GET /internal/v1/summoners/{puuid}/duo-profile`(lol-repository 내부 포트)로 받아 글·신청 생성 시점에 스냅샷으로 저장한다.
+- **lol-server 는 lol-repository 에 종속되지 않는다.** 듀오의 Riot 계정 통계(티어·모스트 챔피언·최근 게임)는 `GET /internal/v1/summoners/{puuid}/duo-profile`(lol-repository 내부 포트)로 받아 글·신청 생성 시점에 스냅샷으로 저장하되, 받지 못하면(무응답·장애·색인 없음) 통계 없이 만든다(티어 `UNRANKED` 표식, 언랭 검증 생략). 매칭 상대에게 보여 줄 Riot ID 는 RSO 연동 때 저장한 값이 기본이고, lol-repository 가 주면 그 값을 쓴다.
 - **챔피언 통계 OLAP 은 BigQuery** (`STATS_DATASOURCE=bigquery`). lol-repository 로 이전 예정.
 
 ## 코드 컨벤션 요약

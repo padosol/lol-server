@@ -87,7 +87,7 @@ lol-server 는 **app 스키마(회원·커뮤니티·듀오)만 소유**한다. 
 
 local 프로필은 슈퍼유저로 접속하고 기동하며 app 스키마를 직접 만든다 (`create-schemas` 기본값 true, 가드·`SET ROLE` 없음 — 로컬엔 `lol_server` 계정이 없다).
 
-- 빈 DB: lol-server 가 app 에 V1 부터 적용한다. lol-repository 없이 기동한다 (듀오 글·신청 생성만 lol-repository 내부 API 가 필요하다).
+- 빈 DB: lol-server 가 app 에 V1 부터 적용한다. lol-repository 없이 기동하고 동작한다 (듀오 글·신청은 통계 없이 만들어진다).
 - 예전 DB(lol-repository 가 public 에 전부 만든 것): lol-server 가 app 에 새 테이블을 만든다. public 의 회원·게시글 등은 쓰이지 않는 사본으로 남는다 (search_path 상 app 이 먼저). 로컬 데이터를 이어 쓰려면 `INSERT INTO app.<t> SELECT * FROM public.<t>` 후 시퀀스를 맞춘다.
 - lol-repository 가 공유 체인으로 public 에 app 테이블까지 만드는 동안은 로컬에서 항상 걸리므로 "public 에 app 테이블이 있으면 거부" 가드는 prod 에만 둔다.
 

@@ -1,7 +1,5 @@
 package com.example.lolserver.duo.adapter.out.client;
 
-import com.example.lolserver.common.error.CoreException;
-import com.example.lolserver.common.error.ErrorType;
 import com.example.lolserver.duo.domain.vo.MostChampion;
 import com.example.lolserver.duo.domain.vo.RecentGameSummary;
 import com.example.lolserver.duo.domain.vo.RiotAccountStats;
@@ -22,7 +20,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withException;
@@ -107,46 +104,49 @@ class DuoProfileClientAdapterTest {
         server.verify();
     }
 
-    @DisplayName("5xx 는 RIOT_ACCOUNT_STATS_UNAVAILABLE")
+    @DisplayName("5xx 는 예외 없이 빈 값 — 듀오는 통계 없이 진행한다")
     @Test
-    void serverError_throwsUnavailable() {
+    void serverError_returnsEmpty() {
         server.expect(requestTo(DUO_PROFILE_URL))
                 .andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR));
 
-        assertUnavailable();
+        assertThat(adapter.findByPuuid(PUUID)).isEmpty();
         server.verify();
     }
 
-    @DisplayName("타임아웃 등 I/O 실패는 RIOT_ACCOUNT_STATS_UNAVAILABLE")
+    @DisplayName("타임아웃 등 I/O 실패는 예외 없이 빈 값")
     @Test
-    void ioFailure_throwsUnavailable() {
+    void ioFailure_returnsEmpty() {
         server.expect(requestTo(DUO_PROFILE_URL))
                 .andRespond(withException(new SocketTimeoutException("Read timed out")));
 
-        assertUnavailable();
+        assertThat(adapter.findByPuuid(PUUID)).isEmpty();
         server.verify();
     }
 
-    @DisplayName("실패가 이어져 서킷이 열리면 lol-repository 를 호출하지 않고 바로 RIOT_ACCOUNT_STATS_UNAVAILABLE")
+    @DisplayName("200 이지만 본문을 읽을 수 없으면 예외 없이 빈 값")
     @Test
-    void circuitOpen_failsFastWithoutCalling() {
+    void unreadableBody_returnsEmpty() {
+        server.expect(requestTo(DUO_PROFILE_URL))
+                .andRespond(withSuccess("{not json", MediaType.APPLICATION_JSON));
+
+        assertThat(adapter.findByPuuid(PUUID)).isEmpty();
+        server.verify();
+    }
+
+    @DisplayName("실패가 이어져 서킷이 열리면 lol-repository 를 호출하지 않고 바로 빈 값")
+    @Test
+    void circuitOpen_returnsEmptyWithoutCalling() {
         for (int i = 0; i < 2; i++) {
             server.expect(requestTo(DUO_PROFILE_URL))
                     .andRespond(withStatus(HttpStatus.SERVICE_UNAVAILABLE));
         }
-        assertUnavailable();
-        assertUnavailable();
+        assertThat(adapter.findByPuuid(PUUID)).isEmpty();
+        assertThat(adapter.findByPuuid(PUUID)).isEmpty();
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 
         // 세 번째 호출은 기대하지 않았으므로, 요청이 나가면 MockRestServiceServer 가 실패시킨다
-        assertUnavailable();
+        assertThat(adapter.findByPuuid(PUUID)).isEmpty();
         server.verify();
-    }
-
-    private void assertUnavailable() {
-        assertThatThrownBy(() -> adapter.findByPuuid(PUUID))
-                .isInstanceOf(CoreException.class)
-                .extracting(e -> ((CoreException) e).getErrorType())
-                .isEqualTo(ErrorType.RIOT_ACCOUNT_STATS_UNAVAILABLE);
     }
 }

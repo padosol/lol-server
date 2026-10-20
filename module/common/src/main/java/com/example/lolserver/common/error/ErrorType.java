@@ -72,12 +72,6 @@ public enum ErrorType {
     DUO_REQUEST_ALREADY_COMPLETED(400, ErrorCode.E400,
             "이미 처리 완료된 요청입니다."),
     INVALID_LANE(400, ErrorCode.E400, "유효하지 않은 라인입니다."),
-    // 전적 데이터가 적재된 적 없는 계정과 실제 언랭 계정은 사용자가 취할 행동이 다르므로 구분한다.
-    SUMMONER_SEARCH_REQUIRED(400, ErrorCode.E400,
-            "전적 정보가 없습니다. 소환사 검색을 먼저 진행해주세요."),
-    // 전적 정보는 lol-repository 가 갖는다. 그쪽이 응답하지 않으면 듀오 글·신청을 만들 수 없다.
-    RIOT_ACCOUNT_STATS_UNAVAILABLE(503, ErrorCode.E503,
-            "전적 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요."),
     DUO_UNRANKED_NOT_ALLOWED(400, ErrorCode.E400,
             "솔로랭크 티어가 없는 계정은 듀오를 등록할 수 없습니다.");
 

@@ -13,7 +13,7 @@ Spring Boot 3.3 + JDK 21, League of Legends 전적 검색 서비스의 회원·�
 | `module/domain/championstats` | 챔피언 통계 OLAP (BigQuery) + Redisson single-flight 캐시 — lol-repository 로 이전 예정 (MP-158) |
 | `module/domain/member` | 회원·인증 (OAuth/RSO 연동) |
 | `module/domain/community` | 커뮤니티 게시글·댓글·투표 |
-| `module/domain/duo` | 듀오 모집글·신청. Riot 계정 통계·Riot ID 는 lol-repository 내부 API(`/internal/v1/summoners/{puuid}/duo-profile`)로 받아 생성 시점에 스냅샷 저장 |
+| `module/domain/duo` | 듀오 모집글·신청. 통계는 lol-repository 내부 API(`/internal/v1/summoners/{puuid}/duo-profile`)로 받아 생성 시점에 스냅샷 저장 — 받지 못해도 통계 없이 생성한다(lol-repository 에 종속되지 않음). Riot ID 는 RSO 연동 때 member 가 저장한 값이 기본 |
 
 > 모듈 단일 진실원천은 `settings.gradle`. `module/infra/`·`module/core/lol-server-domain/` 등은 레이어→수직 컨텍스트 재구성(77b945e5) 잔재 디렉터리로 빌드에 미포함. `docs/ARCHITECTURE.md`·일부 build 커맨드(`:module:infra:api:asciidoctor`)는 옛 구조 기준(stale).
 
@@ -31,7 +31,7 @@ Spring Boot 3.3 + JDK 21, League of Legends 전적 검색 서비스의 회원·�
 ## 빌드 / 실행
 
 ```bash
-./gradlew bootRun -Dspring.profiles.active=local   # Postgres/Redis Docker 필요 (duo 글 생성은 lol-repository 내부 포트 8112)
+./gradlew bootRun -Dspring.profiles.active=local   # Postgres/Redis Docker 필요 (lol-repository 는 없어도 된다 — duo 통계만 내부 포트 8112)
 ./gradlew test                                     # 전체 테스트
 ./gradlew compileJava compileTestJava              # Docker 없이 전 모듈 컴파일 검증 (리팩토링용)
 ./gradlew archTest                                 # Docker 없이 ArchUnit(*ArchitectureTest) 전 모듈 실행

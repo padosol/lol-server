@@ -19,6 +19,7 @@ import com.example.lolserver.duo.domain.vo.RiotAccountStats;
 import com.example.lolserver.duo.domain.vo.MostChampion;
 import com.example.lolserver.duo.domain.vo.RecentGameSummary;
 import com.example.lolserver.duo.domain.vo.TierInfo;
+import com.example.lolserver.member.application.model.readmodel.LinkedRiotAccountReadModel;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
@@ -76,6 +77,11 @@ class DuoServiceTest {
     @Mock
     private DuoNotificationPort duoNotificationPort;
 
+    private static LinkedRiotAccountReadModel linked(String puuid) {
+        return LinkedRiotAccountReadModel.builder()
+                .puuid(puuid).gameName("Hide on bush").tagLine("KR1").build();
+    }
+
     private void givenLockPassThrough() {
         given(duoLockPort.executeWithLock(anyString(), any()))
                 .willAnswer(invocation -> {
@@ -100,7 +106,7 @@ class DuoServiceTest {
                     .memo("듀오 구합니다")
                     .build();
 
-            given(riotAccountResolver.extractRiotPuuid(memberId))
+            given(riotAccountResolver.resolveLinkedAccount(memberId))
                     .willThrow(new CoreException(ErrorType.RIOT_ACCOUNT_NOT_LINKED));
 
             // when & then
@@ -124,7 +130,7 @@ class DuoServiceTest {
                     .build();
 
             givenLockPassThrough();
-            given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
+            given(riotAccountResolver.resolveLinkedAccount(memberId)).willReturn(linked(puuid));
             given(duoPostPersistencePort.existsActiveByMemberId(memberId))
                     .willReturn(true);
 
@@ -158,10 +164,10 @@ class DuoServiceTest {
             RiotAccountStats stats = new RiotAccountStats("Hide on bush", "KR1", tierInfo, mostChampions, recentGameSummary);
 
             givenLockPassThrough();
-            given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
+            given(riotAccountResolver.resolveLinkedAccount(memberId)).willReturn(linked(puuid));
             given(duoPostPersistencePort.existsActiveByMemberId(memberId))
                     .willReturn(false);
-            given(riotAccountResolver.lookupAllStats(puuid)).willReturn(stats);
+            given(riotAccountResolver.lookupStats(any())).willReturn(stats);
             given(duoPostPersistencePort.save(any(DuoPost.class)))
                     .willAnswer(invocation -> {
                         DuoPost post = invocation.getArgument(0);
@@ -226,10 +232,10 @@ class DuoServiceTest {
                     new RecentGameSummary(0, 0, Collections.emptyList()));
 
             givenLockPassThrough();
-            given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
+            given(riotAccountResolver.resolveLinkedAccount(memberId)).willReturn(linked(puuid));
             given(duoPostPersistencePort.existsActiveByMemberId(memberId))
                     .willReturn(false);
-            given(riotAccountResolver.lookupAllStats(puuid)).willReturn(stats);
+            given(riotAccountResolver.lookupStats(any())).willReturn(stats);
 
             // when & then
             assertThatThrownBy(() -> duoService.createDuoPost(memberId, command))
@@ -237,6 +243,41 @@ class DuoServiceTest {
                     .extracting(e -> ((CoreException) e).getErrorType())
                     .isEqualTo(ErrorType.DUO_UNRANKED_NOT_ALLOWED);
             then(duoPostPersistencePort).should(never()).save(any(DuoPost.class));
+        }
+
+        @DisplayName("lol-repository 에서 통계를 받지 못해도 글은 만들어진다 - tierAvailable=false, 연동 시점 Riot ID")
+        @Test
+        void statsUnknown_stillCreatesPost() {
+            // given
+            Long memberId = 1L;
+            String puuid = "test-puuid";
+            CreateDuoPostCommand command = CreateDuoPostCommand.builder()
+                    .primaryLane("MID")
+                    .desiredLane("JUNGLE")
+                    .hasMicrophone(true)
+                    .memo("듀오 구합니다")
+                    .build();
+
+            givenLockPassThrough();
+            given(riotAccountResolver.resolveLinkedAccount(memberId)).willReturn(linked(puuid));
+            given(riotAccountResolver.lookupStats(any()))
+                    .willReturn(RiotAccountStats.unknown("Hide on bush", "KR1"));
+            given(duoPostPersistencePort.existsActiveByMemberId(memberId))
+                    .willReturn(false);
+            given(duoPostPersistencePort.save(any(DuoPost.class)))
+                    .willAnswer(invocation -> invocation.getArgument(0));
+
+            // when
+            DuoPostResultModel result = duoService.createDuoPost(memberId, command);
+
+            // then
+            assertThat(result.isTierAvailable()).isFalse();
+            assertThat(result.getTier()).isEqualTo(TierInfo.UNRANKED_TIER);
+            assertThat(result.getStatus()).isEqualTo("ACTIVE");
+            assertThat(result.getMostChampions()).isEmpty();
+            assertThat(result.getRecentGameSummary()).isNull();
+            then(duoPostPersistencePort).should().save(argThat(post ->
+                    "Hide on bush".equals(post.getGameName()) && "KR1".equals(post.getTagLine())));
         }
 
         @DisplayName("락 획득 실패 시 LOCK_ACQUISITION_FAILED 에러 - 게시글은 저장되지 않는다")
@@ -252,7 +293,7 @@ class DuoServiceTest {
                     .memo("듀오 구합니다")
                     .build();
 
-            given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
+            given(riotAccountResolver.resolveLinkedAccount(memberId)).willReturn(linked(puuid));
             given(duoLockPort.executeWithLock(anyString(), any()))
                     .willThrow(new CoreException(ErrorType.LOCK_ACQUISITION_FAILED));
 
@@ -300,8 +341,8 @@ class DuoServiceTest {
                             lock.unlock();
                         }
                     });
-            given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
-            given(riotAccountResolver.lookupAllStats(puuid)).willReturn(stats);
+            given(riotAccountResolver.resolveLinkedAccount(memberId)).willReturn(linked(puuid));
+            given(riotAccountResolver.lookupStats(any())).willReturn(stats);
             given(duoPostPersistencePort.existsActiveByMemberId(memberId))
                     .willAnswer(invocation -> !savedPosts.isEmpty());
             given(duoPostPersistencePort.save(any(DuoPost.class)))

@@ -5,6 +5,7 @@ import com.example.lolserver.duo.domain.vo.MostChampion;
 import com.example.lolserver.duo.domain.vo.RecentGameSummary;
 import com.example.lolserver.duo.domain.vo.RiotAccountStats;
 import com.example.lolserver.duo.domain.vo.TierInfo;
+import com.example.lolserver.member.application.model.readmodel.LinkedRiotAccountReadModel;
 import com.example.lolserver.member.application.port.in.MemberQueryUseCase;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
@@ -35,20 +36,25 @@ class RiotAccountResolverTest {
     @Mock
     private RiotAccountStatsPort riotAccountStatsPort;
 
+    private static LinkedRiotAccountReadModel linked(String gameName, String tagLine) {
+        return LinkedRiotAccountReadModel.builder()
+                .puuid("test-puuid").gameName(gameName).tagLine(tagLine).build();
+    }
+
     @Nested
-    @DisplayName("extractRiotPuuid")
-    class ExtractRiotPuuid {
+    @DisplayName("resolveLinkedAccount")
+    class ResolveLinkedAccount {
 
         @DisplayName("회원이 존재하지 않으면 MEMBER_NOT_FOUND 에러")
         @Test
         void memberNotFound_throwsException() {
             // given
             Long memberId = 1L;
-            given(memberQueryUseCase.findRiotPuuid(memberId))
+            given(memberQueryUseCase.findLinkedRiotAccount(memberId))
                     .willThrow(new CoreException(ErrorType.MEMBER_NOT_FOUND));
 
             // when & then
-            assertThatThrownBy(() -> riotAccountResolver.extractRiotPuuid(memberId))
+            assertThatThrownBy(() -> riotAccountResolver.resolveLinkedAccount(memberId))
                     .isInstanceOf(CoreException.class)
                     .extracting(e -> ((CoreException) e).getErrorType())
                     .isEqualTo(ErrorType.MEMBER_NOT_FOUND);
@@ -59,83 +65,89 @@ class RiotAccountResolverTest {
         void riotNotLinked_throwsException() {
             // given
             Long memberId = 1L;
-            given(memberQueryUseCase.findRiotPuuid(memberId))
+            given(memberQueryUseCase.findLinkedRiotAccount(memberId))
                     .willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> riotAccountResolver.extractRiotPuuid(memberId))
+            assertThatThrownBy(() -> riotAccountResolver.resolveLinkedAccount(memberId))
                     .isInstanceOf(CoreException.class)
                     .extracting(e -> ((CoreException) e).getErrorType())
                     .isEqualTo(ErrorType.RIOT_ACCOUNT_NOT_LINKED);
         }
 
-        @DisplayName("Riot 계정 연동 시 PUUID 반환")
+        @DisplayName("Riot 계정 연동 시 puuid·연동 시점 Riot ID 반환")
         @Test
         void success() {
             // given
             Long memberId = 1L;
-            given(memberQueryUseCase.findRiotPuuid(memberId))
-                    .willReturn(Optional.of("test-puuid"));
+            given(memberQueryUseCase.findLinkedRiotAccount(memberId))
+                    .willReturn(Optional.of(linked("hide on bush", "KR1")));
 
             // when
-            String puuid = riotAccountResolver.extractRiotPuuid(memberId);
+            LinkedRiotAccountReadModel account = riotAccountResolver.resolveLinkedAccount(memberId);
 
             // then
-            assertThat(puuid).isEqualTo("test-puuid");
+            assertThat(account.getPuuid()).isEqualTo("test-puuid");
+            assertThat(account.getGameName()).isEqualTo("hide on bush");
         }
     }
 
     @Nested
-    @DisplayName("lookupAllStats")
-    class LookupAllStats {
-
-        @DisplayName("전적 색인이 없는 계정은 언랭이 아니라 SUMMONER_SEARCH_REQUIRED 로 구분한다")
-        @Test
-        void summonerNotIndexed_throwsSearchRequired() {
-            // given
-            String puuid = "test-puuid";
-            given(riotAccountStatsPort.findByPuuid(puuid)).willReturn(Optional.empty());
-
-            // when & then
-            assertThatThrownBy(() -> riotAccountResolver.lookupAllStats(puuid))
-                    .isInstanceOf(CoreException.class)
-                    .extracting(e -> ((CoreException) e).getErrorType())
-                    .isEqualTo(ErrorType.SUMMONER_SEARCH_REQUIRED);
-        }
+    @DisplayName("lookupStats")
+    class LookupStats {
 
         @DisplayName("lol-repository 가 준 Riot ID·티어·전적 요약을 그대로 반환한다")
         @Test
         void indexed_returnsStats() {
             // given
-            String puuid = "test-puuid";
             RiotAccountStats stats = new RiotAccountStats(
                     "hide on bush", "KR1",
                     new TierInfo("GOLD", "II", 50),
                     List.of(new MostChampion(1, "Annie", 10, 6, 4)),
                     new RecentGameSummary(1, 0,
                             List.of(new RecentGameSummary.PlayedChampion(1, "Annie"))));
-            given(riotAccountStatsPort.findByPuuid(puuid)).willReturn(Optional.of(stats));
+            given(riotAccountStatsPort.findByPuuid("test-puuid")).willReturn(Optional.of(stats));
 
             // when
-            RiotAccountStats result = riotAccountResolver.lookupAllStats(puuid);
+            RiotAccountStats result = riotAccountResolver.lookupStats(linked("old name", "OLD"));
 
-            // then
+            // then — lol-repository 값이 연동 시점 값보다 최근이다
             assertThat(result).isEqualTo(stats);
         }
 
-        @DisplayName("lol-repository 장애(RIOT_ACCOUNT_STATS_UNAVAILABLE)는 그대로 전파한다")
+        @DisplayName("lol-repository 응답에 Riot ID 가 없으면 연동 시점 Riot ID 로 채운다")
         @Test
-        void upstreamFailure_propagatesCoreException() {
+        void statsWithoutRiotId_fallsBackToLinked() {
             // given
-            String puuid = "test-puuid";
-            given(riotAccountStatsPort.findByPuuid(puuid))
-                    .willThrow(new CoreException(ErrorType.RIOT_ACCOUNT_STATS_UNAVAILABLE));
+            RiotAccountStats stats = new RiotAccountStats(
+                    null, null, new TierInfo("GOLD", "II", 50), List.of(), null);
+            given(riotAccountStatsPort.findByPuuid("test-puuid")).willReturn(Optional.of(stats));
 
-            // when & then
-            assertThatThrownBy(() -> riotAccountResolver.lookupAllStats(puuid))
-                    .isInstanceOf(CoreException.class)
-                    .extracting(e -> ((CoreException) e).getErrorType())
-                    .isEqualTo(ErrorType.RIOT_ACCOUNT_STATS_UNAVAILABLE);
+            // when
+            RiotAccountStats result = riotAccountResolver.lookupStats(linked("hide on bush", "KR1"));
+
+            // then
+            assertThat(result.gameName()).isEqualTo("hide on bush");
+            assertThat(result.tagLine()).isEqualTo("KR1");
+            assertThat(result.tierInfo()).isEqualTo(new TierInfo("GOLD", "II", 50));
+        }
+
+        @DisplayName("통계를 받지 못하면(무응답·장애·색인 없음) 통계 없이 연동 시점 Riot ID 만 반환한다")
+        @Test
+        void statsUnavailable_returnsUnknownWithLinkedRiotId() {
+            // given
+            given(riotAccountStatsPort.findByPuuid("test-puuid")).willReturn(Optional.empty());
+
+            // when
+            RiotAccountStats result = riotAccountResolver.lookupStats(linked("hide on bush", "KR1"));
+
+            // then
+            assertThat(result.isKnown()).isFalse();
+            assertThat(result.tierOrUnranked()).isEqualTo(TierInfo.UNRANKED);
+            assertThat(result.gameName()).isEqualTo("hide on bush");
+            assertThat(result.tagLine()).isEqualTo("KR1");
+            assertThat(result.mostChampions()).isEmpty();
+            assertThat(result.recentGameSummary()).isNull();
         }
     }
 }

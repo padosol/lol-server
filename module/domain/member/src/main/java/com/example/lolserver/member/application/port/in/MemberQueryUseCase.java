@@ -1,5 +1,6 @@
 package com.example.lolserver.member.application.port.in;
 
+import com.example.lolserver.member.application.model.readmodel.LinkedRiotAccountReadModel;
 import com.example.lolserver.member.application.model.readmodel.MemberProfileReadModel;
 import com.example.lolserver.member.application.model.readmodel.MemberReadModel;
 
@@ -22,8 +23,8 @@ public interface MemberQueryUseCase {
     List<MemberProfileReadModel> getMemberProfiles(Collection<Long> memberIds);
 
     /**
-     * 회원에 연동된 RIOT 계정의 puuid를 조회한다.
+     * 회원에 연동된 RIOT 계정(puuid·연동 시점 Riot ID)을 조회한다.
      * 회원이 없으면 예외를 던지고, RIOT 연동이 없으면 빈 값을 반환한다.
      */
-    Optional<String> findRiotPuuid(Long memberId);
+    Optional<LinkedRiotAccountReadModel> findLinkedRiotAccount(Long memberId);
 }

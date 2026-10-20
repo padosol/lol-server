@@ -2,6 +2,7 @@ package com.example.lolserver.member.adapter.out.oauth;
 
 import com.example.lolserver.member.config.OAuthProperties;
 import com.example.lolserver.member.application.port.out.RiotAccountPort;
+import com.example.lolserver.member.domain.vo.RiotAccount;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ public class RiotRsoClient implements RiotAccountPort {
 
     @SuppressWarnings("unchecked")
     @Override
-    public String fetchPuuid(String accessToken) {
+    public RiotAccount fetchAccount(String accessToken) {
         OAuthProperties.ProviderConfig config =
                 oAuthProperties.getProviderConfig("riot");
         try {
@@ -42,7 +43,10 @@ public class RiotRsoClient implements RiotAccountPort {
                         "Riot PUUID를 가져올 수 없습니다.");
             }
 
-            return puuid;
+            // Riot ID 는 없어도 연동은 된다 — 듀오에서 상대에게 보여 줄 기본값일 뿐이다
+            return new RiotAccount(puuid,
+                    (String) response.get("gameName"),
+                    (String) response.get("tagLine"));
         } catch (CoreException e) {
             throw e;
         } catch (Exception e) {
