@@ -54,7 +54,9 @@ class AppSchemaMigrationTest {
 
     @BeforeEach
     void resetDatabase() throws SQLException {
-        execute("DROP SCHEMA IF EXISTS app CASCADE; DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
+        execute("DROP SCHEMA IF EXISTS app CASCADE; DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+                + " DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'lol_server')"
+                + " THEN CREATE ROLE lol_server; END IF; END $$;");
     }
 
     @Nested
@@ -106,20 +108,19 @@ class AppSchemaMigrationTest {
             assertThat(schemaExists("app")).isFalse();
         }
 
-        @DisplayName("app 만 옮긴 직후(이력 없음, Riot 테이블은 public 에 남음)면 V1 을 baseline 으로 기록하고 V2 만 적용한다")
+        @DisplayName("이동 직후(테이블만 있고 이력 없음)면 V1 을 baseline 으로 기록하고 V2 만 적용하며, 새 객체도 lol_server 소유다")
         @Test
         void baselinesMovedSchemaAndAppliesV2() throws Exception {
-            // given — 운영(V35) 상태의 app 테이블만 02-move-schema.sql 로 옮겨지고 Riot 테이블은 public 에 남은 상태
-            execute("CREATE SCHEMA app;");
-            runScript("app", "V1__init_app_schema.sql");
-            execute("CREATE TABLE public.match (match_id VARCHAR(30) PRIMARY KEY);");
+            // given — 운영(V35) 상태의 app 테이블이 02-move-schema.sql 로 옮겨진 상태
+            movedAppSchema("V1__init_app_schema.sql");
 
-            // when
+            // when — 접속은 슈퍼유저(전환 전 계정)지만 init-sqls 의 SET ROLE 로 lol_server 가 된다
             flyway("postgresql-prod.yml").migrate();
 
             // then
             assertThat(historyTypes()).containsExactly(Map.entry("1", "BASELINE"), Map.entry("2", "SQL"));
             assertThat(appTableCount()).isEqualTo(APP_TABLE_COUNT);
+            assertThat(appObjectsNotOwnedByLolServer()).isEmpty();
             assertThat(tableExists("public", "flyway_schema_history")).isFalse();
             validateAppEntities();
         }
@@ -128,15 +129,14 @@ class AppSchemaMigrationTest {
         @Test
         void toleratesCommunityImageAlreadyPresent() throws Exception {
             // given
-            execute("CREATE SCHEMA app;");
-            runScript("app", "V1__init_app_schema.sql");
-            runScript("app", "V2__add_community_image.sql");
+            movedAppSchema("V1__init_app_schema.sql", "V2__add_community_image.sql");
 
             // when
             flyway("postgresql-prod.yml").migrate();
 
             // then
             assertThat(historyTypes()).containsExactly(Map.entry("1", "BASELINE"), Map.entry("2", "SQL"));
+            assertThat(appObjectsNotOwnedByLolServer()).isEmpty();
             validateAppEntities();
         }
 
@@ -144,7 +144,7 @@ class AppSchemaMigrationTest {
         @Test
         void refusesWhenPublicStillHasAppTables() throws Exception {
             // given
-            execute("CREATE SCHEMA app;");
+            movedAppSchema();
             runScript("public", "V1__init_app_schema.sql");
 
             // when & then
@@ -160,21 +160,28 @@ class AppSchemaMigrationTest {
                 .bind("spring.flyway", FlywayProperties.class)
                 .orElseThrow(() -> new IllegalStateException(yaml + " 에 spring.flyway 가 없다"));
         assertThat(props.isEnabled()).isTrue();
-        return Flyway.configure()
+        var config = Flyway.configure()
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
                 .locations(props.getLocations().toArray(String[]::new))
                 .schemas(props.getSchemas().toArray(String[]::new))
                 .defaultSchema(props.getDefaultSchema())
                 .createSchemas(props.isCreateSchemas())
                 .baselineOnMigrate(props.isBaselineOnMigrate())
-                .baselineVersion(props.getBaselineVersion())
-                .load();
+                .baselineVersion(props.getBaselineVersion());
+        // Spring Boot FlywayAutoConfiguration 과 같은 방식: 비어 있지 않으면 줄바꿈으로 이어 붙인다
+        if (!props.getInitSqls().isEmpty()) {
+            // user 가 없으면 Flyway 가 앱 커넥션 풀을 빌려 쓰고, init-sqls(SET ROLE)가 그 풀에 남는다
+            assertThat(props.getUser()).as(yaml + ": init-sqls 를 쓰면 spring.flyway.user 로 전용 커넥션을 써야 한다")
+                    .isNotNull();
+            config.initSql(String.join("\n", props.getInitSqls()));
+        }
+        return config.load();
     }
 
     /** 운영과 같은 search_path·네이밍 전략으로 app 엔티티만 ddl-auto=validate 한다. 불일치면 예외. */
     private static void validateAppEntities() {
         var dataSource = new DriverManagerDataSource(
-                POSTGRES.getJdbcUrl() + "&currentSchema=app,riot,public",
+                POSTGRES.getJdbcUrl() + "&currentSchema=app,public",
                 POSTGRES.getUsername(), POSTGRES.getPassword());
         var emf = new LocalContainerEntityManagerFactoryBean();
         emf.setDataSource(dataSource);
@@ -193,6 +200,16 @@ class AppSchemaMigrationTest {
         String sql = new ClassPathResource("db/migration/app/" + migration)
                 .getContentAsString(StandardCharsets.UTF_8);
         execute("SET search_path TO " + schema + ";\n" + sql);
+    }
+
+    /** 02-move-schema.sql 직후 상태: lol_server 소유 app 스키마에 주어진 마이그레이션을 lol_server 로 적용한다. */
+    private static void movedAppSchema(String... migrations) throws Exception {
+        execute("CREATE SCHEMA app AUTHORIZATION lol_server;");
+        for (String migration : migrations) {
+            String sql = new ClassPathResource("db/migration/app/" + migration)
+                    .getContentAsString(StandardCharsets.UTF_8);
+            execute("SET ROLE lol_server; SET search_path TO app;\n" + sql);
+        }
     }
 
     private static void execute(String sql) throws SQLException {
@@ -215,6 +232,19 @@ class AppSchemaMigrationTest {
     private static boolean tableExists(String schema, String table) throws SQLException {
         return queryInt("SELECT count(*) FROM pg_tables WHERE schemaname = '" + schema
                 + "' AND tablename = '" + table + "'") == 1;
+    }
+
+    /** app 스키마에서 lol_server 소유가 아닌 테이블·시퀀스 이름. */
+    private static List<String> appObjectsNotOwnedByLolServer() throws SQLException {
+        List<String> names = new ArrayList<>();
+        try (Connection conn = connect(); Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery("SELECT relname FROM pg_class WHERE relnamespace = 'app'::regnamespace"
+                     + " AND relkind IN ('r', 'p', 'S') AND pg_get_userbyid(relowner) <> 'lol_server' ORDER BY 1")) {
+            while (rs.next()) {
+                names.add(rs.getString(1));
+            }
+        }
+        return names;
     }
 
     private static int appTableCount() throws SQLException {

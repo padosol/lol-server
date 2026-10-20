@@ -23,7 +23,7 @@ Spring Boot 진입점 + 컴포지션 루트. **모든 인프라 모듈을 implem
 - `config/ExecutorConfig.java` — 일반 `@Async`/`@Scheduled` 용 풀. (Virtual Thread 풀 `queryExecutor` 는 `infra:persistence:postgresql:AsyncQueryConfig` 에 별도 정의)
 - `config/CacheConfig.java` — `rotation` 캐시 정의 위치. 신규 캐시 추가 시 여기 cacheNames 추가
 - `build.gradle` — 모듈 결합 spec 의 single source of truth (`bootJar { enabled = true }`)
-- `src/main/resources/db/migration/app` — app 스키마(member·community·duo) Flyway 체인. riot 스키마는 lol-repository 소유. `AppSchemaMigrationTest`(Testcontainers)가 엔티티와 대조. 운영 적용 절차는 `docs/db-split/README.md`
+- `src/main/resources/db/migration/app` — app 스키마(member·community·duo) Flyway 체인. lol-server 가 가진 DDL 은 이것뿐이고 app 밖 데이터는 lol-repository API 로 받는다. `AppSchemaMigrationTest`(Testcontainers)가 엔티티와 대조. 운영 적용 절차는 `docs/db-split/README.md`
 
 ## Common Modifications
 

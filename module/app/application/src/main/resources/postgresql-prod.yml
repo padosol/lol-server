@@ -1,6 +1,6 @@
 spring:
-  # app 스키마(member·community·duo)는 lol-server 가 소유하고 기동 시 Flyway 로 적용한다
-  # (classpath:db/migration/app). riot 스키마는 lol-repository 소유라 여기서 건드리지 않는다.
+  # lol-server 는 app 스키마(member·community·duo)만 소유하고 기동 시 Flyway 로 적용한다
+  # (classpath:db/migration/app). app 밖 데이터는 lol-repository API 로 받는다.
   #
   # 이 설정은 스키마 이동(docs/db-split/02-move-schema.sql) 뒤에만 기동된다:
   # - 이동 전(app 스키마 없음): create-schemas=false 라 Flyway 가 실패한다
@@ -15,6 +15,13 @@ spring:
     # 이동 직후 app 스키마는 테이블은 있고 이력이 없다 → V1 을 baseline 으로 기록하고 V2 부터 적용
     baseline-on-migrate: true
     baseline-version: 1
+    # 접속 계정과 무관하게 Flyway 가 만드는 객체(이력·새 테이블)를 lol_server 소유로 둔다.
+    # lol_server 계정으로 전환하기 전(지금 계정으로 접속)에도 소유자가 어긋나지 않게 — docs/db-split/README.md 5절
+    init-sqls: SET ROLE lol_server
+    # SET ROLE 이 앱 커넥션 풀에 남으면 Hibernate 가 lol_server 로 app 밖 테이블을 조회하다 기동이 깨진다.
+    # user 를 지정하면 Spring Boot 가 Flyway 전용 커넥션(풀 없음)을 따로 만든다.
+    user: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
   jpa:
     open-in-view: false
@@ -22,8 +29,8 @@ spring:
       ddl-auto: validate
     properties:
       hibernate:
-        # 테이블이 app·riot 스키마로 나뉘어도 search_path(app, riot, public) 전체에서 찾도록 테이블 단위로 조회.
-        # 기본값(grouped)은 현재 스키마(app) 하나만 봐서 riot 테이블을 못 찾고 validate 가 실패한다.
+        # app 밖(public)을 직접 읽는 과도기 모듈의 테이블도 찾도록 테이블 단위로 조회.
+        # 기본값(grouped)은 현재 스키마(app) 하나만 봐서 validate 가 실패한다. 그 모듈이 모두 빠지면 기본값으로 되돌린다.
         hbm2ddl:
           jdbc_metadata_extraction_strategy: individually
         format_sql: false
@@ -36,8 +43,8 @@ spring:
     show-sql: false
 
   datasource:
-    # search_path 를 접속 계정 설정에 기대지 않고 직접 지정한다 (app 우선, riot 은 읽기, public 은 확장용)
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?currentSchema=app,riot,public
+    # search_path 를 접속 계정 설정에 기대지 않고 직접 지정한다. public 은 app 밖을 직접 읽는 과도기 모듈용 — 빠지면 app 만 남긴다
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?currentSchema=app,public
     driver-class-name: org.postgresql.Driver
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
