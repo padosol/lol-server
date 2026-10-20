@@ -27,7 +27,9 @@ ADR 3.1 표 기준. 분류 규칙은 네 SQL 파일에 같은 술어로 들어 �
 
 V1~V36 기준 테이블 64개(+history), 시퀀스 42개(컬럼 소속 39 + 독립 3), 뷰 6개. 새 테이블이 `member`·`social_account`·`community_*`·`duo_*` 이름 규칙을 벗어나면 riot 으로 분류되므로 분류 규칙을 같이 고칠 것.
 
-**전환기 결정 — P1 에서 앱 테이블도 `lol_repository` 소유**: P3(MP-144)까지는 lol-repository 의 Flyway 가 lol-db-schema 전체(앱 테이블 포함)를 적용하는 유일한 주체다. 앱 테이블 소유자를 P1 에서 `lol_server` 로 바꾸면 그 사이 앱 테이블 마이그레이션이 실패한다. 그래서 앱 테이블 소유권은 P2 이동 때 `lol_server` 로 넘기고, 그 시점부터 lol-db-schema 를 동결한다.
+**전환기 결정 — P1 에서 앱 테이블도 `lol_repository` 소유**: P2 전까지는 lol-repository 의 Flyway 가 lol-db-schema 전체(앱 테이블 포함)를 적용하는 유일한 주체다. 앱 테이블 소유자를 P1 에서 `lol_server` 로 바꾸면 그 사이 앱 테이블 마이그레이션이 실패한다. 그래서 앱 테이블 소유권은 P2 이동 때 `lol_server` 로 넘기고, 그 시점부터 lol-db-schema 를 동결한다.
+
+**app 스키마 마이그레이션은 P2 부터 lol-server 가 소유 (MP-144)**: lol-server 는 자기 체인 `module/app/application/src/main/resources/db/migration/app` 을 V1 부터 따로 갖는다. V1 = lol-db-schema V1~V35 를 적용한 app 테이블 13개(+ V32 기준 데이터) 그대로, V2 = lol-db-schema V36(`community_image`, `IF NOT EXISTS`). 이력은 `app.flyway_schema_history`. 운영은 이동 직후 lol-server 가 기동하며 V1 을 baseline 으로 기록하고 V2 부터 적용한다 (4.2). 이후 앱 테이블 변경은 lol-db-schema 가 아니라 이 체인에 V3 부터 추가한다. 세 경로(새 체인 빈 DB / 공유 V35→이동→app 체인 / 공유 V36→이동)의 app 스키마 구조·기준 데이터가 같음을 pg_dump 비교로 확인했다.
 
 ## 2. 리허설에서 드러난 함정 (설계 문서 6.1 보완)
 
@@ -74,7 +76,7 @@ ORDER BY calls DESC;
 5. 확인: 두 서비스 주요 API, `SELECT usename, application_name, count(*) FROM pg_stat_activity GROUP BY 1, 2;` 로 각 계정 접속 확인, lol-server 로그 `permission denied` 0건.
 6. 롤백: lol-deploy 자격증명 키를 슈퍼유저로 되돌리기만 하면 된다 (권한·search_path 는 슈퍼유저에 영향 없음).
 
-01 이후 lol-db-schema 에 **새 앱 테이블**이 추가되면 `lol_server` 에는 SELECT 만 열린다 (기본 권한). 배포 직후 `01-roles.sql` 을 다시 돌려 RW 를 준다.
+01 이후 lol-db-schema 에 **새 앱 테이블**을 추가하지 않는다. 앱 테이블 변경은 lol-server app 체인(V3~)에 넣고 P2 이후 lol-server 배포로 적용한다 (1절).
 
 ## 4. P2 — 스키마 이동 (MP-136)
 
@@ -82,8 +84,8 @@ ORDER BY calls DESC;
 
 - [ ] P1 완료: 두 서비스가 각자 계정으로 동작, `03-verify.sql` 통과
 - [ ] lol-repository 에 `spring.flyway.default-schema: public` 배포됨 (2절 1)
-- [ ] lol-server 에 `jdbc_metadata_extraction_strategy: individually` 배포됨 (2절 2)
-- [ ] lol-db-schema 동결 선언 — 이동 후 MP-143·MP-144 완료 전까지 새 마이그레이션 금지 (Flyway 가 `default-schema=public` 으로 돌면 새 객체가 public 에 생긴다)
+- [ ] lol-server 새 이미지(app Flyway 체인 + `individually` + `currentSchema=app,riot,public`) 빌드 완료, **아직 롤아웃하지 않음** — 이 이미지는 이동 전 DB 에서는 의도적으로 기동에 실패한다 (`create-schemas: false` + `db/migration-guard`)
+- [ ] lol-db-schema 동결 선언 — 이동 후 MP-143 완료 전까지 새 마이그레이션 금지 (Flyway 가 `default-schema=public` 으로 돌면 새 객체가 public 에 생긴다). 앱 테이블 변경은 lol-server app 체인으로
 - [ ] 직전 pg_dump 백업 (데이터는 바뀌지 않지만 카탈로그 변경이므로)
 
 ### 4.2 실행
@@ -101,25 +103,38 @@ ORDER BY calls DESC;
    - 이동 대상 테이블·뷰 전부를 `LOCK TABLE` 한 문장으로 먼저 잡는다. 잠금 하나당 대기 2초(`lock_timeout`), 잠금 전체 대기 5초(`statement_timeout`)가 상한이다. 대기 중엔 그 테이블의 조회도 줄을 서므로 **서비스가 멈출 수 있는 최대 시간 ≈ 5초**.
    - 잠금을 다 잡은 뒤의 이동은 리허설 기준 15~25ms.
    - 상한을 넘으면 `canceling statement due to lock timeout` / `statement timeout` 으로 아무것도 바뀌지 않은 채 롤백된다 → 1단계부터 다시.
-3. 출력 끝의 스키마별 객체 수(`02-move-schema.sql` 이 출력)가 app 14 테이블·12 시퀀스 / riot 50 테이블·30 시퀀스·6 뷰 / public 1 테이블인지 확인하고, `03-verify.sql` 이 P2 로 판별해 통과하는지 확인.
-4. 확인: lol-server 주요 API(전적·랭킹·커뮤니티·듀오), lol-repository 랭킹 계산·백필 1회(`BATCH_*` 시퀀스 포함), 두 서비스 로그의 `does not exist`·`permission denied` 0건. 두 서비스를 한 번씩 재시작해 기동 시 검증(Flyway validate, Hibernate validate)도 확인한다.
-5. 실행 기록: 시각, 소요 시간(`\timing` 출력), 재시도 횟수를 MP-136 에 남긴다.
+3. 출력 끝의 스키마별 객체 수(`02-move-schema.sql` 이 출력)가 app 13 테이블·11 시퀀스 / riot 50 테이블·30 시퀀스·6 뷰 / public 1 테이블인지 확인하고 (prod 는 공유 체인 V35 — V36 까지 적용돼 있었다면 app 14·12), `03-verify.sql` 이 P2 로 판별해 통과하는지 확인.
+4. **lol-server 새 이미지 롤아웃** (4.1 의 이미지). 기동 로그에 `Successfully baselined schema with version: 1` → `Successfully applied 1 migration to schema "app", now at version v2` 가 찍히고 `Started LolServerApplication` 까지 가는지 확인. 실행 중이던 옛 파드는 커넥션 풀로 이동 후에도 동작하지만 재시작하면 `grouped` 검증으로 죽으므로 롤아웃을 미루지 않는다. 이후 `03-verify.sql` 을 다시 돌려 통과 확인 (app 14 테이블).
+5. 확인: lol-server 주요 API(전적·랭킹·커뮤니티·듀오·커뮤니티 이미지 업로드), lol-repository 랭킹 계산·백필 1회(`BATCH_*` 시퀀스 포함), 두 서비스 로그의 `does not exist`·`permission denied` 0건. lol-repository 를 한 번 재시작해 기동 시 검증(Flyway validate, Hibernate validate)도 확인한다.
+6. 실행 기록: 시각, 소요 시간(`\timing` 출력), 재시도 횟수를 MP-136 에 남긴다.
 
 ### 4.3 롤백
 
-`psql -v ON_ERROR_STOP=1 -f 02-rollback.sql` → `03-verify.sql` (P1 으로 판별돼야 함). 데이터 미변경이라 즉시 끝난다. 잠금은 이동과 같은 방식(선점, 총 5초 상한)이며 시간 초과로 실패하면 변경 없이 롤백되니 다시 실행한다. 앱 설정(2절 1·2)은 P1 에서도 무해하므로 되돌리지 않는다.
+1. lol-server 새 이미지를 이미 롤아웃했다면 **먼저 이전 이미지로 되돌린다** — 새 이미지는 app 테이블이 public 에 있으면 기동을 거부한다.
+2. `psql -v ON_ERROR_STOP=1 -f 02-rollback.sql` → `03-verify.sql` (P1 으로 판별돼야 함). 데이터 미변경이라 즉시 끝난다. 잠금은 이동과 같은 방식(선점, 총 5초 상한)이며 시간 초과로 실패하면 변경 없이 롤백되니 다시 실행한다. lol-server 가 V2 로 만든 `community_image` 도 public 으로 돌아가고, `app.flyway_schema_history` 는 삭제된다 (다시 이동하면 lol-server 가 baseline 부터 새로 쓰고 V2 는 `IF NOT EXISTS` 라 무해).
+3. lol-repository 설정(2절 1)은 P1 에서도 무해하므로 되돌리지 않는다.
 
 ## 5. 다음 단계 (P3, 이 런북 범위 밖)
 
-- MP-143 (lol-repository): `db/migration/riot`, `spring.flyway.default-schema: riot` + baseline. 기존 `public.flyway_schema_history` 는 이력으로 보존.
-- MP-144 (lol-server): Flyway 활성화, `db/migration/app`, `app.flyway_schema_history` baseline. 현재 lol-server 테스트는 H2 `create-drop` 이라 Testcontainers 도입이 선행돼야 한다.
+- MP-143 (lol-repository): `db/migration/riot` 를 V1 부터 따로 두고(lol-server app 체인과 같은 방식), `spring.flyway.default-schema: riot` + baseline. 기존 `public.flyway_schema_history` 는 이력으로 보존.
+- MP-144 (lol-server): 코드는 완료 — app 체인·`AppSchemaMigrationTest`(Testcontainers). 운영 적용은 4.2 의 4단계.
+- MP-155: P2 이후 lol-server 는 lol-db-schema 를 쓰지 않는다 (이 런북의 `rehearse.sh` 만 공유 체인을 쓴다). 서브모듈 제거 가능.
 - 정리: `lol_repository` 의 public `CREATE` 회수, 동결 해제.
+
+## 6. 로컬 DB
+
+lol-server local 프로필은 기동하며 app 스키마를 직접 만든다 (`create-schemas` 기본값 true, 가드 없음).
+
+- 빈 DB: lol-server 가 app 에 V1·V2 를 적용한다. riot 테이블(매치·소환사 등)은 아직 lol-server 모듈이 읽으므로 lol-repository 를 한 번 띄워 마이그레이션해야 Hibernate 검증이 통과한다.
+- 예전 DB(lol-repository 가 public 에 전부 만든 것): lol-server 가 app 에 새 테이블을 만든다. public 의 회원·게시글 등은 쓰이지 않는 사본으로 남는다 (search_path 상 app 이 먼저). 로컬 데이터를 이어 쓰려면 `INSERT INTO app.<t> SELECT * FROM public.<t>` 후 시퀀스를 맞춘다.
+- MP-143 전까지 lol-repository 는 공유 체인으로 public 에 app 테이블도 계속 만든다 — 그래서 "public 에 app 테이블이 있으면 거부" 가드는 prod 에만 둔다.
 
 ## 부록 — 로컬 리허설
 
 ```bash
-docs/db-split/rehearse.sh          # Postgres 16 컨테이너(localhost:55432)에서 V1~Vn → 01 → 02 → 롤백 → 02, 매 단계 03 검증
+docs/db-split/rehearse.sh          # Postgres 16 컨테이너(localhost:55432)에서 공유 V1~V35 → 01 → (app 체인 거부 확인) → 02 → app 체인 → 롤백 → 02 → app 체인, 매 단계 03 검증
 KEEP=1 docs/db-split/rehearse.sh   # 끝난 뒤 P2 상태 DB 를 남김 (앱 기동 리허설용)
+SHARED_TARGET=36 docs/db-split/rehearse.sh  # 공유 체인 V36 까지 적용된 경우 (V2 가 무해한지)
 ```
 
 앱 기동 리허설은 위 DB 에 각 jar 를 서비스 계정으로 붙여서 한다 (Redis·RabbitMQ 컨테이너 별도). 비밀번호는 `KEEP=1` 실행 끝에 출력된 값을 export 한다:
@@ -130,12 +145,15 @@ SPRING_PROFILES_ACTIVE=local java -jar <lol-repository>/module/app/application/b
   --spring.datasource.url=jdbc:postgresql://localhost:55432/postgres \
   --spring.datasource.username=lol_repository --spring.datasource.password="$LOL_REPOSITORY_DB_PASSWORD" \
   --spring.flyway.default-schema=public
-# lol-server (local seed 는 Riot 테이블 쓰기라 끈다)
+# lol-server (local seed 는 Riot 테이블 쓰기라 끈다). app 체인을 lol-server 가 직접 적용하는 걸 보려면
+# 먼저 DROP TABLE app.flyway_schema_history, app.community_image; 로 "이동 직후 V35" 상태를 만든다.
 SPRING_PROFILES_ACTIVE=local java -jar module/app/application/build/libs/application-*.jar \
-  --spring.datasource.url=jdbc:postgresql://localhost:55432/postgres \
+  --spring.datasource.url='jdbc:postgresql://localhost:55432/postgres?currentSchema=app,riot,public' \
   --spring.datasource.username=lol_server --spring.datasource.password="$LOL_SERVER_DB_PASSWORD" \
   --spring.sql.init.mode=never
 ```
+
+2026-10-20 lol-server app 체인 리허설 (공유 V35 → 01 → 02 이동 → lol-server jar 를 `lol_server` 로 기동): `Successfully baselined schema with version: 1` → V2 적용 → 전체 엔티티 Hibernate 검증 통과 → `Started LolServerApplication`. 이동 전 DB 에서는 prod 설정이 아무것도 만들지 않고 실패한다 (`rehearse.sh`, `AppSchemaMigrationTest`).
 
 2026-10-07 리허설 결과 (Postgres 16, V1~V36):
 

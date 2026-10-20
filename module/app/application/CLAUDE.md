@@ -23,6 +23,7 @@ Spring Boot 진입점 + 컴포지션 루트. **모든 인프라 모듈을 implem
 - `config/ExecutorConfig.java` — 일반 `@Async`/`@Scheduled` 용 풀. (Virtual Thread 풀 `queryExecutor` 는 `infra:persistence:postgresql:AsyncQueryConfig` 에 별도 정의)
 - `config/CacheConfig.java` — `rotation` 캐시 정의 위치. 신규 캐시 추가 시 여기 cacheNames 추가
 - `build.gradle` — 모듈 결합 spec 의 single source of truth (`bootJar { enabled = true }`)
+- `src/main/resources/db/migration/app` — app 스키마(member·community·duo) Flyway 체인. riot 스키마는 lol-repository 소유. `AppSchemaMigrationTest`(Testcontainers)가 엔티티와 대조. 운영 적용 절차는 `docs/db-split/README.md`
 
 ## Common Modifications
 
@@ -41,6 +42,8 @@ Spring Boot 진입점 + 컴포지션 루트. **모든 인프라 모듈을 implem
   ✅ `application.yml` 의 `message.broker` 가 `kafka` 또는 `rabbitmq` 중 하나만 — 어댑터 측 `@ConditionalOnProperty` 로 자동 분기
 - ❌ broker 어댑터 미존재 환경에서 부팅 — `RabbitAutoConfiguration` 이 connection 시도하다 실패
   ✅ `application.yml` 의 `spring.autoconfigure.exclude` 에 두 AutoConfiguration 모두 명시 (이미 처리됨)
+- ❌ 적용된 app 마이그레이션(V1·V2…) 수정 — 체크섬 불일치로 운영 기동 실패
+  ✅ 새 버전(V3~)으로 추가. V1 은 운영에선 baseline 이라 실행되지 않으니 빈 DB 전용
 - ❌ 비즈니스 로직을 `LolServerApplication` 또는 이 모듈의 config 에 작성 — 헥사고날 위반
   ✅ 도메인 로직은 `core:lol-server-domain`, 어댑터는 `infra:*` 로
 

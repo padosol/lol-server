@@ -4,6 +4,9 @@ plugins {
     id 'io.spring.dependency-management'
 }
 
+// Boot 3.3 관리 버전(1.19.x)은 Docker Engine 29+(최소 API 1.40)에 붙지 못해 테스트가 조용히 skip 된다.
+ext['testcontainers.version'] = '1.21.4'
+
 dependencies {
     // ── 수직(컨텍스트별) 도메인 모듈 — 컴포지션 루트가 전 컨텍스트를 조립한다 ──
     implementation project(":module:common")
@@ -29,6 +32,16 @@ dependencies {
 
     // PostgreSQL 드라이버 (runtimeOnly는 모듈간 전이되지 않으므로 직접 추가)
     runtimeOnly 'org.postgresql:postgresql'
+
+    // app 스키마 마이그레이션 (src/main/resources/db/migration/app). Flyway 10 은 DB 별 모듈이 따로 있다.
+    implementation 'org.flywaydb:flyway-core'
+    runtimeOnly 'org.flywaydb:flyway-database-postgresql'
+
+    // app 마이그레이션 ↔ 엔티티 검증 (Docker 없으면 건너뜀)
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    testRuntimeOnly 'org.postgresql:postgresql'
 }
 
 bootJar {
