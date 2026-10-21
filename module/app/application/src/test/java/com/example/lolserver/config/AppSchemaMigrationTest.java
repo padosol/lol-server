@@ -70,7 +70,7 @@ class AppSchemaMigrationTest {
             flyway("postgresql-local.yml").migrate();
 
             // then
-            assertThat(appliedVersions()).containsExactly("1", "2", "3");
+            assertThat(appliedVersions()).containsExactly("1", "2", "3", "4");
             assertThat(appTableCount()).isEqualTo(APP_TABLE_COUNT);
             assertThat(queryInt("SELECT count(*) FROM app.community_category")).isEqualTo(8);
             validateAppEntities();
@@ -86,7 +86,7 @@ class AppSchemaMigrationTest {
             flyway("postgresql-local.yml").migrate();
 
             // then
-            assertThat(appliedVersions()).containsExactly("1", "2", "3");
+            assertThat(appliedVersions()).containsExactly("1", "2", "3", "4");
             assertThat(tableExists("app", "member")).isTrue();
             validateAppEntities();
         }
@@ -119,7 +119,7 @@ class AppSchemaMigrationTest {
 
             // then
             assertThat(historyTypes()).containsExactly(
-                    Map.entry("1", "BASELINE"), Map.entry("2", "SQL"), Map.entry("3", "SQL"));
+                    Map.entry("1", "BASELINE"), Map.entry("2", "SQL"), Map.entry("3", "SQL"), Map.entry("4", "SQL"));
             assertThat(appTableCount()).isEqualTo(APP_TABLE_COUNT);
             assertThat(appObjectsNotOwnedByLolServer()).isEmpty();
             assertThat(tableExists("public", "flyway_schema_history")).isFalse();
@@ -137,7 +137,7 @@ class AppSchemaMigrationTest {
 
             // then
             assertThat(historyTypes()).containsExactly(
-                    Map.entry("1", "BASELINE"), Map.entry("2", "SQL"), Map.entry("3", "SQL"));
+                    Map.entry("1", "BASELINE"), Map.entry("2", "SQL"), Map.entry("3", "SQL"), Map.entry("4", "SQL"));
             assertThat(appObjectsNotOwnedByLolServer()).isEmpty();
             validateAppEntities();
         }

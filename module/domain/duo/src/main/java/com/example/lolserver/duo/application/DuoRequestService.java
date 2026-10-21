@@ -17,6 +17,7 @@ import com.example.lolserver.duo.domain.DuoRequest;
 import com.example.lolserver.duo.domain.vo.DuoRequestStatus;
 import com.example.lolserver.duo.domain.vo.Lane;
 import com.example.lolserver.duo.domain.vo.RiotAccountStats;
+import com.example.lolserver.member.application.model.readmodel.LinkedRiotAccountReadModel;
 import com.example.lolserver.common.support.SliceResult;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
@@ -45,7 +46,8 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
     @Transactional
     public DuoRequestResultModel createDuoRequest(Long memberId, Long duoPostId,
             CreateDuoRequestCommand command) {
-        String puuid = riotAccountResolver.extractRiotPuuid(memberId);
+        LinkedRiotAccountReadModel account = riotAccountResolver.resolveLinkedAccount(memberId);
+        String puuid = account.getPuuid();
 
         DuoPost duoPost = duoPostPersistencePort.findById(duoPostId)
                 .orElseThrow(() -> new CoreException(ErrorType.DUO_POST_NOT_FOUND));
@@ -62,7 +64,7 @@ public class DuoRequestService implements DuoRequestUseCase, DuoRequestQueryUseC
             throw new CoreException(ErrorType.DUO_REQUEST_ALREADY_EXISTS);
         }
 
-        RiotAccountStats stats = riotAccountResolver.lookupAllStats(puuid);
+        RiotAccountStats stats = riotAccountResolver.lookupStats(account);
 
         DuoRequest duoRequest = DuoRequest.create(
                 duoPostId, memberId, puuid,

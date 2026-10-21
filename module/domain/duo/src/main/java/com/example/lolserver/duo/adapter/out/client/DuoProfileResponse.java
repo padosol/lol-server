@@ -2,7 +2,7 @@ package com.example.lolserver.duo.adapter.out.client;
 
 import com.example.lolserver.duo.domain.vo.MostChampion;
 import com.example.lolserver.duo.domain.vo.RecentGameSummary;
-import com.example.lolserver.duo.domain.vo.RiotAccountStats;
+import com.example.lolserver.duo.domain.vo.SummonerStats;
 import com.example.lolserver.duo.domain.vo.TierInfo;
 
 import java.util.List;
@@ -10,10 +10,10 @@ import java.util.List;
 /**
  * lol-repository {@code GET /internal/v1/summoners/{puuid}/duo-profile} 응답.
  * 계약은 lol-repository {@code docs/api/internal-v1.openapi.yaml} 이 소유한다.
+ *
+ * <p>응답의 gameName·tagLine 은 읽지 않는다 — Riot ID 는 RSO 연동 때 받은 값을 쓴다.
  */
 public record DuoProfileResponse(
-        String gameName,
-        String tagLine,
         Tier tierInfo,
         List<Champion> mostChampions,
         RecentGames recentGameSummary
@@ -31,10 +31,8 @@ public record DuoProfileResponse(
     public record PlayedChampion(int championId, String championName) {
     }
 
-    public RiotAccountStats toDomain() {
-        return new RiotAccountStats(
-                gameName,
-                tagLine,
+    public SummonerStats toDomain() {
+        return new SummonerStats(
                 new TierInfo(tierInfo.tier(), tierInfo.rank(), tierInfo.leaguePoints()),
                 mostChampions.stream()
                         .map(c -> new MostChampion(

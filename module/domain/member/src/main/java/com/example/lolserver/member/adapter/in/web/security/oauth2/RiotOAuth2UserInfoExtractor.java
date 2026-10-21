@@ -28,6 +28,8 @@ public class RiotOAuth2UserInfoExtractor
                 .provider(OAuthProvider.RIOT.name())
                 .providerId((String) attributes.get("sub"))
                 .puuid((String) attributes.get("puuid"))
+                .gameName((String) attributes.get("gameName"))
+                .tagLine((String) attributes.get("tagLine"))
                 .build();
     }
 }

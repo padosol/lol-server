@@ -28,7 +28,8 @@ public class LolRepositoryClientProperties {
      * 내부 포트 주소 (prod: {@code http://lol-repository:8081}). 공개 포트는 {@code /internal} 을 404 로 받는다.
      *
      * <p>prod 에서 {@code LOL_REPOSITORY_INTERNAL_URL} 이 빠지면 바인딩은 {@code ${...}} 를 글자 그대로 넣고 기동한다.
-     * 그러면 duo 글·신청 생성만 500 으로 깨지므로, http(s) 주소가 아니면 기동에서 막는다.
+     * 그러면 모든 duo 글·신청이 장애 없이 통계만 빠진 채 만들어져 설정 실수를 알아채기 어려우므로,
+     * http(s) 주소가 아니면 기동에서 막는다. lol-repository 가 떠 있는지는 기동과 무관하다.
      */
     @NotBlank
     @Pattern(regexp = "https?://[^\\s${}]+",

@@ -1,10 +1,7 @@
 package com.example.lolserver.duo.adapter.out.client;
 
-import com.example.lolserver.common.error.CoreException;
-import com.example.lolserver.common.error.ErrorType;
-import com.example.lolserver.duo.application.port.out.RiotAccountStatsPort;
-import com.example.lolserver.duo.domain.vo.RiotAccountStats;
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import com.example.lolserver.duo.application.port.out.SummonerStatsPort;
+import com.example.lolserver.duo.domain.vo.SummonerStats;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,12 +19,13 @@ import java.util.Optional;
  * duo 프로필을 lol-repository 내부 API 로 조회한다 (서비스 분리 설계 5절).
  *
  * <p>404(색인된 적 없는 소환사)는 정상 응답으로 보고 빈 값을 돌려준다 — 서킷 브레이커 실패로도 세지 않는다.
- * 연결 실패·타임아웃·5xx 와 서킷이 열린 상태는 {@code RIOT_ACCOUNT_STATS_UNAVAILABLE}(503) 로 바꾼다.
+ * 연결 실패·타임아웃·5xx 와 서킷이 열린 상태도 빈 값이다. 듀오 글·신청은 통계 없이 만들어지고, 서킷은
+ * lol-repository 가 느릴 때 그 요청들이 타임아웃만큼 묶이지 않게 한다.
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DuoProfileClientAdapter implements RiotAccountStatsPort {
+public class DuoProfileClientAdapter implements SummonerStatsPort {
 
     static final String DUO_PROFILE_URI = "/internal/v1/summoners/{puuid}/duo-profile";
 
@@ -35,16 +33,18 @@ public class DuoProfileClientAdapter implements RiotAccountStatsPort {
     private final CircuitBreaker lolRepositoryCircuitBreaker;
 
     @Override
-    public Optional<RiotAccountStats> findByPuuid(String puuid) {
+    public Optional<SummonerStats> findByPuuid(String puuid) {
         try {
             return lolRepositoryCircuitBreaker.executeSupplier(() -> fetch(puuid));
-        } catch (CallNotPermittedException | RestClientException e) {
-            log.warn("lol-repository duo-profile 조회 실패. puuid={}, cause={}", puuid, e.getMessage());
-            throw new CoreException(ErrorType.RIOT_ACCOUNT_STATS_UNAVAILABLE);
+        } catch (RuntimeException e) {
+            // 서킷 open(CallNotPermittedException)·연결 실패·5xx·응답 변환 실패 모두 — 서킷은 이미 실패로 기록했다
+            log.warn("lol-repository duo-profile 조회 실패 — 통계 없이 진행. puuid={}, cause={}: {}",
+                    puuid, e.getClass().getSimpleName(), e.getMessage());
+            return Optional.empty();
         }
     }
 
-    private Optional<RiotAccountStats> fetch(String puuid) {
+    private Optional<SummonerStats> fetch(String puuid) {
         return lolRepositoryRestClient.get()
                 .uri(DUO_PROFILE_URI, puuid)
                 .accept(MediaType.APPLICATION_JSON)
