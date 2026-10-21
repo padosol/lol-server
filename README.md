@@ -30,7 +30,7 @@ Riot 데이터(소환사·전적·리그/랭킹·게임 데이터)는 lol-reposi
 로컬 인프라는 `docker/docker-compose-local.yml` 로 한 번에 기동할 수 있습니다.
 
 ```bash
-# postgres / redis (compose 의 rabbitmq·kafka 는 lol-server 가 쓰지 않는다)
+# postgres / redis
 docker compose -f docker/docker-compose-local.yml up -d
 ```
 
