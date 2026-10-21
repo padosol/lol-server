@@ -106,8 +106,8 @@ class ChampionStatsControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/{platformId}/champion-stats", platformId)
-                                .param("championId", String.valueOf(championId))
+                        get("/api/v1/champion-stats/{championId}", championId)
+                                .param("platform", platformId)
                                 .param("patch", patch)
                                 .param("tier", "EMERALD")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -118,10 +118,10 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(
-                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)")
+                                parameterWithName("championId").description("챔피언 ID (e.g., 266)")
                         ),
                         queryParameters(
-                                parameterWithName("championId").description("챔피언 ID (e.g., 266)"),
+                                parameterWithName("platform").description("플랫폼 ID (예: kr)"),
                                 parameterWithName("patch").description("패치 버전 (e.g., 14.24)"),
                                 parameterWithName("tier").description("티어 필터. 단일 티어(e.g., EMERALD) 또는 범위 티어(e.g., MASTER+)를 지원합니다.")
                         ),
@@ -249,7 +249,8 @@ class ChampionStatsControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/{platformId}/champion-stats/positions", platformId)
+                        get("/api/v1/champion-stats")
+                                .param("platform", platformId)
                                 .param("patch", "16.1")
                                 .param("tier", "EMERALD")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -259,10 +260,8 @@ class ChampionStatsControllerTest extends RestDocsSupport {
                 .andDo(document("champion-stats-positions",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        pathParameters(
-                                parameterWithName("platformId").description("플랫폼 ID (e.g., kr)")
-                        ),
                         queryParameters(
+                                parameterWithName("platform").description("플랫폼 ID (예: kr)"),
                                 parameterWithName("patch").description("패치 버전 (e.g., 16.1)"),
                                 parameterWithName("tier").description("티어 필터. 단일 티어(e.g., EMERALD) 또는 범위 티어(e.g., MASTER+)를 지원합니다.")
                         ),

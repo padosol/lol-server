@@ -25,6 +25,8 @@ public class DuoRequest {
     private Long duoPostId;
     private Long requesterId;
     private String requesterPuuid;
+    private String gameName;
+    private String tagLine;
     private Lane primaryLane;
     private Lane desiredLane;
     private boolean hasMicrophone;
@@ -41,14 +43,16 @@ public class DuoRequest {
     public static DuoRequest create(Long duoPostId, Long requesterId,
             String requesterPuuid, Lane primaryLane, Lane desiredLane,
             boolean hasMicrophone, String memo, RiotAccountStats stats) {
-        TierInfo tierInfo = stats.tierInfo();
-        tierInfo.validateRanked();
+        stats.validateEligible();
+        TierInfo tierInfo = stats.tierOrUnranked();
 
         LocalDateTime now = LocalDateTime.now();
         return DuoRequest.builder()
                 .duoPostId(duoPostId)
                 .requesterId(requesterId)
                 .requesterPuuid(requesterPuuid)
+                .gameName(stats.gameName())
+                .tagLine(stats.tagLine())
                 .primaryLane(primaryLane)
                 .desiredLane(desiredLane)
                 .hasMicrophone(hasMicrophone)

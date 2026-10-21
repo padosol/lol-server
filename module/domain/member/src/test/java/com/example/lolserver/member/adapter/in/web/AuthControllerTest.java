@@ -64,7 +64,7 @@ class AuthControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        post("/api/auth/refresh")
+                        post("/api/v1/auth/refresh")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .cookie(new Cookie("refreshToken", "dummy-refresh-token-for-test"))
                 )
@@ -98,7 +98,7 @@ class AuthControllerTest extends RestDocsSupport {
 
         // when & then
         mockMvc.perform(
-                        post("/api/auth/logout")
+                        post("/api/v1/auth/logout")
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())

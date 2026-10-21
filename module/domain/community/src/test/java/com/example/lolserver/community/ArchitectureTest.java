@@ -53,6 +53,26 @@ class ArchitectureTest {
         rule.check(classes);
     }
 
+    /**
+     * 위 규칙의 목록에 없는 기술이라도 스토리지·이미지 처리 SDK 는 애플리케이션에 새어 들어오면
+     * 안 된다. {@code ImageStoragePort}/{@code ImageProcessorPort} 가 바이트만 주고받도록
+     * 설계한 이유가 여기 있고, 이 규칙이 없으면 "포트를 우회해 S3Client 를 바로 쓰는" 지름길이
+     * 조용히 생긴다.
+     */
+    @Test
+    void domain과_application은_스토리지_이미지_SDK에_의존하지_않는다() {
+        ArchRule rule = noClasses()
+                .that().resideInAnyPackage("..community.domain..", "..community.application..")
+                .should().dependOnClassesThat()
+                .resideInAnyPackage(
+                        "software.amazon.awssdk..",
+                        "org.apache.tika..",
+                        "javax.imageio..",
+                        "java.awt..")
+                .as("이미지 저장·디코딩 기술은 adapter.out 안에만 있어야 한다");
+        rule.check(classes);
+    }
+
     @Test
     void in어댑터는_out어댑터에_직접_의존하지_않는다() {
         ArchRule rule = noClasses()

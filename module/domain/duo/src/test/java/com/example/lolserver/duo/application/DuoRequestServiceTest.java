@@ -16,11 +16,11 @@ import com.example.lolserver.duo.domain.vo.DuoPostStatus;
 import com.example.lolserver.duo.domain.vo.DuoRequestStatus;
 import com.example.lolserver.duo.domain.vo.Lane;
 import com.example.lolserver.duo.domain.vo.RiotAccountStats;
+import com.example.lolserver.duo.domain.vo.RiotId;
 import com.example.lolserver.duo.domain.vo.MostChampion;
 import com.example.lolserver.duo.domain.vo.RecentGameSummary;
 import com.example.lolserver.duo.domain.vo.TierInfo;
-import com.example.lolserver.summoner.application.model.readmodel.SummonerReadModel;
-import com.example.lolserver.summoner.application.port.in.SummonerQueryUseCase;
+import com.example.lolserver.member.application.model.readmodel.LinkedRiotAccountReadModel;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
@@ -48,6 +48,7 @@ import java.util.function.Supplier;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -68,9 +69,6 @@ class DuoRequestServiceTest {
     private DuoPostPersistencePort duoPostPersistencePort;
 
     @Mock
-    private SummonerQueryUseCase summonerQueryUseCase;
-
-    @Mock
     private RiotAccountResolver riotAccountResolver;
 
     @Mock
@@ -78,6 +76,11 @@ class DuoRequestServiceTest {
 
     @Mock
     private DuoNotificationPort duoNotificationPort;
+
+    private static LinkedRiotAccountReadModel linked(String puuid) {
+        return LinkedRiotAccountReadModel.builder()
+                .puuid(puuid).gameName("Hide on bush").tagLine("KR1").build();
+    }
 
     private void givenLockPassThrough() {
         given(duoLockPort.executeWithLock(anyString(), any()))
@@ -123,7 +126,7 @@ class DuoRequestServiceTest {
                     .memo("같이 하실 분")
                     .build();
 
-            given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
+            given(riotAccountResolver.resolveLinkedAccount(memberId)).willReturn(linked(puuid));
             given(duoPostPersistencePort.findById(duoPostId))
                     .willReturn(Optional.of(duoPost));
 
@@ -149,7 +152,7 @@ class DuoRequestServiceTest {
                     .memo("같이 하실 분")
                     .build();
 
-            given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
+            given(riotAccountResolver.resolveLinkedAccount(memberId)).willReturn(linked(puuid));
             given(duoPostPersistencePort.findById(duoPostId))
                     .willReturn(Optional.of(duoPost));
 
@@ -175,7 +178,7 @@ class DuoRequestServiceTest {
                     .memo("같이 하실 분")
                     .build();
 
-            given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
+            given(riotAccountResolver.resolveLinkedAccount(memberId)).willReturn(linked(puuid));
             given(duoPostPersistencePort.findById(duoPostId))
                     .willReturn(Optional.of(duoPost));
             given(duoRequestPersistencePort.existsByDuoPostIdAndRequesterIdAndStatusIn(
@@ -205,7 +208,7 @@ class DuoRequestServiceTest {
                     .memo("같이 하실 분")
                     .build();
 
-            given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
+            given(riotAccountResolver.resolveLinkedAccount(memberId)).willReturn(linked(puuid));
             given(duoPostPersistencePort.findById(duoPostId))
                     .willReturn(Optional.of(duoPost));
             given(duoRequestPersistencePort.existsByDuoPostIdAndRequesterIdAndStatusIn(
@@ -215,9 +218,9 @@ class DuoRequestServiceTest {
                     new MostChampion(1, "Jinx", 30, 18, 12));
             RecentGameSummary recentGameSummary = new RecentGameSummary(10, 10, List.of(
                     new RecentGameSummary.PlayedChampion(1, "Jinx")));
-            RiotAccountStats stats = new RiotAccountStats(tierInfo, mostChampions, recentGameSummary);
+            RiotAccountStats stats = new RiotAccountStats("DuoBuddy", "KR2", tierInfo, mostChampions, recentGameSummary);
 
-            given(riotAccountResolver.lookupAllStats(puuid)).willReturn(stats);
+            given(riotAccountResolver.lookupStats(any())).willReturn(stats);
             given(duoRequestPersistencePort.save(any(DuoRequest.class)))
                     .willAnswer(invocation -> {
                         DuoRequest request = invocation.getArgument(0);
@@ -255,7 +258,9 @@ class DuoRequestServiceTest {
             assertThat(result.getStatus()).isEqualTo("PENDING");
             assertThat(result.getMostChampions()).hasSize(1);
             assertThat(result.getRecentGameSummary().wins()).isEqualTo(10);
-            then(duoRequestPersistencePort).should().save(any(DuoRequest.class));
+            // 매칭 상대에게 보여 줄 Riot ID 도 통계와 함께 스냅샷으로 저장한다
+            then(duoRequestPersistencePort).should().save(argThat(request ->
+                    "DuoBuddy".equals(request.getGameName()) && "KR2".equals(request.getTagLine())));
         }
 
         @DisplayName("솔로랭크 티어가 없으면 DUO_UNRANKED_NOT_ALLOWED 에러 - 저장되지 않는다")
@@ -273,14 +278,14 @@ class DuoRequestServiceTest {
                     .memo("같이 하실 분")
                     .build();
 
-            given(riotAccountResolver.extractRiotPuuid(memberId)).willReturn(puuid);
+            given(riotAccountResolver.resolveLinkedAccount(memberId)).willReturn(linked(puuid));
             given(duoPostPersistencePort.findById(duoPostId))
                     .willReturn(Optional.of(duoPost));
             given(duoRequestPersistencePort.existsByDuoPostIdAndRequesterIdAndStatusIn(
                     eq(duoPostId), eq(memberId), anyList()))
                     .willReturn(false);
-            given(riotAccountResolver.lookupAllStats(puuid)).willReturn(new RiotAccountStats(
-                    TierInfo.UNRANKED, Collections.emptyList(),
+            given(riotAccountResolver.lookupStats(any())).willReturn(new RiotAccountStats(
+                    "DuoBuddy", "KR2", TierInfo.UNRANKED, Collections.emptyList(),
                     new RecentGameSummary(0, 0, Collections.emptyList())));
 
             // when & then
@@ -290,6 +295,44 @@ class DuoRequestServiceTest {
                     .extracting(e -> ((CoreException) e).getErrorType())
                     .isEqualTo(ErrorType.DUO_UNRANKED_NOT_ALLOWED);
             then(duoRequestPersistencePort).should(never()).save(any(DuoRequest.class));
+        }
+
+        @DisplayName("lol-repository 에서 통계를 받지 못해도 신청은 만들어진다 - 티어 UNRANKED 표식, 연동 시점 Riot ID")
+        @Test
+        void statsUnknown_stillCreatesRequest() {
+            // given
+            Long memberId = 2L;
+            Long duoPostId = 100L;
+            String puuid = "test-puuid";
+            DuoPost duoPost = createTestDuoPost(duoPostId, 1L);
+            CreateDuoRequestCommand command = CreateDuoRequestCommand.builder()
+                    .primaryLane("ADC")
+                    .desiredLane("SUPPORT")
+                    .hasMicrophone(true)
+                    .memo("같이 하실 분")
+                    .build();
+
+            given(riotAccountResolver.resolveLinkedAccount(memberId)).willReturn(linked(puuid));
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+            given(duoRequestPersistencePort.existsByDuoPostIdAndRequesterIdAndStatusIn(
+                    eq(duoPostId), eq(memberId), anyList()))
+                    .willReturn(false);
+            given(riotAccountResolver.lookupStats(any()))
+                    .willReturn(RiotAccountStats.unknown(new RiotId("Hide on bush", "KR1")));
+            given(duoRequestPersistencePort.save(any(DuoRequest.class)))
+                    .willAnswer(invocation -> invocation.getArgument(0));
+
+            // when
+            DuoRequestResultModel result = duoRequestService.createDuoRequest(memberId, duoPostId, command);
+
+            // then
+            assertThat(result.getTier()).isEqualTo(TierInfo.UNRANKED_TIER);
+            assertThat(result.getStatus()).isEqualTo("PENDING");
+            then(duoRequestPersistencePort).should().save(argThat(request ->
+                    "Hide on bush".equals(request.getGameName()) && "KR1".equals(request.getTagLine())
+                            && request.getMostChampions().isEmpty()
+                            && request.getRecentGameSummary() == null));
         }
     }
 
@@ -392,6 +435,8 @@ class DuoRequestServiceTest {
                     .id(duoPostId)
                     .memberId(1L)
                     .puuid(ownerPuuid)
+                    .gameName("Hide on bush")
+                    .tagLine("KR1")
                     .primaryLane(Lane.MID)
                     .desiredLane(Lane.JUNGLE)
                     .hasMicrophone(true)
@@ -405,11 +450,6 @@ class DuoRequestServiceTest {
                     .expiresAt(LocalDateTime.now().plusHours(1))
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
-                    .build();
-            SummonerReadModel partnerSummoner = SummonerReadModel.builder()
-                    .puuid(ownerPuuid)
-                    .gameName("Hide on bush")
-                    .tagLine("KR1")
                     .build();
 
             DuoRequest losingRequest = createTestDuoRequest(201L, duoPostId, 3L);
@@ -425,8 +465,6 @@ class DuoRequestServiceTest {
                     .willReturn(true);
             given(duoRequestPersistencePort.findByDuoPostId(duoPostId))
                     .willReturn(List.of(duoRequest, losingRequest));
-            given(summonerQueryUseCase.findSummonerByPuuid(ownerPuuid))
-                    .willReturn(Optional.of(partnerSummoner));
 
             // when
             DuoMatchResultModel result = duoRequestService.confirmDuoRequest(requesterId, requestId);
@@ -470,8 +508,6 @@ class DuoRequestServiceTest {
                     .willReturn(Optional.of(duoPost));
             given(duoPostPersistencePort.markMatchedIfActive(duoPostId))
                     .willReturn(true);
-            given(summonerQueryUseCase.findSummonerByPuuid("owner-puuid"))
-                    .willReturn(Optional.empty());
 
             // when
             duoRequestService.confirmDuoRequest(requesterId, requestId);
@@ -572,8 +608,6 @@ class DuoRequestServiceTest {
                     .willAnswer(invocation -> invocation.getArgument(0));
             given(duoPostPersistencePort.markMatchedIfActive(duoPostId))
                     .willReturn(true);
-            given(summonerQueryUseCase.findSummonerByPuuid("owner-puuid"))
-                    .willReturn(Optional.empty());
 
             ExecutorService executor = Executors.newFixedThreadPool(2);
             CountDownLatch startLatch = new CountDownLatch(1);
@@ -627,18 +661,11 @@ class DuoRequestServiceTest {
             DuoRequest confirmedRequest = createTestDuoRequest(200L, duoPostId, 2L);
             confirmedRequest.accept();
             confirmedRequest.confirm();
-            SummonerReadModel requesterSummoner = SummonerReadModel.builder()
-                    .puuid("requester-puuid")
-                    .gameName("DuoBuddy")
-                    .tagLine("KR2")
-                    .build();
 
             given(duoPostPersistencePort.findById(duoPostId))
                     .willReturn(Optional.of(duoPost));
             given(duoRequestPersistencePort.findConfirmedByDuoPostId(duoPostId))
                     .willReturn(Optional.of(confirmedRequest));
-            given(summonerQueryUseCase.findSummonerByPuuid("requester-puuid"))
-                    .willReturn(Optional.of(requesterSummoner));
 
             // when
             DuoMatchResultModel result = duoRequestService.getMatchResult(ownerId, duoPostId);
@@ -662,18 +689,11 @@ class DuoRequestServiceTest {
             DuoRequest confirmedRequest = createTestDuoRequest(200L, duoPostId, requesterId);
             confirmedRequest.accept();
             confirmedRequest.confirm();
-            SummonerReadModel ownerSummoner = SummonerReadModel.builder()
-                    .puuid("owner-puuid")
-                    .gameName("Hide on bush")
-                    .tagLine("KR1")
-                    .build();
 
             given(duoPostPersistencePort.findById(duoPostId))
                     .willReturn(Optional.of(duoPost));
             given(duoRequestPersistencePort.findConfirmedByDuoPostId(duoPostId))
                     .willReturn(Optional.of(confirmedRequest));
-            given(summonerQueryUseCase.findSummonerByPuuid("owner-puuid"))
-                    .willReturn(Optional.of(ownerSummoner));
 
             // when
             DuoMatchResultModel result = duoRequestService.getMatchResult(requesterId, duoPostId);
@@ -681,6 +701,36 @@ class DuoRequestServiceTest {
             // then
             assertThat(result.getPartnerGameName()).isEqualTo("Hide on bush");
             assertThat(result.getPartnerTagLine()).isEqualTo("KR1");
+        }
+
+        @DisplayName("Riot ID 스냅샷이 없는 예전 글은 상대 이름 없이 반환한다")
+        @Test
+        void legacyRowWithoutSnapshot_returnsNullPartnerIdentity() {
+            // given
+            Long requesterId = 2L;
+            Long duoPostId = 100L;
+            DuoPost duoPost = DuoPost.builder()
+                    .id(duoPostId)
+                    .memberId(1L)
+                    .puuid("owner-puuid")
+                    .status(DuoPostStatus.MATCHED)
+                    .build();
+            DuoRequest confirmedRequest = createTestDuoRequest(200L, duoPostId, requesterId);
+            confirmedRequest.accept();
+            confirmedRequest.confirm();
+
+            given(duoPostPersistencePort.findById(duoPostId))
+                    .willReturn(Optional.of(duoPost));
+            given(duoRequestPersistencePort.findConfirmedByDuoPostId(duoPostId))
+                    .willReturn(Optional.of(confirmedRequest));
+
+            // when
+            DuoMatchResultModel result = duoRequestService.getMatchResult(requesterId, duoPostId);
+
+            // then
+            assertThat(result.getPartnerGameName()).isNull();
+            assertThat(result.getPartnerTagLine()).isNull();
+            assertThat(result.getStatus()).isEqualTo("CONFIRMED");
         }
 
         @DisplayName("MATCHED 상태가 아닌 게시글 조회 시 DUO_POST_NOT_MATCHED 에러")
@@ -834,6 +884,8 @@ class DuoRequestServiceTest {
                 .id(id)
                 .memberId(memberId)
                 .puuid("owner-puuid")
+                .gameName("Hide on bush")
+                .tagLine("KR1")
                 .primaryLane(Lane.MID)
                 .desiredLane(Lane.JUNGLE)
                 .hasMicrophone(true)
@@ -856,6 +908,8 @@ class DuoRequestServiceTest {
                 .duoPostId(duoPostId)
                 .requesterId(requesterId)
                 .requesterPuuid("requester-puuid")
+                .gameName("DuoBuddy")
+                .tagLine("KR2")
                 .primaryLane(Lane.ADC)
                 .desiredLane(Lane.SUPPORT)
                 .hasMicrophone(false)

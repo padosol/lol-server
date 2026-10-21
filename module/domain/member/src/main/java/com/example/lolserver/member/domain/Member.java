@@ -2,6 +2,7 @@ package com.example.lolserver.member.domain;
 
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
+import com.example.lolserver.member.domain.vo.RiotAccount;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -87,7 +88,7 @@ public class Member {
 
     public void linkSocialAccount(String provider,
             String providerId, String email, String nickname,
-            String profileImageUrl, String puuid) {
+            String profileImageUrl, RiotAccount riotAccount) {
         if (this.socialAccounts == null) {
             this.socialAccounts = new ArrayList<>();
         }
@@ -99,7 +100,7 @@ public class Member {
         }
         SocialAccount newAccount = SocialAccount.create(
                 this.id, provider, providerId, email, nickname,
-                profileImageUrl, puuid);
+                profileImageUrl, riotAccount);
         this.socialAccounts.add(newAccount);
     }
 
@@ -144,12 +145,12 @@ public class Member {
 
     public static Member createNewWithSocialAccount(String provider,
             String providerId, String email, String nickname,
-            String profileImageUrl, String puuid) {
+            String profileImageUrl, RiotAccount riotAccount) {
         Member member = createNew();
         member.socialAccounts = new ArrayList<>();
         SocialAccount account = SocialAccount.create(
                 null, provider, providerId, email, nickname,
-                profileImageUrl, puuid);
+                profileImageUrl, riotAccount);
         member.socialAccounts.add(account);
         return member;
     }

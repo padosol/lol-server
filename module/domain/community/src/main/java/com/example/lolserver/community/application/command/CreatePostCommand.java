@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Builder
@@ -15,4 +17,6 @@ public class CreatePostCommand {
     private String title;
     private String content;
     private Long categoryId;
+    /** 이 글에 첨부할 이미지 id. 없으면 첨부 없음. */
+    private List<Long> imageIds;
 }

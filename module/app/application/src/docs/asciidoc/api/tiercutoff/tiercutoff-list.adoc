@@ -3,7 +3,7 @@
 
 ==== HTTP Request
 include::{snippets}/tier-cutoff-list/http-request.adoc[]
-include::{snippets}/tier-cutoff-list/path-parameters.adoc[]
+include::{snippets}/tier-cutoff-list/query-parameters.adoc[]
 
 ==== HTTP Response
 include::{snippets}/tier-cutoff-list/http-response.adoc[]

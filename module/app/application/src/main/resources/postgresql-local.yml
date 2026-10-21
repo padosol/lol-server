@@ -1,19 +1,18 @@
 spring:
-  # 스키마 마이그레이션은 lol-repository 가 단독으로 소유한다 (lol-db-schema 서브모듈을
-  # 이미지에 싣고 기동 시 Flyway 로 적용). lol-server 는 스키마를 만들지 않고
-  # ddl-auto: validate 로 검증만 한다.
+  # lol-server 는 app 스키마(member·community·duo)만 소유하고 기동 시 Flyway 로 적용한다
+  # (classpath:db/migration/app). app 밖 데이터는 lol-repository API 로 받는다.
   #
-  # local: 빈 DB 로 시작하면 lol-repository 가 먼저 떠서 스키마를 만들어야 한다.
-  # lol-server 단독 기동 시에는 validate 가 실패하니, lol-repository 를 먼저 띄울 것.
+  # local: app 스키마가 없으면 만들고 V1 부터 적용한다. lol-repository 가 공유 체인으로 public 에 만든
+  # app 테이블(member·community_*·duo_*)은 쓰이지 않는 사본으로 남는다 — search_path 상 app 이 먼저다.
+  # (prod 의 "public 에 app 테이블이 있으면 거부" 가드는 local 에 넣지 않는다 → docs/db-split/README.md 6절)
   flyway:
-    enabled: false
-
-  # local 개발용 기본 데이터 시드 (스키마는 Flyway 담당, 여기선 데이터만).
-  # Flyway 마이그레이션 이후 실행되며, 스크립트는 ON CONFLICT 로 멱등 처리됨.
-  sql:
-    init:
-      mode: always
-      data-locations: classpath:db/seed/season-local.sql
+    enabled: true
+    locations: classpath:db/migration/app
+    schemas: app
+    default-schema: app
+    # 스키마 이동으로 테이블은 있는데 이력이 없는 app 스키마 → V1 을 baseline 으로 기록하고 V2 부터 적용
+    baseline-on-migrate: true
+    baseline-version: 1
 
   jpa:
     open-in-view: false
@@ -31,10 +30,11 @@ spring:
     show-sql: false
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    # search_path 를 접속 계정 설정에 기대지 않고 직접 지정한다
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}?currentSchema=app
     driver-class-name: org.postgresql.Driver
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:1234}
     hikari:
       register-mbeans: true
       maximum-pool-size: 30

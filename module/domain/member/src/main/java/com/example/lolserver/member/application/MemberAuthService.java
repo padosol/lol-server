@@ -85,7 +85,7 @@ public class MemberAuthService implements MemberAuthUseCase {
         member.linkSocialAccount(
                 userInfo.getProvider(), userInfo.getProviderId(),
                 userInfo.getEmail(), userInfo.getNickname(),
-                userInfo.getProfileImageUrl(), userInfo.getPuuid());
+                userInfo.getProfileImageUrl(), userInfo.toRiotAccount());
 
         memberPersistencePort.save(member);
     }
@@ -168,7 +168,7 @@ public class MemberAuthService implements MemberAuthUseCase {
                 userInfo.getEmail(),
                 userInfo.getNickname(),
                 userInfo.getProfileImageUrl(),
-                userInfo.getPuuid());
+                userInfo.toRiotAccount());
         return memberPersistencePort.save(member);
     }
 
