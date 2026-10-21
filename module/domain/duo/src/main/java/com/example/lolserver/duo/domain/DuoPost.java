@@ -43,8 +43,8 @@ public class DuoPost {
     public static DuoPost create(Long memberId, String puuid,
             Lane primaryLane, Lane desiredLane, boolean hasMicrophone, String memo,
             RiotAccountStats stats) {
-        TierInfo tierInfo = stats.tierInfo();
-        tierInfo.validateRanked();
+        stats.validateEligible();
+        TierInfo tierInfo = stats.tierOrUnranked();
 
         LocalDateTime now = LocalDateTime.now();
         return DuoPost.builder()

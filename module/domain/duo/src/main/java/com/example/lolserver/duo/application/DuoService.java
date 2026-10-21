@@ -20,6 +20,7 @@ import com.example.lolserver.duo.domain.DuoRequest;
 import com.example.lolserver.duo.domain.vo.DuoRequestStatus;
 import com.example.lolserver.duo.domain.vo.Lane;
 import com.example.lolserver.duo.domain.vo.RiotAccountStats;
+import com.example.lolserver.member.application.model.readmodel.LinkedRiotAccountReadModel;
 import com.example.lolserver.common.support.SliceResult;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
@@ -48,10 +49,11 @@ public class DuoService implements DuoPostUseCase, DuoPostQueryUseCase {
     @Override
     @Transactional
     public DuoPostResultModel createDuoPost(Long memberId, CreateDuoPostCommand command) {
-        String puuid = riotAccountResolver.extractRiotPuuid(memberId);
+        LinkedRiotAccountReadModel account = riotAccountResolver.resolveLinkedAccount(memberId);
+        String puuid = account.getPuuid();
 
         // 외부 통계 조회는 락 밖에서 — 락 임계구역이 lease(10s)를 넘지 않도록 한다.
-        RiotAccountStats stats = riotAccountResolver.lookupAllStats(puuid);
+        RiotAccountStats stats = riotAccountResolver.lookupStats(account);
 
         // 락 안에서 활성글 존재 검사와 저장을 함께 수행해 check-then-act 레이스를 제거한다.
         return duoLockPort.executeWithLock(MEMBER_POST_LOCK_PREFIX + memberId, () -> {

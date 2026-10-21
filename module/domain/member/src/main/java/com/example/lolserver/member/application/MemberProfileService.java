@@ -1,6 +1,7 @@
 package com.example.lolserver.member.application;
 
 import com.example.lolserver.member.application.dto.UpdateNicknameCommand;
+import com.example.lolserver.member.application.model.readmodel.LinkedRiotAccountReadModel;
 import com.example.lolserver.member.application.model.readmodel.MemberProfileReadModel;
 import com.example.lolserver.member.application.model.readmodel.MemberReadModel;
 import com.example.lolserver.member.application.model.resultmodel.MemberResultModel;
@@ -8,7 +9,6 @@ import com.example.lolserver.member.application.port.in.MemberCommandUseCase;
 import com.example.lolserver.member.application.port.in.MemberQueryUseCase;
 import com.example.lolserver.member.application.port.out.MemberPersistencePort;
 import com.example.lolserver.member.domain.Member;
-import com.example.lolserver.member.domain.SocialAccount;
 import com.example.lolserver.member.domain.vo.OAuthProvider;
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
@@ -65,7 +65,7 @@ public class MemberProfileService
     }
 
     @Override
-    public Optional<String> findRiotPuuid(Long memberId) {
+    public Optional<LinkedRiotAccountReadModel> findLinkedRiotAccount(Long memberId) {
         Member member = memberPersistencePort
                 .findByIdWithSocialAccounts(memberId)
                 .orElseThrow(() -> new CoreException(
@@ -74,7 +74,7 @@ public class MemberProfileService
         return member.getSocialAccounts().stream()
                 .filter(sa -> OAuthProvider.RIOT.name().equals(sa.getProvider())
                         && sa.getPuuid() != null)
-                .map(SocialAccount::getPuuid)
+                .map(LinkedRiotAccountReadModel::of)
                 .findFirst();
     }
 

@@ -50,6 +50,12 @@ public class SocialAccountEntity {
     @Column(name = "puuid")
     private String puuid;
 
+    @Column(name = "game_name")
+    private String gameName;
+
+    @Column(name = "tag_line")
+    private String tagLine;
+
     @Column(name = "linked_at", nullable = false)
     private LocalDateTime linkedAt;
 }

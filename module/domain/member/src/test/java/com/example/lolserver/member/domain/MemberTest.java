@@ -2,6 +2,7 @@ package com.example.lolserver.member.domain;
 
 import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
+import com.example.lolserver.member.domain.vo.RiotAccount;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -31,6 +32,28 @@ class MemberTest {
         assertThat(result.getProvider()).isEqualTo("GOOGLE");
         assertThat(result.getProviderId()).isEqualTo("google-123");
         assertThat(result.getMemberId()).isEqualTo(1L);
+    }
+
+    @DisplayName("RIOT 계정을 연동하면 puuid와 연동 시점 Riot ID가 저장되고, 탈퇴하면 지워진다")
+    @Test
+    void linkRiotAccount_storesRiotId_andWithdrawAnonymizes() {
+        // given
+        Member member = createMemberWithSocialAccounts();
+
+        // when
+        member.linkSocialAccount("RIOT", "riot-sub", null, null, null,
+                new RiotAccount("riot-puuid", "Hide on bush", "KR1"));
+
+        // then
+        SocialAccount riot = member.getSocialAccounts().get(0);
+        assertThat(riot.getPuuid()).isEqualTo("riot-puuid");
+        assertThat(riot.getGameName()).isEqualTo("Hide on bush");
+        assertThat(riot.getTagLine()).isEqualTo("KR1");
+
+        member.withdraw();
+        assertThat(riot.getPuuid()).isNull();
+        assertThat(riot.getGameName()).isNull();
+        assertThat(riot.getTagLine()).isNull();
     }
 
     @DisplayName("이미 같은 provider가 연동되어 있으면 예외가 발생한다")
