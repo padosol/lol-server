@@ -16,6 +16,7 @@ import com.example.lolserver.duo.domain.vo.DuoPostStatus;
 import com.example.lolserver.duo.domain.vo.DuoRequestStatus;
 import com.example.lolserver.duo.domain.vo.Lane;
 import com.example.lolserver.duo.domain.vo.RiotAccountStats;
+import com.example.lolserver.duo.domain.vo.RiotId;
 import com.example.lolserver.duo.domain.vo.MostChampion;
 import com.example.lolserver.duo.domain.vo.RecentGameSummary;
 import com.example.lolserver.duo.domain.vo.TierInfo;
@@ -318,7 +319,7 @@ class DuoRequestServiceTest {
                     eq(duoPostId), eq(memberId), anyList()))
                     .willReturn(false);
             given(riotAccountResolver.lookupStats(any()))
-                    .willReturn(RiotAccountStats.unknown("Hide on bush", "KR1"));
+                    .willReturn(RiotAccountStats.unknown(new RiotId("Hide on bush", "KR1")));
             given(duoRequestPersistencePort.save(any(DuoRequest.class)))
                     .willAnswer(invocation -> invocation.getArgument(0));
 

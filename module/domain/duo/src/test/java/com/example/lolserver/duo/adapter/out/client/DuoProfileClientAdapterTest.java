@@ -2,7 +2,7 @@ package com.example.lolserver.duo.adapter.out.client;
 
 import com.example.lolserver.duo.domain.vo.MostChampion;
 import com.example.lolserver.duo.domain.vo.RecentGameSummary;
-import com.example.lolserver.duo.domain.vo.RiotAccountStats;
+import com.example.lolserver.duo.domain.vo.SummonerStats;
 import com.example.lolserver.duo.domain.vo.TierInfo;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
@@ -32,7 +32,7 @@ class DuoProfileClientAdapterTest {
     private static final String PUUID = "puuid-1";
     private static final String DUO_PROFILE_URL = BASE_URL + "/internal/v1/summoners/" + PUUID + "/duo-profile";
 
-    // lol-repository docs/api/internal-v1.openapi.yaml 의 DuoProfileReadModel
+    // lol-repository docs/api/internal-v1.openapi.yaml 의 DuoProfileReadModel. gameName·tagLine 은 읽지 않는다
     private static final String DUO_PROFILE_JSON = """
             {
               "gameName": "Hide on bush",
@@ -67,17 +67,16 @@ class DuoProfileClientAdapterTest {
         adapter = new DuoProfileClientAdapter(builder.build(), circuitBreaker);
     }
 
-    @DisplayName("200 응답의 Riot ID·티어·모스트 챔피언·최근 게임을 도메인 값으로 옮긴다")
+    @DisplayName("200 응답의 티어·모스트 챔피언·최근 게임을 도메인 값으로 옮긴다 — Riot ID 는 RSO 연동 값이라 읽지 않는다")
     @Test
     void ok_mapsToDomain() {
         server.expect(requestTo(DUO_PROFILE_URL))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess(DUO_PROFILE_JSON, MediaType.APPLICATION_JSON));
 
-        Optional<RiotAccountStats> result = adapter.findByPuuid(PUUID);
+        Optional<SummonerStats> result = adapter.findByPuuid(PUUID);
 
-        assertThat(result).contains(new RiotAccountStats(
-                "Hide on bush", "KR1",
+        assertThat(result).contains(new SummonerStats(
                 new TierInfo("GOLD", "II", 50),
                 List.of(new MostChampion(1, "Annie", 10, 6, 4)),
                 new RecentGameSummary(1, 1, List.of(

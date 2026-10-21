@@ -43,7 +43,7 @@ public class RiotRsoClient implements RiotAccountPort {
                         "Riot PUUID를 가져올 수 없습니다.");
             }
 
-            // Riot ID 는 없어도 연동은 된다 — 듀오에서 상대에게 보여 줄 기본값일 뿐이다
+            // Riot ID 는 없어도 연동은 된다 — 듀오 매칭에만 쓰고, 없으면 듀오가 막는다(RIOT_ACCOUNT_RELINK_REQUIRED)
             return new RiotAccount(puuid,
                     (String) response.get("gameName"),
                     (String) response.get("tagLine"));

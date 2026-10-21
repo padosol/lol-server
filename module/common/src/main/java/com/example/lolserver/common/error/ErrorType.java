@@ -52,6 +52,8 @@ public enum ErrorType {
 
     // 듀오 찾기
     RIOT_ACCOUNT_NOT_LINKED(400, ErrorCode.E400, "Riot 계정 연동이 필요합니다."),
+    RIOT_ACCOUNT_RELINK_REQUIRED(400, ErrorCode.E400,
+            "Riot ID 를 확인할 수 없습니다. Riot 계정 연동을 해제한 뒤 다시 연동해 주세요."),
     DUO_POST_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 듀오 게시글입니다."),
     DUO_POST_NOT_ACTIVE(400, ErrorCode.E400, "활성 상태의 듀오 게시글이 아닙니다."),
     DUO_POST_ACTIVE_EXISTS(409, ErrorCode.E409,

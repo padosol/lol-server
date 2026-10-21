@@ -1,7 +1,7 @@
 package com.example.lolserver.duo.adapter.out.client;
 
-import com.example.lolserver.duo.application.port.out.RiotAccountStatsPort;
-import com.example.lolserver.duo.domain.vo.RiotAccountStats;
+import com.example.lolserver.duo.application.port.out.SummonerStatsPort;
+import com.example.lolserver.duo.domain.vo.SummonerStats;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,7 @@ import java.util.Optional;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DuoProfileClientAdapter implements RiotAccountStatsPort {
+public class DuoProfileClientAdapter implements SummonerStatsPort {
 
     static final String DUO_PROFILE_URI = "/internal/v1/summoners/{puuid}/duo-profile";
 
@@ -33,7 +33,7 @@ public class DuoProfileClientAdapter implements RiotAccountStatsPort {
     private final CircuitBreaker lolRepositoryCircuitBreaker;
 
     @Override
-    public Optional<RiotAccountStats> findByPuuid(String puuid) {
+    public Optional<SummonerStats> findByPuuid(String puuid) {
         try {
             return lolRepositoryCircuitBreaker.executeSupplier(() -> fetch(puuid));
         } catch (RuntimeException e) {
@@ -44,7 +44,7 @@ public class DuoProfileClientAdapter implements RiotAccountStatsPort {
         }
     }
 
-    private Optional<RiotAccountStats> fetch(String puuid) {
+    private Optional<SummonerStats> fetch(String puuid) {
         return lolRepositoryRestClient.get()
                 .uri(DUO_PROFILE_URI, puuid)
                 .accept(MediaType.APPLICATION_JSON)
