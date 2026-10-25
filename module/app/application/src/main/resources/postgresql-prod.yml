@@ -2,22 +2,15 @@ spring:
   # lol-server 는 app 스키마(member·community·duo)만 소유하고 기동 시 Flyway 로 적용한다
   # (classpath:db/migration/app). app 밖 데이터는 lol-repository API 로 받는다.
   #
-  # 이 설정은 스키마 이동(docs/db-split/02-move-schema.sql) 뒤에만 기동된다:
-  # - 이동 전(app 스키마 없음): create-schemas=false 라 Flyway 가 실패한다
-  # - app 테이블이 public 에 남아 있으면 db/migration-guard/beforeMigrate.sql 이 실패시킨다
-  # 둘 다 빈 테이블이 실제 데이터를 가리는 사고를 막기 위한 의도된 실패다.
+  # app 스키마가 없으면 만들고 V1 부터 적용한다. public 에 남은 예전 app 테이블은 옮기지 않고 읽지도 않는다.
+  # baseline 하지 않는다 — 이력 없이 테이블만 있는 app 스키마는 V1 을 건너뛰지 않고 실패한다 (docs/db-split/README.md).
   #
-  # 접속 계정(DB_USERNAME — 지금은 공유 슈퍼유저)으로 그대로 마이그레이션한다. 전용 계정이나 SET ROLE 에 기대지
-  # 않는다 (docs/db-split/README.md 5절).
+  # 접속 계정(DB_USERNAME — 지금은 공유 슈퍼유저)으로 그대로 마이그레이션한다. 전용 계정이나 SET ROLE 에 기대지 않는다.
   flyway:
     enabled: true
-    locations: classpath:db/migration/app,classpath:db/migration-guard
+    locations: classpath:db/migration/app
     schemas: app
     default-schema: app
-    create-schemas: false
-    # 이동 직후 app 스키마는 테이블은 있고 이력이 없다 → V1 을 baseline 으로 기록하고 V2 부터 적용
-    baseline-on-migrate: true
-    baseline-version: 1
 
   jpa:
     open-in-view: false
