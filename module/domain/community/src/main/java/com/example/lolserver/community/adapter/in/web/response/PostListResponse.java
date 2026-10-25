@@ -13,6 +13,7 @@ public record PostListResponse(
         int downvoteCount,
         int commentCount,
         double hotScore,
+        boolean hasImage,
         AuthorResponse author,
         LocalDateTime createdAt
 ) {
@@ -26,6 +27,7 @@ public record PostListResponse(
                 readModel.getDownvoteCount(),
                 readModel.getCommentCount(),
                 readModel.getHotScore(),
+                readModel.isHasImage(),
                 readModel.getAuthor() != null ? AuthorResponse.from(readModel.getAuthor()) : null,
                 readModel.getCreatedAt()
         );

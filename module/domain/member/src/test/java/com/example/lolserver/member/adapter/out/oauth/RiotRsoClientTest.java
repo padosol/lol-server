@@ -1,6 +1,7 @@
 package com.example.lolserver.member.adapter.out.oauth;
 
 import com.example.lolserver.member.config.OAuthProperties;
+import com.example.lolserver.member.domain.vo.RiotAccount;
 import com.example.lolserver.common.error.CoreException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -58,8 +59,8 @@ class RiotRsoClientTest {
     }
 
     @Test
-    @DisplayName("fetchPuuid로 access token을 사용하여 PUUID를 조회한다")
-    void fetchPuuid_success() {
+    @DisplayName("fetchAccount로 access token을 사용하여 PUUID와 Riot ID를 조회한다")
+    void fetchAccount_success() {
         // given
         givenAccountApiReturns("test-access-token", Map.of(
                 "puuid", "fetched-puuid-456",
@@ -68,31 +69,44 @@ class RiotRsoClientTest {
         ));
 
         // when
-        String puuid = riotRsoClient.fetchPuuid("test-access-token");
+        RiotAccount account = riotRsoClient.fetchAccount("test-access-token");
 
         // then
-        assertThat(puuid).isEqualTo("fetched-puuid-456");
+        assertThat(account).isEqualTo(new RiotAccount("fetched-puuid-456", "Player", "KR1"));
     }
 
     @Test
-    @DisplayName("fetchPuuid에서 응답이 null이면 예외가 발생한다")
-    void fetchPuuid_nullResponse_throwsException() {
+    @DisplayName("fetchAccount에서 Riot ID가 없어도 PUUID만으로 조회된다")
+    void fetchAccount_withoutRiotId_returnsPuuidOnly() {
+        // given
+        givenAccountApiReturns("test-access-token", Map.of("puuid", "fetched-puuid-456"));
+
+        // when
+        RiotAccount account = riotRsoClient.fetchAccount("test-access-token");
+
+        // then
+        assertThat(account).isEqualTo(new RiotAccount("fetched-puuid-456", null, null));
+    }
+
+    @Test
+    @DisplayName("fetchAccount에서 응답이 null이면 예외가 발생한다")
+    void fetchAccount_nullResponse_throwsException() {
         // given
         givenAccountApiReturns("test-access-token", null);
 
         // when & then
-        assertThatThrownBy(() -> riotRsoClient.fetchPuuid("test-access-token"))
+        assertThatThrownBy(() -> riotRsoClient.fetchAccount("test-access-token"))
                 .isInstanceOf(CoreException.class);
     }
 
     @Test
-    @DisplayName("fetchPuuid에서 응답에 puuid가 없으면 예외가 발생한다")
-    void fetchPuuid_missingPuuid_throwsException() {
+    @DisplayName("fetchAccount에서 응답에 puuid가 없으면 예외가 발생한다")
+    void fetchAccount_missingPuuid_throwsException() {
         // given
         givenAccountApiReturns("test-access-token", Map.of("gameName", "TestPlayer"));
 
         // when & then
-        assertThatThrownBy(() -> riotRsoClient.fetchPuuid("test-access-token"))
+        assertThatThrownBy(() -> riotRsoClient.fetchAccount("test-access-token"))
                 .isInstanceOf(CoreException.class);
     }
 }

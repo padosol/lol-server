@@ -1,6 +1,8 @@
 package com.example.lolserver.member.application.port.out;
 
+import com.example.lolserver.member.domain.vo.RiotAccount;
+
 public interface RiotAccountPort {
 
-    String fetchPuuid(String accessToken);
+    RiotAccount fetchAccount(String accessToken);
 }

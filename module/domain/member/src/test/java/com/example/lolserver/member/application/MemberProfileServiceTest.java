@@ -1,5 +1,6 @@
 package com.example.lolserver.member.application;
 
+import com.example.lolserver.member.application.model.readmodel.LinkedRiotAccountReadModel;
 import com.example.lolserver.member.application.model.readmodel.MemberProfileReadModel;
 import com.example.lolserver.member.application.model.readmodel.MemberReadModel;
 import com.example.lolserver.member.application.port.out.MemberPersistencePort;
@@ -133,9 +134,9 @@ class MemberProfileServiceTest {
                 .containsExactlyInAnyOrder("회원1", "회원2");
     }
 
-    @DisplayName("RIOT 연동 puuid 조회 시 연동된 puuid를 반환한다")
+    @DisplayName("RIOT 연동 계정 조회 시 puuid와 연동 시점 Riot ID를 반환한다")
     @Test
-    void findRiotPuuid() {
+    void findLinkedRiotAccount() {
         // given
         Long memberId = 1L;
         SocialAccount google = SocialAccount.builder()
@@ -145,7 +146,7 @@ class MemberProfileServiceTest {
         SocialAccount riot = SocialAccount.builder()
                 .id(2L).memberId(memberId)
                 .provider(OAuthProvider.RIOT.name()).providerId("r-1")
-                .puuid("riot-puuid-123")
+                .puuid("riot-puuid-123").gameName("Hide on bush").tagLine("KR1")
                 .linkedAt(LocalDateTime.now()).build();
         Member member = Member.builder()
                 .id(memberId).uuid("uuid").nickname("회원").role("USER")
@@ -155,15 +156,19 @@ class MemberProfileServiceTest {
                 .willReturn(Optional.of(member));
 
         // when
-        Optional<String> result = memberProfileService.findRiotPuuid(memberId);
+        Optional<LinkedRiotAccountReadModel> result = memberProfileService.findLinkedRiotAccount(memberId);
 
         // then
-        assertThat(result).contains("riot-puuid-123");
+        assertThat(result).hasValueSatisfying(account -> {
+            assertThat(account.getPuuid()).isEqualTo("riot-puuid-123");
+            assertThat(account.getGameName()).isEqualTo("Hide on bush");
+            assertThat(account.getTagLine()).isEqualTo("KR1");
+        });
     }
 
     @DisplayName("RIOT 연동이 없으면 빈 값을 반환한다")
     @Test
-    void findRiotPuuid_notLinked() {
+    void findLinkedRiotAccount_notLinked() {
         // given
         Long memberId = 1L;
         SocialAccount google = SocialAccount.builder()
@@ -178,21 +183,21 @@ class MemberProfileServiceTest {
                 .willReturn(Optional.of(member));
 
         // when
-        Optional<String> result = memberProfileService.findRiotPuuid(memberId);
+        Optional<LinkedRiotAccountReadModel> result = memberProfileService.findLinkedRiotAccount(memberId);
 
         // then
         assertThat(result).isEmpty();
     }
 
-    @DisplayName("존재하지 않는 회원의 RIOT puuid 조회 시 예외가 발생한다")
+    @DisplayName("존재하지 않는 회원의 RIOT 연동 계정 조회 시 예외가 발생한다")
     @Test
-    void findRiotPuuid_memberNotFound() {
+    void findLinkedRiotAccount_memberNotFound() {
         // given
         given(memberPersistencePort.findByIdWithSocialAccounts(999L))
                 .willReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> memberProfileService.findRiotPuuid(999L))
+        assertThatThrownBy(() -> memberProfileService.findLinkedRiotAccount(999L))
                 .isInstanceOf(CoreException.class)
                 .extracting(e -> ((CoreException) e).getErrorType())
                 .isEqualTo(ErrorType.MEMBER_NOT_FOUND);

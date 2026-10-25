@@ -1,3 +1,4 @@
 lol:
   repository:
-    url: http://localhost:8111
+    # lol-repository 내부 API(/internal/v1/**) 포트. 공개 포트(8111)는 /internal 을 404 로 받는다.
+    internal-url: http://localhost:8112

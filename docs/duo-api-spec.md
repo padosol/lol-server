@@ -189,6 +189,7 @@ Query: ?page=0
 | 에러 | HTTP | 설명 |
 |------|------|------|
 | RIOT_ACCOUNT_NOT_LINKED | 400 | Riot 계정 미연동 |
+| RIOT_ACCOUNT_RELINK_REQUIRED | 400 | 연동에 Riot ID 가 없음 (Riot ID 저장 전 연동) — 연동 해제 후 다시 연동 |
 | DUO_POST_NOT_FOUND | 404 | 게시글 없음 |
 | DUO_POST_NOT_ACTIVE | 400 | 비활성 게시글 (선착순 탈락 포함) |
 | DUO_POST_ACTIVE_EXISTS | 409 | 이미 활성 게시글 보유 (회원당 1개) |

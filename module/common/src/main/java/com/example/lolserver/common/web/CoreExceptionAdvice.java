@@ -8,9 +8,14 @@ import com.example.lolserver.common.web.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @Slf4j
 @RestControllerAdvice
@@ -31,6 +36,40 @@ public class CoreExceptionAdvice {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(ErrorType.INVALID_INPUT));
+    }
+
+    /**
+     * 필수 query 누락({@code platform} 등), {@code params} 조건 불일치, 타입 변환 실패,
+     * 읽을 수 없는 본문(없는 enum 값 등).
+     *
+     * <p>이 핸들러가 없으면 아래 {@code exception(Exception)} 폴백이 잡아 500 이 나간다.
+     */
+    @ExceptionHandler({
+        MissingServletRequestParameterException.class,
+        UnsatisfiedServletRequestParameterException.class,
+        MethodArgumentTypeMismatchException.class,
+        HttpMessageNotReadableException.class
+    })
+    public ResponseEntity<ApiResponse<ErrorMessage>> badRequestParameter(Exception e) {
+        log.debug("Bad request parameter : {}", e.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ErrorType.INVALID_INPUT));
+    }
+
+    /**
+     * {@code spring.servlet.multipart.max-file-size} 를 넘긴 업로드.
+     *
+     * <p>이 핸들러가 없으면 아래 {@code exception(Exception)} 폴백이 잡아 500 DEFAULT_ERROR 가
+     * 나가고, 사용자에게는 "알 수 없는 오류"로 보인다. 앱 레벨 용량 검증과 이중이 되는 게 아니라
+     * <b>앱 코드에 도달하기 전에</b> 톰캣/Spring 이 끊는 경로를 덮는 것이다.
+     */
+    @ExceptionHandler
+    public ResponseEntity<ApiResponse<ErrorMessage>> maxUploadSizeExceeded(
+            MaxUploadSizeExceededException e) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ErrorType.IMAGE_SIZE_EXCEEDED));
     }
 
     @ExceptionHandler

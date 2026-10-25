@@ -24,6 +24,8 @@ public class DuoPost {
     private Long id;
     private Long memberId;
     private String puuid;
+    private String gameName;
+    private String tagLine;
     private Lane primaryLane;
     private Lane desiredLane;
     private boolean hasMicrophone;
@@ -41,13 +43,15 @@ public class DuoPost {
     public static DuoPost create(Long memberId, String puuid,
             Lane primaryLane, Lane desiredLane, boolean hasMicrophone, String memo,
             RiotAccountStats stats) {
-        TierInfo tierInfo = stats.tierInfo();
-        tierInfo.validateRanked();
+        stats.validateEligible();
+        TierInfo tierInfo = stats.tierOrUnranked();
 
         LocalDateTime now = LocalDateTime.now();
         return DuoPost.builder()
                 .memberId(memberId)
                 .puuid(puuid)
+                .gameName(stats.gameName())
+                .tagLine(stats.tagLine())
                 .primaryLane(primaryLane)
                 .desiredLane(desiredLane)
                 .hasMicrophone(hasMicrophone)

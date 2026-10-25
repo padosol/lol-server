@@ -14,15 +14,12 @@ services:
       # .env 에서 로드되지 않거나 컨테이너 내부에서 달라져야 하는 값만 지정
       SPRING_PROFILES_ACTIVE: local
       SPRING_DATA_REDIS_HOST: lol-redis-mon
-      SPRING_RABBITMQ_HOST: lol-rabbitmq-mon
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
       - monitoring
     depends_on:
       lol-redis:
-        condition: service_healthy
-      lol-rabbitmq:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8100/actuator/health || exit 1"]
@@ -40,17 +37,6 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
-      retries: 5
-
-  lol-rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: lol-rabbitmq-mon
-    networks:
-      - monitoring
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 10s
-      timeout: 5s
       retries: 5
 
   prometheus:

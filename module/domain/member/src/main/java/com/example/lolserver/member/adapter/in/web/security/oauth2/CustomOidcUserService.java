@@ -1,6 +1,7 @@
 package com.example.lolserver.member.adapter.in.web.security.oauth2;
 
 import com.example.lolserver.member.application.port.out.RiotAccountPort;
+import com.example.lolserver.member.domain.vo.RiotAccount;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
@@ -37,12 +38,16 @@ public class CustomOidcUserService extends OidcUserService {
             if ("riot".equals(registrationId)) {
                 String accessToken = userRequest.getAccessToken()
                         .getTokenValue();
-                String puuid = riotAccountPort.fetchPuuid(accessToken);
-                log.debug("[OIDC] Riot PUUID 조회 성공: {}", puuid);
+                RiotAccount account = riotAccountPort.fetchAccount(accessToken);
+                log.debug("[OIDC] Riot PUUID 조회 성공: {}", account.puuid());
 
                 Map<String, Object> enrichedClaims =
                         new HashMap<>(oidcUser.getAttributes());
-                enrichedClaims.put("puuid", puuid);
+                enrichedClaims.put("puuid", account.puuid());
+                if (account.gameName() != null && account.tagLine() != null) {
+                    enrichedClaims.put("gameName", account.gameName());
+                    enrichedClaims.put("tagLine", account.tagLine());
+                }
 
                 return new DefaultOidcUser(
                         oidcUser.getAuthorities(),

@@ -32,6 +32,8 @@ class SocialAccountMapperTest {
                 .nickname("TestUser")
                 .profileImageUrl("https://example.com/photo.jpg")
                 .puuid("test-puuid-123")
+                .gameName("Hide on bush")
+                .tagLine("KR1")
                 .linkedAt(linkedAt)
                 .build();
 
@@ -49,6 +51,8 @@ class SocialAccountMapperTest {
         assertThat(result.getProfileImageUrl())
                 .isEqualTo("https://example.com/photo.jpg");
         assertThat(result.getPuuid()).isEqualTo("test-puuid-123");
+        assertThat(result.getGameName()).isEqualTo("Hide on bush");
+        assertThat(result.getTagLine()).isEqualTo("KR1");
         assertThat(result.getLinkedAt()).isEqualTo(linkedAt);
     }
 
@@ -130,6 +134,8 @@ class SocialAccountMapperTest {
                 .nickname("NewName")
                 .profileImageUrl("https://new.com/photo.jpg")
                 .puuid("new-puuid")
+                .gameName("Hide on bush")
+                .tagLine("KR1")
                 .linkedAt(LocalDateTime.of(2026, 12, 31, 23, 59))
                 .build();
 
@@ -147,6 +153,8 @@ class SocialAccountMapperTest {
         assertThat(entity.getProfileImageUrl())
                 .isEqualTo("https://new.com/photo.jpg");
         assertThat(entity.getPuuid()).isEqualTo("new-puuid");
+        assertThat(entity.getGameName()).isEqualTo("Hide on bush");
+        assertThat(entity.getTagLine()).isEqualTo("KR1");
     }
 
     @DisplayName("SocialAccountEntity 리스트를 도메인 리스트로 변환한다")

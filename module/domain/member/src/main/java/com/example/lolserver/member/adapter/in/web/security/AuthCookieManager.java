@@ -19,6 +19,14 @@ public class AuthCookieManager {
 
     private static final String ACCESS_TOKEN_COOKIE = "accessToken";
     private static final String REFRESH_TOKEN_COOKIE = "refreshToken";
+    static final String REFRESH_TOKEN_PATH = "/api/v1/auth/refresh";
+    /**
+     * 옛 refresh 경로. 브라우저는 Path 가 일치하는 경로에만 쿠키를 보내므로, lol-ui 가 옛
+     * {@code /api/auth/refresh} 를 호출하는 병행 기간에는 같은 refresh 토큰을 두 Path 에 모두 발급한다.
+     * 새 Path 로만 발급하면 옛 경로 호출에 쿠키가 실리지 않아 사용자가 로그아웃된다.
+     * lol-ui 전환 + refresh 토큰 유효기간(14일) 경과 후 MP-148 에서 제거.
+     */
+    static final String LEGACY_REFRESH_TOKEN_PATH = "/api/auth/refresh";
 
     private final JwtProperties jwtProperties;
     private final CookieProperties cookieProperties;
@@ -27,12 +35,15 @@ public class AuthCookieManager {
         addCookie(response, ACCESS_TOKEN_COOKIE, tokenReadModel.accessToken(),
                 "/", (int) jwtProperties.getAccessTokenExpiry());
         addCookie(response, REFRESH_TOKEN_COOKIE, tokenReadModel.refreshToken(),
-                "/api/auth/refresh", (int) jwtProperties.getRefreshTokenExpiry());
+                REFRESH_TOKEN_PATH, (int) jwtProperties.getRefreshTokenExpiry());
+        addCookie(response, REFRESH_TOKEN_COOKIE, tokenReadModel.refreshToken(),
+                LEGACY_REFRESH_TOKEN_PATH, (int) jwtProperties.getRefreshTokenExpiry());
     }
 
     public void clearAuthCookies(HttpServletResponse response) {
         deleteCookie(response, ACCESS_TOKEN_COOKIE, "/");
-        deleteCookie(response, REFRESH_TOKEN_COOKIE, "/api/auth/refresh");
+        deleteCookie(response, REFRESH_TOKEN_COOKIE, REFRESH_TOKEN_PATH);
+        deleteCookie(response, REFRESH_TOKEN_COOKIE, LEGACY_REFRESH_TOKEN_PATH);
     }
 
     public String extractAccessToken(HttpServletRequest request) {
