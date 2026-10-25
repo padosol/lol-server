@@ -9,7 +9,7 @@
 -- 로컬에서 항상 걸린다. 로컬의 public app 테이블은 쓰이지 않는 사본으로 남는다.
 DO $$
 BEGIN
-    -- 카탈로그를 직접 본다: to_regclass('public.member') 는 public USAGE 가 없는 계정(lol_server)에서 권한 오류가 난다
+    -- 카탈로그를 직접 본다: to_regclass('public.member') 는 public USAGE 가 없는 계정에서 권한 오류가 난다 (접속 계정과 무관하게)
     IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
                WHERE n.nspname = 'public' AND c.relname = 'member' AND c.relkind IN ('r', 'p')) THEN
         RAISE EXCEPTION 'app 테이블이 아직 public 스키마에 있습니다. docs/db-split/02-move-schema.sql 로 app 으로 옮긴 뒤 기동하세요 (런북 docs/db-split/README.md).';

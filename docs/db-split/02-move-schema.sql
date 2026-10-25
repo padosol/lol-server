@@ -1,8 +1,9 @@
 -- MP-136 app 테이블 스키마 이동: public → app
 --
--- 전제: 01-roles.sql 적용(lol_server 계정 존재), 런북 4.1.
+-- 전제: 런북 4.1.
 -- lol-server 몫(app 테이블)만 옮긴다. 그 밖의 객체는 그대로 두고 잠그지도 않는다.
--- 실행: 슈퍼유저로.  psql -v ON_ERROR_STOP=1 -f 02-move-schema.sql
+-- 실행: 슈퍼유저(lol-server 가 접속하는 계정)로.  psql -v ON_ERROR_STOP=1 -f 02-move-schema.sql
+-- 소유자는 바꾸지 않는다 — app 스키마는 실행 계정 소유, 테이블은 지금 소유자 그대로.
 --       잠금을 못 잡아 실패하면 아무것도 바뀌지 않은 채 롤백되므로 잠시 뒤 다시 실행한다.
 -- 롤백: 02-rollback.sql
 --
@@ -15,7 +16,7 @@
 --   - 대기 중에는 뒤따르는 조회도 그 테이블에서 줄을 서므로, 이 상한이 곧 lol-server 가 멈출 수 있는 최대 시간이다.
 --   - 다 잡은 뒤의 이동은 카탈로그 변경뿐이라 수십 ms.
 --
--- 분류 (03 과 동일): app = member, member_withdrawal, social_account, community_*, duo_*  → app / 소유자 lol_server
+-- 분류 (03 과 동일): app = member, member_withdrawal, social_account, community_*, duo_*  → app
 
 \set ON_ERROR_STOP on
 \timing on
@@ -38,7 +39,7 @@ WHERE c.relnamespace = 'public'::regnamespace
 -- 2) 이동: 잠금을 이미 쥐고 있으므로 짧다
 SET LOCAL statement_timeout = '10s';
 
-CREATE SCHEMA IF NOT EXISTS app AUTHORIZATION lol_server;
+CREATE SCHEMA IF NOT EXISTS app;
 
 DO $$
 DECLARE
@@ -55,8 +56,7 @@ BEGIN
                OR c.relname LIKE 'duo\_%')
         ORDER BY c.relname
     LOOP
-        EXECUTE format('ALTER TABLE public.%I SET SCHEMA app', r.relname);
-        EXECUTE format('ALTER TABLE app.%I OWNER TO lol_server', r.relname);  -- 컬럼 소속 시퀀스도 함께
+        EXECUTE format('ALTER TABLE public.%I SET SCHEMA app', r.relname);  -- 컬럼 소속 시퀀스도 함께
         moved := moved + 1;
     END LOOP;
 
