@@ -40,7 +40,9 @@ Spring Boot 진입점 + 컴포지션 루트. **모든 인프라 모듈을 implem
 - ❌ Riot 데이터(소환사·전적·랭킹·게임 데이터) 테이블에 엔티티·쿼리 추가 — lol-server 는 app 스키마 밖에 DB 권한이 없다
   ✅ lol-repository API 로 받는다 (duo 는 `/internal/v1/**`). Hibernate validate 도 현재 스키마(`app`)만 본다
 - ❌ 적용된 app 마이그레이션(V1·V2…) 수정 — 체크섬 불일치로 운영 기동 실패
-  ✅ 새 버전(V3~)으로 추가. V1 은 운영에선 baseline 이라 실행되지 않으니 빈 DB 전용
+  ✅ 새 버전으로 추가. V1 은 운영에선 baseline 이라 실행되지 않으니 빈 DB 전용
+- ❌ V2 이후 마이그레이션을 재실행 불가로 작성 (`ADD COLUMN x`, `CREATE TABLE t`) — 운영에서 `02-rollback` 뒤 재이동하면 V1 baseline 부터 V2~ 를 컬럼·테이블이 이미 있는 상태에 다시 적용하므로 실패
+  ✅ `IF NOT EXISTS` 등으로 멱등하게. `AppSchemaMigrationTest.reappliesAfterRollbackAndRemove` 가 검증
 - ❌ 비즈니스 로직을 `LolServerApplication` 또는 이 모듈의 config 에 작성 — 헥사고날 위반
   ✅ 도메인 로직은 `core:lol-server-domain`, 어댑터는 `infra:*` 로
 

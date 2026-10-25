@@ -142,6 +142,23 @@ class AppSchemaMigrationTest {
             validateAppEntities();
         }
 
+        @DisplayName("롤백(02-rollback) 뒤 다시 이동해 이력 없이 V2~ 가 이미 반영된 테이블이어도 다시 적용이 실패하지 않는다")
+        @Test
+        void reappliesAfterRollbackAndRemove() throws Exception {
+            // given — 02-rollback 은 테이블을 컬럼째 public 으로 돌리고 app.flyway_schema_history 를 지운다
+            movedAppSchema("V1__init_app_schema.sql", "V2__add_community_image.sql",
+                    "V3__add_duo_riot_id.sql", "V4__add_social_account_riot_id.sql");
+
+            // when — 재이동 후 롤아웃은 V1 baseline 부터 V2~ 를 다시 적용한다
+            flyway("postgresql-prod.yml").migrate();
+
+            // then
+            assertThat(historyTypes()).containsExactly(
+                    Map.entry("1", "BASELINE"), Map.entry("2", "SQL"), Map.entry("3", "SQL"), Map.entry("4", "SQL"));
+            assertThat(appObjectsNotOwnedByLolServer()).isEmpty();
+            validateAppEntities();
+        }
+
         @DisplayName("app 스키마가 있어도 app 테이블이 public 에 남아 있으면 거부한다")
         @Test
         void refusesWhenPublicStillHasAppTables() throws Exception {
