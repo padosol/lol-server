@@ -46,8 +46,8 @@ spring:
     password: ${DB_PASSWORD}
     hikari:
       register-mbeans: true
-      maximum-pool-size: 30
-      minimum-idle: 30
+      maximum-pool-size: 10
+      minimum-idle: 10
       connection-timeout: 10000
       max-lifetime: 600000
       validation-timeout: 3000
