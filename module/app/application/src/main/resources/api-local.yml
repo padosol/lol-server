@@ -3,7 +3,6 @@ server:
   tomcat:
     accesslog:
       enabled: true
-      # basedir 를 두지 않으므로 상대경로는 /tmp/tomcat.* 기준이 된다. 실행 디렉터리의 logs/ 로 고정
       directory: ${user.dir}/logs
       pattern: "%{yyyy-MM-dd HH:mm:ss}t %s [%r] [Remote: %a] [Size: %b]"
 
