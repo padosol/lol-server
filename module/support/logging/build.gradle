@@ -5,4 +5,7 @@ plugins {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+    // 운영 콘솔 JSON 로그 (logback-prod.xml). 9.x 는 Jackson 3 기반이라 Boot 3.3(Jackson 2.17)과 맞는 8.0 고정
+    implementation 'net.logstash.logback:logstash-logback-encoder:8.0'
 }
