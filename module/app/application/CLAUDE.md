@@ -22,7 +22,7 @@ Spring Boot 진입점 + 컴포지션 루트. **모든 인프라 모듈을 implem
 - `src/main/resources/client-repository-{local,prod}.yml` — lol-repository 내부 API 주소 (`lol.repository.internal-url`, prod `LOL_REPOSITORY_INTERNAL_URL` = 내부 포트 8081)
 - `config/ExecutorConfig.java` — 일반 `@Async`/`@Scheduled` 용 풀. (Virtual Thread 풀 `queryExecutor` 는 `common:config:AsyncQueryConfig` 에 별도 정의)
 - `build.gradle` — 모듈 결합 spec 의 single source of truth (`bootJar { enabled = true }`)
-- `src/main/resources/db/migration/app` — app 스키마(member·community·duo) Flyway 체인. lol-server 가 가진 DDL 은 이것뿐이고 app 밖 데이터는 lol-repository API 로 받는다. `AppSchemaMigrationTest`(Testcontainers)가 엔티티와 대조. 운영 적용 절차는 `docs/db-split/README.md`
+- `src/main/resources/db/migration/app` — app 스키마(member·community·duo) Flyway 체인. lol-server 가 가진 DDL 은 이것뿐이고 app 밖 데이터는 lol-repository API 로 받는다. `AppSchemaMigrationTest`(Testcontainers)가 엔티티와 대조. 운영도 기동 때 app 스키마를 만들고 V1 부터 적용한다 — public 의 예전 데이터는 옮기지 않는다 (`docs/db-split/README.md`)
 
 ## Common Modifications
 
@@ -40,9 +40,7 @@ Spring Boot 진입점 + 컴포지션 루트. **모든 인프라 모듈을 implem
 - ❌ Riot 데이터(소환사·전적·랭킹·게임 데이터) 테이블에 엔티티·쿼리 추가 — lol-server 는 app 스키마 밖에 DB 권한이 없다
   ✅ lol-repository API 로 받는다 (duo 는 `/internal/v1/**`). Hibernate validate 도 현재 스키마(`app`)만 본다
 - ❌ 적용된 app 마이그레이션(V1·V2…) 수정 — 체크섬 불일치로 운영 기동 실패
-  ✅ 새 버전으로 추가. V1 은 운영에선 baseline 이라 실행되지 않으니 빈 DB 전용
-- ❌ V2 이후 마이그레이션을 재실행 불가로 작성 (`ADD COLUMN x`, `CREATE TABLE t`) — 운영에서 `02-rollback` 뒤 재이동하면 V1 baseline 부터 V2~ 를 컬럼·테이블이 이미 있는 상태에 다시 적용하므로 실패
-  ✅ `IF NOT EXISTS` 등으로 멱등하게. `AppSchemaMigrationTest.reappliesAfterRollbackAndRemove` 가 검증
+  ✅ 새 버전으로 추가. 주석도 체크섬에 들어가므로 주석만 고치는 것도 안 된다
 - ❌ 비즈니스 로직을 `LolServerApplication` 또는 이 모듈의 config 에 작성 — 헥사고날 위반
   ✅ 도메인 로직은 `core:lol-server-domain`, 어댑터는 `infra:*` 로
 
