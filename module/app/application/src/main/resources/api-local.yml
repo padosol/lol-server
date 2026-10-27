@@ -1,9 +1,9 @@
 server:
   port: 8100
   tomcat:
-    basedir: .
     accesslog:
       enabled: true
+      directory: ${user.dir}/logs
       pattern: "%{yyyy-MM-dd HH:mm:ss}t %s [%r] [Remote: %a] [Size: %b]"
 
 spring:
