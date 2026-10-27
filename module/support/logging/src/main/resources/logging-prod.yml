@@ -1,1 +1,2 @@
 logging.config: classpath:logback/logback-${spring.profiles.active}.xml
+spring.main.banner-mode: off  # stdout 을 JSON 로그만으로 유지

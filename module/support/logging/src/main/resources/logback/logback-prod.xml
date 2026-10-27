@@ -2,20 +2,18 @@
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
+    <!--
+        OTel collector 가 stdout 을 줄 단위로 읽어 Loki 로 보내므로 스택트레이스까지 한 줄 JSON 으로 낸다.
+        최상위 level 로 Loki 가 detected_level 을 잡고, 평평해야 `| json` 필드명이 짧다.
+        서비스명은 OTel 이 service_name 라벨로 붙이므로 줄에 넣지 않는다.
+        참조되지 않는 appender 를 두면 logback 경고와 함께 Boot 가 status 목록을 평문으로 stdout 에 덤프하므로 두지 않는다.
+    -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${level:-%5p}) [%8X{traceId:-}] [%thread] %clr(%-40.40logger{39}){cyan} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}</pattern>
-            <charset>utf8</charset>
-        </encoder>
-    </appender>
-
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_PATH}/app.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_PATH}/app.%d{yyyy-MM-dd}.log.zip</fileNamePattern>
-            <maxHistory>30</maxHistory> </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <fieldNames>
+                <version>[ignore]</version>
+                <levelValue>[ignore]</levelValue>
+            </fieldNames>
         </encoder>
     </appender>
 
