@@ -220,7 +220,7 @@ git commit -m "feat: 게시글 상세 SSR 조회에 로그인 토큰을 실어 �
 - Produces:
   - `Post.viewerAuthenticated: boolean` — 주석: "서버가 이 응답을 만들 때 로그인 회원으로 인식했는가. false 이면 `currentUserVote`·`currentUserBookmarked` 가 비어 있다"
   - `export interface PostViewResult { viewCount: number }`
-  - `recordPostView(postId: number): Promise<PostViewResult>` — `apiClient.post<ApiResponse<PostViewResult>>(\`/v1/community/posts/${postId}/views\`)` 의 `data.data`
+  - `recordPostView(postId: number): Promise<PostViewResult>` — `apiClient.post<ApiResponse<PostViewResult>>(\`/v1/community/posts/${postId}/views\`, undefined, { skipAuthRedirect: true })` 의 `data.data`
   - `recordPostViewAndSync(queryClient: QueryClient, postId: number): Promise<void>` — 성공하면 `setQueryData<Post>(postDetailKey(postId), prev => prev && { ...prev, viewCount })`, 실패하면 `logger.warn` 만 하고 resolve(throw 하지 않음)
   - `useRecordPostView(postId: number, enabled: boolean): void` — `useQueryClient()` + `useRef<number | null>`; `enabled` 이고 ref 가 `postId` 와 다를 때만 ref 를 갱신하고 `void recordPostViewAndSync(queryClient, postId)`
 
@@ -231,6 +231,7 @@ it("성공하면 조회 기록 경로로 POST 하고 캐시의 viewCount 를 바
   queryClient.setQueryData(postDetailKey(42), post);          // adapter 응답 data: { viewCount: 11 }
   await recordPostViewAndSync(queryClient, 42);
   expect(calls).toEqual(["POST /api/v1/community/posts/42/views"]);
+  expect(requestConfig.skipAuthRedirect).toBe(true);          // 401 이 로그인 리다이렉트로 번지지 않게
   expect(queryClient.getQueryData<Post>(postDetailKey(42))?.viewCount).toBe(11);
 });
 it("실패해도 throw 하지 않고 캐시를 유지한다", async () => {

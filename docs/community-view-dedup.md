@@ -136,9 +136,7 @@ Redis 로 24시간 동안 한 번만 센다. 함께, SSR 상세 조회가 로그
 
 **엔드포인트**: `POST /api/v1/community/posts/{postId}/views`
 
-- 컨트롤러 클래스 매핑이 `{"/api/v1/community", "/api/community"}` 라 옛 경로에도 자동으로 생기지만, 비로그인 허용은 **v1 경로만** 연다(5.4). 이 API 를 옛 경로로 부를 클라이언트가 없다.
-
-> **구현 노트 — 별도 컨트롤러, v1 만 매핑.** 조회 기록 API 는 기존 게시글 컨트롤러가 아니라 별도 컨트롤러(`CommunityPostViewController`)에 두고 `/api/v1/community` 만 매핑했다. 옛 `/api/community` 경로는 매핑하지 않는다. v1 경로만 `permitAll` 로 여는 것과 같은 이유다.
+- 기존 게시글 컨트롤러가 아니라 별도 컨트롤러(`CommunityPostViewController`)에 두고 `/api/v1/community` 만 매핑한다. 옛 `/api/community` 경로는 매핑하지 않는다. 비로그인 허용(5.4)도 v1 경로만 열며, 이 API 를 옛 경로로 부를 클라이언트가 없다.
 - 요청 본문 없음. 인증 선택(로그인 시 `@AuthenticationPrincipal` 로 회원, 아니면 방문자 쿠키).
 - 응답 `200 OK` — `ApiResponse<PostViewResponse>`, 본문 `{ "viewCount": 124 }`.
   - 이번 요청으로 셌으면 증가 후 값, 중복이면 현재 값.
@@ -151,9 +149,9 @@ Redis 로 24시간 동안 한 번만 센다. 함께, SSR 상세 조회가 로그
 2. `PostViewDedupPort.tryMarkViewed(postId, viewer)` — Redis `SET NX EX`.
 3. `true`(처음 봄) → `postPersistencePort.incrementViewCount(postId)` 후 `post.getViewCount() + 1` 반환.
    `false`(중복) → `post.getViewCount()` 반환.
-4. 트랜잭션은 이 유스케이스에 `@Transactional`. Redis 표시 후 DB 증가가 실패하면 그 조회 1건은 유실된다 — 표시 전용 값이라 허용한다.
+4. Redis 호출을 감싸는 트랜잭션은 없다. 서비스에는 `@Transactional` 이 없고(조회는 Spring Data 의 자체 읽기 트랜잭션), UPDATE 만 리포지토리 메서드(`incrementViewCount`)의 짧은 트랜잭션에서 돈다. Redis 장애 시 타임아웃 동안 DB 커넥션을 붙잡아 풀이 고갈되는 것을 막기 위해서다. Redis 표시 후 DB 증가가 실패하면 그 조회 1건은 유실된다 — 표시 전용 값이라 허용한다.
 
-**Redis 장애 시**: `tryMarkViewed` 가 예외를 던지면 서비스(또는 어댑터)가 잡아 `warn` 로그를 남기고 **증가하지 않은 현재 값으로 200** 을 준다. 장애 중에 중복 판정 없이 세면 새로고침 부풀리기가 되살아나므로 과소 집계 쪽을 택한다. (설계자 판단)
+**Redis 장애 시**: `tryMarkViewed` 가 예외를 던지면 어댑터가 잡아 `warn` 로그(원인은 문자열로만, 스택트레이스 없음)를 남기고 **증가하지 않은 현재 값으로 200** 을 준다. 장애 중에 중복 판정 없이 세면 새로고침 부풀리기가 되살아나므로 과소 집계 쪽을 택한다. (설계자 판단)
 
 > **구현 노트 — 장애는 어댑터가 잡는다.** 예외는 서비스가 아니라 어댑터(`PostViewDedupRedisAdapter`)가 잡아 `warn` 로그를 남기고 `false` 를 돌려준다(fail closed). 서비스에는 try/catch 가 없고, `false` 를 중복으로 보고 현재 값을 그대로 반환한다.
 
@@ -172,7 +170,7 @@ Redis 로 24시간 동안 한 번만 센다. 함께, SSR 상세 조회가 로그
 - `Secure`·`SameSite`·`Domain` 은 기존 인증 쿠키와 같은 `cookie.*` 설정을 따른다.
 - 비로그인 요청에 쿠키가 없거나 UUID 로 파싱되지 않으면 → 새 UUID 를 발급해 `Set-Cookie` 로 내려주고, 그 값으로 판정한다(첫 방문은 센다).
 - 로그인 요청에서는 쿠키를 읽지도 발급하지도 않는다.
-- 쿠키 읽기·발급은 웹 어댑터(`adapter/in/web`) 책임이다. application 에는 이미 결정된 viewer 값만 넘긴다(값 객체, 예: `domain.vo.ViewerKey` — `ofMember(Long)`, `ofVisitor(UUID)`, `asKey()`).
+- 쿠키 읽기·발급은 웹 어댑터(`adapter/in/web`) 책임이다. application 에는 이미 결정된 viewer 값만 넘긴다(값 객체, 예: `domain.vo.ViewerKey` — `ofMember(Long)`, `ofVisitor(UUID)`, `value()`).
 
 **`CookieProperties` 위치 이동**: 지금 `member/config/CookieProperties`(prefix `cookie`) 에 있다. community 는 member 의 port.in·application.model 외에는 의존할 수 없으므로(ArchitectureTest), 두 모듈이 함께 쓰도록 **`common/config` 로 옮긴다** (설정값을 여러 모듈이 쓰면 common/config — 기존 프로젝트 규칙). member 쪽은 `AuthCookieManager` 와 테스트 3곳(`SecurityConfigAuthorizationTest`, `AuthCookieManagerTest`, `SecurityConfigTest`)의 import 가 바뀐다. 캐시 값 클래스가 아니므로 Redis flush 는 필요 없다.
 
@@ -190,7 +188,7 @@ Redis 로 24시간 동안 한 번만 센다. 함께, SSR 상세 조회가 로그
 - `StringRedisTemplate` 사용(match·member 의 기존 어댑터와 같은 방식). `GenericJackson2JsonRedisSerializer` 를 거치지 않으므로 클래스 이동·리네임 시 역직렬화 문제가 없다.
 - 용량: 키당 대략 100B. 하루 10만 조회면 약 10MB, TTL 로 자연 소멸.
 - TTL 은 `@ConfigurationProperties` 객체로 둔다(예: `community.view.dedup-ttl: 24h`, community 모듈 config). `@Value` 금지 규칙.
-- 포트: `application/port/out/PostViewDedupPort` — `boolean tryMarkViewed(Long postId, ViewerKey viewer)`.
+- 포트: `application/port/out/PostViewDedupPort` — `boolean tryMarkViewed(Long postId, ViewerKey viewer, Duration ttl)` — TTL 은 application 이 `CommunityViewProperties` 에서 넘긴다.
 - 어댑터: 예 `adapter/out/cache/PostViewDedupRedisAdapter`. 같은 모듈의 `adapter/out/ratelimit/RedisImageRateLimitAdapter` 가 참고 구현이다(`StringRedisTemplate` 사용, `RuntimeException` 을 잡아 장애를 삼키는 방식).
 - `module/domain/community/build.gradle` 에는 업로드 rate limit 용으로 `spring-boot-starter-data-redis` 가 **이미 있다.** 의존 추가는 필요 없다. Redis 연결 설정은 `common` 의 `RedisConfig` 를 그대로 쓴다.
 
@@ -229,7 +227,7 @@ CSRF 는 비활성이다. 다른 사이트가 방문자 브라우저로 이 POST
    - 비용: 로그인 사용자의 전체 페이지 로드당 `/v1/members/me` 1회.
 
 1. **조회 기록 호출**
-   - 상세 화면(`PostDetailPanel` 또는 `CommunityDetailPageClient`)에서 **세션 status 가 `unknown` 이 아닐 때** `POST /v1/community/posts/{postId}/views` 를 한 번 보낸다. 비로그인은 즉시 `anonymous` 라 지연이 없고, 로그인 사용자는 세션 검사가 끝난 뒤 보내 토큰이 만료돼 있었더라도 `m:{memberId}` 로 센다. `apiClient`(withCredentials) 로 보내 `visitorId`·인증 쿠키가 실리게 한다.
+   - 상세 화면(`PostDetailPanel` 또는 `CommunityDetailPageClient`)에서 **세션 status 가 `unknown` 이 아닐 때** `POST /v1/community/posts/{postId}/views` 를 한 번 보낸다. 비로그인은 즉시 `anonymous` 라 지연이 없고, 로그인 사용자는 세션 검사가 끝난 뒤 보내 토큰이 만료돼 있었더라도 `m:{memberId}` 로 센다. `apiClient`(withCredentials) 로 보내 `visitorId`·인증 쿠키가 실리게 하고, `skipAuthRedirect: true` 로 보낸다(구 백엔드가 비로그인 POST 에 401 을 주면 인터셉터가 `/login` 으로 보내는 것을 막는다. 5.7 참고).
    - `useRef` 가드로 같은 `postId` 에 한 번만. `postId` 가 바뀌면 다시 보낸다. StrictMode 로 두 번 나가도 서버가 흡수하지만 요청 자체를 줄인다.
    - 응답의 `viewCount` 를 `setQueryData(postDetailKey(postId))` 로 써넣는다. 실패는 조용히 무시한다(토스트 없음, 로그만).
    - 수정 화면(`CommunityEditPageClient`)에서는 호출하지 않는다.
@@ -253,7 +251,7 @@ CSRF 는 비활성이다. 다른 사이트가 방문자 브라우저로 이 POST
 2. **lol-ui 곧바로**: 앱 진입 세션 검사, 조회 기록 호출, SSR 토큰 전달, 조건부 재조회.
    세션 검사는 기존 `/v1/members/me` 만 쓰므로 백엔드 배포와 무관하게 먼저 나가도 된다.
 
-역순(프론트 먼저)은 새 API 가 없어 404, 동시 반영이 어려우면 과대 집계보다 짧은 과소 집계를 택한다. (설계자 판단)
+역순(프론트 먼저)이면 구 백엔드가 비로그인 `POST …/views` 에 **401** 을 준다(커뮤니티 POST 는 `authenticated()`). 그러면 lol-ui 인터셉터가 refresh 실패 후 독자를 `/login` 으로 보낸다. 그래서 lol-ui 는 조회 기록 POST 를 `skipAuthRedirect: true` 로 보내 401 을 삼키고, 배포 순서는 백엔드 먼저를 유지한다. 동시 반영이 어려우면 과대 집계보다 짧은 과소 집계를 택한다. (설계자 판단)
 DB 스키마(`lol-db-schema`) 변경 없음. Redis flush 불필요(새 키만 생긴다).
 
 ### 5.8 테스트
@@ -286,7 +284,7 @@ DB 스키마(`lol-db-schema`) 변경 없음. Redis flush 불필요(새 키만 �
 | Redis 장애 시 | 세지 않음, 200 | 장애 중 부풀리기보다 과소 집계 |
 | 비로그인 허용 경로 | v1 만 | 옛 경로로 부를 클라이언트가 없다 |
 | 작성자 본인 조회 | 센다 | 특별 취급할 요구가 없다 |
-| 배포 순서 | 백엔드 → 프론트, 짧은 과소 집계 허용 | 역순은 404 |
+| 배포 순서 | 백엔드 → 프론트, 짧은 과소 집계 허용 | 역순은 구 백엔드가 비로그인 POST 에 401 → `skipAuthRedirect: true` 로 삼킴 |
 | `CookieProperties` | `common/config` 로 이동 | 두 모듈이 쓰는 설정 |
 | 세션 검사 API | 기존 `GET /v1/members/me` | 백엔드 변경 없이 401→refresh 를 일으키고 프로필도 최신화된다 |
 | 세션 검사 대상 | 저장된 `user` 가 있을 때만 | 비로그인 방문자에게 요청을 늘리지 않는다 |
