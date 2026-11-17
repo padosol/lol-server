@@ -10,11 +10,17 @@ import com.example.lolserver.community.domain.Post;
 import com.example.lolserver.community.domain.vo.ViewerKey;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 게시글 조회 기록 유스케이스.
+ *
+ * <p>클래스 레벨 {@code @Transactional} 을 두지 않는다. 경로에 Redis 호출({@code tryMarkViewed})이 있어,
+ * 트랜잭션으로 감싸면 Redis 장애 시 타임아웃 동안 DB 커넥션을 붙잡아 풀이 고갈된다
+ * (ImageService 와 같은 규칙). 조회는 Spring Data 의 자체 읽기 트랜잭션, UPDATE 는
+ * 리포지토리 메서드의 짧은 트랜잭션이 맡는다.
+ */
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class PostViewService implements PostViewUseCase {
 
     private final PostPersistencePort postPersistencePort;

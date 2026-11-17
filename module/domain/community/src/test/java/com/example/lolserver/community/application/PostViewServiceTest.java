@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.transaction.annotation.Transactional;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
@@ -81,5 +83,13 @@ class PostViewServiceTest {
                 .isInstanceOf(CoreException.class)
                 .extracting(e -> ((CoreException) e).getErrorType()).isEqualTo(ErrorType.POST_NOT_FOUND);
         then(postViewDedupPort).shouldHaveNoInteractions();
+    }
+
+    @Test
+    void 서비스는_Redis_호출을_트랜잭션_밖에_두기_위해_Transactional_이_없다() throws NoSuchMethodException {
+        assertThat(AnnotatedElementUtils.hasAnnotation(PostViewService.class, Transactional.class)).isFalse();
+        assertThat(AnnotatedElementUtils.hasAnnotation(
+                PostViewService.class.getMethod("recordView", Long.class, ViewerKey.class),
+                Transactional.class)).isFalse();
     }
 }

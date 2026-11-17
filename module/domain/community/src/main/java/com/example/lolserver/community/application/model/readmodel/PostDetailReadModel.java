@@ -38,11 +38,6 @@ public class PostDetailReadModel {
     private final LocalDateTime updatedAt;
 
     public static PostDetailReadModel of(Post post, MemberProfileReadModel author, Vote currentUserVote,
-                                         boolean currentUserBookmarked) {
-        return of(post, author, currentUserVote, currentUserBookmarked, List.of(), false);
-    }
-
-    public static PostDetailReadModel of(Post post, MemberProfileReadModel author, Vote currentUserVote,
                                          boolean currentUserBookmarked, List<PostImageReadModel> images,
                                          boolean viewerAuthenticated) {
         return PostDetailReadModel.builder()

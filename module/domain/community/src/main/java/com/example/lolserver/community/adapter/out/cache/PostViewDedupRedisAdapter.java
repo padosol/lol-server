@@ -31,7 +31,7 @@ public class PostViewDedupRedisAdapter implements PostViewDedupPort {
             // RedisImageRateLimitAdapter 와 달리 fail-closed: 장애 시 세지 않는다(false).
             // 장애 중에 통과시키면 새로고침 조회수 부풀리기가 되살아나므로 과소 집계를 택한다.
             log.warn("게시글 조회 중복 판정 실패, 조회수를 올리지 않는다: postId={}, viewer={}",
-                    postId, viewer.value(), e);
+                    postId, viewer.value(), e.toString());
             return false;
         }
     }
