@@ -115,17 +115,19 @@ Redis 로 24시간 동안 한 번만 센다. 함께, SSR 상세 조회가 로그
                                  ├ 401 → refresh → 재시도 200 → authenticated (쿠키 갱신됨)
                                  └ refresh 실패   → (한 번 더 확인 후) 조용히 로그아웃 → anonymous
 
-[상세 화면 — status 가 확정된 뒤]
-  ├─ POST /api/v1/community/posts/{id}/views        (모든 방문자, 1회)
-  │     로그인: viewer = m:{memberId}
-  │     비로그인: viewer = v:{visitorId 쿠키}  (없으면 서버가 발급)
-  │     Redis SET community:post-view:{id}:{viewer} 1 NX EX 86400
-  │       └─ 성공(처음) → DB view_count + 1
-  │     응답 { viewCount } → 화면 숫자 보정
+[상세 화면 — status 가 확정되고 글을 받은 뒤]
+  ├─ (불일치: status == authenticated 인데 글의 viewerAuthenticated == false 일 때만, 글마다 1회)
+  │     ← SSR 시점에 토큰이 만료돼 있었거나, 읽는 동안 만료된 채 다른 글로 클라이언트 이동한 경우
+  │     세션 재검사 revalidateSession() (앱 진입과 같은 로직. 진행 중인 검사가 있으면 그것을 함께 기다림)
+  │       └ authenticated → GET /api/v1/community/posts/{id}  (쿠키가 갱신돼 개인화되어 온다. 조회수와 무관)
+  │     → 끝나면(결과와 무관) 아래 조회 기록. 그래서 m: 로 세고, 기록 응답의 조회수가 재조회에 덮이지 않는다
   │
-  └─ (status == authenticated 인데 initialPost.viewerAuthenticated == false 일 때만)
-        GET /api/v1/community/posts/{id}  ← SSR 시점엔 토큰이 만료돼 있었던 경우. 세션 검사가 쿠키를
-                                             새로 받아 둔 뒤라 개인화되어 온다. 조회수와 무관
+  └─ POST /api/v1/community/posts/{id}/views        (모든 방문자, 1회. 불일치면 위 단계 뒤에)
+        로그인: viewer = m:{memberId}
+        비로그인: viewer = v:{visitorId 쿠키}  (없으면 서버가 발급)
+        Redis SET community:post-view:{id}:{viewer} 1 NX EX 86400
+          └─ 성공(처음) → DB view_count + 1
+        응답 { viewCount } → 화면 숫자 보정
 ```
 
 ---
@@ -216,18 +218,23 @@ CSRF 는 비활성이다. 다른 사이트가 방문자 브라우저로 이 POST
    - **왜 필요한가**: access token(30분)이 만료되면 `accessToken` 쿠키도 같은 Max-Age(1800초)로 사라진다. 상세 GET·조회 기록 POST 는 `permitAll` 이라 토큰이 없어도 401 이 아니라 비로그인으로 성공하므로, `apiClient` 의 401→refresh 가 영영 돌지 않는다. 지금도 30분 넘게 쉬다 상세에 들어오면 추천·북마크 상태가 비어 보인다(**현재 코드에도 있는 문제**). lol-ui 에는 앱 시작 시 인증 필수 API 를 부르는 곳이 없다(`getMyProfile` 은 로그인 직후에만 호출).
    - **위치**: `(main)/[locale]/layout.tsx` 에 `GameDataLoader` 처럼 렌더링 없는 클라이언트 컴포넌트(예: `features/auth` 의 `SessionBootstrap`)를 마운트한다.
    - **상태**: `useAuthStore` 에 `status: "unknown" | "authenticated" | "anonymous"` 를 추가한다. 초기값 `unknown`, persist 대상에서 제외한다(`partialize` 는 지금처럼 `user` 만).
-   - **동작** (전체 페이지 로드당 1회, 클라이언트 내비게이션에서는 다시 하지 않음)
+   - **동작** (전체 페이지 로드당 1회. 클라이언트 내비게이션에서는 상세 화면의 불일치 때만 아래 재검사로 다시 한다)
      1. 저장된 `user` 없음 → 즉시 `anonymous`. 요청을 보내지 않는다(비로그인 방문자 비용 0).
      2. 저장된 `user` 있음 → `GET /v1/members/me`. 토큰이 없으면 백엔드가 401 을 준다(`/api/v1/members/**` 는 `authenticated`, `RestAuthenticationEntryPoint`).
         - 200 → `setUser(profile)`(프로필 최신화 겸) · `authenticated`.
         - 401 → 기존 인터셉터가 refresh 후 재시도 → 200 이면 위와 같다. refresh 가 새 `accessToken` 쿠키를 심으므로 이후 요청은 모두 회원으로 인식된다.
-        - refresh 실패 → **로그인 화면으로 보내지 않는다.** 이 요청에는 인터셉터의 `/login` 이동을 끄는 플래그(예: `skipAuthRedirect`)를 싣는다. 다른 탭이 먼저 refresh 해 토큰이 회전됐을 수 있으므로 `/v1/members/me` 를 **한 번 더** 시도하고, 그래도 401 이면 `clearAuth()` → `anonymous`(조용한 로그아웃). 인터셉터의 `clearAuthStorage()` 는 localStorage 만 지우므로 메모리 상태는 이 컴포넌트가 직접 지운다(`shared` 는 `entities` 를 import 할 수 없다).
-        - 네트워크 오류·5xx → 로그인 상태를 바꾸지 않는다. `user` 를 유지한 채 확정된 것으로 보고 진행한다(아래 조회 기록은 보내고, 재조회는 하지 않는다).
+        - refresh 실패 → **로그인 화면으로 보내지 않는다.** 이 요청에는 인터셉터의 `/login` 이동을 끄는 플래그(예: `skipAuthRedirect`)를 싣는다. 다른 탭이 먼저 refresh 해 토큰이 회전됐을 수 있으므로 `/v1/members/me` 를 **한 번 더** 시도하고, 그래도 거절(4xx)되면 `clearAuth()` → `anonymous`(조용한 로그아웃). 인터셉터의 `clearAuthStorage()` 는 localStorage 만 지우므로 메모리 상태는 이 컴포넌트가 직접 지운다(`shared` 는 `entities` 를 import 할 수 없다).
+        - 401 이 아닌 4xx(탈퇴 계정의 refresh 403 `MEMBER_WITHDRAWN`, 삭제 계정의 404 `MEMBER_NOT_FOUND` 등) → 다시 물어도 같은 답이라 재확인 없이 `clearAuth()` → `anonymous`. `unverified` 로 두면 헤더가 영영 로그인으로 남는다.
+        - 응답이 없는 오류(네트워크·타임아웃)·5xx → 로그인 상태를 바꾸지 않는다. `user` 를 유지한 채 확정된 것으로 보고(`unverified`) 진행한다(아래 조회 기록은 보내고, 재조회는 하지 않는다).
+     3. refresh 요청(새·옛 경로 모두)에는 10초 타임아웃을 건다(`apiClient` 와 같은 값). axios 기본값은 무제한이라, refresh 가 매달리면 세션 검사와 그 뒤의 조회 기록이 끝나지 않는다.
+   - **재검사** `revalidateSession()`: 위 로직을 한 함수로 묶어 두 곳에서 부른다. 앱 진입(`SessionBootstrap`, 페이지 로드당 1회)과, 상세 화면에서 세션은 `authenticated` 인데 서버가 비로그인으로 답했을 때(3번)다. 후자는 읽는 동안 토큰이 만료돼 쿠키가 사라진 채 다른 글로 클라이언트 이동한 경우다 — 앱 진입 검사는 이미 끝났고 상세 GET 은 `permitAll` 이라 401 이 나지 않으니, 인증 필수인 `/me` 로 401 → refresh 를 일으켜 쿠키를 다시 받는다. 동시에 부르면(StrictMode 의 effect 재실행, 여러 화면) 진행 중인 요청 하나를 함께 기다리고, 끝나면 비운다.
+   - 확인하는 동안 로그아웃하면 늦게 도착한 `/me` 응답이 user 를 되살리지 않는다(응답 시점에 저장된 `user` 가 비어 있으면 `setUser` 를 건너뛴다).
    - 로그인 성공(`useGoogleLogin` 등의 `setUser`) 시 `authenticated`, 로그아웃 시 `anonymous` 로 맞춘다.
-   - 비용: 로그인 사용자의 전체 페이지 로드당 `/v1/members/me` 1회.
+   - 비용: 로그인 사용자의 전체 페이지 로드당 `/v1/members/me` 1회. 불일치가 난 상세 화면마다 `/v1/members/me` 와 상세 GET 이 1회씩 더 붙는다.
 
 1. **조회 기록 호출**
-   - 상세 화면(`PostDetailPanel` 또는 `CommunityDetailPageClient`)에서 **세션 status 가 `unknown` 이 아닐 때** `POST /v1/community/posts/{postId}/views` 를 한 번 보낸다. 비로그인은 즉시 `anonymous` 라 지연이 없고, 로그인 사용자는 세션 검사가 끝난 뒤 보내 토큰이 만료돼 있었더라도 `m:{memberId}` 로 센다. `apiClient`(withCredentials) 로 보내 `visitorId`·인증 쿠키가 실리게 하고, `skipAuthRedirect: true` 로 보낸다(구 백엔드가 비로그인 POST 에 401 을 주면 인터셉터가 `/login` 으로 보내는 것을 막는다. 5.7 참고).
+   - 상세 화면(`PostDetailPanel` 또는 `CommunityDetailPageClient`)에서 **세션 status 가 `unknown` 이 아니고 글을 받은 뒤** `POST /v1/community/posts/{postId}/views` 를 한 번 보낸다. 비로그인은 즉시 `anonymous` 라 지연이 없고, 로그인 사용자는 세션 검사가 끝난 뒤 보내 토큰이 만료돼 있었더라도 `m:{memberId}` 로 센다.
+   - 단 불일치(세션은 `authenticated` 인데 글이 `viewerAuthenticated == false`)면 3번의 **재검사 → 재조회가 끝난 뒤** 보낸다. 재검사가 쿠키를 새로 받은 뒤라 `m:` 로 세고, 기록 응답의 `viewCount` 가 재조회 응답보다 늦게 도착하므로 재조회에 덮이지 않는다(POST/GET 경쟁 없음). 그 밖에는 status 가 확정되는 대로 보낸다. `apiClient`(withCredentials) 로 보내 `visitorId`·인증 쿠키가 실리게 하고, `skipAuthRedirect: true` 로 보낸다(구 백엔드가 비로그인 POST 에 401 을 주면 인터셉터가 `/login` 으로 보내는 것을 막는다. 5.7 참고).
    - `useRef` 가드로 같은 `postId` 에 한 번만. `postId` 가 바뀌면 다시 보낸다. StrictMode 로 두 번 나가도 서버가 흡수하지만 요청 자체를 줄인다.
    - 응답의 `viewCount` 를 `setQueryData(postDetailKey(postId))` 로 써넣는다. 실패는 조용히 무시한다(토스트 없음, 로그만).
    - 수정 화면(`CommunityEditPageClient`)에서는 호출하지 않는다.
@@ -237,9 +244,11 @@ CSRF 는 비활성이다. 다른 사이트가 방문자 브라우저로 이 POST
    - `serverApiClient` 인터셉터 로그는 method·url 만 찍으므로 토큰이 로그에 남지 않는다. 헤더를 로그에 추가하지 않는다.
    - React `cache` 는 요청 스코프라 사용자 간에 섞이지 않는다. 페이지는 이미 `force-dynamic` 이다.
 3. **조건부 재조회**
-   - `PostDetailPanel` 의 재조회 effect 조건을 `status === "authenticated" && hasInitialPost && !initialPost.viewerAuthenticated` 로 바꾼다.
-   - 해당 경우: SSR 시점엔 access token 이 만료돼 있었다(refresh 쿠키는 `Path=/api/v1/auth/refresh`·옛 경로라 Next 서버에 오지 않아 SSR 에서 갱신할 수 없다). 0번 세션 검사가 refresh 로 쿠키를 새로 받은 뒤라 재조회는 개인화되어 온다.
-   - 토큰이 살아 있던 대부분의 경우는 SSR 응답이 이미 개인화돼(`viewerAuthenticated == true`) 재조회가 없다.
+   - `PostDetailPanel` 의 판단은 순수 함수 `decideDetailSync(status, post, attempted)` 로 뺀다: status 가 `unknown` 이거나 글이 아직 없으면 대기 / `authenticated` 인데 `viewerAuthenticated` 가 false(필드 없음 포함)이고 이 글에서 아직 시도하지 않았으면 **재검사** / 그 밖에는 **기록**.
+   - 재검사 경우 순서: `revalidateSession()` → `authenticated` 면 `refetch()` → 이 글을 시도한 것으로 표시 → 조회 기록(1번). 재검사가 `/me` 401 → refresh 로 쿠키를 새로 받으므로 재조회는 개인화되어 온다.
+   - 불일치의 원인은 둘이다. SSR 시점에 이미 access token 이 만료돼 있었던 경우(refresh 쿠키는 `Path=/api/v1/auth/refresh`·옛 경로라 Next 서버에 오지 않아 SSR 에서 갱신할 수 없다)와, 읽는 동안 만료된 채 다른 글로 클라이언트 이동한 경우(RSC 요청에 `accessToken` 쿠키가 없다)다.
+   - 재검사가 로그아웃(`anonymous`)·`unverified` 로 끝나면 status 가 바뀌어 곧바로 기록한다. 재조회도 비로그인으로 오면(백엔드 배포 전 등) 시도 표시가 기록을 풀어 준다 — 같은 글에서 다시 시도하지 않으므로 고리가 없고, 기록도 빠지지 않는다.
+   - 토큰이 살아 있던 대부분의 경우는 SSR 응답이 이미 개인화돼(`viewerAuthenticated == true`) 재검사·재조회가 없다.
 4. **타입·주석**
    - `Post` 타입에 `viewerAuthenticated: boolean` 추가.
    - `usePostDetail.ts` 의 "GET 이 조회수를 올린다"는 설명을 갱신한다. "invalidate 하지 않는다" 규칙은 이번에는 유지한다(풀지 여부는 별도 작업).
@@ -291,6 +300,8 @@ DB 스키마(`lol-db-schema`) 변경 없음. Redis flush 불필요(새 키만 �
 | refresh 실패 시 | `/login` 이동 없이 조용히 로그아웃 | 글을 읽던 사람을 로그인 화면으로 끌어가지 않는다 |
 | refresh 실패 후 재확인 | `/me` 한 번 더 | 다른 탭이 먼저 토큰을 회전시킨 경우의 거짓 로그아웃 방지 |
 | 네트워크 오류·5xx 시 | 로그인 상태 유지 | 일시 장애로 로그아웃시키지 않는다 |
+| 401 이 아닌 4xx 시 | 재확인 없이 조용히 로그아웃 (401 뒤 재확인의 4xx 도 같다) | 탈퇴 403·삭제 404 는 다시 물어도 같은 답이다. `unverified` 로 두면 헤더가 영영 로그인으로 남는다 |
+| 상세에서 세션·응답 불일치 | 세션 재검사 → 재조회 → 조회 기록, 글마다 1회 | 읽는 동안 토큰이 만료된 채 클라이언트 이동하면 상세 GET 이 비로그인으로 성공해 refresh 가 돌지 않는다. 기록을 뒤로 미뤄 `m:` 로 세고 POST/GET 경쟁도 없앤다 |
 
 ## 8. 결정 기록
 
@@ -300,5 +311,6 @@ DB 스키마(`lol-db-schema`) 변경 없음. Redis flush 불필요(새 키만 �
 | 로그인 사용자 개인화 | SSR 이 `accessToken` 쿠키를 `Authorization` 으로 전달, 토큰 만료 시에만 재조회 | 사용자 |
 | 토큰 만료 사용자의 세션 복구 | **프론트가 직접 복구하되, 앱 진입 시 토큰 검사부터 한다** (5.6.0) | 사용자 |
 | 토큰 만료 사용자의 조회 기록 시점 | 세션 검사가 끝난 뒤 보낸다 — `m:` 로 1회만 센다 | 사용자 결정에서 따라옴 |
+| 세션 중 토큰 만료 후 클라이언트 이동 | 상세에서 불일치 감지 시 세션 재검증 후 재조회·기록 | 최종 리뷰에서 따라옴 |
 
 참고: refresh 는 토큰을 회전시키므로(`MemberAuthService.refreshToken`) 여러 탭이 동시에 refresh 하면 하나가 실패할 수 있다. 앱 전체에 이미 있는 성질이고, 이 설계는 "refresh 실패 후 `/me` 재확인"으로 세션 검사에서의 거짓 로그아웃만 막는다. 탭 간 refresh 직렬화(Web Locks 등)는 범위 밖이다.
