@@ -1,6 +1,6 @@
 # 커뮤니티 조회수 중복 방지 설계
 
-> 상태: **설계 확정 대기** · 작성 2026-11-17
+> 상태: **구현 완료(lol-ui 대기)** · 작성 2026-11-17
 > 대상: lol-server `module/domain/community` (+ `member` 의 `SecurityConfig`·`CookieProperties`), lol-ui 앱 진입 세션 검사·커뮤니티 상세 화면
 > 기준 코드: lol-server `develop@46d6e786`, lol-ui `develop@a14ebb4`
 
@@ -137,6 +137,8 @@ Redis 로 24시간 동안 한 번만 센다. 함께, SSR 상세 조회가 로그
 **엔드포인트**: `POST /api/v1/community/posts/{postId}/views`
 
 - 컨트롤러 클래스 매핑이 `{"/api/v1/community", "/api/community"}` 라 옛 경로에도 자동으로 생기지만, 비로그인 허용은 **v1 경로만** 연다(5.4). 이 API 를 옛 경로로 부를 클라이언트가 없다.
+
+> **구현 노트 — 별도 컨트롤러, v1 만 매핑.** 조회 기록 API 는 기존 게시글 컨트롤러가 아니라 별도 컨트롤러(`CommunityPostViewController`)에 두고 `/api/v1/community` 만 매핑했다. 옛 `/api/community` 경로는 매핑하지 않는다. v1 경로만 `permitAll` 로 여는 것과 같은 이유다.
 - 요청 본문 없음. 인증 선택(로그인 시 `@AuthenticationPrincipal` 로 회원, 아니면 방문자 쿠키).
 - 응답 `200 OK` — `ApiResponse<PostViewResponse>`, 본문 `{ "viewCount": 124 }`.
   - 이번 요청으로 셌으면 증가 후 값, 중복이면 현재 값.
@@ -152,6 +154,8 @@ Redis 로 24시간 동안 한 번만 센다. 함께, SSR 상세 조회가 로그
 4. 트랜잭션은 이 유스케이스에 `@Transactional`. Redis 표시 후 DB 증가가 실패하면 그 조회 1건은 유실된다 — 표시 전용 값이라 허용한다.
 
 **Redis 장애 시**: `tryMarkViewed` 가 예외를 던지면 서비스(또는 어댑터)가 잡아 `warn` 로그를 남기고 **증가하지 않은 현재 값으로 200** 을 준다. 장애 중에 중복 판정 없이 세면 새로고침 부풀리기가 되살아나므로 과소 집계 쪽을 택한다. (설계자 판단)
+
+> **구현 노트 — 장애는 어댑터가 잡는다.** 예외는 서비스가 아니라 어댑터(`PostViewDedupRedisAdapter`)가 잡아 `warn` 로그를 남기고 `false` 를 돌려준다(fail closed). 서비스에는 try/catch 가 없고, `false` 를 중복으로 보고 현재 값을 그대로 반환한다.
 
 반환 숫자는 동시 요청이 겹치면 실제 DB 값과 1~2 차이 날 수 있다. 표시 전용이라 별도 재조회는 하지 않는다.
 
