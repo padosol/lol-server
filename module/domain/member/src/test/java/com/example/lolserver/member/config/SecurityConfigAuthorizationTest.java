@@ -82,6 +82,8 @@ class SecurityConfigAuthorizationTest {
         "GET, /api/v1/duo/posts",
         "GET, /api/v1/duo/posts/1",
         "GET, /api/duo/posts",
+        // 조회 기록은 비로그인 방문자도 남긴다
+        "POST, /api/v1/community/posts/1/views",
     })
     void 비로그인_공개(String method, String path) throws Exception {
         mockMvc.perform(request(HttpMethod.valueOf(method), path))
@@ -115,6 +117,8 @@ class SecurityConfigAuthorizationTest {
         "POST, /api/community/bookmarks",
         "POST, /api/community/votes",
         "GET, /api/community/me/posts",
+        // 조회 기록은 v1 경로만 공개한다 - 옛 경로는 열지 않는다
+        "POST, /api/community/posts/1/views",
         // 듀오 변경·개인화
         "POST, /api/v1/duo/posts",
         "GET, /api/v1/duo/posts/1/requests",
