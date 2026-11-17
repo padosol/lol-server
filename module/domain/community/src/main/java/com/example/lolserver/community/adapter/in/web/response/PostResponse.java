@@ -19,6 +19,7 @@ public record PostResponse(
         AuthorResponse author,
         String currentUserVote,
         boolean currentUserBookmarked,
+        boolean viewerAuthenticated,
         List<ImageResponse> images,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
@@ -36,6 +37,7 @@ public record PostResponse(
                 AuthorResponse.from(readModel.getAuthor()),
                 readModel.getCurrentUserVote() != null ? readModel.getCurrentUserVote().name() : null,
                 readModel.isCurrentUserBookmarked(),
+                readModel.isViewerAuthenticated(),
                 toImages(readModel.getImages()),
                 readModel.getCreatedAt(),
                 readModel.getUpdatedAt()
@@ -55,6 +57,7 @@ public record PostResponse(
                 AuthorResponse.from(resultModel.getAuthor()),
                 resultModel.getCurrentUserVote() != null ? resultModel.getCurrentUserVote().name() : null,
                 resultModel.isCurrentUserBookmarked(),
+                true,
                 toImages(resultModel.getImages()),
                 resultModel.getCreatedAt(),
                 resultModel.getUpdatedAt()

@@ -27,6 +27,8 @@ public class PostDetailReadModel {
     private final AuthorReadModel author;
     private final VoteType currentUserVote;
     private final boolean currentUserBookmarked;
+    /** 서버가 이 요청을 로그인 회원으로 인식했는가. false 이면 개인화 필드가 비어 있다. */
+    private final boolean viewerAuthenticated;
     /**
      * 현재 이 글에 붙어 있는 이미지. 본문에 URL 이 이미 들어 있어 렌더링에는 불필요하지만,
      * 수정 화면이 전체 교체 시맨틱({@code imageIds})을 채우려면 이 목록이 필요하다.
@@ -37,11 +39,12 @@ public class PostDetailReadModel {
 
     public static PostDetailReadModel of(Post post, MemberProfileReadModel author, Vote currentUserVote,
                                          boolean currentUserBookmarked) {
-        return of(post, author, currentUserVote, currentUserBookmarked, List.of());
+        return of(post, author, currentUserVote, currentUserBookmarked, List.of(), false);
     }
 
     public static PostDetailReadModel of(Post post, MemberProfileReadModel author, Vote currentUserVote,
-                                         boolean currentUserBookmarked, List<PostImageReadModel> images) {
+                                         boolean currentUserBookmarked, List<PostImageReadModel> images,
+                                         boolean viewerAuthenticated) {
         return PostDetailReadModel.builder()
                 .id(post.getId())
                 .title(post.getTitle())
@@ -56,6 +59,7 @@ public class PostDetailReadModel {
                         currentUserVote != null
                                 ? currentUserVote.getVoteType() : null)
                 .currentUserBookmarked(currentUserBookmarked)
+                .viewerAuthenticated(viewerAuthenticated)
                 .images(images)
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())

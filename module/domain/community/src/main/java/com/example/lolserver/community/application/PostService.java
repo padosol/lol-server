@@ -120,15 +120,11 @@ public class PostService implements PostUseCase, PostQueryUseCase {
     }
 
     @Override
-    @Transactional
     public PostDetailReadModel getPost(Long postId, Long currentMemberId) {
         Post post = postPersistencePort.findById(postId)
                 .orElseThrow(() -> new CoreException(ErrorType.POST_NOT_FOUND));
 
         post.validateNotDeleted();
-
-        postPersistencePort.incrementViewCount(postId);
-        post.incrementViewCount();
 
         MemberProfileReadModel author = memberQueryUseCase.getMemberProfile(post.getMemberId());
 
@@ -145,7 +141,7 @@ public class PostService implements PostUseCase, PostQueryUseCase {
                         .existsByMemberIdAndPostId(currentMemberId, postId);
 
         return PostDetailReadModel.of(post, author, currentUserVote, currentUserBookmarked,
-                imageQueryUseCase.getPostImages(postId));
+                imageQueryUseCase.getPostImages(postId), currentMemberId != null);
     }
 
     /**

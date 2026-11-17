@@ -36,6 +36,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
@@ -256,7 +257,7 @@ class PostServiceTest {
                 .isEqualTo(ErrorType.POST_NOT_FOUND);
     }
 
-    @DisplayName("게시글 상세 조회 시 조회수가 증가하고 상세 정보를 반환한다")
+    @DisplayName("게시글 상세 조회는 조회수를 바꾸지 않고 상세 정보를 반환한다")
     @Test
     void getPost_success() {
         // given
@@ -274,7 +275,26 @@ class PostServiceTest {
 
         // then
         assertThat(result.getId()).isEqualTo(postId);
-        then(postPersistencePort).should().incrementViewCount(postId);
+        assertThat(result.isViewerAuthenticated()).isFalse();
+        then(postPersistencePort).should(never()).incrementViewCount(any());
+    }
+
+    @DisplayName("로그인 상세 조회는 viewerAuthenticated 가 true 이다")
+    @Test
+    void getPost_로그인이면_viewerAuthenticated_true() {
+        // given
+        Long postId = 1L;
+        Long authorId = 1L;
+        given(postPersistencePort.findById(postId))
+                .willReturn(Optional.of(createPost(postId, authorId)));
+        given(memberQueryUseCase.getMemberProfile(authorId))
+                .willReturn(createProfile(authorId));
+
+        // when
+        PostDetailReadModel result = postService.getPost(postId, 2L);
+
+        // then
+        assertThat(result.isViewerAuthenticated()).isTrue();
     }
 
     @DisplayName("비로그인 상세 조회 시 북마크 여부는 false 이고 북마크를 조회하지 않는다")
