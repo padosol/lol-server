@@ -1,6 +1,6 @@
 package com.example.lolserver.member.adapter.in.web.security;
 
-import com.example.lolserver.member.config.CookieProperties;
+import com.example.lolserver.common.config.CookieProperties;
 import com.example.lolserver.member.config.JwtProperties;
 import com.example.lolserver.member.application.model.resultmodel.AuthTokenResultModel;
 import jakarta.servlet.http.Cookie;

@@ -3,7 +3,7 @@ package com.example.lolserver.member.adapter.in.web.security;
 import com.example.lolserver.member.config.CorsProperties;
 import com.example.lolserver.member.config.JwtProperties;
 import com.example.lolserver.member.config.SecurityConfig;
-import com.example.lolserver.member.config.CookieProperties;
+import com.example.lolserver.common.config.CookieProperties;
 import com.example.lolserver.member.adapter.in.web.security.oauth2.CustomOidcUserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
