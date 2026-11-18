@@ -1,0 +1,13 @@
+[[community-post-view]]
+=== 게시글 조회 기록
+
+같은 방문자·같은 글은 첫 기록 후 24시간 동안 1회만 센다.
+
+==== HTTP Request
+include::{snippets}/community-post-view/http-request.adoc[]
+include::{snippets}/community-post-view/path-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/community-post-view/http-response.adoc[]
+include::{snippets}/community-post-view/response-headers.adoc[]
+include::{snippets}/community-post-view/response-fields.adoc[]

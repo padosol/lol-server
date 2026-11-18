@@ -123,6 +123,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET,
                         "/api/community/categories",
                         "/api/v1/community/categories").permitAll()
+                // 조회 기록은 비로그인 방문자도 남긴다.
+                .requestMatchers(HttpMethod.POST, "/api/v1/community/posts/*/views").permitAll()
                 .requestMatchers("/api/community/**", "/api/v1/community/**")
                         .authenticated()
 
