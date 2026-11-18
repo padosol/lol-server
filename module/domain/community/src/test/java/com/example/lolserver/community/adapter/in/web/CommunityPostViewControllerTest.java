@@ -72,7 +72,7 @@ class CommunityPostViewControllerTest extends RestDocsSupport {
                                           NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
                 return member;
             }
-        }};
+        } };
     }
 
     @DisplayName("비로그인이고 쿠키가 없으면 방문자 키로 기록하고 쿠키를 발급한다")
