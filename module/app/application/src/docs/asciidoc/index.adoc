@@ -142,6 +142,8 @@ include::api/community/community-post-list.adoc[]
 
 include::api/community/community-post-detail.adoc[]
 
+include::api/community/community-post-view.adoc[]
+
 include::api/community/community-post-update.adoc[]
 
 include::api/community/community-post-delete.adoc[]
