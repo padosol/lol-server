@@ -46,7 +46,7 @@ Spring Boot 진입점 + 컴포지션 루트. **모든 인프라 모듈을 implem
 
 ## Cross-Module Dependencies
 
-- depends on (implementation): 모든 모듈 (`common`, `shared`, `support:logging`, `domain:{championstats,member,community,duo}`) — 단일 진실원천은 `build.gradle`
+- depends on (implementation): 모든 모듈 (`common`, `shared`, `support:logging`, `domain:{championstats,member,community,duo,esports}`) — 단일 진실원천은 `build.gradle`
 - consumed by: 없음 (terminal, bootJar 산출)
 - 빌드: `./gradlew bootRun -Dspring.profiles.active=local` — Postgres/Redis Docker 서비스 필요
 
