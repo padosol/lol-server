@@ -1,5 +1,5 @@
 spring:
-  # lol-server 는 app 스키마(member·community·duo)만 소유하고 기동 시 Flyway 로 적용한다
+  # lol-server 는 app 스키마(member·community·duo·esports 로스터)만 소유하고 기동 시 Flyway 로 적용한다
   # (classpath:db/migration/app). app 밖 데이터는 lol-repository API 로 받는다.
   #
   # app 스키마가 없으면 만들고 V1 부터 적용한다 (prod 와 같다). 예전 공유 체인(lol-db-schema)이 public 에 만든
