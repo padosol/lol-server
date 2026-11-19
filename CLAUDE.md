@@ -14,6 +14,7 @@ Spring Boot 3.3 + JDK 21, League of Legends 전적 검색 서비스의 회원·�
 | `module/domain/member` | 회원·인증 (OAuth/RSO 연동) |
 | `module/domain/community` | 커뮤니티 게시글·댓글·투표 |
 | `module/domain/duo` | 듀오 모집글·신청. 통계는 lol-repository 내부 API(`/internal/v1/summoners/{puuid}/duo-profile`)로 받아 생성 시점에 스냅샷 저장 — 받지 못해도 통계 없이 생성한다(lol-repository 에 종속되지 않음). 듀오는 RSO 연동 회원 전용 — Riot ID 는 연동 때 member 가 저장한 값만 쓰고, 연동에 Riot ID 가 없으면 다시 연동하라고 막는다 |
+| `module/domain/esports` | e스포츠 로스터 — 리그·시즌·팀·인물·소환사 연결 관리자 API(`/api/v1/admin/esports/**`), 계약 사건 API(입단·재계약·이적·팀 내 이동·임대·방출·은퇴·휴식), 공개 조회(`GET /api/v1/esports/**`). 규칙은 인물 타임라인(`PersonTimeline`)이 효력 발생일 기준으로 검사하고, 조회는 V5 뷰를 그대로 읽는다. 소환사는 puuid 만 다룬다(Riot ID 는 화면이 lol-repository 에서). 다른 컨텍스트에 의존하지 않는다. 영속화 테스트는 H2 가 아니라 Testcontainers Postgres(`EsportsPostgresTestBase`) |
 
 > 모듈 단일 진실원천은 `settings.gradle`. `module/infra/`·`module/core/lol-server-domain/` 등은 레이어→수직 컨텍스트 재구성(77b945e5) 잔재 디렉터리로 빌드에 미포함. `docs/ARCHITECTURE.md`·일부 build 커맨드(`:module:infra:api:asciidoctor`)는 옛 구조 기준(stale).
 
@@ -23,7 +24,7 @@ Spring Boot 3.3 + JDK 21, League of Legends 전적 검색 서비스의 회원·�
 
 - 새 도메인/비즈니스 규칙 추가 → 해당 컨텍스트 `module/domain/<ctx>/`의 `domain` + `application`
 - 새 REST 엔드포인트 → 해당 컨텍스트의 `adapter/in/web`
-- 새 영속화/쿼리 → 해당 컨텍스트의 `adapter/out/persistence` (JPA + QueryDSL + MapStruct). app 테이블(member·community·duo) DDL 은 `module/app/application/src/main/resources/db/migration/app` 에 새 버전으로
+- 새 영속화/쿼리 → 해당 컨텍스트의 `adapter/out/persistence` (JPA + QueryDSL + MapStruct). app 테이블(member·community·duo·e스포츠 로스터) DDL 은 `module/app/application/src/main/resources/db/migration/app` 에 새 버전으로
 - 챔피언 통계 OLAP 쿼리 → `module/domain/championstats/adapter/out/bigquery`
 - 외부 API 호출 → lol-repository 내부 API `module/domain/duo/adapter/out/client`, OAuth/RSO `module/domain/member/adapter/out/oauth`. Riot 데이터 테이블에 엔티티·쿼리를 만들지 않는다 — 필요한 값은 lol-repository API 로
 - 모듈 조립/프로파일/실행 → [`app/application/CLAUDE.md`](module/app/application/CLAUDE.md)

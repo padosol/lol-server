@@ -13,6 +13,7 @@ public record MemberResponse(
         String email,
         String nickname,
         String profileImageUrl,
+        String role,
         List<SocialAccountResponse> socialAccounts
 ) {
     public static MemberResponse from(MemberReadModel readModel) {
@@ -27,6 +28,7 @@ public record MemberResponse(
                 readModel.getEmail(),
                 readModel.getNickname(),
                 readModel.getProfileImageUrl(),
+                readModel.getRole(),
                 accounts
         );
     }
@@ -43,6 +45,7 @@ public record MemberResponse(
                 resultModel.getEmail(),
                 resultModel.getNickname(),
                 resultModel.getProfileImageUrl(),
+                resultModel.getRole(),
                 accounts
         );
     }

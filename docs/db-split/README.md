@@ -1,13 +1,14 @@
 # lol-server app 스키마
 
-lol-server 는 **app 스키마(회원·커뮤니티·듀오)만 쓴다**. app 밖 데이터는 DB 가 아니라 lol-repository API 로 받는다. 근거는 [서비스 분리 설계](https://linear.app/metapick/document/14e7fbfeb5bc) 6.1·8절, [ADR 서비스 역할과 책임 경계](https://linear.app/metapick/document/d7ffc5b22f69) 3.1절, Linear 프로젝트 「Riot 데이터 도메인 lol-repository 이전」.
+lol-server 는 **app 스키마(회원·커뮤니티·듀오·e스포츠 로스터)만 쓴다**. app 밖 데이터는 DB 가 아니라 lol-repository API 로 받는다. 근거는 [서비스 분리 설계](https://linear.app/metapick/document/14e7fbfeb5bc) 6.1·8절, [ADR 서비스 역할과 책임 경계](https://linear.app/metapick/document/d7ffc5b22f69) 3.1절, Linear 프로젝트 「Riot 데이터 도메인 lol-repository 이전」.
 
 운영도 **데이터를 옮기지 않고 app 스키마를 새로 시작한다**. public 의 예전 app 테이블을 app 으로 옮기던 스크립트(`02-move-schema.sql`·`02-rollback.sql`·`03-verify.sql`·`rehearse.sh`)와 "옮기기 전엔 기동 거부" 가드는 쓰지 않기로 해 지웠다 (git 이력 `105176f4`).
 
 ## 1. 원칙
 
-- **app 테이블** = `member`, `member_withdrawal`, `social_account`, `community_*`, `duo_*` — 14개.
-- **DDL**: lol-server 체인 `module/app/application/src/main/resources/db/migration/app` 만. V1 = 공유 체인(lol-db-schema) V35 시점의 app 테이블 13개 + 커뮤니티 기준 데이터, V2 = `community_image`. 이후 변경은 이 체인에 새 버전으로 추가하고, 적용된 버전은 주석도 고치지 않는다(체크섬). lol-db-schema 에는 넣지 않는다.
+- **app 테이블** = `member`, `member_withdrawal`, `social_account`, `community_*`, `duo_*` 14개 + e스포츠 로스터 `esports_league`, `esports_season`, `esports_team`, `esports_team_name_history`, `esports_contract`, `esports_career_event`, `person`, `person_summoner` 8개 — 22개.
+  - e스포츠 로스터는 lol-server 가 소유한다 (ADR 3.1 표에는 `esports_*` 가 riot 으로 적혀 있지만 그 테이블을 쓰는 코드는 없었다). 소환사는 `person_summoner.puuid` 만 저장하고 조회 시 lol-repository API 로 받는다.
+- **DDL**: lol-server 체인 `module/app/application/src/main/resources/db/migration/app` 만. V1 = 공유 체인(lol-db-schema) V35 시점의 app 테이블 13개 + 커뮤니티 기준 데이터, V2 = `community_image`, V5 = e스포츠 로스터. 이후 변경은 이 체인에 새 버전으로 추가하고, 적용된 버전은 주석도 고치지 않는다(체크섬). lol-db-schema 에는 넣지 않는다.
 - **접속 계정**: 공유 슈퍼유저(lol-deploy `postgres-credentials`)로 접속하고 그대로 마이그레이션한다 — `SET ROLE` 이나 전용 계정을 전제하지 않는다 (`AppSchemaMigrationTest.prodMigratesAsConnectingAccount`). `app` 스키마와 그 안 객체는 그 계정 소유다.
 - **app 밖 테이블에 엔티티를 만들지 않는다** — Hibernate `ddl-auto: validate` 는 현재 스키마(`currentSchema=app`)만 보므로 기동이 실패한다. 슈퍼유저라 DB 권한으로는 막히지 않으니 코드와 리뷰로 지킨다. app 밖 데이터는 lol-repository API 로 받는다.
 

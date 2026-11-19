@@ -22,7 +22,7 @@ Spring Boot 진입점 + 컴포지션 루트. **모든 인프라 모듈을 implem
 - `src/main/resources/client-repository-{local,prod}.yml` — lol-repository 내부 API 주소 (`lol.repository.internal-url`, prod `LOL_REPOSITORY_INTERNAL_URL` = 내부 포트 8081)
 - `config/ExecutorConfig.java` — 일반 `@Async`/`@Scheduled` 용 풀. (Virtual Thread 풀 `queryExecutor` 는 `common:config:AsyncQueryConfig` 에 별도 정의)
 - `build.gradle` — 모듈 결합 spec 의 single source of truth (`bootJar { enabled = true }`)
-- `src/main/resources/db/migration/app` — app 스키마(member·community·duo) Flyway 체인. lol-server 가 가진 DDL 은 이것뿐이고 app 밖 데이터는 lol-repository API 로 받는다. `AppSchemaMigrationTest`(Testcontainers)가 엔티티와 대조. 운영도 기동 때 app 스키마를 만들고 V1 부터 적용한다 — public 의 예전 데이터는 옮기지 않는다 (`docs/db-split/README.md`)
+- `src/main/resources/db/migration/app` — app 스키마(member·community·duo·e스포츠 로스터) Flyway 체인. lol-server 가 가진 DDL 은 이것뿐이고 app 밖 데이터는 lol-repository API 로 받는다. `AppSchemaMigrationTest`(Testcontainers)가 엔티티와 대조. 운영도 기동 때 app 스키마를 만들고 V1 부터 적용한다 — public 의 예전 데이터는 옮기지 않는다 (`docs/db-split/README.md`)
 
 ## Common Modifications
 
@@ -46,7 +46,7 @@ Spring Boot 진입점 + 컴포지션 루트. **모든 인프라 모듈을 implem
 
 ## Cross-Module Dependencies
 
-- depends on (implementation): 모든 모듈 (`common`, `shared`, `support:logging`, `domain:{championstats,member,community,duo}`) — 단일 진실원천은 `build.gradle`
+- depends on (implementation): 모든 모듈 (`common`, `shared`, `support:logging`, `domain:{championstats,member,community,duo,esports}`) — 단일 진실원천은 `build.gradle`
 - consumed by: 없음 (terminal, bootJar 산출)
 - 빌드: `./gradlew bootRun -Dspring.profiles.active=local` — Postgres/Redis Docker 서비스 필요
 

@@ -75,7 +75,37 @@ public enum ErrorType {
             "이미 처리 완료된 요청입니다."),
     INVALID_LANE(400, ErrorCode.E400, "유효하지 않은 라인입니다."),
     DUO_UNRANKED_NOT_ALLOWED(400, ErrorCode.E400,
-            "솔로랭크 티어가 없는 계정은 듀오를 등록할 수 없습니다.");
+            "솔로랭크 티어가 없는 계정은 듀오를 등록할 수 없습니다."),
+
+    // e스포츠 로스터 — 공통 advice 가 고정 문구만 응답하므로 거부 사유마다 상수를 둔다
+    ESPORTS_LEAGUE_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 리그입니다."),
+    ESPORTS_SEASON_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 시즌입니다."),
+    ESPORTS_TEAM_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 팀입니다."),
+    PERSON_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 인물입니다."),
+    CONTRACT_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 계약입니다."),
+    CAREER_EVENT_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 커리어 사건입니다."),
+    TEAM_NAME_HISTORY_NOT_FOUND(404, ErrorCode.E404, "존재하지 않는 팀명 이력입니다."),
+    ESPORTS_ID_DUPLICATED(409, ErrorCode.E409, "이미 사용 중인 ID 입니다."),
+    SUMMONER_ALREADY_LINKED(409, ErrorCode.E409, "이미 다른 인물에 연결된 소환사 계정입니다."),
+    CONTRACT_PERIOD_CONFLICT(409, ErrorCode.E409, "다른 계약과 기간이 겹치거나 이미 종료가 기록된 계약입니다."),
+    PERSON_IN_USE(409, ErrorCode.E409, "계약·사건·소환사 연결이 있는 인물은 삭제할 수 없습니다."),
+    TEAM_HAS_ACTIVE_CONTRACT(409, ErrorCode.E409, "해체일 이후까지 이어지는 계약이 있는 팀입니다."),
+    NO_ACTIVE_CONTRACT(400, ErrorCode.E400, "효력 발생일에 진행 중인 계약이 없습니다."),
+    NOT_A_CONTINUATION(400, ErrorCode.E400, "효력 발생일 전날까지 이어지는 같은 조직의 계약이 없습니다."),
+    SAME_ORGANIZATION(400, ErrorCode.E400, "같은 조직 안에서는 이적·임대가 아니라 팀 내 이동입니다."),
+    DIFFERENT_ORGANIZATION(400, ErrorCode.E400, "다른 조직으로는 팀 내 이동이 아니라 이적입니다."),
+    NOTHING_CHANGED(400, ErrorCode.E400, "팀·역할·포지션 중 바뀐 것이 없습니다."),
+    PLAYER_STAFF_SWITCH(400, ErrorCode.E400,
+            "선수 계약과 코칭스태프 계약은 다른 계약입니다. 방출·은퇴 후 신규 입단으로 넣어 주세요."),
+    NOT_A_PLAYER(400, ErrorCode.E400, "선수 계약이 아닙니다."),
+    ALREADY_ON_LOAN(400, ErrorCode.E400, "임대 중인 선수입니다."),
+    LOAN_EXCEEDS_CONTRACT(400, ErrorCode.E400, "임대 기간이 원 계약 기간을 넘습니다."),
+    NOT_A_LOAN(400, ErrorCode.E400, "임대 계약이 아닙니다."),
+    PERSON_RETIRED(400, ErrorCode.E400, "은퇴한 인물입니다. 은퇴 번복을 먼저 넣어 주세요."),
+    PERSON_NOT_RETIRED(400, ErrorCode.E400, "은퇴 상태가 아닙니다."),
+    ALREADY_INACTIVE(400, ErrorCode.E400, "이미 활동 중단 상태입니다."),
+    NOT_INACTIVE(400, ErrorCode.E400, "활동 중단 상태가 아닙니다."),
+    TEAM_NESTED_TOO_DEEP(400, ErrorCode.E400, "상위 팀은 한 단계만 지정할 수 있습니다.");
 
     private final int httpStatus;
     private final ErrorCode errorCode;

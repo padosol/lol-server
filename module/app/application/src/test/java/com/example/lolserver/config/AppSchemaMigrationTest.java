@@ -48,10 +48,12 @@ class AppSchemaMigrationTest {
     private static final String[] APP_ENTITY_PACKAGES = {
         "com.example.lolserver.member.adapter.out.persistence.entity",
         "com.example.lolserver.community.adapter.out.persistence.entity",
-        "com.example.lolserver.duo.adapter.out.persistence.entity"
+        "com.example.lolserver.duo.adapter.out.persistence.entity",
+        "com.example.lolserver.esports.adapter.out.persistence.entity"
     };
 
-    private static final int APP_TABLE_COUNT = 14;
+    /** 회원·커뮤니티·듀오 14 + e스포츠 로스터 8 (V5) */
+    private static final int APP_TABLE_COUNT = 22;
 
     @BeforeEach
     void resetDatabase() throws SQLException {
@@ -66,7 +68,7 @@ class AppSchemaMigrationTest {
         flyway(yaml).migrate();
 
         // then
-        assertThat(appliedVersions()).containsExactly("1", "2", "3", "4");
+        assertThat(appliedVersions()).containsExactly("1", "2", "3", "4", "5");
         assertThat(appTableCount()).isEqualTo(APP_TABLE_COUNT);
         assertThat(queryInt("SELECT count(*) FROM app.community_category")).isEqualTo(8);
         validateAppEntities();
@@ -83,10 +85,95 @@ class AppSchemaMigrationTest {
         flyway(yaml).migrate();
 
         // then
-        assertThat(appliedVersions()).containsExactly("1", "2", "3", "4");
+        assertThat(appliedVersions()).containsExactly("1", "2", "3", "4", "5");
         assertThat(appTableCount()).isEqualTo(APP_TABLE_COUNT);
         assertThat(tableExists("public", "member")).isTrue();
         validateAppEntities();
+    }
+
+    @DisplayName("e스포츠 로스터 — 정식 계약 기간 겹침, 포지션 없는 선수, 인물당 대표 계정 2개를 DB 가 거부한다")
+    @Test
+    void esportsRosterConstraintsRejectInvalidRows() throws Exception {
+        // given
+        flyway("postgresql-local.yml").migrate();
+        executeInApp("""
+                INSERT INTO esports_team (team_id, team_code, name) VALUES ('t-a', 'AAA', 'A'), ('t-b', 'BBB', 'B');
+                INSERT INTO person (person_id, nick_name) VALUES ('p1', 'Sol');
+                INSERT INTO esports_contract (person_id, team_id, role, position, contract_type, start_date, end_date)
+                VALUES ('p1', 't-a', 'PLAYER', 'MID', 'SIGN', '2024-11-18', '2026-11-17');
+                INSERT INTO person_summoner (puuid, person_id, is_main) VALUES ('puuid-1', 'p1', TRUE);
+                """);
+
+        // when & then
+        assertThatThrownBy(() -> executeInApp("""
+                INSERT INTO esports_contract (person_id, team_id, role, position, contract_type, start_date, end_date)
+                VALUES ('p1', 't-b', 'COACH', NULL, 'SIGN', '2025-06-01', '2025-12-31');
+                """))
+                .isInstanceOf(SQLException.class)
+                .hasMessageContaining("ex_contract_no_overlap");
+        // CHECK 는 NULL 을 통과시키므로 position IN (...) 만으로는 포지션 없는 선수가 들어온다
+        assertThatThrownBy(() -> executeInApp("""
+                INSERT INTO esports_contract (person_id, team_id, role, position, contract_type, start_date)
+                VALUES ('p1', 't-b', 'PLAYER', NULL, 'SIGN', '2030-01-01');
+                """))
+                .isInstanceOf(SQLException.class)
+                .hasMessageContaining("ck_contract_position");
+        assertThatThrownBy(() -> executeInApp("""
+                INSERT INTO person_summoner (puuid, person_id, is_main) VALUES ('puuid-2', 'p1', TRUE);
+                """))
+                .isInstanceOf(SQLException.class)
+                .hasMessageContaining("uk_person_summoner_main");
+    }
+
+    @DisplayName("e스포츠 로스터 — 팀 내 이동(MOVE/MOVED)·상위 팀·비활동 사유 제약")
+    @Test
+    void esportsRosterLifecycleConstraints() throws Exception {
+        // given — CL 팀(t1a)에서 1군(t1)으로 콜업: 직전 계약은 MOVED 로 끝나고 MOVE 계약이 end_date 를 물려받는다
+        flyway("postgresql-local.yml").migrate();
+        executeInApp("""
+                INSERT INTO esports_team (team_id, team_code, name) VALUES ('t1', 'T1', 'T1');
+                INSERT INTO esports_team (team_id, team_code, name, parent_team_id)
+                VALUES ('t1a', 'T1A', 'T1 Esports Academy', 't1');
+                INSERT INTO person (person_id, nick_name) VALUES ('p1', 'Sol');
+                INSERT INTO esports_contract (person_id, team_id, role, position, contract_type,
+                                              start_date, end_date, actual_end_date, end_reason)
+                VALUES ('p1', 't1a', 'PLAYER', 'MID', 'SIGN', '2026-01-01', '2026-11-16', '2026-05-31', 'MOVED');
+                INSERT INTO esports_contract (person_id, team_id, role, position, contract_type, start_date, end_date)
+                VALUES ('p1', 't1', 'PLAYER', 'MID', 'MOVE', '2026-06-01', '2026-11-16');
+                INSERT INTO esports_career_event (person_id, event_type, event_date, reason)
+                VALUES ('p1', 'HIATUS', '2026-07-01', 'MILITARY');
+                """);
+
+        // when & then
+        assertThatThrownBy(() -> executeInApp(
+                "UPDATE esports_team SET parent_team_id = 't1' WHERE team_id = 't1';"))
+                .isInstanceOf(SQLException.class)
+                .hasMessageContaining("ck_team_parent_not_self");
+        assertThatThrownBy(() -> executeInApp(
+                "UPDATE esports_team SET parent_team_id = 'nope' WHERE team_id = 't1a';"))
+                .isInstanceOf(SQLException.class)
+                .hasMessageContaining("fk_team_parent");
+        // 비활동 사유는 HIATUS 에만 붙는다
+        assertThatThrownBy(() -> executeInApp("""
+                INSERT INTO esports_career_event (person_id, event_type, event_date, reason)
+                VALUES ('p1', 'RETIRE', '2026-08-01', 'REST');
+                """))
+                .isInstanceOf(SQLException.class)
+                .hasMessageContaining("ck_career_event_reason");
+        assertThatThrownBy(() -> executeInApp("""
+                INSERT INTO esports_career_event (person_id, event_type, event_date, reason)
+                VALUES ('p1', 'HIATUS', '2026-09-01', 'VACATION');
+                """))
+                .isInstanceOf(SQLException.class)
+                .hasMessageContaining("ck_career_event_reason");
+        // 시즌 기간이 뒤집히면 시즌 로스터 뷰의 daterange 가 오류를 내므로 저장 단계에서 막는다
+        assertThatThrownBy(() -> executeInApp("""
+                INSERT INTO esports_league (league_id, name) VALUES ('lck', 'LCK');
+                INSERT INTO esports_season (season_id, league_id, name, start_date, end_date)
+                VALUES ('lck_2026', 'lck', '2026 LCK', '2026-09-06', '2026-01-14');
+                """))
+                .isInstanceOf(SQLException.class)
+                .hasMessageContaining("ck_season_period");
     }
 
     @DisplayName("app 스키마에 이력 없이 테이블만 있으면 V1 을 건너뛰지 않고 실패한다 (baseline 하지 않음)")
@@ -159,6 +246,10 @@ class AppSchemaMigrationTest {
         String sql = new ClassPathResource("db/migration/app/" + migration)
                 .getContentAsString(StandardCharsets.UTF_8);
         execute("SET search_path TO " + schema + ";\n" + sql);
+    }
+
+    private static void executeInApp(String sql) throws SQLException {
+        execute("SET search_path TO app;\n" + sql);
     }
 
     private static void execute(String sql) throws SQLException {
