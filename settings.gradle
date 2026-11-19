@@ -14,5 +14,6 @@ include(
         "module:domain:championstats",
         "module:domain:member",
         "module:domain:community",
-        "module:domain:duo"
+        "module:domain:duo",
+        "module:domain:esports"
 )
