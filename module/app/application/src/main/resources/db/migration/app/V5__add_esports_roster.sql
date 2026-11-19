@@ -12,7 +12,7 @@
 --
 -- 날짜 규약: 모든 기간은 양 끝을 포함한다([start, last]).
 --   GCD(라이엇 글로벌 계약 DB)가 공개하는 계약 종료일이 "이 날까지 유효" 이므로 그대로 적는다.
---   재계약은 이전 계약 마지막 날의 다음 날 시작한다 (~2026-11-17 / 2026-11-18~).
+--   재계약은 이전 계약 마지막 날의 다음 날 시작한다 (~2026-11-16 / 2026-11-17~).
 
 -- =====================================================
 -- 1. 확장 -- btree_gist
@@ -70,11 +70,17 @@ COMMENT ON COLUMN esports_season.start_date IS '시즌 기간. v_esports_season_
 -- 팀 마스터는 대회와 무관하다. 한 팀이 LCK 와 롤드컵에 동시에 나오므로 대회에 매달면 중복된다.
 -- 대신 홈 리그를 갖는다 -- 국제 대회에서 "T1 (LCK)" / "BLG (LPL)" 로 소속을 표시해야 한다.
 -- 현재 팀명·코드·로고만 둔다. 지나간 이름은 esports_team_name_history 에 있다.
+--
+-- 1군·2군은 팀을 나눠 표현한다. LCK CL 팀은 실제로 이름이 따로 있다 (T1 / T1 Esports Academy).
+-- CL 팀은 parent_team_id 로 같은 조직의 LCK 팀을 가리킨다 (1단계만 -- 부모의 부모는 없다).
+-- 조직 ID = COALESCE(parent_team_id, team_id). 재계약·이적·임대의 "같은 팀" 판단과 소속 기간 묶기는 조직 단위다.
+-- "부모의 부모 없음" 은 CHECK 로 막을 수 없어 도메인이 검사하고 v_esports_roster_invalid 가 잡는다.
 CREATE TABLE IF NOT EXISTS esports_team (
     team_id        VARCHAR(30)  NOT NULL,
     team_code      VARCHAR(20)  NOT NULL,
     game_code      VARCHAR(20)  NOT NULL DEFAULT 'lol',
     home_league_id VARCHAR(50),
+    parent_team_id VARCHAR(30),
     name           VARCHAR(100) NOT NULL,
     name_eng       VARCHAR(100),
     image_url      VARCHAR(500),
@@ -88,6 +94,10 @@ CREATE TABLE IF NOT EXISTS esports_team (
     CONSTRAINT uk_esports_team_code UNIQUE (game_code, team_code),
     CONSTRAINT fk_team_home_league FOREIGN KEY (home_league_id)
         REFERENCES esports_league (league_id),
+    CONSTRAINT fk_team_parent FOREIGN KEY (parent_team_id)
+        REFERENCES esports_team (team_id),
+    CONSTRAINT ck_team_parent_not_self
+        CHECK (parent_team_id IS NULL OR parent_team_id <> team_id),
     CONSTRAINT ck_team_lifetime
         CHECK (disbanded_at IS NULL OR founded_at IS NULL OR disbanded_at >= founded_at)
 );
@@ -95,6 +105,7 @@ CREATE TABLE IF NOT EXISTS esports_team (
 COMMENT ON TABLE  esports_team                IS '팀 마스터. 대회와 무관하며 홈 리그만 갖는다';
 COMMENT ON COLUMN esports_team.team_code      IS '수기 입력용 사람이 읽는 키 (T1, GEN)';
 COMMENT ON COLUMN esports_team.home_league_id IS '소속(홈) 리그. 국제 대회의 소속 표시에 쓴다';
+COMMENT ON COLUMN esports_team.parent_team_id IS '같은 조직의 상위 팀 (CL 팀 -> LCK 팀). 1단계만';
 COMMENT ON COLUMN esports_team.name           IS '현재 팀명. 과거 이름은 esports_team_name_history 에 있다';
 COMMENT ON COLUMN esports_team.name_since     IS '현재 이름을 쓰기 시작한 날. 이력이 있으면 마지막 이력의 valid_to 다음 날이어야 한다';
 
@@ -182,8 +193,10 @@ COMMENT ON COLUMN person_summoner.visible IS 'FALSE 면 저장만 하고 화면�
 --   contract_type : 이 계약이 어떻게 시작됐나
 --     SIGN     신규 입단 (FA 영입·신인·은퇴 후 스태프 합류)
 --     TRANSFER 이적 (계약 중인 선수를 데려옴. 직전 계약은 TRANSFERRED 로 끝나야 한다)
---     RENEWAL  재계약 (같은 팀 직전 계약의 다음 날 시작)
+--     RENEWAL  재계약 (같은 조직 직전 계약의 다음 날 시작. 재계약하며 CL 팀 -> LCK 팀 승격도 된다)
 --     LOAN     임대 (원 소속 계약은 그대로 유지. 임대 계약끼리만 기간 겹침을 검사한다)
+--     MOVE     팀 내 이동 (콜업·샌드다운·스태프 역할 변경·선수 포지션 전향. 계약서는 하나이므로
+--              직전 계약은 MOVED 로 끝나고 MOVE 계약이 end_date 를 물려받는다. 같은 조직 안에서만)
 --
 --   end_date        : 계약서상 만료일 (GCD 공개값). NULL = 미공개
 --   actual_end_date : 만료일 전에 끝났을 때만 채운다. NULL = 만료일까지 유지(또는 진행 중)
@@ -193,6 +206,7 @@ COMMENT ON COLUMN person_summoner.visible IS 'FALSE 면 저장만 하고 화면�
 --     RELEASED    방출 · 상호 해지
 --     RETIRED     은퇴 (esports_career_event 에 RETIRE 도 함께 넣는다)
 --     RECALLED    임대 조기 복귀
+--     MOVED       팀 내 이동 (다음 날 같은 조직의 MOVE 계약이 이어진다)
 CREATE TABLE IF NOT EXISTS esports_contract (
     contract_id     BIGSERIAL    NOT NULL,
     person_id       VARCHAR(30)  NOT NULL,
@@ -220,7 +234,7 @@ CREATE TABLE IF NOT EXISTS esports_contract (
              ELSE position IS NULL
         END
     ),
-    CONSTRAINT ck_contract_type CHECK (contract_type IN ('SIGN', 'TRANSFER', 'RENEWAL', 'LOAN')),
+    CONSTRAINT ck_contract_type CHECK (contract_type IN ('SIGN', 'TRANSFER', 'RENEWAL', 'LOAN', 'MOVE')),
     CONSTRAINT ck_contract_loan_player CHECK (contract_type <> 'LOAN' OR role = 'PLAYER'),
     CONSTRAINT ck_contract_period CHECK (end_date IS NULL OR end_date >= start_date),
     CONSTRAINT ck_contract_actual_end CHECK (
@@ -231,7 +245,7 @@ CREATE TABLE IF NOT EXISTS esports_contract (
     CONSTRAINT ck_contract_end_reason CHECK (
         CASE WHEN actual_end_date IS NULL
              THEN end_reason IS NULL
-             ELSE COALESCE(end_reason IN ('RENEWED', 'TRANSFERRED', 'RELEASED', 'RETIRED', 'RECALLED'), FALSE)
+             ELSE COALESCE(end_reason IN ('RENEWED', 'TRANSFERRED', 'RELEASED', 'RETIRED', 'RECALLED', 'MOVED'), FALSE)
         END
     ),
     CONSTRAINT ck_contract_recalled_loan CHECK (end_reason IS DISTINCT FROM 'RECALLED' OR contract_type = 'LOAN'),
@@ -263,7 +277,8 @@ COMMENT ON COLUMN esports_contract.end_reason      IS 'actual_end_date 가 있�
 --   RETIRE   선수 은퇴. 이후 PLAYER 계약은 UNRETIRE 없이 들어오면 검증 뷰가 잡는다
 --            (스태프 계약은 은퇴와 무관하다 -- 은퇴 후 코치 전향)
 --   UNRETIRE 은퇴 번복 · 선수 복귀
---   HIATUS   활동 중단 (계약은 유지된 채 휴식)
+--   HIATUS   활동 중단 (계약은 유지된 채 휴식). reason 으로 사유를 남긴다
+--            REST 휴식·부상 / SUSPENSION 출장정지 / MILITARY 군 입대 / PERSONAL 개인 사유(임의 탈퇴 포함)
 --   RETURN   활동 재개
 CREATE TABLE IF NOT EXISTS esports_career_event (
     event_id   BIGSERIAL    NOT NULL,
@@ -271,12 +286,17 @@ CREATE TABLE IF NOT EXISTS esports_career_event (
     event_type VARCHAR(20)  NOT NULL,
     event_date DATE         NOT NULL,
     team_id    VARCHAR(30),
+    reason     VARCHAR(20),
     note       VARCHAR(300),
     source_url VARCHAR(500),
     created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_esports_career_event PRIMARY KEY (event_id),
     CONSTRAINT uk_career_event UNIQUE (person_id, event_type, event_date),
     CONSTRAINT ck_career_event_type CHECK (event_type IN ('RETIRE', 'UNRETIRE', 'HIATUS', 'RETURN')),
+    CONSTRAINT ck_career_event_reason CHECK (
+        reason IS NULL
+        OR (event_type = 'HIATUS' AND reason IN ('REST', 'SUSPENSION', 'MILITARY', 'PERSONAL'))
+    ),
     CONSTRAINT fk_ce_person FOREIGN KEY (person_id) REFERENCES person (person_id),
     CONSTRAINT fk_ce_team   FOREIGN KEY (team_id)   REFERENCES esports_team (team_id)
 );
@@ -284,6 +304,7 @@ CREATE INDEX IF NOT EXISTS idx_career_event ON esports_career_event (person_id, 
 
 COMMENT ON TABLE  esports_career_event         IS '은퇴·복귀·활동 중단 등 계약 밖의 e스포츠 커리어 사건';
 COMMENT ON COLUMN esports_career_event.team_id IS '사건 당시 소속 (표시용, 선택)';
+COMMENT ON COLUMN esports_career_event.reason  IS 'HIATUS 사유 (REST / SUSPENSION / MILITARY / PERSONAL). 다른 사건은 NULL';
 
 -- =====================================================
 -- 6. 유도 뷰
