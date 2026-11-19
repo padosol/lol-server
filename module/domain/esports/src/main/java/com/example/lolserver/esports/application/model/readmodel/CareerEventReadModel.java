@@ -1,5 +1,6 @@
 package com.example.lolserver.esports.application.model.readmodel;
 
+import com.example.lolserver.esports.domain.CareerEvent;
 import com.example.lolserver.esports.domain.vo.CareerEventType;
 import com.example.lolserver.esports.domain.vo.HiatusReason;
 
@@ -15,4 +16,8 @@ public record CareerEventReadModel(
         String note,
         String sourceUrl
 ) {
+    public static CareerEventReadModel of(CareerEvent event) {
+        return new CareerEventReadModel(event.getEventId(), event.getEventType(), event.getEventDate(),
+                event.getTeamId(), event.getReason(), event.getNote(), event.getSourceUrl());
+    }
 }
