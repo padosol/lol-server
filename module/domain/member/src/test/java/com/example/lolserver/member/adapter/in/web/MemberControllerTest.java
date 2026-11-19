@@ -80,6 +80,7 @@ class MemberControllerTest extends RestDocsSupport {
                 .email("user@example.com")
                 .nickname("테스트유저")
                 .profileImageUrl("https://example.com/profile.jpg")
+                .role("USER")
                 .socialAccounts(List.of(
                         SocialAccountReadModel.builder()
                                 .id(1L)
@@ -119,6 +120,8 @@ class MemberControllerTest extends RestDocsSupport {
                                         .description("닉네임"),
                                 fieldWithPath("data.profileImageUrl").type(JsonFieldType.STRING)
                                         .description("프로필 이미지 URL"),
+                                fieldWithPath("data.role").type(JsonFieldType.STRING)
+                                        .description("회원 역할 (USER / ADMIN). ADMIN 이면 관리자 메뉴를 보여준다"),
                                 fieldWithPath("data.socialAccounts").type(JsonFieldType.ARRAY)
                                         .description("연결된 소셜 계정 목록"),
                                 fieldWithPath("data.socialAccounts[].id").type(JsonFieldType.NUMBER)
@@ -147,6 +150,7 @@ class MemberControllerTest extends RestDocsSupport {
                 .email("user@example.com")
                 .nickname("새닉네임")
                 .profileImageUrl("https://example.com/profile.jpg")
+                .role("USER")
                 .socialAccounts(List.of(
                         SocialAccountReadModel.builder()
                                 .id(1L)
@@ -193,6 +197,8 @@ class MemberControllerTest extends RestDocsSupport {
                                         .description("변경된 닉네임"),
                                 fieldWithPath("data.profileImageUrl").type(JsonFieldType.STRING)
                                         .description("프로필 이미지 URL"),
+                                fieldWithPath("data.role").type(JsonFieldType.STRING)
+                                        .description("회원 역할 (USER / ADMIN). ADMIN 이면 관리자 메뉴를 보여준다"),
                                 fieldWithPath("data.socialAccounts").type(JsonFieldType.ARRAY)
                                         .description("연결된 소셜 계정 목록"),
                                 fieldWithPath("data.socialAccounts[].id").type(JsonFieldType.NUMBER)

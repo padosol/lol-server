@@ -48,7 +48,8 @@ class AppSchemaMigrationTest {
     private static final String[] APP_ENTITY_PACKAGES = {
         "com.example.lolserver.member.adapter.out.persistence.entity",
         "com.example.lolserver.community.adapter.out.persistence.entity",
-        "com.example.lolserver.duo.adapter.out.persistence.entity"
+        "com.example.lolserver.duo.adapter.out.persistence.entity",
+        "com.example.lolserver.esports.adapter.out.persistence.entity"
     };
 
     /** 회원·커뮤니티·듀오 14 + e스포츠 로스터 8 (V5) */

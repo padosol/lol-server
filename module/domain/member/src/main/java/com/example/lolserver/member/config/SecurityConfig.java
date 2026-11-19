@@ -146,6 +146,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/**", "/api/v1/admin/**")
                         .hasRole("ADMIN")
 
+                // e스포츠 로스터 — 조회만 공개. 입력은 위의 관리자 경로(/api/v1/admin/esports)로만 받는다
+                .requestMatchers(HttpMethod.GET, "/api/v1/esports/**").permitAll()
+
                 // 옛 챔피언 통계 경로 — lol-ui 전환 후 MP-156 에서 제거
                 .requestMatchers(HttpMethod.GET, "/api/v1/*/champion-stats/**").permitAll()
                 .anyRequest().authenticated();

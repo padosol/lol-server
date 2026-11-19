@@ -1,0 +1,27 @@
+plugins {
+    id 'lolserver.web-conventions'
+    id 'lolserver.persistence-conventions'
+}
+
+// Boot 3.3 관리 버전(1.19.x)은 Docker Engine 29+(최소 API 1.40)에 붙지 못해 테스트가 조용히 skip 된다.
+ext['testcontainers.version'] = '1.21.4'
+
+dependencies {
+    implementation project(':module:common')
+
+    testImplementation(testFixtures(project(':module:common')))
+    testImplementation 'com.tngtech.archunit:archunit-junit5:1.3.0'
+
+    // 로스터는 Postgres 전용 기능(EXCLUDE USING gist, daterange, 뷰)에 기대므로 H2 가 아니라
+    // 실제 Postgres 에 app 체인(module/app/application 의 db/migration/app)을 적용해서 테스트한다.
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.flywaydb:flyway-core'
+    testRuntimeOnly 'org.flywaydb:flyway-database-postgresql'
+    testRuntimeOnly 'org.postgresql:postgresql'
+}
+
+tasks.named('test') {
+    systemProperty 'esports.appMigrationDir',
+            rootProject.file('module/app/application/src/main/resources/db/migration/app').absolutePath
+}

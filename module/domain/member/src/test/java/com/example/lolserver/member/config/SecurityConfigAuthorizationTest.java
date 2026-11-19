@@ -84,6 +84,10 @@ class SecurityConfigAuthorizationTest {
         "GET, /api/duo/posts",
         // 조회 기록은 비로그인 방문자도 남긴다
         "POST, /api/v1/community/posts/1/views",
+        // e스포츠 로스터 — 공개 조회
+        "GET, /api/v1/esports/teams",
+        "GET, /api/v1/esports/teams/t1/roster",
+        "GET, /api/v1/esports/summoners/abc/person",
     })
     void 비로그인_공개(String method, String path) throws Exception {
         mockMvc.perform(request(HttpMethod.valueOf(method), path))
@@ -132,6 +136,8 @@ class SecurityConfigAuthorizationTest {
         "GET, /api/duo/notifications/subscribe",
         // 챔피언 통계는 조회만 공개
         "POST, /api/v1/champion-stats",
+        // e스포츠 로스터는 조회만 공개 — 입력은 관리자 경로(/api/v1/admin/esports)로만
+        "POST, /api/v1/esports/teams",
         // 소환사·전적·랭킹·게임 데이터는 lol-repository 가 받는다 — lol-server 에서는 정의되지 않은 리소스
         "GET, /api/v1/summoners/puuid-1",
         "GET, /api/v1/kr/rank",
@@ -167,6 +173,14 @@ class SecurityConfigAuthorizationTest {
     @Test
     void 어드민_403() throws Exception {
         mockMvc.perform(request(HttpMethod.GET, "/api/v1/admin/anything")
+                        .header("Authorization", "Bearer " + accessToken("USER")))
+                .andExpect(status().isForbidden());
+    }
+
+    @DisplayName("e스포츠 관리자 경로는 일반 회원이면 403")
+    @Test
+    void 어드민_esports_403() throws Exception {
+        mockMvc.perform(request(HttpMethod.POST, "/api/v1/admin/esports/teams")
                         .header("Authorization", "Bearer " + accessToken("USER")))
                 .andExpect(status().isForbidden());
     }
