@@ -5,6 +5,7 @@ import com.example.lolserver.common.error.ErrorType;
 import com.example.lolserver.esports.domain.vo.CareerEventType;
 import com.example.lolserver.esports.domain.vo.ContractType;
 import com.example.lolserver.esports.domain.vo.EndReason;
+import com.example.lolserver.esports.domain.vo.HiatusReason;
 import com.example.lolserver.esports.domain.vo.Position;
 import com.example.lolserver.esports.domain.vo.Role;
 import lombok.Getter;
@@ -132,6 +133,98 @@ public class PersonTimeline {
                 prev.getEndDate(), note);
         end(prev, date.minusDays(1), EndReason.MOVED);
         return add(moved);
+    }
+
+    /**
+     * 임대. 원 계약은 그대로 두고 다른 조직의 임차팀에 LOAN 계약을 만든다.
+     * 임대는 원 계약 기간을 넘을 수 없고, 임대끼리는 겹칠 수 없다. 포지션을 빼면 원 계약 포지션을 쓴다.
+     */
+    public Contract loan(Team team, Position position, LocalDate date, LocalDate endDate, String note) {
+        Contract parent = mainContractOn(date)
+                .orElseThrow(() -> new CoreException(ErrorType.NO_ACTIVE_CONTRACT));
+        if (parent.getRole() != Role.PLAYER) {
+            throw new CoreException(ErrorType.NOT_A_PLAYER);
+        }
+        if (parent.getOrganizationId().equals(team.organizationId())) {
+            throw new CoreException(ErrorType.SAME_ORGANIZATION);
+        }
+        if (endDate == null) {
+            throw new CoreException(ErrorType.INVALID_INPUT);
+        }
+        if (parent.lastDay() != null && endDate.isAfter(parent.lastDay())) {
+            throw new CoreException(ErrorType.LOAN_EXCEEDS_CONTRACT);
+        }
+        boolean loanOverlaps = contracts.stream().anyMatch(c -> c.isLoan() && c.overlaps(date, endDate));
+        if (loanOverlaps) {
+            throw new CoreException(ErrorType.ALREADY_ON_LOAN);
+        }
+        Position loanPosition = position != null ? position : parent.getPosition();
+        return add(Contract.open(personId, team, Role.PLAYER, loanPosition, ContractType.LOAN, date, endDate, note));
+    }
+
+    /** 임대 조기 복귀. 임대를 그날 RECALLED 로 끝낸다. */
+    public void recall(Long loanContractId, LocalDate date) {
+        Contract loan = contracts.stream()
+                .filter(c -> c.isLoan() && Objects.equals(c.getContractId(), loanContractId))
+                .findFirst()
+                .orElseThrow(() -> new CoreException(ErrorType.NOT_A_LOAN));
+        if (!loan.isEffectiveOn(date)) {
+            throw new CoreException(ErrorType.NO_ACTIVE_CONTRACT);
+        }
+        end(loan, date, EndReason.RECALLED);
+    }
+
+    /** 방출·상호 해지. 정식 계약과 진행 중인 임대를 그날 RELEASED 로 끝낸다. */
+    public void release(LocalDate date) {
+        Contract main = mainContractOn(date)
+                .orElseThrow(() -> new CoreException(ErrorType.NO_ACTIVE_CONTRACT));
+        end(main, date, EndReason.RELEASED);
+        loanOn(date).ifPresent(loan -> end(loan, date, EndReason.RELEASED));
+    }
+
+    /**
+     * 선수 은퇴. 진행 중인 선수 계약(과 임대)을 그날 RETIRED 로 끝내고 RETIRE 사건을 남긴다.
+     * FA 은퇴는 사건만 남는다. 스태프 계약 중이면 은퇴가 아니라 방출로 넣는다.
+     */
+    public CareerEvent retire(LocalDate date, String note, String sourceUrl) {
+        if (retiredOn(date)) {
+            throw new CoreException(ErrorType.PERSON_RETIRED);
+        }
+        Optional<Contract> main = mainContractOn(date);
+        if (main.isPresent() && main.get().getRole().isStaff()) {
+            throw new CoreException(ErrorType.NOT_A_PLAYER);
+        }
+        main.ifPresent(contract -> {
+            end(contract, date, EndReason.RETIRED);
+            loanOn(date).ifPresent(loan -> end(loan, date, EndReason.RETIRED));
+        });
+        String teamId = main.map(Contract::getTeamId).orElse(null);
+        return record(CareerEvent.of(personId, CareerEventType.RETIRE, date, teamId, null, note, sourceUrl));
+    }
+
+    /** 은퇴 번복. 은퇴 상태일 때만. */
+    public CareerEvent unretire(LocalDate date, String note, String sourceUrl) {
+        if (!retiredOn(date)) {
+            throw new CoreException(ErrorType.PERSON_NOT_RETIRED);
+        }
+        return record(CareerEvent.of(personId, CareerEventType.UNRETIRE, date, null, null, note, sourceUrl));
+    }
+
+    /** 활동 중단 (휴식·출장정지·군 입대·개인 사유). 계약은 그대로다. */
+    public CareerEvent hiatus(LocalDate date, HiatusReason reason, String note, String sourceUrl) {
+        if (inactiveOn(date)) {
+            throw new CoreException(ErrorType.ALREADY_INACTIVE);
+        }
+        String teamId = mainContractOn(date).map(Contract::getTeamId).orElse(null);
+        return record(CareerEvent.of(personId, CareerEventType.HIATUS, date, teamId, reason, note, sourceUrl));
+    }
+
+    /** 활동 재개. 활동 중단 상태일 때만. ({@code return} 은 예약어라 이름이 다르다) */
+    public CareerEvent comeBack(LocalDate date, String note, String sourceUrl) {
+        if (!inactiveOn(date)) {
+            throw new CoreException(ErrorType.NOT_INACTIVE);
+        }
+        return record(CareerEvent.of(personId, CareerEventType.RETURN, date, null, null, note, sourceUrl));
     }
 
     // ── 조회 도우미 ──
