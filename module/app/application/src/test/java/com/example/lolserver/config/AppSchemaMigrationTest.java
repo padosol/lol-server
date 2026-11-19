@@ -124,6 +124,49 @@ class AppSchemaMigrationTest {
                 .hasMessageContaining("uk_person_summoner_main");
     }
 
+    @DisplayName("e스포츠 로스터 — 팀 내 이동(MOVE/MOVED)·상위 팀·비활동 사유 제약")
+    @Test
+    void esportsRosterLifecycleConstraints() throws Exception {
+        // given — CL 팀(t1a)에서 1군(t1)으로 콜업: 직전 계약은 MOVED 로 끝나고 MOVE 계약이 end_date 를 물려받는다
+        flyway("postgresql-local.yml").migrate();
+        executeInApp("""
+                INSERT INTO esports_team (team_id, team_code, name) VALUES ('t1', 'T1', 'T1');
+                INSERT INTO esports_team (team_id, team_code, name, parent_team_id)
+                VALUES ('t1a', 'T1A', 'T1 Esports Academy', 't1');
+                INSERT INTO person (person_id, nick_name) VALUES ('p1', 'Sol');
+                INSERT INTO esports_contract (person_id, team_id, role, position, contract_type,
+                                              start_date, end_date, actual_end_date, end_reason)
+                VALUES ('p1', 't1a', 'PLAYER', 'MID', 'SIGN', '2026-01-01', '2026-11-16', '2026-05-31', 'MOVED');
+                INSERT INTO esports_contract (person_id, team_id, role, position, contract_type, start_date, end_date)
+                VALUES ('p1', 't1', 'PLAYER', 'MID', 'MOVE', '2026-06-01', '2026-11-16');
+                INSERT INTO esports_career_event (person_id, event_type, event_date, reason)
+                VALUES ('p1', 'HIATUS', '2026-07-01', 'MILITARY');
+                """);
+
+        // when & then
+        assertThatThrownBy(() -> executeInApp(
+                "UPDATE esports_team SET parent_team_id = 't1' WHERE team_id = 't1';"))
+                .isInstanceOf(SQLException.class)
+                .hasMessageContaining("ck_team_parent_not_self");
+        assertThatThrownBy(() -> executeInApp(
+                "UPDATE esports_team SET parent_team_id = 'nope' WHERE team_id = 't1a';"))
+                .isInstanceOf(SQLException.class)
+                .hasMessageContaining("fk_team_parent");
+        // 비활동 사유는 HIATUS 에만 붙는다
+        assertThatThrownBy(() -> executeInApp("""
+                INSERT INTO esports_career_event (person_id, event_type, event_date, reason)
+                VALUES ('p1', 'RETIRE', '2026-08-01', 'REST');
+                """))
+                .isInstanceOf(SQLException.class)
+                .hasMessageContaining("ck_career_event_reason");
+        assertThatThrownBy(() -> executeInApp("""
+                INSERT INTO esports_career_event (person_id, event_type, event_date, reason)
+                VALUES ('p1', 'HIATUS', '2026-09-01', 'VACATION');
+                """))
+                .isInstanceOf(SQLException.class)
+                .hasMessageContaining("ck_career_event_reason");
+    }
+
     @DisplayName("app 스키마에 이력 없이 테이블만 있으면 V1 을 건너뛰지 않고 실패한다 (baseline 하지 않음)")
     @ParameterizedTest(name = "{0}")
     @ValueSource(strings = {"postgresql-local.yml", "postgresql-prod.yml"})
