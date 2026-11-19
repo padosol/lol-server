@@ -51,7 +51,8 @@ class AppSchemaMigrationTest {
         "com.example.lolserver.duo.adapter.out.persistence.entity"
     };
 
-    private static final int APP_TABLE_COUNT = 14;
+    /** 회원·커뮤니티·듀오 14 + e스포츠 로스터 8 (V5) */
+    private static final int APP_TABLE_COUNT = 22;
 
     @BeforeEach
     void resetDatabase() throws SQLException {
@@ -66,7 +67,7 @@ class AppSchemaMigrationTest {
         flyway(yaml).migrate();
 
         // then
-        assertThat(appliedVersions()).containsExactly("1", "2", "3", "4");
+        assertThat(appliedVersions()).containsExactly("1", "2", "3", "4", "5");
         assertThat(appTableCount()).isEqualTo(APP_TABLE_COUNT);
         assertThat(queryInt("SELECT count(*) FROM app.community_category")).isEqualTo(8);
         validateAppEntities();
@@ -83,10 +84,44 @@ class AppSchemaMigrationTest {
         flyway(yaml).migrate();
 
         // then
-        assertThat(appliedVersions()).containsExactly("1", "2", "3", "4");
+        assertThat(appliedVersions()).containsExactly("1", "2", "3", "4", "5");
         assertThat(appTableCount()).isEqualTo(APP_TABLE_COUNT);
         assertThat(tableExists("public", "member")).isTrue();
         validateAppEntities();
+    }
+
+    @DisplayName("e스포츠 로스터 — 정식 계약 기간 겹침, 포지션 없는 선수, 인물당 대표 계정 2개를 DB 가 거부한다")
+    @Test
+    void esportsRosterConstraintsRejectInvalidRows() throws Exception {
+        // given
+        flyway("postgresql-local.yml").migrate();
+        executeInApp("""
+                INSERT INTO esports_team (team_id, team_code, name) VALUES ('t-a', 'AAA', 'A'), ('t-b', 'BBB', 'B');
+                INSERT INTO person (person_id, nick_name) VALUES ('p1', 'Sol');
+                INSERT INTO esports_contract (person_id, team_id, role, position, contract_type, start_date, end_date)
+                VALUES ('p1', 't-a', 'PLAYER', 'MID', 'SIGN', '2024-11-18', '2026-11-17');
+                INSERT INTO person_summoner (puuid, person_id, is_main) VALUES ('puuid-1', 'p1', TRUE);
+                """);
+
+        // when & then
+        assertThatThrownBy(() -> executeInApp("""
+                INSERT INTO esports_contract (person_id, team_id, role, position, contract_type, start_date, end_date)
+                VALUES ('p1', 't-b', 'COACH', NULL, 'SIGN', '2025-06-01', '2025-12-31');
+                """))
+                .isInstanceOf(SQLException.class)
+                .hasMessageContaining("ex_contract_no_overlap");
+        // CHECK 는 NULL 을 통과시키므로 position IN (...) 만으로는 포지션 없는 선수가 들어온다
+        assertThatThrownBy(() -> executeInApp("""
+                INSERT INTO esports_contract (person_id, team_id, role, position, contract_type, start_date)
+                VALUES ('p1', 't-b', 'PLAYER', NULL, 'SIGN', '2030-01-01');
+                """))
+                .isInstanceOf(SQLException.class)
+                .hasMessageContaining("ck_contract_position");
+        assertThatThrownBy(() -> executeInApp("""
+                INSERT INTO person_summoner (puuid, person_id, is_main) VALUES ('puuid-2', 'p1', TRUE);
+                """))
+                .isInstanceOf(SQLException.class)
+                .hasMessageContaining("uk_person_summoner_main");
     }
 
     @DisplayName("app 스키마에 이력 없이 테이블만 있으면 V1 을 건너뛰지 않고 실패한다 (baseline 하지 않음)")
@@ -159,6 +194,10 @@ class AppSchemaMigrationTest {
         String sql = new ClassPathResource("db/migration/app/" + migration)
                 .getContentAsString(StandardCharsets.UTF_8);
         execute("SET search_path TO " + schema + ";\n" + sql);
+    }
+
+    private static void executeInApp(String sql) throws SQLException {
+        execute("SET search_path TO app;\n" + sql);
     }
 
     private static void execute(String sql) throws SQLException {
