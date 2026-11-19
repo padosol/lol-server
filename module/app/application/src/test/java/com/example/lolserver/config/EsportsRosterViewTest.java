@@ -56,7 +56,9 @@ class EsportsRosterViewTest {
                 INSERT INTO esports_team (team_id, team_code, name, parent_team_id) VALUES ('x', 'X', 'Nested', 't1a');
                 INSERT INTO person (person_id, nick_name) VALUES
                     ('p_move', 'Move'), ('p_up', 'Up'), ('p_loan', 'Loan'), ('p_ret', 'Ret'), ('p_ret2', 'Ret2'),
-                    ('p_hiatus', 'Hiatus'), ('p_bad', 'Bad'), ('p_coach_swap', 'Swap'), ('p_creator', 'Creator');
+                    ('p_hiatus', 'Hiatus'), ('p_bad', 'Bad'), ('p_coach_swap', 'Swap'), ('p_creator', 'Creator'),
+                    ('p_loan_ret', 'LoanRet'), ('p_loan_ret2', 'LoanRet2'), ('p_ret_future', 'RetFuture'),
+                    ('p_ret_lastday', 'RetLastDay'), ('p_orphan', 'Orphan');
 
                 -- 콜업: CL 계약을 전날 MOVED 로 끝내고 1군 MOVE 계약이 end_date 를 물려받는다
                 INSERT INTO esports_contract (person_id, team_id, role, position, contract_type,
@@ -111,7 +113,84 @@ class EsportsRosterViewTest {
                     ('p_coach_swap', 't1a', 'PLAYER', 'TOP', 'SIGN', CURRENT_DATE - 200, CURRENT_DATE + 100, CURRENT_DATE - 41, 'MOVED');
                 INSERT INTO esports_contract (person_id, team_id, role, position, contract_type, start_date, end_date) VALUES
                     ('p_coach_swap', 't1', 'COACH', NULL, 'MOVE', CURRENT_DATE - 40, CURRENT_DATE + 100);
+
+                -- 임대 중 은퇴: 원 계약(gen)과 임대(t1)가 함께 RETIRED. 권리는 원 소속팀(gen)이 원래 만료일까지
+                INSERT INTO esports_contract (person_id, team_id, role, position, contract_type,
+                                              start_date, end_date, actual_end_date, end_reason) VALUES
+                    ('p_loan_ret', 'gen', 'PLAYER', 'MID', 'SIGN', CURRENT_DATE - 500, CURRENT_DATE + 400, CURRENT_DATE - 30, 'RETIRED'),
+                    ('p_loan_ret', 't1', 'PLAYER', 'MID', 'LOAN', CURRENT_DATE - 100, CURRENT_DATE + 100, CURRENT_DATE - 30, 'RETIRED'),
+                    ('p_loan_ret2', 'gen', 'PLAYER', 'MID', 'SIGN', CURRENT_DATE - 500, CURRENT_DATE + 400, CURRENT_DATE - 30, 'RETIRED'),
+                    ('p_loan_ret2', 't1', 'PLAYER', 'MID', 'LOAN', CURRENT_DATE - 100, CURRENT_DATE + 100, CURRENT_DATE - 30, 'RETIRED');
+                INSERT INTO esports_career_event (person_id, event_type, event_date, team_id) VALUES
+                    ('p_loan_ret', 'RETIRE', CURRENT_DATE - 30, 'gen'),
+                    ('p_loan_ret2', 'RETIRE', CURRENT_DATE - 30, 'gen'),
+                    ('p_loan_ret2', 'UNRETIRE', CURRENT_DATE - 20, NULL);
+                -- 권리 기간 중 원 소속팀(gen)과 다시 입단 — 권리 위반이 아니다
+                INSERT INTO esports_contract (person_id, team_id, role, position, contract_type, start_date, end_date) VALUES
+                    ('p_loan_ret2', 'gen', 'PLAYER', 'MID', 'SIGN', CURRENT_DATE - 10, CURRENT_DATE + 300);
+
+                -- 발표 후 효력 전 은퇴(미래 날짜): 아직 계약 중이므로 권리를 붙이지 않는다
+                INSERT INTO esports_contract (person_id, team_id, role, position, contract_type,
+                                              start_date, end_date, actual_end_date, end_reason) VALUES
+                    ('p_ret_future', 'gen', 'PLAYER', 'TOP', 'SIGN', CURRENT_DATE - 100, CURRENT_DATE + 200, CURRENT_DATE + 10, 'RETIRED'),
+                    ('p_ret_lastday', 'gen', 'PLAYER', 'JGL', 'SIGN', CURRENT_DATE - 500, CURRENT_DATE, CURRENT_DATE - 30, 'RETIRED');
+                INSERT INTO esports_career_event (person_id, event_type, event_date, team_id) VALUES
+                    ('p_ret_future', 'RETIRE', CURRENT_DATE + 10, 'gen'),
+                    ('p_ret_lastday', 'RETIRE', CURRENT_DATE - 30, 'gen');
+
+                -- 정정 사고: 이적으로 끝났는데 이적 계약이 지워져 후속 계약이 없다
+                INSERT INTO esports_contract (person_id, team_id, role, position, contract_type,
+                                              start_date, end_date, actual_end_date, end_reason) VALUES
+                    ('p_orphan', 't1', 'PLAYER', 'AD', 'SIGN', CURRENT_DATE - 200, CURRENT_DATE + 200, CURRENT_DATE - 50, 'TRANSFERRED');
                 """);
+    }
+
+    @DisplayName("임대 중 은퇴하면 권리는 임차팀이 아니라 원 소속팀이 원래 만료일까지 가진다")
+    @Test
+    void person_status_임대중_은퇴는_원소속팀_권리() throws SQLException {
+        Map<String, Object> row = personStatus("p_loan_ret");
+
+        assertThat(row.get("status")).isEqualTo("RETIRED");
+        assertThat(row.get("rights_team_id")).isEqualTo("gen");
+        assertThat(row.get("rights_until")).isEqualTo(daysFromToday(400));
+    }
+
+    @DisplayName("권리 기간 중 원 소속팀과 다시 입단하면 권리 위반으로 잡지 않는다")
+    @Test
+    void roster_invalid_원소속팀_재입단은_권리위반이_아니다() throws SQLException {
+        assertThat(rows("SELECT problem, person_id FROM v_esports_roster_invalid WHERE person_id = 'p_loan_ret2'"))
+                .extracting(row -> row.get("problem"))
+                .doesNotContain("SIGN_DURING_RETIRE_RIGHTS");
+    }
+
+    @DisplayName("미래 날짜로 넣은 은퇴(효력 전)는 아직 계약 중이라 권리를 붙이지 않는다")
+    @Test
+    void person_status_미래날짜_은퇴는_권리를_붙이지_않는다() throws SQLException {
+        Map<String, Object> row = personStatus("p_ret_future");
+
+        assertThat(row.get("status")).isEqualTo("CONTRACTED");
+        assertThat(row.get("rights_team_id")).isNull();
+    }
+
+    @DisplayName("권리 마지막 날(원래 만료일 당일)에도 권리가 보인다 — 기간은 양 끝 포함")
+    @Test
+    void person_status_권리_마지막날도_권리가_있다() throws SQLException {
+        Map<String, Object> row = personStatus("p_ret_lastday");
+
+        assertThat(row.get("rights_team_id")).isEqualTo("gen");
+        assertThat(row.get("rights_until")).isEqualTo(daysFromToday(0));
+    }
+
+    @DisplayName("이적·이동·재계약으로 조기 종료됐는데 다음 날 시작하는 계약이 없으면 검증 뷰가 잡는다")
+    @Test
+    void roster_invalid_후속계약없는_조기종료() throws SQLException {
+        List<Map<String, Object>> rows = rows("SELECT problem, person_id FROM v_esports_roster_invalid");
+
+        assertThat(rows)
+                .extracting(row -> row.get("problem"), row -> row.get("person_id"))
+                .contains(tuple("EARLY_END_WITHOUT_SUCCESSOR", "p_orphan"))
+                .doesNotContain(tuple("EARLY_END_WITHOUT_SUCCESSOR", "p_move"),
+                        tuple("EARLY_END_WITHOUT_SUCCESSOR", "p_coach_swap"));
     }
 
     @DisplayName("같은 조직 다른 팀으로 다음 날 재계약하면 직전 계약은 EXPIRED 가 아니라 RENEWED")

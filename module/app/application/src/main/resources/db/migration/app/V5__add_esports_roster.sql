@@ -61,7 +61,10 @@ CREATE TABLE IF NOT EXISTS esports_season (
     updated_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_esports_season PRIMARY KEY (season_id),
     CONSTRAINT fk_esports_season_league FOREIGN KEY (league_id)
-        REFERENCES esports_league (league_id)
+        REFERENCES esports_league (league_id),
+    -- 뒤집힌 기간은 v_esports_season_roster 의 daterange 가 오류를 내므로 저장 단계에서 막는다
+    CONSTRAINT ck_season_period
+        CHECK (start_date IS NULL OR end_date IS NULL OR end_date >= start_date)
 );
 
 COMMENT ON TABLE  esports_season            IS '시즌/대회 회차 (lck_2026, worlds_2026)';
@@ -452,13 +455,15 @@ SELECT p.person_id, p.nick_name,
          WHERE e.person_id = p.person_id
            AND e.event_date <= CURRENT_DATE
   ) ev ON TRUE
+  -- 권리: 마지막으로 RETIRED 로 끝난 정식 계약(임대 제외 — 임대 중 은퇴해도 권리는 원 소속팀).
+  --       권리 기간 [actual_end_date + 1, end_date] 안일 때만 (효력 전 미래 은퇴에는 붙이지 않는다)
   LEFT JOIN LATERAL (
-        SELECT c.team_id, c.end_date
+        SELECT c.team_id, c.actual_end_date, c.end_date
           FROM esports_contract c
-         WHERE c.person_id = p.person_id AND c.end_reason = 'RETIRED'
+         WHERE c.person_id = p.person_id AND c.end_reason = 'RETIRED' AND c.contract_type <> 'LOAN'
          ORDER BY c.start_date DESC
          LIMIT 1
-  ) rr ON rr.end_date > CURRENT_DATE
+  ) rr ON rr.actual_end_date < CURRENT_DATE AND rr.end_date >= CURRENT_DATE
  WHERE EXISTS (SELECT 1 FROM esports_contract     c WHERE c.person_id = p.person_id)
     OR EXISTS (SELECT 1 FROM esports_career_event e WHERE e.person_id = p.person_id);
 
@@ -589,10 +594,22 @@ UNION ALL
 SELECT 'SIGN_DURING_RETIRE_RIGHTS', c.person_id, c.contract_id, c.team_id, c.start_date
   FROM esports_contract c
   JOIN esports_team ct ON ct.team_id = c.team_id
-  JOIN esports_contract r ON r.person_id = c.person_id AND r.end_reason = 'RETIRED'
+  JOIN esports_contract r
+    ON r.person_id = c.person_id AND r.end_reason = 'RETIRED' AND r.contract_type <> 'LOAN'
   JOIN esports_team rt ON rt.team_id = r.team_id
  WHERE c.contract_type = 'SIGN'
    AND c.start_date BETWEEN r.actual_end_date + 1 AND r.end_date
-   AND COALESCE(ct.parent_team_id, ct.team_id) <> COALESCE(rt.parent_team_id, rt.team_id);
+   AND COALESCE(ct.parent_team_id, ct.team_id) <> COALESCE(rt.parent_team_id, rt.team_id)
+UNION ALL
+-- (13) 이적·팀 내 이동·재계약으로 조기 종료됐는데 다음 날 시작하는 정식 계약이 없음
+--      (정정·삭제로 후속 계약만 지운 경우 — 화면에는 FA 로 보이는데 다른 검사로는 잡히지 않는다)
+SELECT 'EARLY_END_WITHOUT_SUCCESSOR', c.person_id, c.contract_id, c.team_id, c.actual_end_date
+  FROM esports_contract c
+ WHERE c.end_reason IN ('TRANSFERRED', 'MOVED', 'RENEWED')
+   AND NOT EXISTS (
+        SELECT 1 FROM esports_contract n
+         WHERE n.person_id = c.person_id
+           AND n.contract_type <> 'LOAN'
+           AND n.start_date = c.actual_end_date + 1);
 
 COMMENT ON VIEW v_esports_roster_invalid IS '로스터 오입력 검출. problem 별로 원인 행을 보여준다. 0행이어야 한다 (SIGN_DURING_RETIRE_RIGHTS 는 권리 양도가 있었다면 정상일 수 있다)';

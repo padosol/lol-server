@@ -165,6 +165,14 @@ class AppSchemaMigrationTest {
                 """))
                 .isInstanceOf(SQLException.class)
                 .hasMessageContaining("ck_career_event_reason");
+        // 시즌 기간이 뒤집히면 시즌 로스터 뷰의 daterange 가 오류를 내므로 저장 단계에서 막는다
+        assertThatThrownBy(() -> executeInApp("""
+                INSERT INTO esports_league (league_id, name) VALUES ('lck', 'LCK');
+                INSERT INTO esports_season (season_id, league_id, name, start_date, end_date)
+                VALUES ('lck_2026', 'lck', '2026 LCK', '2026-09-06', '2026-01-14');
+                """))
+                .isInstanceOf(SQLException.class)
+                .hasMessageContaining("ck_season_period");
     }
 
     @DisplayName("app 스키마에 이력 없이 테이블만 있으면 V1 을 건너뛰지 않고 실패한다 (baseline 하지 않음)")
