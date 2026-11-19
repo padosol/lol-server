@@ -160,7 +160,7 @@ public class EsportsMasterService implements EsportsMasterUseCase {
         }
         Team parent = teamPersistencePort.findById(parentTeamId)
                 .orElseThrow(() -> new CoreException(ErrorType.ESPORTS_TEAM_NOT_FOUND));
-        team.validateParent(parent);
+        team.validateParent(parent, teamPersistencePort.hasChildTeams(team.getTeamId()));
     }
 
     private static League toLeague(String leagueId, LeagueCommand command) {
@@ -179,7 +179,7 @@ public class EsportsMasterService implements EsportsMasterUseCase {
     }
 
     private static Season toSeason(String seasonId, String leagueId, SeasonCommand command) {
-        return Season.builder()
+        Season season = Season.builder()
                 .seasonId(seasonId)
                 .leagueId(leagueId)
                 .name(command.name())
@@ -189,5 +189,7 @@ public class EsportsMasterService implements EsportsMasterUseCase {
                 .endDate(command.endDate())
                 .sortOrder(command.sortOrder())
                 .build();
+        season.validatePeriod();
+        return season;
     }
 }

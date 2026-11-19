@@ -12,6 +12,7 @@ import com.example.lolserver.esports.domain.vo.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,7 +44,9 @@ public class EsportsPersonController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate contractEndingBy,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        PersonSearchCommand command = new PersonSearchCommand(q, status, role, teamId, contractEndingBy,
+        // 검색창이 비어 있을 때 오는 q= 는 "검색어 없음" 이다 — 그대로 두면 '%%' 가 이력 없는 인물까지 목록에 섞는다
+        String keyword = StringUtils.hasText(q) ? q.trim() : null;
+        PersonSearchCommand command = new PersonSearchCommand(keyword, status, role, teamId, contractEndingBy,
                 page, Math.min(size, MAX_PAGE_SIZE));
         return ResponseEntity.ok(ApiResponse.success(PageResponse.of(
                 esportsQueryUseCase.searchPersons(command).map(PersonSummaryResponse::from))));

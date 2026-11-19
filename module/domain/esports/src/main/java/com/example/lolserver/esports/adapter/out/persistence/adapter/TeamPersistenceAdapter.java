@@ -44,6 +44,11 @@ public class TeamPersistenceAdapter implements TeamPersistencePort {
     }
 
     @Override
+    public boolean hasChildTeams(String teamId) {
+        return teamRepository.existsByParentTeamId(teamId);
+    }
+
+    @Override
     public TeamNameHistory saveNameHistory(TeamNameHistory history) {
         try {
             return mapper.toDomain(nameHistoryRepository.saveAndFlush(mapper.toEntity(history)));

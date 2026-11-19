@@ -14,6 +14,9 @@ public interface TeamPersistencePort {
 
     Team save(Team team);
 
+    /** 이 팀을 상위 팀으로 가리키는 팀(CL 팀)이 있는가 — 상위 팀 1단계 검사용. */
+    boolean hasChildTeams(String teamId);
+
     TeamNameHistory saveNameHistory(TeamNameHistory history);
 
     Optional<TeamNameHistory> findNameHistory(String teamId, Long historyId);

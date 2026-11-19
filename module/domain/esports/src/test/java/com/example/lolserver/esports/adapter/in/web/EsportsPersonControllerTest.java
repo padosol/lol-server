@@ -73,6 +73,20 @@ class EsportsPersonControllerTest extends RestDocsSupport {
         assertThat(command.getValue().size()).isEqualTo(20);
     }
 
+    @DisplayName("빈 검색어(q=)는 검색어 없음으로 본다 — 이력 없는 인물이 목록에 섞이지 않게")
+    @Test
+    void searchPersons_빈검색어는_검색어없음으로_본다() throws Exception {
+        given(esportsQueryUseCase.searchPersons(org.mockito.ArgumentMatchers.any())).willReturn(
+                new PageResult<>(List.of(), 0, 20, 0, 0, true, true));
+
+        mockMvc.perform(get("/api/v1/esports/persons").param("q", "  "))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<PersonSearchCommand> command = ArgumentCaptor.forClass(PersonSearchCommand.class);
+        verify(esportsQueryUseCase).searchPersons(command.capture());
+        assertThat(command.getValue().q()).isNull();
+    }
+
     @DisplayName("인물 프로필 API — 공개 소환사 puuid 포함")
     @Test
     void getPersonProfile_200() throws Exception {

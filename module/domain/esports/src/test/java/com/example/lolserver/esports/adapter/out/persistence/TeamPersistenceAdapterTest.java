@@ -51,6 +51,17 @@ class TeamPersistenceAdapterTest extends EsportsPostgresTestBase {
                 .extracting("errorType").isEqualTo(ErrorType.CONTRACT_PERIOD_CONFLICT);
     }
 
+    @DisplayName("하위 팀(parent_team_id 로 가리키는 팀)이 있으면 true")
+    @Test
+    void hasChildTeams_하위팀이_있으면_true() {
+        teamPersistencePort.save(Team.builder().teamId("t1").teamCode("T1").gameCode("lol").name("T1").build());
+        teamPersistencePort.save(Team.builder().teamId("t1a").teamCode("T1A").gameCode("lol").name("T1A")
+                .parentTeamId("t1").build());
+
+        assertThat(teamPersistencePort.hasChildTeams("t1")).isTrue();
+        assertThat(teamPersistencePort.hasChildTeams("t1a")).isFalse();
+    }
+
     @DisplayName("해체일 이후까지 이어지는 계약이 있으면 true")
     @Test
     void hasContractEffectiveOnOrAfter_해체일이후_계약이_있으면_true() {

@@ -27,7 +27,7 @@ class TeamTest {
     void validateParent_상위팀에_상위팀이_있으면_TEAM_NESTED_TOO_DEEP() {
         Team x = team("x", null);
 
-        assertThatThrownBy(() -> x.validateParent(team("t1a", "t1")))
+        assertThatThrownBy(() -> x.validateParent(team("t1a", "t1"), false))
                 .isInstanceOf(CoreException.class)
                 .extracting("errorType").isEqualTo(ErrorType.TEAM_NESTED_TOO_DEEP);
     }
@@ -37,7 +37,17 @@ class TeamTest {
     void validateParent_자기자신이면_TEAM_NESTED_TOO_DEEP() {
         Team t1 = team("t1", null);
 
-        assertThatThrownBy(() -> t1.validateParent(team("t1", null)))
+        assertThatThrownBy(() -> t1.validateParent(team("t1", null), false))
+                .isInstanceOf(CoreException.class)
+                .extracting("errorType").isEqualTo(ErrorType.TEAM_NESTED_TOO_DEEP);
+    }
+
+    @DisplayName("하위 팀(CL 팀)이 있는 팀에 상위 팀을 지정하면 2단계가 되므로 거부한다")
+    @Test
+    void validateParent_하위팀이_있는팀에_상위팀을_지정하면_TEAM_NESTED_TOO_DEEP() {
+        Team t1 = team("t1", null);
+
+        assertThatThrownBy(() -> t1.validateParent(team("gen", null), true))
                 .isInstanceOf(CoreException.class)
                 .extracting("errorType").isEqualTo(ErrorType.TEAM_NESTED_TOO_DEEP);
     }

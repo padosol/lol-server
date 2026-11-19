@@ -39,9 +39,12 @@ public class Team {
         return new TeamName(teamCode, name, nameEng, imageUrl, darkImageUrl);
     }
 
-    /** 상위 팀은 1단계만 허용한다 — 자기 자신이나, 이미 상위 팀이 있는 팀은 상위 팀이 될 수 없다. */
-    public void validateParent(Team parent) {
-        if (parent.getTeamId().equals(teamId) || parent.getParentTeamId() != null) {
+    /**
+     * 상위 팀은 1단계만 허용한다 — 자기 자신이나 이미 상위 팀이 있는 팀은 상위 팀이 될 수 없고,
+     * 하위 팀(CL 팀)을 가진 팀에 상위 팀을 붙이면 2단계가 되므로 그것도 막는다.
+     */
+    public void validateParent(Team parent, boolean hasChildTeams) {
+        if (parent.getTeamId().equals(teamId) || parent.getParentTeamId() != null || hasChildTeams) {
             throw new CoreException(ErrorType.TEAM_NESTED_TOO_DEEP);
         }
     }

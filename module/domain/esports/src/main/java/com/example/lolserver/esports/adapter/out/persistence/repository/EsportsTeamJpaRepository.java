@@ -4,4 +4,6 @@ import com.example.lolserver.esports.adapter.out.persistence.entity.EsportsTeamE
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface EsportsTeamJpaRepository extends JpaRepository<EsportsTeamEntity, String> {
+
+    boolean existsByParentTeamId(String parentTeamId);
 }

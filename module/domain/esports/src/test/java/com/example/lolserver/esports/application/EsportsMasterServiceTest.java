@@ -4,6 +4,8 @@ import com.example.lolserver.common.error.CoreException;
 import com.example.lolserver.common.error.ErrorType;
 import com.example.lolserver.esports.application.command.CreateTeamCommand;
 import com.example.lolserver.esports.application.command.RenameTeamCommand;
+import com.example.lolserver.esports.application.command.SeasonCommand;
+import com.example.lolserver.esports.application.command.UpdateTeamCommand;
 import com.example.lolserver.esports.application.port.out.LeaguePersistencePort;
 import com.example.lolserver.esports.application.port.out.TeamPersistencePort;
 import com.example.lolserver.esports.domain.Team;
@@ -96,6 +98,35 @@ class EsportsMasterServiceTest {
                 .isInstanceOf(CoreException.class)
                 .extracting("errorType").isEqualTo(ErrorType.TEAM_HAS_ACTIVE_CONTRACT);
         verify(teamPersistencePort, never()).save(any());
+    }
+
+    @DisplayName("하위 팀이 있는 팀(T1)에 상위 팀을 지정하면 2단계가 되므로 거부한다")
+    @Test
+    void updateTeam_하위팀이_있는팀에_상위팀을_지정하면_TEAM_NESTED_TOO_DEEP() {
+        given(teamPersistencePort.findById("t1")).willReturn(Optional.of(
+                Team.builder().teamId("t1").teamCode("T1").gameCode("lol").name("T1").build()));
+        given(teamPersistencePort.findById("gen")).willReturn(Optional.of(
+                Team.builder().teamId("gen").teamCode("GEN").gameCode("lol").name("Gen.G").build()));
+        given(teamPersistencePort.hasChildTeams("t1")).willReturn(true);
+
+        assertThatThrownBy(() -> service.updateTeam("t1", new UpdateTeamCommand(null, "gen", null)))
+                .isInstanceOf(CoreException.class)
+                .extracting("errorType").isEqualTo(ErrorType.TEAM_NESTED_TOO_DEEP);
+        verify(teamPersistencePort, never()).save(any());
+    }
+
+    @DisplayName("시즌 종료일이 시작일보다 빠르면 저장하지 않고 거부한다")
+    @Test
+    void createSeason_종료일이_시작일보다_빠르면_INVALID_INPUT() {
+        given(leaguePersistencePort.existsLeague("lck")).willReturn(true);
+        given(leaguePersistencePort.existsSeason("lck_2026")).willReturn(false);
+        SeasonCommand command = new SeasonCommand("lck_2026", "2026 LCK", null, 2026,
+                LocalDate.of(2026, 9, 6), LocalDate.of(2026, 1, 14), 0);
+
+        assertThatThrownBy(() -> service.createSeason("lck", command))
+                .isInstanceOf(CoreException.class)
+                .extracting("errorType").isEqualTo(ErrorType.INVALID_INPUT);
+        verify(leaguePersistencePort, never()).saveSeason(any());
     }
 
     private static CreateTeamCommand teamCommand(String teamId, String parentTeamId) {
