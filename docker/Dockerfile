@@ -1,5 +1,7 @@
 # Stage 1: 빌드
-FROM eclipse-temurin:21-jdk AS build
+# JAR 는 아키텍처 독립 산출물이라 빌드 스테이지는 빌드 머신 네이티브 플랫폼($BUILDPLATFORM)에서 한 번만 실행한다.
+# 멀티 아키텍처(amd64/arm64) 빌드 시 Gradle 을 QEMU 에뮬레이션으로 돌리지 않기 위함.
+FROM --platform=$BUILDPLATFORM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 
 # Gradle Wrapper 복사 및 실행 권한 부여
@@ -17,6 +19,7 @@ COPY module module
 RUN ./gradlew :module:app:application:bootJar -x test --no-daemon
 
 # Stage 2: 런타임
+# 타깃 플랫폼($TARGETPLATFORM, 예: linux/arm64) 베이스 이미지 — FROM 기본 동작이라 --platform 은 생략한다.
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
