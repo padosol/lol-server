@@ -313,6 +313,7 @@ COMMENT ON COLUMN esports_career_event.reason  IS 'HIATUS 사유 (REST / SUSPENS
 -- 6.1 계약 상태 -- 모든 화면의 기본 재료. 자연 만료를 EXPIRED 로 유도한다.
 CREATE OR REPLACE VIEW v_esports_contract_status AS
 SELECT c.contract_id, c.person_id, p.nick_name, c.team_id, t.team_code,
+       COALESCE(t.parent_team_id, t.team_id) AS organization_id,
        c.role, c.position, c.contract_type,
        c.start_date, c.end_date, c.actual_end_date,
        COALESCE(c.actual_end_date, c.end_date) AS last_day,
@@ -324,11 +325,12 @@ SELECT c.contract_id, c.person_id, p.nick_name, c.team_id, t.team_code,
        END AS status,
        CASE
            WHEN c.actual_end_date IS NOT NULL THEN c.end_reason
-           -- 만료 다음 날 같은 팀 재계약이 이어지면 만료가 아니라 재계약이다
+           -- 만료 다음 날 같은 조직 재계약이 이어지면 만료가 아니라 재계약이다 (CL 팀 -> LCK 팀 승격 포함)
            WHEN c.end_date < CURRENT_DATE AND EXISTS (
                 SELECT 1 FROM esports_contract n
+                  JOIN esports_team nt ON nt.team_id = n.team_id
                  WHERE n.person_id = c.person_id
-                   AND n.team_id = c.team_id
+                   AND COALESCE(nt.parent_team_id, nt.team_id) = COALESCE(t.parent_team_id, t.team_id)
                    AND n.contract_type = 'RENEWAL'
                    AND n.start_date = c.end_date + 1) THEN 'RENEWED'
            WHEN c.end_date < CURRENT_DATE     THEN 'EXPIRED'
@@ -337,7 +339,7 @@ SELECT c.contract_id, c.person_id, p.nick_name, c.team_id, t.team_code,
   JOIN person       p ON p.person_id = c.person_id
   JOIN esports_team t ON t.team_id   = c.team_id;
 
-COMMENT ON VIEW v_esports_contract_status IS '계약별 상태(UPCOMING/ACTIVE/ENDED)와 종료 사유. 자연 만료는 EXPIRED, 다음 날 재계약이 이어지면 RENEWED';
+COMMENT ON VIEW v_esports_contract_status IS '계약별 상태(UPCOMING/ACTIVE/ENDED)·조직 ID·종료 사유. 자연 만료는 EXPIRED, 다음 날 같은 조직 재계약이 이어지면 RENEWED';
 
 -- 6.2 현재 로스터 -- 임대 중인 선수는 원 소속팀이 아니라 임대팀에 보인다.
 CREATE OR REPLACE VIEW v_esports_current_roster AS
@@ -352,10 +354,11 @@ SELECT s.*
 
 COMMENT ON VIEW v_esports_current_roster IS '오늘 기준 팀별 로스터(선수+스태프). 임대 선수는 임대팀에 표시';
 
--- 6.3 소속 기간 -- 같은 팀·같은 역할군(선수/스태프)의 연속 계약을 하나로 묶는다.
+-- 6.3 소속 기간 -- 같은 조직·같은 역할군(선수/스태프)의 연속 계약을 하나로 묶는다.
+--     조직 단위라 팀 내 이동(T1A -> T1)과 재계약 승격도 한 줄이다. 한 줄 안의 팀 구간은 team_ids 와 계약 이력이 보여준다.
 CREATE OR REPLACE VIEW v_esports_tenure AS
 WITH c AS (
-    SELECT s.contract_id, s.person_id, s.team_id, s.role, s.contract_type,
+    SELECT s.contract_id, s.person_id, s.team_id, s.organization_id, s.role, s.contract_type,
            s.start_date, s.last_day, s.end_reason,
            (s.role = 'PLAYER') AS as_player
       FROM v_esports_contract_status s
@@ -365,47 +368,72 @@ WITH c AS (
                  AND c.start_date <= LAG(c.last_day) OVER w + 1
                 THEN 0 ELSE 1 END AS is_new
       FROM c
-    WINDOW w AS (PARTITION BY c.person_id, c.team_id, c.as_player ORDER BY c.start_date)
+    WINDOW w AS (PARTITION BY c.person_id, c.organization_id, c.as_player ORDER BY c.start_date)
 ), grouped AS (
     SELECT f.*,
-           SUM(f.is_new) OVER (PARTITION BY f.person_id, f.team_id, f.as_player
+           SUM(f.is_new) OVER (PARTITION BY f.person_id, f.organization_id, f.as_player
                                ORDER BY f.start_date) AS tenure_no
       FROM flagged f
 )
-SELECT g.person_id, g.team_id, g.as_player, g.tenure_no,
+SELECT g.person_id, g.organization_id, g.as_player, g.tenure_no,
        MIN(g.start_date)                                           AS start_date,
        (ARRAY_AGG(g.last_day   ORDER BY g.start_date DESC))[1]     AS last_day,
        (ARRAY_AGG(g.end_reason ORDER BY g.start_date DESC))[1]     AS end_reason,
        COUNT(*)                                                    AS contract_count,
        COUNT(*) FILTER (WHERE g.contract_type = 'RENEWAL')         AS renewal_count,
        BOOL_OR(g.contract_type = 'LOAN')                           AS loan,
-       ARRAY_AGG(DISTINCT g.role)                                  AS roles
+       ARRAY_AGG(DISTINCT g.role)                                  AS roles,
+       ARRAY_AGG(DISTINCT g.team_id)                               AS team_ids
   FROM grouped g
- GROUP BY g.person_id, g.team_id, g.as_player, g.tenure_no;
+ GROUP BY g.person_id, g.organization_id, g.as_player, g.tenure_no;
 
-COMMENT ON VIEW v_esports_tenure IS '소속 기간. 연속 계약(재계약)을 묶은 커리어 한 줄. 선수 시절과 스태프 시절은 따로 묶는다';
+COMMENT ON VIEW v_esports_tenure IS '소속 기간. 같은 조직의 연속 계약(재계약·팀 내 이동)을 묶은 커리어 한 줄. 선수 시절과 스태프 시절은 따로 묶는다';
 
--- 6.4 e스포츠 인물 현재 상태 -- PLAYER / STAFF / FREE_AGENT / RETIRED
+-- 6.4 e스포츠 인물 현재 상태 -- CONTRACTED / ON_LOAN / FREE_AGENT / RETIRED
+--     역할(선수/감독/코치)은 상태가 아니라 role 컬럼이다.
+--       ON_LOAN    진행 중인 임대가 있다. team_id 는 임차팀, contract_team_id 는 원 계약 팀
+--       CONTRACTED 진행 중인 정식 계약이 있다
+--       RETIRED    정식 계약이 없고 마지막 RETIRE/UNRETIRE 가 RETIRE
+--       FREE_AGENT 그 밖
+--     보조: inactive(계약 유지 중 비활동)·사유, retired_as_player(은퇴 후 코치 등), 확정된 다음 계약,
+--           rights_team_id·rights_until(계약 중 은퇴한 선수의 원 소속팀 권리 -- 원래 만료일이 오늘 이후일 때만)
 --     ★ 계약이나 커리어 이벤트가 한 번이라도 있는 인물만 나온다.
 --       계약 이력이 없는 유튜버를 "FA" 로 보여주면 안 되기 때문이다.
 CREATE OR REPLACE VIEW v_esports_person_status AS
 SELECT p.person_id, p.nick_name,
        CASE
-           WHEN r.role = 'PLAYER'           THEN 'PLAYER'
-           WHEN r.role IS NOT NULL          THEN 'STAFF'
+           WHEN ln.contract_id IS NOT NULL  THEN 'ON_LOAN'
+           WHEN mc.contract_id IS NOT NULL  THEN 'CONTRACTED'
            WHEN COALESCE(ev.retired, FALSE) THEN 'RETIRED'
            ELSE 'FREE_AGENT'
-       END                               AS status,
-       r.team_id                         AS team_id,
-       r.role                            AS role,
-       r.position                        AS position,
-       r.last_day                        AS contract_last_day,
-       nx.team_id                        AS next_team_id,
-       nx.start_date                     AS next_start_date,
-       COALESCE(ev.retired, FALSE)       AS retired_as_player,
-       COALESCE(ev.on_hiatus, FALSE)     AS on_hiatus
+       END                                                    AS status,
+       COALESCE(ln.team_id, mc.team_id)                       AS team_id,
+       mc.team_id                                             AS contract_team_id,
+       COALESCE(ln.role, mc.role)                             AS role,
+       COALESCE(ln.position, mc.position)                     AS position,
+       mc.last_day                                            AS contract_last_day,
+       COALESCE(ev.on_hiatus, FALSE)                          AS inactive,
+       CASE WHEN COALESCE(ev.on_hiatus, FALSE) THEN ev.hiatus_reason END AS inactive_reason,
+       COALESCE(ev.retired, FALSE)                            AS retired_as_player,
+       nx.team_id                                             AS next_team_id,
+       nx.start_date                                          AS next_start_date,
+       rr.team_id                                             AS rights_team_id,
+       rr.end_date                                            AS rights_until
   FROM person p
-  LEFT JOIN v_esports_current_roster r ON r.person_id = p.person_id
+  LEFT JOIN LATERAL (
+        SELECT s.contract_id, s.team_id, s.role, s.position, s.last_day
+          FROM v_esports_contract_status s
+         WHERE s.person_id = p.person_id AND s.status = 'ACTIVE' AND s.contract_type <> 'LOAN'
+         ORDER BY s.start_date DESC
+         LIMIT 1
+  ) mc ON TRUE
+  LEFT JOIN LATERAL (
+        SELECT s.contract_id, s.team_id, s.role, s.position
+          FROM v_esports_contract_status s
+         WHERE s.person_id = p.person_id AND s.status = 'ACTIVE' AND s.contract_type = 'LOAN'
+         ORDER BY s.start_date DESC
+         LIMIT 1
+  ) ln ON TRUE
   LEFT JOIN LATERAL (
         SELECT u.team_id, u.start_date
           FROM v_esports_contract_status u
@@ -417,15 +445,24 @@ SELECT p.person_id, p.nick_name,
         SELECT (ARRAY_AGG(e.event_type ORDER BY e.event_date DESC, e.event_id DESC)
                   FILTER (WHERE e.event_type IN ('RETIRE', 'UNRETIRE')))[1] = 'RETIRE' AS retired,
                (ARRAY_AGG(e.event_type ORDER BY e.event_date DESC, e.event_id DESC)
-                  FILTER (WHERE e.event_type IN ('HIATUS', 'RETURN')))[1]   = 'HIATUS' AS on_hiatus
+                  FILTER (WHERE e.event_type IN ('HIATUS', 'RETURN')))[1]   = 'HIATUS' AS on_hiatus,
+               (ARRAY_AGG(e.reason     ORDER BY e.event_date DESC, e.event_id DESC)
+                  FILTER (WHERE e.event_type IN ('HIATUS', 'RETURN')))[1]              AS hiatus_reason
           FROM esports_career_event e
          WHERE e.person_id = p.person_id
            AND e.event_date <= CURRENT_DATE
   ) ev ON TRUE
+  LEFT JOIN LATERAL (
+        SELECT c.team_id, c.end_date
+          FROM esports_contract c
+         WHERE c.person_id = p.person_id AND c.end_reason = 'RETIRED'
+         ORDER BY c.start_date DESC
+         LIMIT 1
+  ) rr ON rr.end_date > CURRENT_DATE
  WHERE EXISTS (SELECT 1 FROM esports_contract     c WHERE c.person_id = p.person_id)
     OR EXISTS (SELECT 1 FROM esports_career_event e WHERE e.person_id = p.person_id);
 
-COMMENT ON VIEW v_esports_person_status IS 'e스포츠 인물 현재 상태. 계약 없음 + 은퇴 아님 = FREE_AGENT. 계약·이벤트 이력이 없는 인물(크리에이터 등)은 나오지 않는다';
+COMMENT ON VIEW v_esports_person_status IS 'e스포츠 인물 현재 상태(CONTRACTED/ON_LOAN/FREE_AGENT/RETIRED)와 역할·비활동·다음 계약·은퇴 권리. 계약·이벤트 이력이 없는 인물(크리에이터 등)은 나오지 않는다';
 
 -- 6.5 시즌 로스터 -- 계약 기간 ∩ 시즌 기간. 시즌마다 로스터를 다시 입력하지 않는다.
 CREATE OR REPLACE VIEW v_esports_season_roster AS
@@ -456,19 +493,48 @@ COMMENT ON VIEW v_esports_team_name_period IS '팀명 기간표. 날짜 d 의 �
 CREATE OR REPLACE VIEW v_esports_roster_invalid AS
 WITH seq AS (   -- 한 사람의 정식 계약(임대 제외)을 시간순으로 놓고 직전 계약을 붙인다
     SELECT c.*,
+           COALESCE(t.parent_team_id, t.team_id) AS org_id,
            COALESCE(c.actual_end_date, c.end_date) AS last_day,
            LAG(c.team_id)    OVER w AS prev_team_id,
+           LAG(COALESCE(t.parent_team_id, t.team_id)) OVER w AS prev_org_id,
            LAG(COALESCE(c.actual_end_date, c.end_date)) OVER w AS prev_last_day,
-           LAG(c.end_reason) OVER w AS prev_end_reason
+           LAG(c.end_date)   OVER w AS prev_end_date,
+           LAG(c.end_reason) OVER w AS prev_end_reason,
+           LAG(c.role)       OVER w AS prev_role
       FROM esports_contract c
+      JOIN esports_team t ON t.team_id = c.team_id
      WHERE c.contract_type <> 'LOAN'
     WINDOW w AS (PARTITION BY c.person_id ORDER BY c.start_date)
 )
--- (1) 재계약인데 같은 팀 직전 계약의 다음 날 시작하지 않음
+-- (1) 재계약인데 같은 조직 직전 계약의 다음 날 시작하지 않음
 SELECT 'RENEWAL_NOT_CONTINUOUS' AS problem, s.person_id, s.contract_id, s.team_id, s.start_date AS at_date
   FROM seq s
  WHERE s.contract_type = 'RENEWAL'
-   AND (s.prev_team_id IS DISTINCT FROM s.team_id OR s.prev_last_day IS DISTINCT FROM s.start_date - 1)
+   AND (s.prev_org_id IS DISTINCT FROM s.org_id OR s.prev_last_day IS DISTINCT FROM s.start_date - 1)
+UNION ALL
+-- (7) 팀 내 이동인데 직전 계약이 전날 MOVED 로 끝나지 않음
+SELECT 'MOVE_NOT_CONTINUOUS', s.person_id, s.contract_id, s.team_id, s.start_date
+  FROM seq s
+ WHERE s.contract_type = 'MOVE'
+   AND (s.prev_end_reason IS DISTINCT FROM 'MOVED' OR s.prev_last_day IS DISTINCT FROM s.start_date - 1)
+UNION ALL
+-- (8) 팀 내 이동인데 다른 조직으로 감 (이적이어야 한다)
+SELECT 'MOVE_OUTSIDE_ORG', s.person_id, s.contract_id, s.team_id, s.start_date
+  FROM seq s
+ WHERE s.contract_type = 'MOVE'
+   AND s.prev_org_id IS DISTINCT FROM s.org_id
+UNION ALL
+-- (9) 팀 내 이동인데 계약서상 만료일이 바뀜 (계약서는 하나다)
+SELECT 'MOVE_END_DATE_CHANGED', s.person_id, s.contract_id, s.team_id, s.start_date
+  FROM seq s
+ WHERE s.contract_type = 'MOVE'
+   AND s.prev_end_date IS DISTINCT FROM s.end_date
+UNION ALL
+-- (10) 팀 내 이동으로 선수 <-> 스태프 전환 (선수 계약과 코칭스태프 계약은 다른 계약이다)
+SELECT 'MOVE_PLAYER_STAFF_SWITCH', s.person_id, s.contract_id, s.team_id, s.start_date
+  FROM seq s
+ WHERE s.contract_type = 'MOVE'
+   AND (s.prev_role = 'PLAYER') IS DISTINCT FROM (s.role = 'PLAYER')
 UNION ALL
 -- (2) 이적인데 직전 계약이 TRANSFERRED 로 끝나지 않음
 SELECT 'TRANSFER_WITHOUT_RELEASE', s.person_id, s.contract_id, s.team_id, s.start_date
@@ -511,6 +577,22 @@ SELECT 'TEAM_NAME_GAP', NULL, NULL, t.team_id, t.name_since
   FROM esports_team t
   JOIN (SELECT team_id, MAX(valid_to) AS last_to
           FROM esports_team_name_history GROUP BY team_id) h ON h.team_id = t.team_id
- WHERE t.name_since IS DISTINCT FROM h.last_to + 1;
+ WHERE t.name_since IS DISTINCT FROM h.last_to + 1
+UNION ALL
+-- (11) 상위 팀에 또 상위 팀이 있음 (1단계만 허용)
+SELECT 'TEAM_NESTED_TOO_DEEP', NULL, NULL, t.team_id, NULL
+  FROM esports_team t
+  JOIN esports_team pt ON pt.team_id = t.parent_team_id
+ WHERE pt.parent_team_id IS NOT NULL
+UNION ALL
+-- (12) 계약 중 은퇴한 선수가 원 소속팀 권리 기간에 다른 조직과 입단 (권리 양도·합의가 있었는지 확인)
+SELECT 'SIGN_DURING_RETIRE_RIGHTS', c.person_id, c.contract_id, c.team_id, c.start_date
+  FROM esports_contract c
+  JOIN esports_team ct ON ct.team_id = c.team_id
+  JOIN esports_contract r ON r.person_id = c.person_id AND r.end_reason = 'RETIRED'
+  JOIN esports_team rt ON rt.team_id = r.team_id
+ WHERE c.contract_type = 'SIGN'
+   AND c.start_date BETWEEN r.actual_end_date + 1 AND r.end_date
+   AND COALESCE(ct.parent_team_id, ct.team_id) <> COALESCE(rt.parent_team_id, rt.team_id);
 
-COMMENT ON VIEW v_esports_roster_invalid IS '로스터 오입력 검출. problem 별로 원인 행을 보여준다. 0행이어야 한다';
+COMMENT ON VIEW v_esports_roster_invalid IS '로스터 오입력 검출. problem 별로 원인 행을 보여준다. 0행이어야 한다 (SIGN_DURING_RETIRE_RIGHTS 는 권리 양도가 있었다면 정상일 수 있다)';
